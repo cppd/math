@@ -202,8 +202,6 @@ std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_var
 template <std::size_t N, typename T, std::size_t ORDER>
 TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
 {
-        static_assert(ORDER >= 0 && ORDER <= 2);
-
         ASSERT(theta >= 0 && theta <= 1);
         ASSERT(i <= 4);
 
@@ -217,29 +215,26 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                 return oss.str();
         }();
 
-        if (ORDER == 0)
+        static_assert(ORDER >= 0 && ORDER <= 2);
+        switch (ORDER)
         {
+        case 0:
                 return {filters::position::create_position_0<N, T>(
                                 Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_0, Position<T>::INIT,
                                 theta, Position<T>::NOISE_MODEL_0, Position<T>::FADING_MEMORY_ALPHA_0),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
-        }
-
-        if (ORDER == 1)
-        {
+        case 1:
                 return {filters::position::create_position_1<N, T>(
                                 Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_1, Position<T>::INIT,
                                 theta, Position<T>::NOISE_MODEL_1, Position<T>::FADING_MEMORY_ALPHA_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
-        }
-
-        if (ORDER == 2)
-        {
+        case 2:
                 return {filters::position::create_position_2<N, T>(
                                 Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_2, Position<T>::INIT,
                                 theta, Position<T>::NOISE_MODEL_2, Position<T>::FADING_MEMORY_ALPHA_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
         }
+        ASSERT(false);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
@@ -260,8 +255,6 @@ std::vector<TestFilterPosition<N, T>> create_positions()
 template <typename T, std::size_t ORDER>
 TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
 {
-        static_assert(ORDER == 0 || ORDER == 1);
-
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
 
@@ -275,8 +268,10 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                 return oss.str();
         }();
 
-        if (ORDER == 0)
+        static_assert(ORDER == 0 || ORDER == 1);
+        switch (ORDER)
         {
+        case 0:
                 return {filters::acceleration::create_acceleration_0<T>(
                                 Acceleration<T>::MEASUREMENT_QUEUE_SIZE, Acceleration<T>::RESET_DT,
                                 Acceleration<T>::ANGLE_ESTIMATION_VARIANCE, Acceleration<T>::GATE,
@@ -284,10 +279,7 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Acceleration<T>::ANGLE_NOISE_MODEL_0, Acceleration<T>::ANGLE_R_NOISE_MODEL_0,
                                 Acceleration<T>::FADING_MEMORY_ALPHA_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
-        }
-
-        if (ORDER == 1)
-        {
+        case 1:
                 return {filters::acceleration::create_acceleration_1<T>(
                                 Acceleration<T>::MEASUREMENT_QUEUE_SIZE, Acceleration<T>::RESET_DT,
                                 Acceleration<T>::ANGLE_ESTIMATION_VARIANCE, Acceleration<T>::GATE,
@@ -296,6 +288,7 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Acceleration<T>::FADING_MEMORY_ALPHA_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         }
+        ASSERT(false);
 }
 
 template <typename T>
@@ -326,11 +319,9 @@ std::vector<TestFilter<2, T>> create_accelerations()
         return res;
 }
 
-template <typename T, std::size_t ORDER_P, std::size_t ORDER_A>
+template <typename T, std::size_t ORDER>
 TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 {
-        static_assert((ORDER_P == 1 && (ORDER_A == 0 || ORDER_A == 1)) || (ORDER_P == 2 && ORDER_A == 1));
-
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
 
@@ -340,32 +331,28 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
         {
                 std::ostringstream oss;
                 oss << std::setprecision(precision) << std::fixed;
-                oss << "Direction " << ORDER_P << '.' << ORDER_A << " (" << ALPHA << " " << alpha << ")";
+                oss << "Direction " << ORDER / 10 << '.' << ORDER % 10 << " (" << ALPHA << " " << alpha << ")";
                 return oss.str();
         }();
 
-        if (ORDER_P == 1 && ORDER_A == 0)
+        static_assert(ORDER == 10 || ORDER == 11 || ORDER == 21);
+        switch (ORDER)
         {
+        case 10:
                 return {filters::direction::create_direction_1_0<T>(
                                 Direction<T>::MEASUREMENT_QUEUE_SIZE, Direction<T>::RESET_DT,
                                 Direction<T>::ANGLE_ESTIMATION_VARIANCE, Direction<T>::GATE, Direction<T>::INIT, alpha,
                                 Direction<T>::POSITION_NOISE_MODEL_1_0, Direction<T>::ANGLE_NOISE_MODEL_1_0,
                                 Direction<T>::FADING_MEMORY_ALPHA_1_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
-        }
-
-        if (ORDER_P == 1 && ORDER_A == 1)
-        {
+        case 11:
                 return {filters::direction::create_direction_1_1<T>(
                                 Direction<T>::MEASUREMENT_QUEUE_SIZE, Direction<T>::RESET_DT,
                                 Direction<T>::ANGLE_ESTIMATION_VARIANCE, Direction<T>::GATE, Direction<T>::INIT, alpha,
                                 Direction<T>::POSITION_NOISE_MODEL_1_1, Direction<T>::ANGLE_NOISE_MODEL_1_1,
                                 Direction<T>::FADING_MEMORY_ALPHA_1_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
-        }
-
-        if (ORDER_P == 2 && ORDER_A == 1)
-        {
+        case 21:
                 return {filters::direction::create_direction_2_1<T>(
                                 Direction<T>::MEASUREMENT_QUEUE_SIZE, Direction<T>::RESET_DT,
                                 Direction<T>::ANGLE_ESTIMATION_VARIANCE, Direction<T>::GATE, Direction<T>::INIT, alpha,
@@ -373,6 +360,7 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Direction<T>::FADING_MEMORY_ALPHA_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
         }
+        ASSERT(false);
 }
 
 template <typename T>
@@ -384,17 +372,17 @@ std::vector<TestFilter<2, T>> create_directions()
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_direction<T, 1, 0>(i, alphas[i]));
+                res.push_back(create_direction<T, 10>(i, alphas[i]));
         }
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_direction<T, 1, 1>(i, alphas[i]));
+                res.push_back(create_direction<T, 11>(i, alphas[i]));
         }
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_direction<T, 2, 1>(i, alphas[i]));
+                res.push_back(create_direction<T, 21>(i, alphas[i]));
         }
 
         return res;
@@ -403,8 +391,6 @@ std::vector<TestFilter<2, T>> create_directions()
 template <typename T, std::size_t ORDER_P>
 TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 {
-        static_assert(ORDER_P == 1 || ORDER_P == 2);
-
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 2);
 
@@ -418,23 +404,23 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                 return oss.str();
         }();
 
-        if (ORDER_P == 1)
+        static_assert(ORDER_P == 1 || ORDER_P == 2);
+        switch (ORDER_P)
         {
+        case 1:
                 return {filters::speed::create_speed_1<2, T>(
                                 Speed<T>::MEASUREMENT_QUEUE_SIZE, Speed<T>::RESET_DT,
                                 Speed<T>::ANGLE_ESTIMATION_VARIANCE, Speed<T>::GATE, Speed<T>::INIT, alpha,
                                 Speed<T>::NOISE_MODEL_1, Speed<T>::FADING_MEMORY_ALPHA_1),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
-        }
-
-        if (ORDER_P == 2)
-        {
+        case 2:
                 return {filters::speed::create_speed_2<2, T>(
                                 Speed<T>::MEASUREMENT_QUEUE_SIZE, Speed<T>::RESET_DT,
                                 Speed<T>::ANGLE_ESTIMATION_VARIANCE, Speed<T>::GATE, Speed<T>::INIT, alpha,
                                 Speed<T>::NOISE_MODEL_2, Speed<T>::FADING_MEMORY_ALPHA_2),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
         }
+        ASSERT(false);
 }
 
 template <typename T>
