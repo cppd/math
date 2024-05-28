@@ -140,7 +140,7 @@ template <std::size_t N, typename T>
 
 template <std::size_t N, typename T>
         requires (N == 1)
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise_speed(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> variance)
 {
@@ -155,7 +155,7 @@ template <std::size_t N, typename T>
 // A practical range is a/2 <= sigma <= a.
 template <std::size_t N, typename T>
         requires (N == 2)
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise_acceleration(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> variance)
 {
@@ -178,7 +178,7 @@ template <std::size_t N, typename T>
 // A practical range is d/2 <= sigma <= d.
 template <std::size_t N, typename T>
         requires (N == 3)
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise(
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise_acceleration(
         const std::type_identity_t<T> dt,
         const std::type_identity_t<T> variance)
 {
@@ -194,6 +194,27 @@ template <std::size_t N, typename T>
                 {dt_4 / 4, dt_3 / 2, dt_2 / 2},
                 {dt_3 / 2,     dt_2,     dt_1},
                 {dt_2 / 2,     dt_1,     dt_0}
+        };
+}
+
+template <std::size_t N, typename T>
+        requires (N == 3)
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> discrete_white_noise_jerk(
+        const std::type_identity_t<T> dt,
+        const std::type_identity_t<T> variance)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const T dt_2 = dt * dt * variance;
+        const T dt_3 = dt_2 * dt;
+        const T dt_4 = dt_3 * dt;
+        const T dt_5 = dt_4 * dt;
+        const T dt_6 = dt_5 * dt;
+
+        return numerical::Matrix<N, N, T>{
+                {dt_6 / 36, dt_5 / 12, dt_4 / 6},
+                {dt_5 / 12,  dt_4 / 4, dt_3 / 2},
+                { dt_4 / 6,  dt_3 / 2,     dt_2}
         };
 }
 }

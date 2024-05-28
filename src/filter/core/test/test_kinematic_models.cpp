@@ -64,21 +64,28 @@ struct Test final
 
                 //
 
-                constexpr numerical::Matrix<1, 1, T> DWN_1{{0.125L}};
-                static_assert(equal(discrete_white_noise<1, T>(0.5L, 0.5L), DWN_1));
+                constexpr numerical::Matrix<1, 1, T> DWN_1{{1.0L / 8}};
+                static_assert(equal(discrete_white_noise_speed<1, T>(0.5L, 0.5L), DWN_1));
 
                 constexpr numerical::Matrix<2, 2, T> DWN_2{
-                        {0.0078125L, 0.03125L},
-                        {  0.03125L,   0.125L}
+                        {1.0L / 128, 1.0L / 32},
+                        { 1.0L / 32,  1.0L / 8}
                 };
-                static_assert(equal(discrete_white_noise<2, T>(0.5L, 0.5L), DWN_2));
+                static_assert(equal(discrete_white_noise_acceleration<2, T>(0.5L, 0.5L), DWN_2));
 
-                constexpr numerical::Matrix<3, 3, T> DWN_3{
-                        {0.0078125, 0.03125, 0.0625},
-                        {  0.03125,   0.125,   0.25},
-                        {   0.0625,    0.25,    0.5}
+                constexpr numerical::Matrix<3, 3, T> DWN_3_A{
+                        {1.0L / 128, 1.0L / 32, 1.0L / 16},
+                        { 1.0L / 32,  1.0L / 8,  1.0L / 4},
+                        { 1.0L / 16,  1.0L / 4,  1.0L / 2}
                 };
-                static_assert(equal(discrete_white_noise<3, T>(0.5L, 0.5L), DWN_3));
+                static_assert(equal(discrete_white_noise_acceleration<3, T>(0.5L, 0.5L), DWN_3_A));
+
+                constexpr numerical::Matrix<3, 3, T> DWN_3_J{
+                        {1.0L / 4608, 1.0L / 768, 1.0L / 192},
+                        { 1.0L / 768, 1.0L / 128,  1.0L / 32},
+                        { 1.0L / 192,  1.0L / 32,   1.0L / 8}
+                };
+                static_assert(equal(discrete_white_noise_jerk<3, T>(0.5L, 0.5L), DWN_3_J));
         }
 };
 
