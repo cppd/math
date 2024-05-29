@@ -445,12 +445,6 @@ void correct_measurements(std::vector<filters::Measurements<N, T>>* const measur
                 if ((n > 3) && ((n % 9) == 0))
                 {
                         m.position.reset();
-                        m.speed.reset();
-                }
-
-                if (std::llround(m.time / 10) % 8 == 0)
-                {
-                        m.speed.reset();
                 }
         }
 }
