@@ -69,7 +69,6 @@ template <typename T, template <typename> typename F>
 class Acceleration final : public Filter<2, T>
 {
         T reset_dt_;
-        T angle_estimation_variance_;
         std::optional<T> gate_;
         Init<T> init_;
         NoiseModel<T> position_noise_model_;
@@ -124,7 +123,6 @@ Acceleration<T, F>::Acceleration(
         const T fading_memory_alpha,
         std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
-          angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           init_(init),
           position_noise_model_(position_noise_model),
