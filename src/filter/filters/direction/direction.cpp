@@ -68,7 +68,6 @@ template <typename T, template <typename> typename F>
 class Direction final : public Filter<2, T>
 {
         T reset_dt_;
-        T angle_estimation_variance_;
         std::optional<T> gate_;
         Init<T> init_;
         NoiseModel<T> position_noise_model_;
@@ -82,13 +81,12 @@ class Direction final : public Filter<2, T>
         Nis<T> nis_;
 
         std::optional<T> last_time_;
-        std::optional<T> last_position_time_;
 
         void check_time(T time) const;
 
         void reset(const Measurements<2, T>& m);
 
-        [[nodiscard]] bool update_filter(const Measurements<2, T>& m, const Estimation<2, T>& estimation);
+        void update_filter(const Measurements<2, T>& m);
 
         [[nodiscard]] std::optional<UpdateInfo<2, T>> update(
                 const Measurements<2, T>& m,
@@ -121,7 +119,6 @@ Direction<T, F>::Direction(
         const T fading_memory_alpha,
         std::unique_ptr<F<T>>&& filter)
         : reset_dt_(reset_dt),
-          angle_estimation_variance_(angle_estimation_variance),
           gate_(gate),
           init_(init),
           position_noise_model_(position_noise_model),
@@ -139,12 +136,6 @@ void Direction<T, F>::check_time(const T time) const
         if (last_time_ && !(*last_time_ < time))
         {
                 error("Measurement time does not increase; from " + to_string(*last_time_) + " to " + to_string(time));
-        }
-
-        if (last_position_time_ && !(*last_position_time_ < time))
-        {
-                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
-                      + to_string(time));
         }
 }
 
@@ -171,19 +162,13 @@ void Direction<T, F>::reset(const Measurements<2, T>& m)
                 });
 
         last_time_ = m.time;
-        last_position_time_ = m.time;
 }
 
 template <typename T, template <typename> typename F>
-bool Direction<T, F>::update_filter(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
+void Direction<T, F>::update_filter(const Measurements<2, T>& m)
 {
         ASSERT(last_time_);
         const T dt = m.time - *last_time_;
-
-        const std::optional<Measurement<1, T>> direction =
-                m.direction && estimation.angle_variance_less_than(angle_estimation_variance_)
-                        ? m.direction
-                        : std::nullopt;
 
         if (m.position)
         {
@@ -192,23 +177,19 @@ bool Direction<T, F>::update_filter(const Measurements<2, T>& m, const Estimatio
                 const Measurement<2, T> position = {.value = m.position->value, .variance = *m.position->variance};
 
                 update_position(
-                        filter_.get(), position, direction, m.speed, gate_, dt, position_noise_model_,
+                        filter_.get(), position, m.direction, m.speed, gate_, dt, position_noise_model_,
                         angle_noise_model_, fading_memory_alpha_, nis_);
 
                 LOG(measurement_description(m) + filter_description(*filter_));
 
-                return true;
+                return;
         }
 
-        if (direction || m.speed)
-        {
-                update_non_position(
-                        filter_.get(), direction, m.speed, gate_, dt, position_noise_model_, angle_noise_model_,
-                        fading_memory_alpha_, nis_);
-                return true;
-        }
+        ASSERT(m.direction || m.speed);
 
-        return false;
+        update_non_position(
+                filter_.get(), m.direction, m.speed, gate_, dt, position_noise_model_, angle_noise_model_,
+                fading_memory_alpha_, nis_);
 }
 
 template <typename T, template <typename> typename F>
@@ -229,20 +210,7 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
                 return {};
         }
 
-        if (!m.position && last_position_time_ && !(m.time - *last_position_time_ < reset_dt_))
-        {
-                return {};
-        }
-
-        if (!update_filter(m, estimation))
-        {
-                return {};
-        }
-
-        if (m.position)
-        {
-                last_position_time_ = m.time;
-        }
+        update_filter(m);
 
         last_time_ = m.time;
 
