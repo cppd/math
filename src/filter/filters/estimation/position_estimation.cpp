@@ -116,6 +116,30 @@ numerical::Matrix<2 * N, 2 * N, T> PositionEstimation<N, T>::position_velocity_p
         return position_->position_velocity_p();
 }
 
+template <std::size_t N, typename T>
+[[nodiscard]] numerical::Vector<N, T> PositionEstimation<N, T>::position() const
+{
+        return position_->position();
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] numerical::Matrix<N, N, T> PositionEstimation<N, T>::position_p() const
+{
+        return position_->position_p();
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] T PositionEstimation<N, T>::speed() const
+{
+        return position_->speed();
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] T PositionEstimation<N, T>::speed_p() const
+{
+        return position_->speed_p();
+}
+
 #define TEMPLATE(N, T) template class PositionEstimation<(N), T>;
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)

@@ -40,6 +40,12 @@ class PositionEstimation final : public Estimation<N, T>
         [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override;
         [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
 
+        [[nodiscard]] numerical::Vector<N, T> position() const override;
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override;
+
+        [[nodiscard]] T speed() const override;
+        [[nodiscard]] T speed_p() const override;
+
 public:
         explicit PositionEstimation(const FilterPosition<N, T>* position);
 
