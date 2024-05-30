@@ -83,6 +83,8 @@ public:
         [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const override;
         [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override;
         [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
+        [[nodiscard]] T speed() const override;
+        [[nodiscard]] T speed_p() const override;
 };
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
@@ -282,6 +284,32 @@ numerical::Matrix<2 * N, 2 * N, T> Position<N, T, F>::position_velocity_p() cons
         else
         {
                 return filter_->position_velocity_p();
+        }
+}
+
+template <std::size_t N, typename T, template <std::size_t, typename> typename F>
+T Position<N, T, F>::speed() const
+{
+        if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
+        {
+                error("speed is not supported");
+        }
+        else
+        {
+                return filter_->speed();
+        }
+}
+
+template <std::size_t N, typename T, template <std::size_t, typename> typename F>
+T Position<N, T, F>::speed_p() const
+{
+        if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
+        {
+                error("speed_p is not supported");
+        }
+        else
+        {
+                return filter_->speed_p();
         }
 }
 
