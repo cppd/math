@@ -233,8 +233,9 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
                                 Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_2, Position<T>::INIT,
                                 theta, Position<T>::NOISE_MODEL_2, Position<T>::FADING_MEMORY_ALPHA_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
+        default:
+                ASSERT(false);
         }
-        ASSERT(false);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
@@ -287,8 +288,9 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
                                 Acceleration<T>::ANGLE_NOISE_MODEL_1, Acceleration<T>::ANGLE_R_NOISE_MODEL_1,
                                 Acceleration<T>::FADING_MEMORY_ALPHA_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
+        default:
+                ASSERT(false);
         }
-        ASSERT(false);
 }
 
 template <typename T>
@@ -359,8 +361,9 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
                                 Direction<T>::POSITION_NOISE_MODEL_2_1, Direction<T>::ANGLE_NOISE_MODEL_2_1,
                                 Direction<T>::FADING_MEMORY_ALPHA_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
+        default:
+                ASSERT(false);
         }
-        ASSERT(false);
 }
 
 template <typename T>
@@ -419,8 +422,9 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
                                 Speed<T>::ANGLE_ESTIMATION_VARIANCE, Speed<T>::GATE, Speed<T>::INIT, alpha,
                                 Speed<T>::NOISE_MODEL_2, Speed<T>::FADING_MEMORY_ALPHA_2),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
+        default:
+                ASSERT(false);
         }
-        ASSERT(false);
 }
 
 template <typename T>
