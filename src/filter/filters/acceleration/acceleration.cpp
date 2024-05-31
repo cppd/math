@@ -147,11 +147,6 @@ void Acceleration<T, F>::check_time(const T time) const
 template <typename T, template <typename> typename F>
 void Acceleration<T, F>::reset(const Measurements<2, T>& m)
 {
-        if (!m.position || queue_.empty())
-        {
-                return;
-        }
-
         ASSERT(queue_.last_time() == m.time);
 
         queue_.update_filter(
@@ -166,8 +161,6 @@ void Acceleration<T, F>::reset(const Measurements<2, T>& m)
                                 measurements.speed, gate_, dt, position_noise_model_, angle_noise_model_,
                                 angle_r_noise_model_, fading_memory_alpha_, nis_);
                 });
-
-        last_time_ = m.time;
 }
 
 template <typename T, template <typename> typename F>
@@ -214,8 +207,21 @@ std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                reset(m);
-                return {};
+                if (!(m.position && m.position->variance))
+                {
+                        return {};
+                }
+                if (!queue_.empty())
+                {
+                        reset(m);
+                        last_time_ = m.time;
+                }
+                return {
+                        {.position = estimation.position(),
+                         .position_p = estimation.position_p().diagonal(),
+                         .speed = estimation.speed(),
+                         .speed_p = estimation.speed_p()}
+                };
         }
 
         update_filter(m);
