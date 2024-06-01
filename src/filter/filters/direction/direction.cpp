@@ -142,11 +142,6 @@ void Direction<T, F>::check_time(const T time) const
 template <typename T, template <typename> typename F>
 void Direction<T, F>::reset(const Measurements<2, T>& m)
 {
-        if (!m.position || queue_.empty())
-        {
-                return;
-        }
-
         ASSERT(queue_.last_time() == m.time);
 
         queue_.update_filter(
@@ -160,8 +155,6 @@ void Direction<T, F>::reset(const Measurements<2, T>& m)
                                 filter_.get(), position, measurements.direction, measurements.speed, gate_, dt,
                                 position_noise_model_, angle_noise_model_, fading_memory_alpha_, nis_);
                 });
-
-        last_time_ = m.time;
 }
 
 template <typename T, template <typename> typename F>
@@ -206,8 +199,21 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                reset(m);
-                return {};
+                if (!(m.position && m.position->variance))
+                {
+                        return {};
+                }
+                if (!queue_.empty())
+                {
+                        reset(m);
+                        last_time_ = m.time;
+                }
+                return {
+                        {.position = estimation.position(),
+                         .position_p = estimation.position_p().diagonal(),
+                         .speed = estimation.speed(),
+                         .speed_p = estimation.speed_p()}
+                };
         }
 
         update_filter(m);
