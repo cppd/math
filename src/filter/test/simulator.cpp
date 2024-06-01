@@ -69,7 +69,6 @@ struct Config final
         T speed_clamp_max = kph_to_mps(100.0);
         T speed_variance = square(0.1);
         T velocity_magnitude_period = 110;
-        T velocity_angle_period = 70;
 
         T angle = degrees_to_radians(-170.0);
         T angle_drift_per_hour = degrees_to_radians(-360.0);
@@ -222,7 +221,6 @@ class Simulator final
         const T speed_clamp_min_;
         const T speed_clamp_max_;
         const T velocity_magnitude_period_;
-        const T velocity_angle_period_;
 
         const T angle_drift_;
         const T angle_r_;
@@ -250,11 +248,6 @@ class Simulator final
 
         [[nodiscard]] T angle(const T time) const
         {
-                if ((false))
-                {
-                        return std::cos(time * (2 * PI<T> / velocity_angle_period_));
-                }
-
                 static constexpr T PERIOD = 31;
                 static constexpr T CHANGE_PERIOD = 9;
                 const T period_number = std::floor(time / PERIOD);
@@ -294,7 +287,6 @@ public:
                   speed_clamp_min_(config.speed_clamp_min),
                   speed_clamp_max_(config.speed_clamp_max),
                   velocity_magnitude_period_(config.velocity_magnitude_period),
-                  velocity_angle_period_(config.velocity_angle_period),
                   angle_drift_(config.measurement_dt * config.angle_drift_per_hour / (T{60} * T{60})),
                   angle_r_(normalize_angle(config.angle_r)),
                   bad_measurement_position_(config.bad_measurement_position),
