@@ -109,22 +109,11 @@ void Speed<N, T, F>::check_time(const T time) const
         {
                 error("Measurement time does not increase; from " + to_string(*last_time_) + " to " + to_string(time));
         }
-
-        if (last_position_time_ && !(*last_position_time_ < time))
-        {
-                error("Measurement time does not increase; from " + to_string(*last_position_time_) + " to "
-                      + to_string(time));
-        }
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
 void Speed<N, T, F>::reset(const Measurements<N, T>& m)
 {
-        if (!m.position || queue_.empty())
-        {
-                return;
-        }
-
         ASSERT(queue_.last_time() == m.time);
 
         queue_.update_filter(
@@ -138,9 +127,6 @@ void Speed<N, T, F>::reset(const Measurements<N, T>& m)
                                 filter_.get(), position, measurements.speed, gate_, dt, noise_model_,
                                 fading_memory_alpha_, nis_);
                 });
-
-        last_time_ = m.time;
-        last_position_time_ = m.time;
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
@@ -182,21 +168,24 @@ std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>&
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                reset(m);
-                return {};
-        }
-
-        if (!m.position && last_position_time_ && !(m.time - *last_position_time_ < reset_dt_))
-        {
-                return {};
+                if (!(m.position && m.position->variance))
+                {
+                        return {};
+                }
+                if (!queue_.empty())
+                {
+                        reset(m);
+                        last_time_ = m.time;
+                }
+                return {
+                        {.position = estimation.position(),
+                         .position_p = estimation.position_p().diagonal(),
+                         .speed = estimation.speed(),
+                         .speed_p = estimation.speed_p()}
+                };
         }
 
         update_filter(m);
-
-        if (m.position)
-        {
-                last_position_time_ = m.time;
-        }
 
         last_time_ = m.time;
 
