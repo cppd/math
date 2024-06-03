@@ -86,7 +86,7 @@ class Acceleration final : public Filter<2, T>
 
         void check_time(T time) const;
 
-        void reset(const Measurements<2, T>& m);
+        void reset();
 
         void update_filter(const Measurements<2, T>& m);
 
@@ -145,10 +145,8 @@ void Acceleration<T, F>::check_time(const T time) const
 }
 
 template <typename T, template <typename> typename F>
-void Acceleration<T, F>::reset(const Measurements<2, T>& m)
+void Acceleration<T, F>::reset()
 {
-        ASSERT(queue_.last_time() == m.time);
-
         queue_.update_filter(
                 [&]
                 {
@@ -213,7 +211,8 @@ std::optional<UpdateInfo<2, T>> Acceleration<T, F>::update(
                 }
                 if (!queue_.empty())
                 {
-                        reset(m);
+                        ASSERT(queue_.last_time() == m.time);
+                        reset();
                         last_time_ = m.time;
                 }
                 return {
