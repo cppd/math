@@ -60,7 +60,7 @@ class Speed final : public Filter<N, T>
 
         void check_time(T time) const;
 
-        void reset(const Measurements<N, T>& m);
+        void reset();
 
         void update_filter(const Measurements<N, T>& m);
 
@@ -112,10 +112,8 @@ void Speed<N, T, F>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-void Speed<N, T, F>::reset(const Measurements<N, T>& m)
+void Speed<N, T, F>::reset()
 {
-        ASSERT(queue_.last_time() == m.time);
-
         queue_.update_filter(
                 [&]
                 {
@@ -174,7 +172,8 @@ std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>&
                 }
                 if (!queue_.empty())
                 {
-                        reset(m);
+                        ASSERT(queue_.last_time() == m.time);
+                        reset();
                         last_time_ = m.time;
                 }
                 return {
