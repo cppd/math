@@ -122,6 +122,8 @@ class Impl final : public View
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
+                //
+
                 ASSERT(pipeline_);
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_);
 
@@ -207,10 +209,10 @@ class Impl final : public View
 
                 //
 
-                const double brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
-                data_buffer_.set_brightness(brightness);
-
-                //
+                {
+                        const double brightness = std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
+                        data_buffer_.set_brightness((1 + brightness) / 2);
+                }
 
                 ASSERT(queue.family_index() == family_index_);
                 ASSERT(command_buffers_);
