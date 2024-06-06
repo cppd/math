@@ -150,7 +150,7 @@ void Speed<N, T, F>::update_filter(const Measurements<N, T>& m)
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
 std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>& m, const Estimation<N, T>& estimation)
 {
-        if (!((m.position && m.position->variance) || m.speed))
+        if (!(m.position && m.position->variance))
         {
                 return {};
         }
@@ -159,17 +159,8 @@ std::optional<UpdateInfo<N, T>> Speed<N, T, F>::update(const Measurements<N, T>&
 
         queue_.update(m, estimation);
 
-        if (!m.position)
-        {
-                return {};
-        }
-
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (!(m.position && m.position->variance))
-                {
-                        return {};
-                }
                 if (!queue_.empty())
                 {
                         ASSERT(queue_.last_time() == m.time);
