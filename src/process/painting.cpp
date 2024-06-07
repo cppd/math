@@ -309,8 +309,9 @@ void thread_function(
                         to_illuminant<Color>(background_color), parameters, dimension_parameters, progress_list);
                 return;
         }
+        default:
+                error("Unknown color index " + to_string(parameters.color_index));
         }
-        error("Unknown color index " + to_string(parameters.color_index));
 }
 
 template <std::size_t N, typename Parameters>
@@ -339,8 +340,9 @@ void thread_function(
                         objects, camera, clip_plane, front_light_proportion, lighting_color, background_color,
                         parameters, dimension_parameters, progress_list);
                 return;
+        default:
+                error("Unknown precision index " + to_string(parameters.precision_index));
         }
-        error("Unknown precision index " + to_string(parameters.precision_index));
 }
 
 template <std::size_t N>
