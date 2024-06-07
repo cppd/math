@@ -255,8 +255,9 @@ void conv_floats_to_dst(
         case 4:
                 conv_floats_4_to_dst(from_format, pixels, to_format, to);
                 return;
+        default:
+                conversion_error(from_format, to_format);
         }
-        conversion_error(from_format, to_format);
 }
 
 void undo_alpha_multiplication(std::vector<float>* const floats)
