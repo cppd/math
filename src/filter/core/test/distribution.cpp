@@ -60,8 +60,9 @@ void check_min_max(
                         return a.first < b.first;
                 });
 
-        if (!(static_cast<std::size_t>(std::abs(min->first)) < expected_distribution.size()
-              && static_cast<std::size_t>(std::abs(max->first)) < expected_distribution.size()))
+        const int size = expected_distribution.size();
+
+        if (!(std::abs(min->first) < size && std::abs(max->first) < size))
         {
                 error("Filter distribution min max error\n" + distribution_to_string(distribution));
         }
