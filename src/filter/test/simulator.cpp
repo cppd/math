@@ -239,6 +239,10 @@ class Simulator final
 
         T time_{0};
         numerical::Vector<N, T> position_{0};
+        std::optional<Velocity> previous_velocity_;
+        std::optional<T> previous_velocity_time_;
+        std::optional<T> zero_velocity_start_time_;
+        T zero_velocity_time_sum_{0};
         Velocity velocity_;
         Velocity next_velocity_;
         numerical::Vector<N, T> next_acceleration_;
@@ -246,22 +250,51 @@ class Simulator final
 
         T angle_;
 
-        [[nodiscard]] T angle(const T time) const
+        [[nodiscard]] T velocity_angle(const T time) const
         {
                 static constexpr T PERIOD = 31;
                 static constexpr T CHANGE_PERIOD = 9;
                 const T period_number = std::floor(time / PERIOD);
                 const T time_in_period = time - period_number * PERIOD;
                 const T angle_time = period_number + std::clamp<T>(time_in_period / CHANGE_PERIOD, 0, 1);
-                const T angle = -0.2 + (PI<T> / 2) * std::cos(angle_time * (PI<T> / 2));
+                const T angle = 0.2 + (PI<T> / 2) * std::cos(angle_time * (PI<T> / 2));
                 return angle;
+        }
+
+        [[nodiscard]] T velocity_magnitude(const T time)
+        {
+                const T speed = speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_));
+                ASSERT(speed_clamp_min_ >= 0);
+                ASSERT(speed_clamp_max_ >= speed_clamp_min_);
+                const T m = std::clamp(speed, speed_clamp_min_, speed_clamp_max_);
+                return (m > 0) ? std::max<T>(0, m + speed_nd_(engine_)) : T{0};
         }
 
         [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
-                const T speed = speed_m_ + speed_a_ * std::sin(time * (2 * PI<T> / velocity_magnitude_period_));
-                const T magnitude = std::clamp(speed, speed_clamp_min_, speed_clamp_max_);
-                return {.magnitude = magnitude + speed_nd_(engine_), .angle = angle(time)};
+                const T magnitude = velocity_magnitude(time);
+                if (magnitude == 0
+                    && (!previous_velocity_ || (previous_velocity_ && previous_velocity_->magnitude > 0)))
+                {
+                        zero_velocity_start_time_ = time;
+                }
+                if (magnitude > 0 && previous_velocity_ && previous_velocity_->magnitude == 0)
+                {
+                        ASSERT(zero_velocity_start_time_);
+                        ASSERT(previous_velocity_time_);
+                        zero_velocity_time_sum_ += *previous_velocity_time_ - *zero_velocity_start_time_;
+                        zero_velocity_start_time_.reset();
+                }
+                if (magnitude == 0 && previous_velocity_ && previous_velocity_->magnitude == 0)
+                {
+                        previous_velocity_time_ = time;
+                        return *previous_velocity_;
+                }
+                const T angle = velocity_angle(time - zero_velocity_time_sum_);
+                const Velocity velocity{.magnitude = magnitude, .angle = angle};
+                previous_velocity_ = velocity;
+                previous_velocity_time_ = time;
+                return velocity;
         }
 
         [[nodiscard]] numerical::Vector<2, T> to_vector(const Velocity& v) const
@@ -363,7 +396,9 @@ public:
 
         [[nodiscard]] T measurement_speed()
         {
-                return velocity_.magnitude + measurements_speed_nd_(engine_);
+                const T m = velocity_.magnitude;
+                ASSERT(m >= 0);
+                return (m > 0) ? std::max<T>(0, m + measurements_speed_nd_(engine_)) : T{0};
         }
 };
 
