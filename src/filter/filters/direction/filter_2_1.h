@@ -80,6 +80,10 @@ public:
                 const Measurement<1, T>& speed,
                 std::optional<T> gate) = 0;
 
+        [[nodiscard]] virtual core::UpdateInfo<2, T> update_velocity(
+                const Measurement<2, T>& velocity,
+                std::optional<T> gate) = 0;
+
         [[nodiscard]] virtual numerical::Vector<2, T> position() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2, 2, T> position_p() const = 0;
 

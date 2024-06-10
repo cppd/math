@@ -381,6 +381,28 @@ numerical::Vector<1, T> speed_residual(const numerical::Vector<1, T>& a, const n
 //
 
 template <typename T>
+numerical::Matrix<2, 2, T> velocity_r(const numerical::Vector<2, T>& velocity_variance)
+{
+        return numerical::make_diagonal_matrix(velocity_variance);
+}
+
+template <typename T>
+numerical::Vector<2, T> velocity_h(const numerical::Vector<6, T>& x)
+{
+        // vx = vx
+        // vy = vy
+        return {x[1], x[3]};
+}
+
+template <typename T>
+numerical::Vector<2, T> velocity_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
+{
+        return a - b;
+}
+
+//
+
+template <typename T>
 class Filter final : public Filter11<T>
 {
         const T sigma_points_alpha_;
@@ -523,6 +545,16 @@ class Filter final : public Filter11<T>
                 return filter_->update(
                         speed_h<T>, speed_r(speed.variance), numerical::Vector<1, T>(speed.value), add_x<T>,
                         speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+        }
+
+        core::UpdateInfo<2, T> update_velocity(const Measurement<2, T>& velocity, std::optional<T> gate) override
+        {
+                ASSERT(filter_);
+                ASSERT(com::check_variance(velocity.variance));
+
+                return filter_->update(
+                        velocity_h<T>, velocity_r(velocity.variance), velocity.value, add_x<T>, velocity_residual<T>,
+                        gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] numerical::Vector<2, T> position() const override
