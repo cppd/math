@@ -81,6 +81,8 @@ class Direction final : public Filter<2, T>
         Nis<T> nis_;
 
         std::optional<T> last_time_;
+        std::optional<T> last_speed_;
+        bool standing_{false};
 
         void check_time(T time) const;
 
@@ -189,6 +191,16 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
         if (!((m.position && m.position->variance) || m.direction || m.speed))
         {
                 return {};
+        }
+
+        if (m.speed)
+        {
+                const T speed = m.speed->value[0];
+                if (last_speed_)
+                {
+                        standing_ = (*last_speed_ == 0) && (speed == 0);
+                }
+                last_speed_ = speed;
         }
 
         check_time(m.time);
