@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
@@ -44,6 +45,24 @@ namespace ns::filter::filters::direction
 {
 namespace
 {
+template <typename T>
+constexpr T STANDING_SPEED{0.1};
+
+template <typename T>
+constexpr Measurement<2, T> STANDING_VELOCITY{
+        .value{        0.001,         0.001},
+        .variance{square(0.001), square(0.001)}
+};
+
+template <typename T>
+const T STANDING_FADING_MEMORY_ALPHA{1.001};
+
+template <typename T>
+const DiscreteNoiseModel<T> STANDING_POSITION_NOISE_MODEL{.variance{0}};
+
+template <typename T>
+const DiscreteNoiseModel<T> STANDING_ANGLE_NOISE_MODEL{.variance{0}};
+
 template <typename T>
 std::string measurement_description(const Measurements<2, T>& m)
 {
@@ -163,6 +182,15 @@ void Direction<T, F>::update_filter(const Measurements<2, T>& m)
         ASSERT(last_time_);
         const T dt = m.time - *last_time_;
 
+        if (standing_)
+        {
+                update_velocity<T>(
+                        filter_.get(), STANDING_VELOCITY<T>, gate_, dt, STANDING_POSITION_NOISE_MODEL<T>,
+                        STANDING_ANGLE_NOISE_MODEL<T>, STANDING_FADING_MEMORY_ALPHA<T>, nis_);
+
+                return;
+        }
+
         if (m.position)
         {
                 ASSERT(m.position->variance);
@@ -198,7 +226,7 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
                 const T speed = m.speed->value[0];
                 if (last_speed_)
                 {
-                        standing_ = (*last_speed_ == 0) && (speed == 0);
+                        standing_ = (*last_speed_ < STANDING_SPEED<T>) && (speed < STANDING_SPEED<T>);
                 }
                 last_speed_ = speed;
         }

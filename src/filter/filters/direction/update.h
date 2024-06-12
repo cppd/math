@@ -110,4 +110,21 @@ void update_non_position(
 
         ASSERT(false);
 }
+
+template <typename T, typename Filter>
+void update_velocity(
+        Filter* const filter,
+        const Measurement<2, T>& velocity,
+        const std::optional<T> gate,
+        const T dt,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const T fading_memory_alpha,
+        Nis<T>& nis)
+{
+        filter->predict(dt, position_noise_model, angle_noise_model, fading_memory_alpha);
+
+        const core::UpdateInfo<2, T> update = filter->update_velocity(velocity, gate);
+        update_nis(update, nis);
+}
 }
