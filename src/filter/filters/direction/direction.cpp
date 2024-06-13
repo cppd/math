@@ -105,6 +105,8 @@ class Direction final : public Filter<2, T>
 
         void check_time(T time) const;
 
+        void update_standing(const Measurements<2, T>& m);
+
         void reset();
 
         void update_filter(const Measurements<2, T>& m);
@@ -158,6 +160,22 @@ void Direction<T, F>::check_time(const T time) const
         {
                 error("Measurement time does not increase; from " + to_string(*last_time_) + " to " + to_string(time));
         }
+}
+
+template <typename T, template <typename> typename F>
+void Direction<T, F>::update_standing(const Measurements<2, T>& m)
+{
+        if (!m.speed)
+        {
+                return;
+        }
+
+        const T speed = m.speed->value[0];
+        if (last_speed_)
+        {
+                standing_ = (*last_speed_ < STANDING_SPEED<T>) && (speed < STANDING_SPEED<T>);
+        }
+        last_speed_ = speed;
 }
 
 template <typename T, template <typename> typename F>
@@ -221,17 +239,9 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
                 return {};
         }
 
-        if (m.speed)
-        {
-                const T speed = m.speed->value[0];
-                if (last_speed_)
-                {
-                        standing_ = (*last_speed_ < STANDING_SPEED<T>) && (speed < STANDING_SPEED<T>);
-                }
-                last_speed_ = speed;
-        }
-
         check_time(m.time);
+
+        update_standing(m);
 
         queue_.update(m, estimation);
 
