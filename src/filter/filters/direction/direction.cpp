@@ -46,16 +46,16 @@ namespace ns::filter::filters::direction
 namespace
 {
 template <typename T>
-constexpr T STANDING_SPEED{0.1};
+constexpr T STANDING_SPEED_LIMIT{0.1};
 
 template <typename T>
 constexpr Measurement<2, T> STANDING_VELOCITY{
-        .value{        0.001,         0.001},
-        .variance{square(0.001), square(0.001)}
+        .value{      0.001,       0.001},
+        .variance{square(0.1), square(0.1)}
 };
 
 template <typename T>
-const T STANDING_FADING_MEMORY_ALPHA{1.001};
+const T STANDING_FADING_MEMORY_ALPHA{1};
 
 template <typename T>
 const DiscreteNoiseModel<T> STANDING_POSITION_NOISE_MODEL{.variance{0}};
@@ -173,7 +173,7 @@ void Direction<T, F>::update_standing(const Measurements<2, T>& m)
         const T speed = m.speed->value[0];
         if (last_speed_)
         {
-                standing_ = (*last_speed_ < STANDING_SPEED<T>) && (speed < STANDING_SPEED<T>);
+                standing_ = (*last_speed_ < STANDING_SPEED_LIMIT<T>) && (speed < STANDING_SPEED_LIMIT<T>);
         }
         last_speed_ = speed;
 }
