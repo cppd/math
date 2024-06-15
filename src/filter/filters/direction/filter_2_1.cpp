@@ -428,13 +428,6 @@ class Filter final : public Filter21<T>
         const T sigma_points_alpha_;
         std::optional<core::Ukf<8, T, core::SigmaPoints<8, T>>> filter_;
 
-        [[nodiscard]] numerical::Vector<2, T> velocity() const
-        {
-                ASSERT(filter_);
-
-                return {filter_->x()[1], filter_->x()[4]};
-        }
-
         [[nodiscard]] numerical::Matrix<2, 2, T> velocity_p() const
         {
                 ASSERT(filter_);
@@ -591,6 +584,13 @@ class Filter final : public Filter21<T>
                         {filter_->p()[0, 0], filter_->p()[0, 3]},
                         {filter_->p()[3, 0], filter_->p()[3, 3]}
                 };
+        }
+
+        [[nodiscard]] numerical::Vector<2, T> velocity() const override
+        {
+                ASSERT(filter_);
+
+                return {filter_->x()[1], filter_->x()[4]};
         }
 
         [[nodiscard]] T speed() const override
