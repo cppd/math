@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/measurement.h>
 #include <src/filter/filters/noise_model.h>
 #include <src/filter/utility/instantiation.h>
+#include <src/numerical/vector.h>
 
 #include <cstddef>
 #include <memory>
@@ -47,12 +48,12 @@ namespace
 {
 template <typename T>
 constexpr T STANDING_SPEED_LIMIT{0.1};
-
 template <typename T>
-constexpr Measurement<2, T> STANDING_VELOCITY{
-        .value{      0.001,       0.001},
-        .variance{square(0.1), square(0.1)}
-};
+constexpr T STANDING_VELOCITY_MAGNITUDE = 0.001;
+template <typename T>
+constexpr numerical::Vector<2, T> STANDING_VELOCITY{0.001, 0.001};
+template <typename T>
+constexpr numerical::Vector<2, T> STANDING_VELOCITY_VARIANCE{square(0.1), square(0.1)};
 
 template <typename T>
 const T STANDING_FADING_MEMORY_ALPHA{1};
@@ -101,11 +102,14 @@ class Direction final : public Filter<2, T>
 
         std::optional<T> last_time_;
         std::optional<T> last_speed_;
+
+        std::optional<numerical::Vector<2, T>> standing_velocity_;
         bool standing_{false};
 
         void check_time(T time) const;
 
         void update_standing(const Measurements<2, T>& m);
+        void update_standing_velocity();
 
         void reset();
 
@@ -179,6 +183,26 @@ void Direction<T, F>::update_standing(const Measurements<2, T>& m)
 }
 
 template <typename T, template <typename> typename F>
+void Direction<T, F>::update_standing_velocity()
+{
+        if (standing_)
+        {
+                if (!standing_velocity_)
+                {
+                        standing_velocity_ = STANDING_VELOCITY_MAGNITUDE<T> * filter_->velocity().normalized();
+                        if (*standing_velocity_ == numerical::Vector<2, T>(0, 0) || !is_finite(*standing_velocity_))
+                        {
+                                standing_velocity_ = STANDING_VELOCITY<T>;
+                        }
+                }
+        }
+        else
+        {
+                standing_velocity_.reset();
+        }
+}
+
+template <typename T, template <typename> typename F>
 void Direction<T, F>::reset()
 {
         queue_.update_filter(
@@ -202,9 +226,11 @@ void Direction<T, F>::update_filter(const Measurements<2, T>& m)
 
         if (standing_)
         {
+                ASSERT(standing_velocity_);
                 update_velocity<T>(
-                        filter_.get(), STANDING_VELOCITY<T>, gate_, dt, STANDING_POSITION_NOISE_MODEL<T>,
-                        STANDING_ANGLE_NOISE_MODEL<T>, STANDING_FADING_MEMORY_ALPHA<T>, nis_);
+                        filter_.get(), {.value = *standing_velocity_, .variance = STANDING_VELOCITY_VARIANCE<T>}, gate_,
+                        dt, STANDING_POSITION_NOISE_MODEL<T>, STANDING_ANGLE_NOISE_MODEL<T>,
+                        STANDING_FADING_MEMORY_ALPHA<T>, nis_);
 
                 return;
         }
@@ -264,6 +290,8 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
                          .speed_p = estimation.speed_p()}
                 };
         }
+
+        update_standing_velocity();
 
         update_filter(m);
 
