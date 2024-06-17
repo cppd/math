@@ -47,22 +47,16 @@ namespace ns::filter::filters::direction
 namespace
 {
 template <typename T>
-constexpr T STANDING_SPEED_LIMIT{0.1};
-template <typename T>
-constexpr T STANDING_VELOCITY_MAGNITUDE = 0.001;
-template <typename T>
-constexpr numerical::Vector<2, T> STANDING_VELOCITY{0.001, 0.001};
-template <typename T>
-constexpr numerical::Vector<2, T> STANDING_VELOCITY_VARIANCE{square(0.1), square(0.1)};
-
-template <typename T>
-const T STANDING_FADING_MEMORY_ALPHA{1};
-
-template <typename T>
-const DiscreteNoiseModel<T> STANDING_POSITION_NOISE_MODEL{.variance{0}};
-
-template <typename T>
-const DiscreteNoiseModel<T> STANDING_ANGLE_NOISE_MODEL{.variance{0}};
+struct Standing final
+{
+        static constexpr T SPEED_LIMIT{0.1};
+        static constexpr T VELOCITY_MAGNITUDE = 0.001;
+        static constexpr numerical::Vector<2, T> VELOCITY_DEFAULT{0.001, 0.001};
+        static constexpr numerical::Vector<2, T> VELOCITY_VARIANCE{square(0.1), square(0.1)};
+        static constexpr T FADING_MEMORY_ALPHA{1};
+        static constexpr DiscreteNoiseModel<T> NOISE_MODEL_POSITION{.variance{0}};
+        static constexpr DiscreteNoiseModel<T> NOISE_MODEL_ANGLE{.variance{0}};
+};
 
 template <typename T>
 std::string measurement_description(const Measurements<2, T>& m)
@@ -177,7 +171,7 @@ void Direction<T, F>::update_standing(const Measurements<2, T>& m)
         const T speed = m.speed->value[0];
         if (last_speed_)
         {
-                standing_ = (*last_speed_ < STANDING_SPEED_LIMIT<T>) && (speed < STANDING_SPEED_LIMIT<T>);
+                standing_ = (*last_speed_ < Standing<T>::SPEED_LIMIT) && (speed < Standing<T>::SPEED_LIMIT);
         }
         last_speed_ = speed;
 }
@@ -189,10 +183,10 @@ void Direction<T, F>::update_standing_velocity()
         {
                 if (!standing_velocity_)
                 {
-                        standing_velocity_ = STANDING_VELOCITY_MAGNITUDE<T> * filter_->velocity().normalized();
+                        standing_velocity_ = Standing<T>::VELOCITY_MAGNITUDE * filter_->velocity().normalized();
                         if (*standing_velocity_ == numerical::Vector<2, T>(0, 0) || !is_finite(*standing_velocity_))
                         {
-                                standing_velocity_ = STANDING_VELOCITY<T>;
+                                standing_velocity_ = Standing<T>::VELOCITY_DEFAULT;
                         }
                 }
         }
@@ -228,9 +222,9 @@ void Direction<T, F>::update_filter(const Measurements<2, T>& m)
         {
                 ASSERT(standing_velocity_);
                 update_velocity<T>(
-                        filter_.get(), {.value = *standing_velocity_, .variance = STANDING_VELOCITY_VARIANCE<T>}, gate_,
-                        dt, STANDING_POSITION_NOISE_MODEL<T>, STANDING_ANGLE_NOISE_MODEL<T>,
-                        STANDING_FADING_MEMORY_ALPHA<T>, nis_);
+                        filter_.get(), {.value = *standing_velocity_, .variance = Standing<T>::VELOCITY_VARIANCE},
+                        gate_, dt, Standing<T>::NOISE_MODEL_POSITION, Standing<T>::NOISE_MODEL_ANGLE,
+                        Standing<T>::FADING_MEMORY_ALPHA, nis_);
 
                 return;
         }
