@@ -47,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -130,27 +131,28 @@ class Impl final : public VolumeObject
         std::optional<int> version_;
 
         void buffer_set_parameters(
-                float window_min,
-                float window_max,
+                const float window_min,
+                const float window_max,
                 const float volume_alpha_coefficient,
-                float isosurface_alpha,
+                const float isosurface_alpha,
                 const bool isosurface,
-                float isovalue,
+                const float isovalue,
                 const color::Color& color) const
         {
-                constexpr float EPS = Limits<float>::epsilon();
-                window_min = std::clamp(window_min, 0.0f, 1 - EPS);
-                window_max = std::clamp(window_max, window_min + EPS, 1.0f);
-
-                const float window_offset = window_min;
-                const float window_scale = 1 / (window_max - window_min);
-
-                isovalue = std::clamp(isovalue, 0.0f, 1.0f);
-                isosurface_alpha = std::clamp(isosurface_alpha, 0.0f, 1.0f);
+                const auto [window_offset, window_scale] = [&]
+                {
+                        constexpr float EPS = Limits<float>::epsilon();
+                        const float min = std::clamp(window_min, 0.0f, 1 - EPS);
+                        const float max = std::clamp(window_max, min + EPS, 1.0f);
+                        const float offset = min;
+                        const float scale = 1 / (max - min);
+                        return std::tuple{offset, scale};
+                }();
 
                 buffer_.set_parameters(
                         *transfer_command_pool_, *transfer_queue_, window_offset, window_scale,
-                        volume_alpha_coefficient, isosurface_alpha, isosurface, isovalue, color.rgb32().clamp(0, 1));
+                        volume_alpha_coefficient, std::clamp(isosurface_alpha, 0.0f, 1.0f), isosurface,
+                        std::clamp(isovalue, 0.0f, 1.0f), color.rgb32().clamp(0, 1));
         }
 
         void buffer_set_lighting(const float ambient, const float metalness, const float roughness) const
