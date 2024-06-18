@@ -274,7 +274,7 @@ public:
         Impl(const unsigned long long x, const unsigned long long y)
                 : plan_(x, y),
                   memory_(x * y),
-                  inv_k_(1.0f / (x * y))
+                  inv_k_(1.0 / (x * y))
         {
         }
 };

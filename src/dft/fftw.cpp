@@ -163,7 +163,7 @@ public:
                   out_(n1 * n2),
                   forward_(false, n1, n2, &in_, &out_),
                   backward_(true, n1, n2, &in_, &out_),
-                  inv_k_(1.0f / (n1 * n2))
+                  inv_k_(1.0 / (n1 * n2))
         {
         }
 };
