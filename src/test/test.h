@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -46,28 +47,26 @@ class Tests final
         std::unordered_map<std::string, Test> large_tests_;
         std::unordered_map<std::string, Test> performance_tests_;
 
-        template <typename T, typename S>
-        void add(const Type type, S&& name, T* const function)
+        template <typename T>
+        void add(const Type type, std::string name, T* const function)
         {
                 const bool inserted = [&]
                 {
                         switch (type)
                         {
                         case Type::SMALL:
-                                return small_tests_.emplace(std::forward<S>(name), function).second;
+                                return small_tests_.emplace(std::move(name), function).second;
                         case Type::LARGE:
-                                return large_tests_.emplace(std::forward<S>(name), function).second;
+                                return large_tests_.emplace(std::move(name), function).second;
                         case Type::PERFORMANCE:
-                                return performance_tests_.emplace(std::forward<S>(name), function).second;
+                                return performance_tests_.emplace(std::move(name), function).second;
                         }
-                        error_fatal(
-                                "Unknown test type " + std::to_string(enum_to_int(type)) + ", test name "
-                                + std::string(std::forward<S>(name)));
+                        error_fatal("Unknown test type " + std::to_string(enum_to_int(type)) + ", test name " + name);
                 }();
 
                 if (!inserted)
                 {
-                        error_fatal("Not unique test name " + std::string(std::forward<S>(name)));
+                        error_fatal("Not unique test name " + name);
                 }
         }
 
@@ -110,12 +109,12 @@ struct AddTest final
         AddTest(AddTest&&) = delete;
         AddTest& operator=(AddTest&&) = delete;
 
-        template <typename T, typename S>
-        AddTest(const Type type, S&& name, T* const function) noexcept
+        template <typename T>
+        AddTest(const Type type, std::string name, T* const function) noexcept
         {
                 try
                 {
-                        Tests::instance_impl().add(type, std::forward<S>(name), function);
+                        Tests::instance_impl().add(type, std::move(name), function);
                 }
                 catch (...)
                 {
