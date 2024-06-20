@@ -47,26 +47,28 @@ class Tests final
         std::unordered_map<std::string, Test> large_tests_;
         std::unordered_map<std::string, Test> performance_tests_;
 
-        template <typename T>
-        void add(const Type type, std::string name, T* const function)
+        template <typename T, typename Name>
+        void add(const Type type, Name&& name, T* const function)
         {
                 const bool inserted = [&]
                 {
                         switch (type)
                         {
                         case Type::SMALL:
-                                return small_tests_.emplace(std::move(name), function).second;
+                                return small_tests_.emplace(std::forward<Name>(name), function).second;
                         case Type::LARGE:
-                                return large_tests_.emplace(std::move(name), function).second;
+                                return large_tests_.emplace(std::forward<Name>(name), function).second;
                         case Type::PERFORMANCE:
-                                return performance_tests_.emplace(std::move(name), function).second;
+                                return performance_tests_.emplace(std::forward<Name>(name), function).second;
                         }
-                        error_fatal("Unknown test type " + std::to_string(enum_to_int(type)) + ", test name " + name);
+                        error_fatal(
+                                "Unknown test type " + std::to_string(enum_to_int(type)) + ", test name "
+                                + std::string(std::forward<Name>(name)));
                 }();
 
                 if (!inserted)
                 {
-                        error_fatal("Not unique test name " + name);
+                        error_fatal("Not unique test name " + std::string(std::forward<Name>(name)));
                 }
         }
 
@@ -109,12 +111,12 @@ struct AddTest final
         AddTest(AddTest&&) = delete;
         AddTest& operator=(AddTest&&) = delete;
 
-        template <typename T>
-        AddTest(const Type type, std::string name, T* const function) noexcept
+        template <typename T, typename Name>
+        AddTest(const Type type, Name&& name, T* const function) noexcept
         {
                 try
                 {
-                        Tests::instance_impl().add(type, std::move(name), function);
+                        Tests::instance_impl().add(type, std::forward<Name>(name), function);
                 }
                 catch (...)
                 {
@@ -123,16 +125,13 @@ struct AddTest final
         }
 
         template <typename T>
-        explicit AddTest(T&& tests) noexcept
+        explicit AddTest(const T& tests) noexcept
         {
                 try
                 {
-                        for (auto&& test : std::forward<T>(tests))
+                        for (const auto& test : tests)
                         {
-                                Tests::instance_impl().add(
-                                        std::get<0>(std::forward<decltype(test)>(test)),
-                                        std::get<1>(std::forward<decltype(test)>(test)),
-                                        std::get<2>(std::forward<decltype(test)>(test)));
+                                Tests::instance_impl().add(std::get<0>(test), std::get<1>(test), std::get<2>(test));
                         }
                 }
                 catch (...)
