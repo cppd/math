@@ -57,38 +57,38 @@ void check_size(
         }
 }
 
-void load_image(QImage* const image, const ColorFormat color_format, const std::span<std::byte> bytes)
+void load_image(const QImage& image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
-        check_size(image->width(), image->height(), color_format, bytes.size());
+        check_size(image.width(), image.height(), color_format, bytes.size());
 
         const std::size_t pixel_size = format_pixel_size_in_bytes(color_format);
-        const std::size_t row_size = pixel_size * image->width();
-        ASSERT(row_size <= static_cast<std::size_t>(image->bytesPerLine()));
+        const std::size_t row_size = pixel_size * image.width();
+        ASSERT(row_size <= static_cast<std::size_t>(image.bytesPerLine()));
 
         std::byte* ptr = bytes.data();
-        for (int row = 0, height = image->height(); row < height; ++row, ptr += row_size)
+        for (int row = 0, height = image.height(); row < height; ++row, ptr += row_size)
         {
-                std::memcpy(ptr, image->scanLine(row), row_size);
+                std::memcpy(ptr, image.constScanLine(row), row_size);
         }
 }
 
-void load_image_alpha(QImage* const image, const ColorFormat color_format, const std::span<std::byte> bytes)
+void load_image_alpha(const QImage& image, const ColorFormat color_format, const std::span<std::byte> bytes)
 {
         ASSERT(color_format == ColorFormat::R16G16B16_SRGB);
 
-        check_size(image->width(), image->height(), color_format, bytes.size());
+        check_size(image.width(), image.height(), color_format, bytes.size());
 
         const std::size_t pixel_size = format_pixel_size_in_bytes(color_format);
         const std::size_t image_pixel_size = pixel_size + sizeof(std::uint16_t);
-        ASSERT(image_pixel_size * image->width() <= static_cast<std::size_t>(image->bytesPerLine()));
+        ASSERT(image_pixel_size * image.width() <= static_cast<std::size_t>(image.bytesPerLine()));
 
-        const int width = image->width();
-        const int height = image->height();
+        const int width = image.width();
+        const int height = image.height();
 
         std::byte* ptr = bytes.data();
         for (int row = 0; row < height; ++row)
         {
-                const unsigned char* image_ptr = image->constScanLine(row);
+                const unsigned char* image_ptr = image.constScanLine(row);
                 for (int col = 0; col < width; ++col)
                 {
                         std::memcpy(ptr, image_ptr, pixel_size);
@@ -108,7 +108,7 @@ void load_1(QImage&& image, const ColorFormat color_format, const std::span<std:
                 {
                         image = image.convertToFormat(QImage::Format_Grayscale8);
                 }
-                load_image(&image, color_format, bytes);
+                load_image(image, color_format, bytes);
         }
         else if (color_format == ColorFormat::R16)
         {
@@ -116,7 +116,7 @@ void load_1(QImage&& image, const ColorFormat color_format, const std::span<std:
                 {
                         image = image.convertToFormat(QImage::Format_Grayscale16);
                 }
-                load_image(&image, color_format, bytes);
+                load_image(image, color_format, bytes);
         }
         else
         {
@@ -134,7 +134,7 @@ void load_3(QImage&& image, const ColorFormat color_format, const std::span<std:
                 {
                         image = image.convertToFormat(QImage::Format_RGB888);
                 }
-                load_image(&image, color_format, bytes);
+                load_image(image, color_format, bytes);
         }
         else if (color_format == ColorFormat::R16G16B16_SRGB)
         {
@@ -142,7 +142,7 @@ void load_3(QImage&& image, const ColorFormat color_format, const std::span<std:
                 {
                         image = image.convertToFormat(QImage::Format_RGBX64);
                 }
-                load_image_alpha(&image, color_format, bytes);
+                load_image_alpha(image, color_format, bytes);
         }
         else
         {
@@ -160,7 +160,7 @@ void load_4(QImage&& image, const ColorFormat color_format, const std::span<std:
                 {
                         image = image.convertToFormat(QImage::Format_RGBA8888);
                 }
-                load_image(&image, color_format, bytes);
+                load_image(image, color_format, bytes);
         }
         else if (color_format == ColorFormat::R16G16B16A16_SRGB)
         {
@@ -168,7 +168,7 @@ void load_4(QImage&& image, const ColorFormat color_format, const std::span<std:
                 {
                         image = image.convertToFormat(QImage::Format_RGBA64);
                 }
-                load_image(&image, color_format, bytes);
+                load_image(image, color_format, bytes);
         }
         else
         {
