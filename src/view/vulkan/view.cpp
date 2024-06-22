@@ -539,7 +539,7 @@ public:
                 }
         }
 
-        void exec(std::vector<Command>&& commands)
+        void exec(const std::vector<Command>& commands)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -547,7 +547,8 @@ public:
                 {
                         cmd(v);
                 };
-                for (const view::Command& command : commands)
+
+                for (const Command& command : commands)
                 {
                         std::visit(visitor, command);
                 }
@@ -561,6 +562,7 @@ public:
                 {
                         info(v);
                 };
+
                 for (const Info& info : infos)
                 {
                         std::visit(visitor, info);
