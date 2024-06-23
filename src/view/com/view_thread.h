@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "thread_queue.h"
+
 #include <src/com/error.h>
 #include <src/com/message.h>
 #include <src/view/event.h>
@@ -26,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <condition_variable>
 #include <exception>
 #include <mutex>
-#include <queue>
 #include <string>
 #include <thread>
 #include <utility>
@@ -36,38 +37,6 @@ namespace ns::view
 {
 namespace view_thread_implementation
 {
-template <typename T>
-class ThreadQueue final
-{
-        std::mutex lock_;
-        std::queue<T> queue_;
-
-public:
-        template <typename A>
-        void push(A&& e)
-        {
-                const std::lock_guard lg(lock_);
-                queue_.push(std::forward<A>(e));
-        }
-
-        std::vector<T> pop()
-        {
-                static_assert(std::is_nothrow_move_assignable_v<T>);
-                static_assert(std::is_nothrow_destructible_v<T>);
-
-                std::vector<T> res;
-                {
-                        const std::lock_guard lg(lock_);
-                        while (!queue_.empty())
-                        {
-                                res.push_back(std::move(queue_.front()));
-                                queue_.pop();
-                        }
-                }
-                return res;
-        }
-};
-
 class QueueEvent final
 {
         const std::vector<Info>* info_;
