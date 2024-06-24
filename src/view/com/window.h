@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <tuple>
 
-namespace ns::view
+namespace ns::view::com
 {
 std::tuple<numerical::Region<2, int>, std::optional<numerical::Region<2, int>>> window_position_and_size(
         bool two_windows,

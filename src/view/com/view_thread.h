@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::view
+namespace ns::view::com
 {
 namespace view_thread_implementation
 {

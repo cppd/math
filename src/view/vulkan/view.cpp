@@ -137,16 +137,16 @@ class Impl final
                 device_graphics_.device().properties())};
 
         std::optional<PixelSizes> pixel_sizes_;
-        FrameRate frame_rate_;
+        com::FrameRate frame_rate_;
 
         ClearBuffer clear_buffer_;
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
 
         ImageProcess image_process_;
-        Camera camera_;
-        Mouse mouse_;
-        ClipPlane clip_plane_;
+        com::Camera camera_;
+        com::Mouse mouse_;
+        com::ClipPlane clip_plane_;
         ViewProcess view_process_;
 
         std::optional<vulkan::Swapchain> swapchain_;
@@ -275,7 +275,7 @@ class Impl final
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
                         graphics_compute_command_pool_, device_graphics_.graphics_compute_queue(0));
 
-                const auto [window_1, window_2] = window_position_and_size(
+                const auto [window_1, window_2] = com::window_position_and_size(
                         image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
                         pixel_sizes_->frame);
 
@@ -576,6 +576,6 @@ std::unique_ptr<View> create_view_impl(
         const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands)
 {
-        return std::make_unique<ViewThread<Impl>>(std::move(initial_commands), window, window_size_in_mm);
+        return std::make_unique<com::ViewThread<Impl>>(std::move(initial_commands), window, window_size_in_mm);
 }
 }

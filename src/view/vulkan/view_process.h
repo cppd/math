@@ -38,7 +38,7 @@ class ViewProcess final
         ClearBuffer* clear_buffer_;
         gpu::renderer::Renderer* renderer_;
         gpu::text_writer::View* text_;
-        Camera* camera_;
+        com::Camera* camera_;
         std::function<void()> create_swapchain_;
         std::function<void(int)> set_sample_count_;
         bool vertical_sync_;
@@ -198,7 +198,7 @@ public:
                 ClearBuffer* const clear_buffer,
                 gpu::renderer::Renderer* const renderer,
                 gpu::text_writer::View* const text,
-                Camera* const camera,
+                com::Camera* const camera,
                 const bool vertical_sync,
                 std::function<void()> create_swapchain,
                 std::function<void(int)> set_sample_count)

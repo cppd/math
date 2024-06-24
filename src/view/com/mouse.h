@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <unordered_map>
 
-namespace ns::view
+namespace ns::view::com
 {
 class Mouse final
 {

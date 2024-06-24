@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <variant>
 
-namespace ns::view
+namespace ns::view::com
 {
 Mouse::Mouse(Camera* const camera)
         : camera_(camera)

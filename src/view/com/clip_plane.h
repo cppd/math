@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <optional>
 
-namespace ns::view
+namespace ns::view::com
 {
 class ClipPlane final
 {

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <tuple>
 
-namespace ns::view
+namespace ns::view::com
 {
 namespace
 {
