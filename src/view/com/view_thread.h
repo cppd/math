@@ -37,7 +37,7 @@ namespace ns::view::com
 {
 namespace view_thread_implementation
 {
-class QueueEvent final
+class ReceiveInfo final
 {
         const std::vector<Info>* info_;
 
@@ -46,7 +46,7 @@ class QueueEvent final
         bool received_ = false;
 
 public:
-        explicit QueueEvent(const std::vector<Info>* const info)
+        explicit ReceiveInfo(const std::vector<Info>* const info)
                 : info_(info)
         {
         }
@@ -78,48 +78,48 @@ public:
 };
 
 template <typename T>
-class EventQueues final
+class ThreadEvents final
 {
         ThreadQueue<Command> send_queue_;
-        ThreadQueue<QueueEvent*> receive_queue_;
+        ThreadQueue<ReceiveInfo*> receive_queue_;
 
 public:
-        explicit EventQueues(std::vector<Command>&& initial_events)
+        explicit ThreadEvents(std::vector<Command>&& commands)
         {
-                for (Command& event : initial_events)
+                for (Command& command : commands)
                 {
-                        send(std::move(event));
+                        send(std::move(command));
                 }
         }
 
-        void send(Command&& event)
+        void send(Command&& command)
         {
-                send_queue_.push(std::move(event));
+                send_queue_.push(std::move(command));
         }
 
         void receive(const std::vector<Info>& info)
         {
-                QueueEvent v(&info);
+                ReceiveInfo v(&info);
                 receive_queue_.push(&v);
                 v.wait();
         }
 
-        void dispatch_events(T* const view)
+        void dispatch(T* const view)
         {
                 view->exec(send_queue_.pop());
 
-                for (QueueEvent* const event : receive_queue_.pop())
+                for (ReceiveInfo* const info : receive_queue_.pop())
                 {
-                        view->receive(event->info());
-                        event->notify();
+                        view->receive(info->info());
+                        info->notify();
                 }
         }
 
-        void dispatch_events()
+        void dispatch()
         {
-                for (QueueEvent* const event : receive_queue_.pop())
+                for (ReceiveInfo* const info : receive_queue_.pop())
                 {
-                        event->notify();
+                        info->notify();
                 }
         }
 };
@@ -129,35 +129,35 @@ template <typename T>
 class ViewThread final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
-        view_thread_implementation::EventQueues<T> event_queues_;
+
+        view_thread_implementation::ThreadEvents<T> thread_events_;
         std::thread thread_;
         std::atomic_bool stop_{false};
         std::atomic_bool started_{false};
 
         void send(Command&& event) override
         {
-                event_queues_.send(std::move(event));
+                thread_events_.send(std::move(event));
         }
 
         void receive(const std::vector<Info>& info) override
         {
-                event_queues_.receive(info);
+                thread_events_.receive(info);
         }
 
         template <typename... Args>
-        void thread_function(Args&&... args)
+        void thread_function(const Args&... args)
         {
                 try
                 {
-                        T view(std::forward<Args>(args)...);
+                        T view(args...);
 
                         started_ = true;
-
                         try
                         {
                                 while (!stop_)
                                 {
-                                        event_queues_.dispatch_events(&view);
+                                        thread_events_.dispatch(&view);
                                         view.render();
                                 }
                         }
@@ -185,7 +185,7 @@ class ViewThread final : public View
                 {
                         while (!stop_)
                         {
-                                event_queues_.dispatch_events();
+                                thread_events_.dispatch();
                         }
                 }
                 catch (const std::exception& e)
@@ -212,7 +212,7 @@ class ViewThread final : public View
 public:
         template <typename... Args>
         explicit ViewThread(std::vector<Command>&& initial_commands, const Args&... args)
-                : event_queues_(std::move(initial_commands))
+                : thread_events_(std::move(initial_commands))
         {
                 try
                 {
