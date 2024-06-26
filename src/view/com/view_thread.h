@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "thread_queue.h"
+#include "thread_events.h"
 
 #include <src/com/error.h>
 #include <src/com/message.h>
@@ -25,9 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/view.h>
 
 #include <atomic>
-#include <condition_variable>
 #include <exception>
-#include <mutex>
 #include <string>
 #include <thread>
 #include <utility>
@@ -35,102 +33,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view::com
 {
-namespace view_thread_implementation
-{
-class ReceiveInfo final
-{
-        const std::vector<Info>* info_;
-
-        std::mutex mutex_;
-        std::condition_variable cv_;
-        bool received_ = false;
-
-public:
-        explicit ReceiveInfo(const std::vector<Info>* const info)
-                : info_(info)
-        {
-        }
-
-        [[nodiscard]] const std::vector<Info>& info() const
-        {
-                return *info_;
-        }
-
-        void wait()
-        {
-                std::unique_lock lock(mutex_);
-                cv_.wait(
-                        lock,
-                        [&]
-                        {
-                                return received_;
-                        });
-        }
-
-        void notify()
-        {
-                {
-                        const std::lock_guard<std::mutex> lock(mutex_);
-                        received_ = true;
-                }
-                cv_.notify_all();
-        }
-};
-
-template <typename T>
-class ThreadEvents final
-{
-        ThreadQueue<Command> send_queue_;
-        ThreadQueue<ReceiveInfo*> receive_queue_;
-
-public:
-        explicit ThreadEvents(std::vector<Command>&& commands)
-        {
-                for (Command& command : commands)
-                {
-                        send(std::move(command));
-                }
-        }
-
-        void send(Command&& command)
-        {
-                send_queue_.push(std::move(command));
-        }
-
-        void receive(const std::vector<Info>& info)
-        {
-                ReceiveInfo v(&info);
-                receive_queue_.push(&v);
-                v.wait();
-        }
-
-        void dispatch(T* const view)
-        {
-                view->exec(send_queue_.pop());
-
-                for (ReceiveInfo* const info : receive_queue_.pop())
-                {
-                        view->receive(info->info());
-                        info->notify();
-                }
-        }
-
-        void dispatch()
-        {
-                for (ReceiveInfo* const info : receive_queue_.pop())
-                {
-                        info->notify();
-                }
-        }
-};
-}
-
 template <typename T>
 class ViewThread final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        view_thread_implementation::ThreadEvents<T> thread_events_;
+        ThreadEvents<T> thread_events_;
         std::thread thread_;
         std::atomic_bool stop_{false};
         std::atomic_bool started_{false};
