@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 
-namespace ns::view
+namespace ns::view::view
 {
 vulkan::RenderPass render_pass_swapchain_color(
         const VkDevice device,

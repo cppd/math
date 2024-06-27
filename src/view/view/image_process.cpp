@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <variant>
 
-namespace ns::view
+namespace ns::view::view
 {
 vulkan::DeviceFunctionality ImageProcess::device_functionality()
 {

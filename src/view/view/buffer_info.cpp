@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::view
+namespace ns::view::view
 {
 void render_buffer_check(
         const std::vector<vulkan::ImageWithMemory>& color,

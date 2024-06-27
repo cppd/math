@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <set>
 
-namespace ns::view
+namespace ns::view::view
 {
 PixelSizes pixel_sizes(
         const double text_size_in_points,

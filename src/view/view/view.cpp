@@ -66,7 +66,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <variant>
 #include <vector>
 
-namespace ns::view
+namespace ns::view::view
 {
 namespace
 {
@@ -571,7 +571,7 @@ public:
 };
 }
 
-std::unique_ptr<View> create_view_impl(
+std::unique_ptr<View> create_view(
         const window::WindowID window,
         const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands)

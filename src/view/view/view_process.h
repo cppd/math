@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <variant>
 
-namespace ns::view
+namespace ns::view::view
 {
 class ViewProcess final
 {

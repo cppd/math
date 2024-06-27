@@ -17,18 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/buffers.h>
+#include <src/view/event.h>
+#include <src/view/view.h>
+#include <src/window/handle.h>
 
-#include <string>
+#include <array>
+#include <memory>
 #include <vector>
 
-namespace ns::view
+namespace ns::view::view
 {
-void render_buffer_check(
-        const std::vector<vulkan::ImageWithMemory>& color,
-        const std::vector<vulkan::DepthImageWithMemory>& depth);
-
-[[nodiscard]] std::string render_buffer_info(
-        const std::vector<vulkan::ImageWithMemory>& color,
-        const std::vector<vulkan::DepthImageWithMemory>& depth);
+std::unique_ptr<View> create_view(
+        window::WindowID window,
+        const std::array<double, 2>& window_size_in_mm,
+        std::vector<Command>&& initial_commands);
 }

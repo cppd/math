@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan_core.h>
 
-namespace ns::view
+namespace ns::view::view
 {
 vulkan::RenderPass render_pass_swapchain_color(
         VkDevice device,

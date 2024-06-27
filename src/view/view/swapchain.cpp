@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <vector>
 
-namespace ns::view
+namespace ns::view::view
 {
 Swapchain::Swapchain(
         const VkDevice device,
