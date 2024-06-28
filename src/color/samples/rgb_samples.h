@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::color
+namespace ns::color::samples
 {
 inline constexpr int RGB_SAMPLES_MIN_WAVELENGTH = 380;
 inline constexpr int RGB_SAMPLES_MAX_WAVELENGTH = 720;

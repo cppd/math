@@ -28,7 +28,7 @@ Journal of Computer Graphics Techniques, Vol. 2, No. 2, 2013.
 #include <cmath>
 #include <type_traits>
 
-namespace ns::color
+namespace ns::color::samples
 {
 namespace xyz_functions_implementation
 {

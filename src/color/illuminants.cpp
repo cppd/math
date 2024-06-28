@@ -32,8 +32,8 @@ namespace ns::color
 {
 namespace
 {
-static_assert(DAYLIGHT_SAMPLES_MIN_WAVELENGTH <= Spectrum::WAVELENGTH_MIN);
-static_assert(DAYLIGHT_SAMPLES_MAX_WAVELENGTH >= Spectrum::WAVELENGTH_MAX);
+static_assert(samples::DAYLIGHT_SAMPLES_MIN_WAVELENGTH <= Spectrum::WAVELENGTH_MIN);
+static_assert(samples::DAYLIGHT_SAMPLES_MAX_WAVELENGTH >= Spectrum::WAVELENGTH_MAX);
 
 template <typename F>
 Spectrum create_spectrum(const F& f)
@@ -58,7 +58,7 @@ const Spectrum& daylight_d65()
         static const Spectrum spectrum = create_spectrum(
                 [](int from, int to, int count)
                 {
-                        return daylight_d65_samples(from, to, count);
+                        return samples::daylight_d65_samples(from, to, count);
                 });
 
         return spectrum;
@@ -66,12 +66,12 @@ const Spectrum& daylight_d65()
 
 double daylight_min_cct()
 {
-        return DAYLIGHT_SAMPLES_MIN_CCT;
+        return samples::DAYLIGHT_SAMPLES_MIN_CCT;
 }
 
 double daylight_max_cct()
 {
-        return DAYLIGHT_SAMPLES_MAX_CCT;
+        return samples::DAYLIGHT_SAMPLES_MAX_CCT;
 }
 
 Spectrum daylight(const double cct)
@@ -79,7 +79,7 @@ Spectrum daylight(const double cct)
         return create_spectrum(
                 [&](const int from, const int to, const int count)
                 {
-                        return daylight_samples(cct, from, to, count);
+                        return samples::daylight_samples(cct, from, to, count);
                 });
 }
 
@@ -88,7 +88,7 @@ const Spectrum& blackbody_a()
         static const Spectrum spectrum = create_spectrum(
                 [](const int from, const int to, const int count)
                 {
-                        return blackbody_a_samples(from, to, count);
+                        return samples::blackbody_a_samples(from, to, count);
                 });
 
         return spectrum;
@@ -99,7 +99,7 @@ Spectrum blackbody(const double t)
         return create_spectrum(
                 [&](const int from, const int to, const int count)
                 {
-                        return blackbody_samples(t, from, to, count);
+                        return samples::blackbody_samples(t, from, to, count);
                 });
 }
 }

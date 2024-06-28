@@ -39,7 +39,7 @@ Elsevier, 2017.
 #include <type_traits>
 #include <vector>
 
-namespace ns::color
+namespace ns::color::samples
 {
 namespace
 {

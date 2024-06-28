@@ -133,14 +133,14 @@ public:
 template <typename T, std::size_t N>
 class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 {
-        static constexpr XYZ XYZ_TYPE = XYZ_31;
+        static constexpr samples::XYZ XYZ_TYPE = samples::XYZ_31;
         static constexpr int FROM = 380;
         static constexpr int TO = 720;
 
-        static_assert(FROM >= XYZ_SAMPLES_MIN_WAVELENGTH);
-        static_assert(FROM >= RGB_SAMPLES_MIN_WAVELENGTH);
-        static_assert(TO <= XYZ_SAMPLES_MAX_WAVELENGTH);
-        static_assert(TO <= RGB_SAMPLES_MAX_WAVELENGTH);
+        static_assert(FROM >= samples::XYZ_SAMPLES_MIN_WAVELENGTH);
+        static_assert(FROM >= samples::RGB_SAMPLES_MIN_WAVELENGTH);
+        static_assert(TO <= samples::XYZ_SAMPLES_MAX_WAVELENGTH);
+        static_assert(TO <= samples::RGB_SAMPLES_MAX_WAVELENGTH);
         static_assert(N > 3);
 
         using Base = Samples<SpectrumSamples<T, N>, N, T>;
@@ -180,29 +180,29 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
                 Functions functions;
 
-                copy(&functions.x, cie_x_samples<XYZ_TYPE>(FROM, TO, N));
-                copy(&functions.y, cie_y_samples<XYZ_TYPE>(FROM, TO, N));
-                copy(&functions.z, cie_z_samples<XYZ_TYPE>(FROM, TO, N));
+                copy(&functions.x, samples::cie_x_samples<XYZ_TYPE>(FROM, TO, N));
+                copy(&functions.y, samples::cie_y_samples<XYZ_TYPE>(FROM, TO, N));
+                copy(&functions.z, samples::cie_z_samples<XYZ_TYPE>(FROM, TO, N));
 
                 {
                         Colors& c = functions.reflectance;
-                        copy(&c.white, rgb_reflectance_white_samples(FROM, TO, N));
-                        copy(&c.cyan, rgb_reflectance_cyan_samples(FROM, TO, N));
-                        copy(&c.magenta, rgb_reflectance_magenta_samples(FROM, TO, N));
-                        copy(&c.yellow, rgb_reflectance_yellow_samples(FROM, TO, N));
-                        copy(&c.red, rgb_reflectance_red_samples(FROM, TO, N));
-                        copy(&c.green, rgb_reflectance_green_samples(FROM, TO, N));
-                        copy(&c.blue, rgb_reflectance_blue_samples(FROM, TO, N));
+                        copy(&c.white, samples::rgb_reflectance_white_samples(FROM, TO, N));
+                        copy(&c.cyan, samples::rgb_reflectance_cyan_samples(FROM, TO, N));
+                        copy(&c.magenta, samples::rgb_reflectance_magenta_samples(FROM, TO, N));
+                        copy(&c.yellow, samples::rgb_reflectance_yellow_samples(FROM, TO, N));
+                        copy(&c.red, samples::rgb_reflectance_red_samples(FROM, TO, N));
+                        copy(&c.green, samples::rgb_reflectance_green_samples(FROM, TO, N));
+                        copy(&c.blue, samples::rgb_reflectance_blue_samples(FROM, TO, N));
                 }
                 {
                         Colors& c = functions.illumination;
-                        copy(&c.white, rgb_illumination_d65_white_samples(FROM, TO, N));
-                        copy(&c.cyan, rgb_illumination_d65_cyan_samples(FROM, TO, N));
-                        copy(&c.magenta, rgb_illumination_d65_magenta_samples(FROM, TO, N));
-                        copy(&c.yellow, rgb_illumination_d65_yellow_samples(FROM, TO, N));
-                        copy(&c.red, rgb_illumination_d65_red_samples(FROM, TO, N));
-                        copy(&c.green, rgb_illumination_d65_green_samples(FROM, TO, N));
-                        copy(&c.blue, rgb_illumination_d65_blue_samples(FROM, TO, N));
+                        copy(&c.white, samples::rgb_illumination_d65_white_samples(FROM, TO, N));
+                        copy(&c.cyan, samples::rgb_illumination_d65_cyan_samples(FROM, TO, N));
+                        copy(&c.magenta, samples::rgb_illumination_d65_magenta_samples(FROM, TO, N));
+                        copy(&c.yellow, samples::rgb_illumination_d65_yellow_samples(FROM, TO, N));
+                        copy(&c.red, samples::rgb_illumination_d65_red_samples(FROM, TO, N));
+                        copy(&c.green, samples::rgb_illumination_d65_green_samples(FROM, TO, N));
+                        copy(&c.blue, samples::rgb_illumination_d65_blue_samples(FROM, TO, N));
                 }
 
                 return functions;

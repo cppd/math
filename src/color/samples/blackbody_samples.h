@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::color
+namespace ns::color::samples
 {
 std::vector<double> blackbody_a_samples(int from, int to, int count);
 std::vector<double> blackbody_samples(double t, int from, int to, int count);

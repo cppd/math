@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::color
+namespace ns::color::samples
 {
 inline constexpr int DAYLIGHT_SAMPLES_MIN_WAVELENGTH = 300;
 inline constexpr int DAYLIGHT_SAMPLES_MAX_WAVELENGTH = 830;

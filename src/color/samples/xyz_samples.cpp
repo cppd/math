@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <vector>
 
-namespace ns::color
+namespace ns::color::samples
 {
 namespace
 {
