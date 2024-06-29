@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -113,7 +113,7 @@ void VolumeObjectParametersDialog::done(const int r)
                 const std::string msg =
                         "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "
                         + to_string(max_image_size_) + "].";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 

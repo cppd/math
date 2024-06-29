@@ -181,7 +181,7 @@ void add_volume(
         process::load_volume<N_IMAGE>("Painter Image", std::move(image));
 }
 
-std::vector<Parameters> create_parameters(const dialog::PainterImageParameters& dialog_parameters)
+std::vector<Parameters> create_parameters(const dialogs::PainterImageParameters& dialog_parameters)
 {
         if (dialog_parameters.all)
         {
@@ -256,8 +256,8 @@ std::function<void(progress::RatioList*)> save_image(
         image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba)
 {
-        std::optional<dialog::PainterImageParameters> dialog_parameters =
-                dialog::PainterImageDialog::show("Save Image", dialog::PainterImagePathType::FILE, false /*use_all*/);
+        std::optional<dialogs::PainterImageParameters> dialog_parameters =
+                dialogs::PainterImageDialog::show("Save Image", dialogs::PainterImagePathType::FILE, false /*use_all*/);
         if (!dialog_parameters)
         {
                 return nullptr;
@@ -296,8 +296,8 @@ std::function<void(progress::RatioList*)> save_image(
                 error("Error image dimension " + to_string(size.size()) + " for saving image");
         }
 
-        std::optional<dialog::PainterImageParameters> dialog_parameters = dialog::PainterImageDialog::show(
-                "Save All Images", dialog::PainterImagePathType::DIRECTORY, true /*use_all*/);
+        std::optional<dialogs::PainterImageParameters> dialog_parameters = dialogs::PainterImageDialog::show(
+                "Save All Images", dialogs::PainterImagePathType::DIRECTORY, true /*use_all*/);
         if (!dialog_parameters)
         {
                 return nullptr;
@@ -346,8 +346,8 @@ std::function<void(progress::RatioList*)> add_volume(
                 error("Error image dimension " + to_string(size.size()) + " for adding volume");
         }
 
-        std::optional<dialog::PainterImageParameters> dialog_parameters =
-                dialog::PainterImageDialog::show("Add Volume", dialog::PainterImagePathType::NONE, false /*use_all*/);
+        std::optional<dialogs::PainterImageParameters> dialog_parameters =
+                dialogs::PainterImageDialog::show("Add Volume", dialogs::PainterImagePathType::NONE, false /*use_all*/);
         if (!dialog_parameters)
         {
                 return nullptr;

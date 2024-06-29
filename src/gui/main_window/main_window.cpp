@@ -186,13 +186,13 @@ void MainWindow::constructor_connections()
                                         message_error("Failed to receive view description");
                                 }
                         }
-                        dialog::application_about(ray_tracing);
+                        dialogs::application_about(ray_tracing);
                 });
 
         connect(ui_.action_help, &QAction::triggered, this,
                 []
                 {
-                        dialog::application_help();
+                        dialogs::application_help();
                 });
 
         connect(&timer_, &QTimer::timeout, this, &MainWindow::on_timer);
@@ -216,7 +216,7 @@ void MainWindow::closeEvent(QCloseEvent* const event)
         ASSERT(std::this_thread::get_id() == thread_id_);
 
         const QPointer ptr(this);
-        std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the main window?");
+        std::optional<bool> yes = dialogs::message_question_default_no("Do you want to close the main window?");
         if (ptr.isNull())
         {
                 return;

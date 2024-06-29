@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -183,7 +183,7 @@ void ImageSliceDialog::done(const int r)
         if (slice_dimension_ != count)
         {
                 const std::string msg = "Slice dimension must be equal to " + to_string(slice_dimension_);
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 

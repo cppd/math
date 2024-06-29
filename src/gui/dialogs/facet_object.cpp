@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -113,7 +113,7 @@ void FacetObjectParametersDialog::done(const int r)
                 const std::string msg =
                         "Facet count must be in the range [" + to_string(min_facet_count_) + ", "
                         + to_string(max_facet_count_) + "].";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 

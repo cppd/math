@@ -57,12 +57,12 @@ namespace
 constexpr bool STL_FORMAT_ASCII = true;
 
 template <std::size_t N>
-std::vector<gui::dialog::FileFilter> create_filters()
+std::vector<gui::dialogs::FileFilter> create_filters()
 {
-        std::vector<gui::dialog::FileFilter> res;
+        std::vector<gui::dialogs::FileFilter> res;
         for (const model::mesh::FileFormat& v : model::mesh::save_formats(N))
         {
-                gui::dialog::FileFilter& filter = res.emplace_back();
+                gui::dialogs::FileFilter& filter = res.emplace_back();
                 filter.name = v.format_name;
                 filter.file_extensions = v.file_name_extensions;
         }
@@ -78,9 +78,9 @@ std::function<void(progress::RatioList*)> action_save_function(
         const std::string caption = "Save " + name;
         const bool read_only = true;
 
-        const std::vector<gui::dialog::FileFilter> filters = create_filters<N>();
+        const std::vector<gui::dialogs::FileFilter> filters = create_filters<N>();
 
-        const std::optional<std::string> file_name_string = gui::dialog::save_file(caption, filters, read_only);
+        const std::optional<std::string> file_name_string = gui::dialogs::save_file(caption, filters, read_only);
         if (!file_name_string)
         {
                 return nullptr;
@@ -149,8 +149,8 @@ std::function<void(progress::RatioList*)> action_save(
                 error("Unsupported color format " + image::format_to_string(image.color_format));
         }
 
-        std::optional<gui::dialog::ViewImageParameters> dialog_parameters =
-                gui::dialog::ViewImageDialog::show("Save Image", image_info(image), time_to_file_name(image_time));
+        std::optional<gui::dialogs::ViewImageParameters> dialog_parameters =
+                gui::dialogs::ViewImageDialog::show("Save Image", image_info(image), time_to_file_name(image_time));
         if (!dialog_parameters)
         {
                 return nullptr;

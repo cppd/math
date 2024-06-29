@@ -42,8 +42,8 @@ std::function<void(progress::RatioList*)> action_self_test(const TestType test_t
         }
         case TestType::ALL:
         {
-                std::optional<gui::dialog::TestSelectionParameters> tests =
-                        gui::dialog::TestSelectionParametersDialog::show(
+                std::optional<gui::dialogs::TestSelectionParameters> tests =
+                        gui::dialogs::TestSelectionParametersDialog::show(
                                 "Select tests", test::Tests::instance().large_names());
                 if (!tests || tests->test_names.empty())
                 {
@@ -57,8 +57,8 @@ std::function<void(progress::RatioList*)> action_self_test(const TestType test_t
         }
         case TestType::BENCHMARK:
         {
-                std::optional<gui::dialog::TestSelectionParameters> tests =
-                        gui::dialog::TestSelectionParametersDialog::show(
+                std::optional<gui::dialogs::TestSelectionParameters> tests =
+                        gui::dialogs::TestSelectionParametersDialog::show(
                                 "Select benchmarks", test::Tests::instance().performance_names());
                 if (!tests || tests->test_names.empty())
                 {

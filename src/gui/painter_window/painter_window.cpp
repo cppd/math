@@ -117,7 +117,8 @@ void PainterWindow::closeEvent(QCloseEvent* const event)
         ASSERT(std::this_thread::get_id() == thread_id_);
 
         const QPointer ptr(this);
-        const std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the painter window?");
+        const std::optional<bool> yes =
+                dialogs::message_question_default_no("Do you want to close the painter window?");
         if (ptr.isNull())
         {
                 return;

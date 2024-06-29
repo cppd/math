@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <string_view>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -118,7 +118,7 @@ void set_buttons(const std::array<QRadioButton*, 2>& buttons, const std::array<c
                 return true;
         }
 
-        dialog::message_critical(name + std::string(" is not selected"));
+        dialogs::message_critical(name + std::string(" is not selected"));
         return false;
 }
 }
@@ -170,7 +170,7 @@ bool PainterParametersWidget::check()
         if (!(thread_count >= 1 && thread_count <= max_thread_count_))
         {
                 const std::string msg = "Thread count must be in the range [1, " + to_string(max_thread_count_) + "].";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return false;
         }
 
@@ -179,7 +179,7 @@ bool PainterParametersWidget::check()
         {
                 const std::string msg =
                         "Samples per pixel must be in the range [1, " + to_string(max_samples_per_pixel_) + "].";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return false;
         }
 

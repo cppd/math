@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -123,7 +123,7 @@ void PainterImageDialog::done(const int r)
                 if (!std::filesystem::is_directory(path))
                 {
                         const std::string msg = "Directory is not selected";
-                        dialog::message_critical(msg);
+                        dialogs::message_critical(msg);
                         return;
                 }
         }
@@ -134,7 +134,7 @@ void PainterImageDialog::done(const int r)
                 if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
                 {
                         const std::string msg = "File is not selected";
-                        dialog::message_critical(msg);
+                        dialogs::message_critical(msg);
                         return;
                 }
         }
@@ -173,16 +173,16 @@ void PainterImageDialog::on_select_path_clicked()
         {
                 const std::string caption = "Directory";
                 const bool read_only = false;
-                path = dialog::select_directory(caption, read_only);
+                path = dialogs::select_directory(caption, read_only);
         }
         else if (path_type_ == PainterImagePathType::FILE)
         {
                 const std::string caption = "File";
-                dialog::FileFilter filter;
+                dialogs::FileFilter filter;
                 filter.name = "Images";
                 filter.file_extensions.emplace_back(image::save_file_extension());
                 const bool read_only = true;
-                path = dialog::save_file(caption, {filter}, read_only);
+                path = dialogs::save_file(caption, {filter}, read_only);
         }
         else
         {

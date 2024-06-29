@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMessageBox>
 #include <QString>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {

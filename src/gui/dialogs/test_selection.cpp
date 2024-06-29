@@ -43,7 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -277,7 +277,7 @@ void TestSelectionParametersDialog::done(const int r)
 
         if (test_names.empty())
         {
-                dialog::message_critical("No items selected");
+                dialogs::message_critical("No items selected");
                 return;
         }
 

@@ -197,8 +197,8 @@ painter::scenes::StorageScene<N, T, Color> make_scene(
         const std::type_identity_t<T> front_light_proportion,
         const Color& light,
         const Color& background_light,
-        const gui::dialog::PainterParameters& parameters,
-        const gui::dialog::PainterParameters3d& dimension_parameters,
+        const gui::dialogs::PainterParameters& parameters,
+        const gui::dialogs::PainterParameters3d& dimension_parameters,
         const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
 {
         progress::Ratio progress(nullptr);
@@ -226,8 +226,8 @@ painter::scenes::StorageScene<N, T, Color> make_scene(
         const std::type_identity_t<T> front_light_proportion,
         const Color& light,
         const Color& background_light,
-        const gui::dialog::PainterParameters& parameters,
-        const gui::dialog::PainterParametersNd& dimension_parameters,
+        const gui::dialogs::PainterParameters& parameters,
+        const gui::dialogs::PainterParametersNd& dimension_parameters,
         const std::optional<numerical::Vector<N + 1, T>>& /*clip_plane_equation*/)
 {
         progress::Ratio progress(nullptr);
@@ -252,7 +252,7 @@ void thread_function(
         const std::type_identity_t<T> front_light_proportion,
         const Color& light,
         const Color& background_light,
-        const gui::dialog::PainterParameters& parameters,
+        const gui::dialogs::PainterParameters& parameters,
         const Parameters& dimension_parameters,
         progress::RatioList* const progress_list)
 {
@@ -286,7 +286,7 @@ void thread_function(
         const std::type_identity_t<T> front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
-        const gui::dialog::PainterParameters& parameters,
+        const gui::dialogs::PainterParameters& parameters,
         const Parameters& dimension_parameters,
         progress::RatioList* const progress_list)
 {
@@ -322,7 +322,7 @@ void thread_function(
         const double front_light_proportion,
         const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
-        const gui::dialog::PainterParameters& parameters,
+        const gui::dialogs::PainterParameters& parameters,
         const Parameters& dimension_parameters,
         progress::RatioList* const progress_list)
 {
@@ -358,7 +358,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
         static_assert(SAMPLES_PER_PIXEL<N> <= SAMPLES_PER_PIXEL_MAXIMUM<N>);
         static_assert(COLOR_INDEX<N> < std::tuple_size_v<Colors>);
 
-        const auto parameters = gui::dialog::PainterParameters3dDialog::show(
+        const auto parameters = gui::dialogs::PainterParameters3dDialog::show(
                 hardware_concurrency(), camera.width, camera.height, SCREEN_SIZE_3D_MAXIMUM, SAMPLES_PER_PIXEL<N>,
                 SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX, color_names(), COLOR_INDEX<N>,
                 integrator_names(), integrator_to_index(INTEGRATOR));
@@ -391,7 +391,7 @@ std::function<void(progress::RatioList*)> action_painter_function(
         static_assert(SCREEN_SIZE_ND<N> <= SCREEN_SIZE_ND_MAXIMUM);
         static_assert(COLOR_INDEX<N> < std::tuple_size_v<Colors>);
 
-        const auto parameters = gui::dialog::PainterParametersNdDialog::show(
+        const auto parameters = gui::dialogs::PainterParametersNdDialog::show(
                 N, hardware_concurrency(), SCREEN_SIZE_ND<N>, SCREEN_SIZE_ND_MINIMUM, SCREEN_SIZE_ND_MAXIMUM,
                 SAMPLES_PER_PIXEL<N>, SAMPLES_PER_PIXEL_MAXIMUM<N>, precision_names(), PRECISION_INDEX, color_names(),
                 COLOR_INDEX<N>, integrator_names(), integrator_to_index(INTEGRATOR));

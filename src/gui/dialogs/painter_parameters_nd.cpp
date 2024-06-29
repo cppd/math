@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <tuple>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -127,7 +127,7 @@ void PainterParametersNdDialog::done(const int r)
                 const std::string msg =
                         "Maximum screen size must be in the range [" + to_string(min_screen_size_) + ", "
                         + to_string(max_screen_size_) + "].";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 

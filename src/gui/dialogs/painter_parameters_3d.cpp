@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <tuple>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -154,7 +154,7 @@ void PainterParameters3dDialog::done(const int r)
         {
                 const std::string msg =
                         "Width must be in the range [" + to_string(min_width_) + ", " + to_string(max_width_) + "]";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 
@@ -163,7 +163,7 @@ void PainterParameters3dDialog::done(const int r)
         {
                 const std::string msg =
                         "Height must be in the range [" + to_string(min_height_) + ", " + to_string(max_height_) + "]";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 

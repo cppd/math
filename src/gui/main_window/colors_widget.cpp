@@ -90,7 +90,7 @@ void ColorsWidget::set_view(view::View* const view)
 void ColorsWidget::on_background_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Background Color", background_color_,
                 [&](const QColor& c)
                 {
@@ -104,7 +104,7 @@ void ColorsWidget::on_background_color_clicked()
 void ColorsWidget::on_wireframe_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Wireframe Color", wireframe_color_,
                 [&](const QColor& c)
                 {
@@ -118,7 +118,7 @@ void ColorsWidget::on_wireframe_color_clicked()
 void ColorsWidget::on_clip_plane_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Clip Plane Color", clip_plane_color_,
                 [&](const QColor& c)
                 {
@@ -132,7 +132,7 @@ void ColorsWidget::on_clip_plane_color_clicked()
 void ColorsWidget::on_normal_color_positive_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Positive Normal Color", normal_color_positive_,
                 [&](const QColor& c)
                 {
@@ -146,7 +146,7 @@ void ColorsWidget::on_normal_color_positive_clicked()
 void ColorsWidget::on_normal_color_negative_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Negative Normal Color", normal_color_negative_,
                 [&](const QColor& c)
                 {
@@ -160,7 +160,7 @@ void ColorsWidget::on_normal_color_negative_clicked()
 void ColorsWidget::on_dft_background_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "DFT Background Color", dft_background_color_,
                 [&](const QColor& c)
                 {
@@ -174,7 +174,7 @@ void ColorsWidget::on_dft_background_color_clicked()
 void ColorsWidget::on_dft_color_clicked()
 {
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "DFT Color", dft_color_,
                 [&](const QColor& c)
                 {

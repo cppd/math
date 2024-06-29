@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 void message_critical(const std::string& message, bool with_parent = true);
 void message_information(const std::string& message);

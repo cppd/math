@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <string>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 void color_dialog(const std::string& title, const QColor& current_color, const std::function<void(const QColor& c)>& f)
 {

@@ -59,7 +59,8 @@ std::vector<int> volume_image_size(const storage::VolumeObjectConst& object)
 
 std::function<void(progress::RatioList*)> action_bound_cocone(const storage::MeshObjectConst& object)
 {
-        std::optional<gui::dialog::BoundCoconeParameters> parameters = gui::dialog::BoundCoconeParametersDialog::show();
+        std::optional<gui::dialogs::BoundCoconeParameters> parameters =
+                gui::dialogs::BoundCoconeParametersDialog::show();
         if (!parameters)
         {
                 return nullptr;
@@ -93,8 +94,8 @@ std::function<void(progress::RatioList*)> action_3d_slice(const storage::VolumeO
                 error("Volume dimension (" + to_string(size.size()) + ") is not suitable for 3D slice");
         }
 
-        std::optional<gui::dialog::ImageSliceParameters> parameters =
-                gui::dialog::ImageSliceDialog::show(size, DIMENSION);
+        std::optional<gui::dialogs::ImageSliceParameters> parameters =
+                gui::dialogs::ImageSliceDialog::show(size, DIMENSION);
         if (!parameters)
         {
                 return nullptr;

@@ -243,7 +243,7 @@ void MeshWidget::on_color_clicked()
                 *object_opt);
 
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Mesh Color", color_to_qcolor(color),
                 [&](const QColor& c)
                 {

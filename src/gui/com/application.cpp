@@ -83,14 +83,14 @@ bool Application::notify(QObject* const receiver, QEvent* const event) noexcept
                         msg += "Error in an event receiver\n";
                         msg += e.what();
                         constexpr bool WITH_PARENT = false;
-                        dialog::message_critical(msg, WITH_PARENT);
+                        dialogs::message_critical(msg, WITH_PARENT);
                         error_fatal(msg);
                 }
                 catch (...)
                 {
                         constexpr const char* MSG = "Error in an event receiver";
                         constexpr bool WITH_PARENT = false;
-                        dialog::message_critical(MSG, WITH_PARENT);
+                        dialogs::message_critical(MSG, WITH_PARENT);
                         error_fatal(MSG);
                 }
         }

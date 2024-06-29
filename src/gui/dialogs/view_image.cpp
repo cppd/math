@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <utility>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -175,7 +175,7 @@ void ViewImageDialog::done(const int r)
         if (!has_directory_and_filename(path_string))
         {
                 const std::string msg = "File is not selected";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 
@@ -192,7 +192,7 @@ void ViewImageDialog::on_select_path_clicked()
         const QPointer ptr(this);
 
         const std::string caption = "File";
-        dialog::FileFilter filter;
+        dialogs::FileFilter filter;
         filter.name = "Images";
         filter.file_extensions.emplace_back(image::save_file_extension());
         constexpr bool READ_ONLY = true;
@@ -201,7 +201,7 @@ void ViewImageDialog::on_select_path_clicked()
                 generic_utf8_filename(path_from_utf8(ui_.line_edit_path->text().toStdString()).filename());
 
         std::optional<std::string> path =
-                dialog::save_file(caption, file_name.empty() ? *file_name_ : file_name, {filter}, READ_ONLY);
+                dialogs::save_file(caption, file_name.empty() ? *file_name_ : file_name, {filter}, READ_ONLY);
 
         if (path && !ptr.isNull())
         {

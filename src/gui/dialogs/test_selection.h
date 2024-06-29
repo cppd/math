@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 #include <vector>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 struct TestSelectionParameters final
 {

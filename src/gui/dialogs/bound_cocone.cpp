@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 
-namespace ns::gui::dialog
+namespace ns::gui::dialogs
 {
 namespace
 {
@@ -129,7 +129,7 @@ void BoundCoconeParametersDialog::done(const int r)
                 const std::string msg =
                         reinterpret_cast<const char*>(u8"ρ must be in the range [") + to_string(min_rho_) + ", "
                         + to_string(max_rho_) + "]";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 
@@ -139,7 +139,7 @@ void BoundCoconeParametersDialog::done(const int r)
                 const std::string msg =
                         reinterpret_cast<const char*>(u8"α must be in the range [") + to_string(min_alpha_) + ", "
                         + to_string(max_alpha_) + "]";
-                dialog::message_critical(msg);
+                dialogs::message_critical(msg);
                 return;
         }
 

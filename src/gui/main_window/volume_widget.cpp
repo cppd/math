@@ -282,7 +282,7 @@ void VolumeWidget::on_color_clicked()
                 *object_opt);
 
         QPointer ptr(this);
-        dialog::color_dialog(
+        dialogs::color_dialog(
                 "Volume Color", color_to_qcolor(color),
                 [&](const QColor& c)
                 {

@@ -62,7 +62,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
                 action, &QAction::triggered,
                 [=]()
                 {
-                        const auto yes = dialog::message_question_default_no("Delete?");
+                        const auto yes = dialogs::message_question_default_no("Delete?");
                         if (yes && *yes)
                         {
                                 actions->erase(id);
@@ -74,7 +74,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
                 action, &QAction::triggered,
                 [=]()
                 {
-                        const auto yes = dialog::message_question_default_no("Delete All?");
+                        const auto yes = dialogs::message_question_default_no("Delete All?");
                         if (yes && *yes)
                         {
                                 actions->clear();

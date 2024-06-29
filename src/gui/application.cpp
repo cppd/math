@@ -39,16 +39,16 @@ void message_event(const MessageEvent& event)
         switch (event.type)
         {
         case MessageType::ERROR:
-                dialog::message_critical(event.text);
+                dialogs::message_critical(event.text);
                 return;
         case MessageType::ERROR_FATAL:
-                dialog::message_critical(event.text, false /*with_parent*/);
+                dialogs::message_critical(event.text, false /*with_parent*/);
                 error_fatal("Exit after error message\n" + event.text);
         case MessageType::INFORMATION:
-                dialog::message_information(event.text);
+                dialogs::message_information(event.text);
                 return;
         case MessageType::WARNING:
-                dialog::message_warning(event.text);
+                dialogs::message_warning(event.text);
                 return;
         }
         error_fatal("Unknown message event type " + to_string(enum_to_int(event.type)));
