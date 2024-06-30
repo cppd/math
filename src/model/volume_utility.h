@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "volume_utility/bounding_box.h" // IWYU pragma: export
-#include "volume_utility/file.h" // IWYU pragma: export
-#include "volume_utility/matrix.h" // IWYU pragma: export
-#include "volume_utility/position.h" // IWYU pragma: export
-#include "volume_utility/vertices.h" // IWYU pragma: export
+#include "volume/bounding_box.h" // IWYU pragma: export
+#include "volume/file.h" // IWYU pragma: export
+#include "volume/matrix.h" // IWYU pragma: export
+#include "volume/position.h" // IWYU pragma: export
+#include "volume/vertices.h" // IWYU pragma: export

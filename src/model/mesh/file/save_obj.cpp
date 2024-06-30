@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/model/mesh.h>
-#include <src/model/mesh_utility/bounding_box.h>
-#include <src/model/mesh_utility/file_info.h>
-#include <src/model/mesh_utility/unique.h>
-#include <src/model/mesh_utility/vertices.h>
+#include <src/model/mesh/bounding_box.h>
+#include <src/model/mesh/file_info.h>
+#include <src/model/mesh/unique.h>
+#include <src/model/mesh/vertices.h>
 #include <src/numerical/vector.h>
 #include <src/settings/instantiation.h>
 

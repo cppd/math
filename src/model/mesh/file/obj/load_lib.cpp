@@ -30,8 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/flip.h>
 #include <src/image/image.h>
 #include <src/model/mesh.h>
-#include <src/model/mesh_utility/file/data_read.h>
-#include <src/model/mesh_utility/file/lines.h>
+#include <src/model/mesh/file/data_read.h>
+#include <src/model/mesh/file/lines.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>

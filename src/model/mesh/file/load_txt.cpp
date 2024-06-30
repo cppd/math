@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/thread.h>
 #include <src/model/mesh.h>
-#include <src/model/mesh_utility/position.h>
+#include <src/model/mesh/position.h>
 #include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 #include <src/settings/instantiation.h>
