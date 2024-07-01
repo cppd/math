@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "repository/meshes.h"
-#include "repository/volumes.h"
+#include "repository/mesh_objects.h"
+#include "repository/volume_objects.h"
 
 #include <src/com/sequence.h>
 #include <src/model/mesh.h>
@@ -38,8 +38,8 @@ class Repository final
         template <std::size_t N>
         struct Repositories final
         {
-                std::unique_ptr<const MeshObjectRepository<N>> meshes = create_mesh_object_repository<N>();
-                std::unique_ptr<const VolumeObjectRepository<N>> volumes = create_volume_object_repository<N>();
+                std::unique_ptr<const repository::MeshObjects<N>> meshes = repository::create_mesh_objects<N>();
+                std::unique_ptr<const repository::VolumeObjects<N>> volumes = repository::create_volume_objects<N>();
         };
 
         using Tuple = Sequence<settings::Dimensions, std::tuple, Repositories>;

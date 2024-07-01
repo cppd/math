@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::storage
+namespace ns::storage::repository
 {
 template <std::size_t N>
-class VolumeObjectRepository
+class VolumeObjects
 {
 public:
-        virtual ~VolumeObjectRepository() = default;
+        virtual ~VolumeObjects() = default;
 
         [[nodiscard]] virtual std::vector<std::string> object_names() const = 0;
 
@@ -40,5 +40,5 @@ public:
 };
 
 template <std::size_t N>
-[[nodiscard]] std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository();
+[[nodiscard]] std::unique_ptr<const VolumeObjects<N>> create_volume_objects();
 }

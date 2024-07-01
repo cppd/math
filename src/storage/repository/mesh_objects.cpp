@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "meshes.h"
+#include "mesh_objects.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -41,7 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::storage
+namespace ns::storage::repository
 {
 namespace
 {
@@ -300,7 +300,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 }
 
 template <std::size_t N>
-class Impl final : public MeshObjectRepository<N>
+class Impl final : public MeshObjects<N>
 {
         std::map<std::string, std::function<std::unique_ptr<model::mesh::Mesh<N>>(unsigned)>> map_point_;
         std::map<std::string, std::function<std::unique_ptr<model::mesh::Mesh<N>>(unsigned)>> map_facet_;
@@ -362,12 +362,12 @@ public:
 }
 
 template <std::size_t N>
-std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository()
+std::unique_ptr<const MeshObjects<N>> create_mesh_objects()
 {
         return std::make_unique<Impl<N>>();
 }
 
-#define TEMPLATE(N) template std::unique_ptr<MeshObjectRepository<(N)>> create_mesh_object_repository<(N)>();
+#define TEMPLATE(N) template std::unique_ptr<const MeshObjects<(N)>> create_mesh_objects<(N)>();
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

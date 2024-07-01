@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "volumes.h"
+#include "volume_objects.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::storage
+namespace ns::storage::repository
 {
 namespace
 {
@@ -265,7 +265,7 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 }
 
 template <std::size_t N>
-class Impl final : public VolumeObjectRepository<N>
+class Impl final : public VolumeObjects<N>
 {
         std::map<std::string, std::function<std::unique_ptr<model::volume::Volume<N>>(unsigned)>> map_;
 
@@ -297,12 +297,12 @@ public:
 }
 
 template <std::size_t N>
-std::unique_ptr<VolumeObjectRepository<N>> create_volume_object_repository()
+std::unique_ptr<const VolumeObjects<N>> create_volume_objects()
 {
         return std::make_unique<Impl<N>>();
 }
 
-#define TEMPLATE(N) template std::unique_ptr<VolumeObjectRepository<(N)>> create_volume_object_repository();
+#define TEMPLATE(N) template std::unique_ptr<const VolumeObjects<(N)>> create_volume_objects();
 
 TEMPLATE_INSTANTIATION_N(TEMPLATE)
 }

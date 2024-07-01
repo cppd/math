@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::storage
+namespace ns::storage::repository
 {
 template <std::size_t N>
-class MeshObjectRepository
+class MeshObjects
 {
 public:
-        virtual ~MeshObjectRepository() = default;
+        virtual ~MeshObjects() = default;
 
         [[nodiscard]] virtual std::vector<std::string> point_object_names() const = 0;
 
@@ -46,5 +46,5 @@ public:
 };
 
 template <std::size_t N>
-[[nodiscard]] std::unique_ptr<MeshObjectRepository<N>> create_mesh_object_repository();
+[[nodiscard]] std::unique_ptr<const MeshObjects<N>> create_mesh_objects();
 }
