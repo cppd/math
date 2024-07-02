@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <tuple>
 
-namespace ns::model
+namespace ns::model::com
 {
 template <std::size_t N, typename T>
 std::tuple<numerical::Vector<N, T>, T> center_and_length_for_min_max(

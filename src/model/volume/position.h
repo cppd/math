@@ -33,11 +33,11 @@ namespace ns::model::volume
 template <std::size_t N>
 std::tuple<numerical::Vector<N, double>, double> center_and_length(const Volume<N>& volume)
 {
-        std::optional<BoundingBox<N>> box = bounding_box(volume);
+        const std::optional<BoundingBox<N>> box = bounding_box(volume);
         if (!box)
         {
                 error("Volume has no geometry");
         }
-        return center_and_length_for_min_max(box->min, box->max);
+        return com::center_and_length_for_min_max(box->min, box->max);
 }
 }

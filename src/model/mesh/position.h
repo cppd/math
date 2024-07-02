@@ -33,11 +33,11 @@ void set_center_and_length(Mesh<N>* const mesh)
 {
         ASSERT(mesh);
 
-        std::optional<BoundingBox<N>> box = bounding_box(*mesh);
+        const std::optional<BoundingBox<N>> box = bounding_box(*mesh);
         if (!box)
         {
                 error("Mesh has no geometry");
         }
-        std::tie(mesh->center, mesh->length) = center_and_length_for_min_max(box->min, box->max);
+        std::tie(mesh->center, mesh->length) = com::center_and_length_for_min_max(box->min, box->max);
 }
 }
