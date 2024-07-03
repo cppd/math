@@ -53,7 +53,7 @@ PainterImageDialog::PainterImageDialog(
         const PainterImagePathType path_type,
         const bool use_all,
         std::optional<PainterImageParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           path_type_(path_type),
           parameters_(parameters)
 {
@@ -63,7 +63,7 @@ PainterImageDialog::PainterImageDialog(
         set_path();
         set_checkboxes(use_all);
 
-        set_dialog_height(this);
+        com::set_dialog_height(this);
 }
 
 void PainterImageDialog::set_path()
@@ -207,7 +207,7 @@ void PainterImageDialog::on_all_toggled()
                 ui_.check_box_8_bit->setVisible(true);
                 ui_.check_box_with_background->setVisible(true);
         }
-        set_dialog_height(this);
+        com::set_dialog_height(this);
 }
 
 std::optional<PainterImageParameters> PainterImageDialog::show(
@@ -217,7 +217,7 @@ std::optional<PainterImageParameters> PainterImageDialog::show(
 {
         std::optional<PainterImageParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, &parameters));
+        const com::QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, &parameters));
 
         if (!w->exec() || w.isNull())
         {

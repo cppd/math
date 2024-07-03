@@ -78,7 +78,7 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
         const int min_facet_count,
         const int max_facet_count,
         std::optional<FacetObjectParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           min_facet_count_(min_facet_count),
           max_facet_count_(max_facet_count),
           parameters_(parameters)
@@ -96,7 +96,7 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
         ui_.spin_box_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
         ui_.spin_box_facet_count->setValue(default_facet_count);
 
-        set_dialog_size(this);
+        com::set_dialog_size(this);
 }
 
 void FacetObjectParametersDialog::done(const int r)
@@ -132,7 +132,7 @@ std::optional<FacetObjectParameters> FacetObjectParametersDialog::show(
 {
         std::optional<FacetObjectParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new FacetObjectParametersDialog(
+        const com::QtObjectInDynamicMemory w(new FacetObjectParametersDialog(
                 dimension, object_name, default_facet_count, min_facet_count, max_facet_count, &parameters));
 
         if (!w->exec() || w.isNull())

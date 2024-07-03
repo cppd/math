@@ -64,12 +64,12 @@ ViewWidget::ViewWidget()
         ui_.check_box_clip_plane_lines->setEnabled(false);
         ui_.check_box_clip_plane_lines->setChecked(true);
         ui_.slider_clip_plane->setEnabled(false);
-        set_slider_position(ui_.slider_clip_plane, 0.5);
+        com::set_slider_position(ui_.slider_clip_plane, 0.5);
         ASSERT(((ui_.slider_clip_plane->maximum() - ui_.slider_clip_plane->minimum()) & 1) == 0);
 
         ui_.check_box_normals->setChecked(false);
         ui_.slider_normals->setEnabled(false);
-        set_slider_position(
+        com::set_slider_position(
                 ui_.slider_normals,
                 (NORMAL_LENGTH_DEFAULT - NORMAL_LENGTH_MINIMUM) / (NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM));
 
@@ -162,14 +162,14 @@ void ViewWidget::on_clip_plane_clicked()
         ui_.slider_clip_plane->setEnabled(checked);
         {
                 const QSignalBlocker blocker(ui_.slider_clip_plane);
-                set_slider_position(ui_.slider_clip_plane, DEFAULT_POSITION);
+                com::set_slider_position(ui_.slider_clip_plane, DEFAULT_POSITION);
         }
 
         if (view_)
         {
                 if (checked)
                 {
-                        view_->send(view::command::ClipPlaneShow(slider_position(ui_.slider_clip_plane)));
+                        view_->send(view::command::ClipPlaneShow(com::slider_position(ui_.slider_clip_plane)));
                 }
                 else
                 {
@@ -268,7 +268,7 @@ void ViewWidget::on_reset_view_clicked()
 
 void ViewWidget::on_clip_plane_changed(int)
 {
-        view_->send(view::command::ClipPlaneSetPosition(slider_position(ui_.slider_clip_plane)));
+        view_->send(view::command::ClipPlaneSetPosition(com::slider_position(ui_.slider_clip_plane)));
 }
 
 void ViewWidget::on_dft_brightness_changed(int)
@@ -324,6 +324,6 @@ double ViewWidget::shadow_zoom() const
 
 double ViewWidget::normal_length() const
 {
-        return std::lerp(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui_.slider_normals));
+        return std::lerp(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, com::slider_position(ui_.slider_normals));
 }
 }

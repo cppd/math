@@ -58,7 +58,7 @@ void set_label(QLabel* const label, const double value)
 
 void set_label(QLabel* const label, QSlider* const slider)
 {
-        set_label(label, slider_position(slider));
+        set_label(label, com::slider_position(slider));
 }
 
 struct MeshInfo final
@@ -143,7 +143,7 @@ void MeshWidget::on_ambient_changed()
                 return;
         }
 
-        const double ambient = slider_position(ui_.slider_ambient);
+        const double ambient = com::slider_position(ui_.slider_ambient);
 
         set_label(ui_.label_ambient, ambient);
 
@@ -166,7 +166,7 @@ void MeshWidget::on_metalness_changed()
                 return;
         }
 
-        const double metalness = slider_position(ui_.slider_metalness);
+        const double metalness = com::slider_position(ui_.slider_metalness);
 
         set_label(ui_.label_metalness, metalness);
 
@@ -189,7 +189,7 @@ void MeshWidget::on_roughness_changed()
                 return;
         }
 
-        const double roughness = slider_position(ui_.slider_roughness);
+        const double roughness = com::slider_position(ui_.slider_roughness);
 
         set_label(ui_.label_roughness, roughness);
 
@@ -212,7 +212,7 @@ void MeshWidget::on_transparency_changed()
                 return;
         }
 
-        const double alpha = 1.0 - slider_position(ui_.slider_transparency);
+        const double alpha = 1.0 - com::slider_position(ui_.slider_transparency);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
@@ -244,7 +244,7 @@ void MeshWidget::on_color_clicked()
 
         QPointer ptr(this);
         dialogs::color_dialog(
-                "Mesh Color", color_to_qcolor(color),
+                "Mesh Color", com::color_to_qcolor(color),
                 [&](const QColor& c)
                 {
                         if (ptr.isNull())
@@ -254,9 +254,9 @@ void MeshWidget::on_color_clicked()
                         std::visit(
                                 [&]<std::size_t N>(const std::shared_ptr<model::mesh::MeshObject<N>>& object)
                                 {
-                                        set_widget_color(ui_.widget_color, c);
+                                        com::set_widget_color(ui_.widget_color, c);
                                         model::mesh::Writing writing(object.get());
-                                        writing.set_color(qcolor_to_color(c));
+                                        writing.set_color(com::qcolor_to_color(c));
                                 },
                                 *object_opt);
                 });
@@ -292,25 +292,25 @@ void MeshWidget::ui_disable()
 
         {
                 const QSignalBlocker blocker(ui_.widget_color);
-                set_widget_color(ui_.widget_color, QColor(255, 255, 255));
+                com::set_widget_color(ui_.widget_color, QColor(255, 255, 255));
         }
         {
                 const QSignalBlocker blocker(ui_.slider_transparency);
-                set_slider_position(ui_.slider_transparency, 0);
+                com::set_slider_position(ui_.slider_transparency, 0);
         }
         {
                 const QSignalBlocker blocker(ui_.slider_ambient);
-                set_slider_to_middle(ui_.slider_ambient);
+                com::set_slider_to_middle(ui_.slider_ambient);
                 ui_.label_ambient->clear();
         }
         {
                 const QSignalBlocker blocker(ui_.slider_metalness);
-                set_slider_to_middle(ui_.slider_metalness);
+                com::set_slider_to_middle(ui_.slider_metalness);
                 ui_.label_metalness->clear();
         }
         {
                 const QSignalBlocker blocker(ui_.slider_roughness);
-                set_slider_to_middle(ui_.slider_roughness);
+                com::set_slider_to_middle(ui_.slider_roughness);
                 ui_.label_roughness->clear();
         }
 }
@@ -329,28 +329,28 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                         {
                                 const double position = 1.0 - info.alpha;
                                 const QSignalBlocker blocker(ui_.slider_transparency);
-                                set_slider_position(ui_.slider_transparency, position);
+                                com::set_slider_position(ui_.slider_transparency, position);
                         }
                         {
                                 const QSignalBlocker blocker(ui_.widget_color);
-                                set_widget_color(ui_.widget_color, color_to_qcolor(info.color));
+                                com::set_widget_color(ui_.widget_color, com::color_to_qcolor(info.color));
                         }
                         {
                                 const double position = info.ambient;
                                 const QSignalBlocker blocker(ui_.slider_ambient);
-                                set_slider_position(ui_.slider_ambient, position);
+                                com::set_slider_position(ui_.slider_ambient, position);
                                 set_label(ui_.label_ambient, ui_.slider_ambient);
                         }
                         {
                                 const double position = info.metalness;
                                 const QSignalBlocker blocker(ui_.slider_metalness);
-                                set_slider_position(ui_.slider_metalness, position);
+                                com::set_slider_position(ui_.slider_metalness, position);
                                 set_label(ui_.label_metalness, ui_.slider_metalness);
                         }
                         {
                                 const double position = info.roughness;
                                 const QSignalBlocker blocker(ui_.slider_roughness);
-                                set_slider_position(ui_.slider_roughness, position);
+                                com::set_slider_position(ui_.slider_roughness, position);
                                 set_label(ui_.label_roughness, ui_.slider_roughness);
                         }
                 },

@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <tuple>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 class ModelEvents final
 {

@@ -118,15 +118,15 @@ LightingWidget::LightingWidget()
 
         ui_.slider_intensity->setMinimum(0);
         ui_.slider_intensity->setMaximum(1000);
-        set_slider_position(ui_.slider_intensity, intensity_to_position(DEFAULT_LIGHTING_INTENSITY));
+        com::set_slider_position(ui_.slider_intensity, intensity_to_position(DEFAULT_LIGHTING_INTENSITY));
 
         ui_.slider_daylight_cct->setMinimum(0);
         ui_.slider_daylight_cct->setMaximum(1000);
-        set_slider_to_middle(ui_.slider_daylight_cct);
+        com::set_slider_to_middle(ui_.slider_daylight_cct);
 
         ui_.slider_blackbody_t->setMinimum(0);
         ui_.slider_blackbody_t->setMaximum(1000);
-        set_slider_to_middle(ui_.slider_blackbody_t);
+        com::set_slider_to_middle(ui_.slider_blackbody_t);
 
         ui_.radio_button_d65->setChecked(true);
         ui_.radio_button_d65->setText(QString::fromUtf8(DAYLIGHT_D65.data(), DAYLIGHT_D65.size()));
@@ -134,7 +134,7 @@ LightingWidget::LightingWidget()
 
         ui_.slider_front_lighting->setMinimum(0);
         ui_.slider_front_lighting->setMaximum(100);
-        set_slider_position(ui_.slider_front_lighting, FRONT_LIGHTING_PROPORTION);
+        com::set_slider_position(ui_.slider_front_lighting, FRONT_LIGHTING_PROPORTION);
 
         on_intensity_changed();
         on_daylight_changed();
@@ -170,7 +170,7 @@ void LightingWidget::send_color()
 
 void LightingWidget::on_intensity_changed()
 {
-        intensity_ = position_to_intensity(slider_position(ui_.slider_intensity));
+        intensity_ = position_to_intensity(com::slider_position(ui_.slider_intensity));
 
         std::ostringstream oss;
         oss << std::setprecision(2) << std::fixed << intensity_;
@@ -206,7 +206,7 @@ void LightingWidget::on_daylight_toggled()
 
 void LightingWidget::on_daylight_changed()
 {
-        const double p = slider_position(ui_.slider_daylight_cct);
+        const double p = com::slider_position(ui_.slider_daylight_cct);
         const int cct = position_to_temperature(p, daylight_min_cct_, daylight_max_cct_);
 
         ui_.radio_button_daylight->setText(QString::fromUtf8(DAYLIGHT_CCT.data(), DAYLIGHT_CCT.size()).arg(cct));
@@ -249,7 +249,7 @@ void LightingWidget::on_blackbody_toggled()
 
 void LightingWidget::on_blackbody_changed()
 {
-        const double p = slider_position(ui_.slider_blackbody_t);
+        const double p = com::slider_position(ui_.slider_blackbody_t);
         const int t = position_to_temperature(p, blackbody_min_t_, blackbody_max_t_);
 
         ui_.radio_button_blackbody->setText(QString::fromUtf8(BLACKBODY_T.data(), BLACKBODY_T.size()).arg(t));
@@ -267,7 +267,7 @@ void LightingWidget::on_blackbody_changed()
 
 void LightingWidget::on_front_lighting_changed()
 {
-        front_lighting_proportion_ = slider_position(ui_.slider_front_lighting);
+        front_lighting_proportion_ = com::slider_position(ui_.slider_front_lighting);
 
         std::ostringstream oss;
         oss << std::setprecision(2) << std::fixed << front_lighting_proportion_;

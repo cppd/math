@@ -198,7 +198,7 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         const std::string_view title,
         std::vector<std::string> test_names,
         std::optional<TestSelectionParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           parameters_(parameters)
 {
         ui_.setupUi(this);
@@ -293,7 +293,8 @@ std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(
 {
         std::optional<TestSelectionParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new TestSelectionParametersDialog(title, std::move(test_names), &parameters));
+        const com::QtObjectInDynamicMemory w(
+                new TestSelectionParametersDialog(title, std::move(test_names), &parameters));
 
         if (!w->exec() || w.isNull())
         {

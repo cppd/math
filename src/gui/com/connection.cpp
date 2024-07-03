@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <utility>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 void Connection::destroy() noexcept
 {

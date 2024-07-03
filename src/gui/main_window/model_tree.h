@@ -44,7 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::main_window
 {
-class ModelTree final : public QWidget, private ModelTreeEvents, private ModelTreeActions
+class ModelTree final : public QWidget, private com::ModelTreeEvents, private ModelTreeActions
 {
         Q_OBJECT
 
@@ -64,8 +64,8 @@ private:
         std::unordered_map<QTreeWidgetItem*, model::ObjectId> map_item_id_;
         std::unordered_map<model::ObjectId, Item> map_id_item_;
 
-        std::vector<Connection> connections_;
-        ThreadQueue thread_queue_;
+        std::vector<com::Connection> connections_;
+        com::ThreadQueue thread_queue_;
 
         void insert(storage::MeshObject&& object, const std::optional<model::ObjectId>& parent_object_id) override;
         void insert(storage::VolumeObject&& object, const std::optional<model::ObjectId>& parent_object_id) override;

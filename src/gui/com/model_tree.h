@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 class ModelTreeEvents
 {

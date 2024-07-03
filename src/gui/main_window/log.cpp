@@ -107,7 +107,7 @@ void Log::write()
         const Switcher switcher(&messages_ptr_, &log);
         for (const Message& m : log)
         {
-                append_to_text_edit(text_edit_, m.text, m.color);
+                com::append_to_text_edit(text_edit_, m.text, m.color);
         }
 }
 }

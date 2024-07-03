@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 class ThreadQueue final : public QObject
 {

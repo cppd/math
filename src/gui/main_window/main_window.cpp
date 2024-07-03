@@ -98,7 +98,7 @@ MainWindow::MainWindow()
 
 void MainWindow::constructor_graphics_widget()
 {
-        QSplitter* const splitter = find_widget_splitter(this, ui_.graphics_widget);
+        QSplitter* const splitter = com::find_widget_splitter(this, ui_.graphics_widget);
         ASSERT(splitter && splitter->orientation() == Qt::Horizontal);
 
         graphics_widget_ = new GraphicsWidget(this);
@@ -115,14 +115,14 @@ void MainWindow::constructor_graphics_widget()
 
 void MainWindow::constructor_splitters()
 {
-        QSplitter* const horizontal = find_widget_splitter(this, graphics_widget_);
+        QSplitter* const horizontal = com::find_widget_splitter(this, graphics_widget_);
         ASSERT(horizontal && horizontal->orientation() == Qt::Horizontal);
         ASSERT(horizontal->children().size() >= 2);
         ASSERT((horizontal->children()[0] == graphics_widget_ && horizontal->children()[1] == ui_.tab_widget)
                || (horizontal->children()[1] == graphics_widget_ && horizontal->children()[0] == ui_.tab_widget));
         horizontal->setSizes(QList<int>() << 1 << 1'000'000);
 
-        QSplitter* const vertical = find_widget_splitter(this, horizontal);
+        QSplitter* const vertical = com::find_widget_splitter(this, horizontal);
         ASSERT(vertical && vertical->orientation() == Qt::Vertical);
         ASSERT(vertical->children().size() >= 2);
         ASSERT((vertical->children()[0] == ui_.text_log && vertical->children()[1] == horizontal)
@@ -135,22 +135,22 @@ void MainWindow::constructor_objects()
         repository_ = std::make_unique<storage::Repository>();
 
         model_tree_ = std::make_unique<ModelTree>();
-        add_widget(ui_.tab_models, model_tree_.get());
+        com::add_widget(ui_.tab_models, model_tree_.get());
 
         lighting_widget_ = std::make_unique<LightingWidget>();
-        add_widget(ui_.tab_lighting, lighting_widget_.get());
+        com::add_widget(ui_.tab_lighting, lighting_widget_.get());
 
         colors_widget_ = std::make_unique<ColorsWidget>();
-        add_widget(ui_.tab_color, colors_widget_.get());
+        com::add_widget(ui_.tab_color, colors_widget_.get());
 
         view_widget_ = std::make_unique<ViewWidget>();
-        add_widget(ui_.tab_view, view_widget_.get());
+        com::add_widget(ui_.tab_view, view_widget_.get());
 
         mesh_widget_ = std::make_unique<MeshWidget>();
-        add_widget(ui_.tab_mesh, mesh_widget_.get());
+        com::add_widget(ui_.tab_mesh, mesh_widget_.get());
 
         volume_widget_ = std::make_unique<VolumeWidget>();
-        add_widget(ui_.tab_volume, volume_widget_.get());
+        com::add_widget(ui_.tab_volume, volume_widget_.get());
 
         //
 
@@ -268,18 +268,18 @@ void MainWindow::showEvent(QShowEvent* const /*event*/)
 
         if (WINDOW_SIZE_GRAPHICS)
         {
-                const QScreen& screen = *Application::instance()->primaryScreen();
+                const QScreen& screen = *com::Application::instance()->primaryScreen();
                 const QSize size = screen.geometry().size() * WINDOW_SIZE_COEF;
-                resize_window_widget(this, graphics_widget_, size);
+                com::resize_window_widget(this, graphics_widget_, size);
         }
         else
         {
-                const QScreen& screen = *Application::instance()->primaryScreen();
+                const QScreen& screen = *com::Application::instance()->primaryScreen();
                 const QSize size = screen.availableGeometry().size() * WINDOW_SIZE_COEF;
-                resize_window_frame(this, size);
+                com::resize_window_frame(this, size);
         }
 
-        move_window_to_desktop_center(this);
+        com::move_window_to_desktop_center(this);
 
         // window is not yet visible on showEvent
         QTimer::singleShot(
@@ -303,19 +303,19 @@ void MainWindow::showEvent(QShowEvent* const /*event*/)
 
 void MainWindow::first_shown()
 {
-        const CommandLineOptions options = command_line_options();
+        const com::CommandLineOptions options = com::command_line_options();
 
         vulkan_instance_ = std::make_unique<vulkan::Instance>();
 
         view_ = view::create_view(
-                widget_window_id(graphics_widget_), widget_size(graphics_widget_), view_initial_commands());
+                com::widget_window_id(graphics_widget_), com::widget_size(graphics_widget_), view_initial_commands());
 
         lighting_widget_->set_view(view_.get());
         colors_widget_->set_view(view_.get());
         view_widget_->set_view(view_.get());
         mesh_widget_->set_model_tree(model_tree_.get());
         volume_widget_->set_model_tree(model_tree_.get());
-        model_events_ = std::make_unique<ModelEvents>(model_tree_->events(), view_.get());
+        model_events_ = std::make_unique<com::ModelEvents>(model_tree_->events(), view_.get());
         actions_ = std::make_unique<Actions>(
                 options, ui_.status_bar, ui_.action_self_test, ui_.action_benchmark, ui_.menu_file, ui_.menu_create,
                 ui_.menu_edit, ui_.menu_rendering, repository_.get(), view_.get(), model_tree_.get(),

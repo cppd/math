@@ -74,7 +74,7 @@ ModelTree::~ModelTree()
         ASSERT(std::this_thread::get_id() == thread_id_);
 }
 
-ModelTreeEvents* ModelTree::events()
+com::ModelTreeEvents* ModelTree::events()
 {
         return this;
 }

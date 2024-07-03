@@ -131,7 +131,7 @@ ViewImageDialog::ViewImageDialog(
         const std::string& info,
         const std::string* const file_name,
         std::optional<ViewImageParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           file_name_(file_name),
           parameters_(parameters)
 {
@@ -159,7 +159,7 @@ ViewImageDialog::ViewImageDialog(
 
         set_line_edit_width(ui_.line_edit_path);
 
-        set_dialog_height(this);
+        com::set_dialog_height(this);
 }
 
 void ViewImageDialog::done(const int r)
@@ -216,7 +216,7 @@ std::optional<ViewImageParameters> ViewImageDialog::show(
 {
         std::optional<ViewImageParameters> parameters;
 
-        const QtObjectInDynamicMemory w(
+        const com::QtObjectInDynamicMemory w(
                 new ViewImageDialog(dialog_parameters().read(), title, info, &file_name, &parameters));
 
         if (!w->exec() || w.isNull())

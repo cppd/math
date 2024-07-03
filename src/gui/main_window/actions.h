@@ -38,11 +38,11 @@ namespace ns::gui::main_window
 {
 class Actions final
 {
-        std::unique_ptr<WorkerThreads> worker_threads_;
-        std::vector<Connection> connections_;
+        std::unique_ptr<com::WorkerThreads> worker_threads_;
+        std::vector<com::Connection> connections_;
 
 public:
-        Actions(const CommandLineOptions& options,
+        Actions(const com::CommandLineOptions& options,
                 QStatusBar* status_bar,
                 QAction* action_self_test,
                 QAction* action_benchmark,

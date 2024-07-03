@@ -101,13 +101,13 @@ void create_painter_window(
         const bool flat_shading,
         painter::scenes::StorageScene<N, T, Color>&& scene)
 {
-        Application::run(
+        com::Application::run(
                 [=, name = std::move(name),
                  scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]()
                 {
                         auto pixels = std::make_unique<PainterPixels<N, T, Color>>(
                                 std::move(*scene), integrator, thread_count, samples_per_pixel, flat_shading);
-                        create_and_show_delete_on_close_window<PainterWindow>(
+                        com::create_and_show_delete_on_close_window<PainterWindow>(
                                 name, integrator, type_bit_name<T>(), Color::name(), std::move(pixels));
                 });
 }

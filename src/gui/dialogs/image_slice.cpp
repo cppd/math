@@ -80,7 +80,7 @@ void create_slider(
         check_box->setChecked(CHECKED);
 
         auto* const label = new QLabel(dialog);
-        set_label_minimum_width_for_text(label, to_string_digit_groups(max_size - 1));
+        com::set_label_minimum_width_for_text(label, to_string_digit_groups(max_size - 1));
         label->setEnabled(CHECKED);
 
         auto* const slider = new QSlider(dialog);
@@ -88,7 +88,7 @@ void create_slider(
         slider->setMinimum(0);
         slider->setMaximum(size - 1);
         slider->setEnabled(CHECKED);
-        set_slider_to_middle(slider);
+        com::set_slider_to_middle(slider);
         label->setText(QString::fromStdString(to_string_digit_groups(slider->value())));
 
         static_assert(!CHECKED);
@@ -104,7 +104,7 @@ void create_slider(
                 slider, &QSlider::valueChanged, dialog,
                 [=]()
                 {
-                        set_label_text_and_minimum_width(label, to_string_digit_groups(slider->value()));
+                        com::set_label_text_and_minimum_width(label, to_string_digit_groups(slider->value()));
 
                         ASSERT(check_box->isChecked());
                         *slice = slider->value();
@@ -133,7 +133,7 @@ ImageSliceDialog::ImageSliceDialog(
         const std::vector<int>& size,
         const int slice_dimension,
         std::optional<ImageSliceParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           slice_dimension_(slice_dimension),
           parameters_(parameters)
 {
@@ -160,7 +160,7 @@ ImageSliceDialog::ImageSliceDialog(
 
         this->setMinimumWidth(this->fontMetrics().boundingRect(QString(75, 'a')).width());
 
-        set_dialog_height(this);
+        com::set_dialog_height(this);
 }
 
 void ImageSliceDialog::done(const int r)
@@ -197,7 +197,7 @@ std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int
 {
         std::optional<ImageSliceParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, &parameters));
+        const com::QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, &parameters));
 
         if (!w->exec() || w.isNull())
         {

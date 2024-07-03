@@ -71,7 +71,7 @@ std::string action_name(const QAction& action)
 }
 
 void load_mesh(
-        WorkerThreads* const threads,
+        com::WorkerThreads* const threads,
         const std::filesystem::path& path,
         const bool use_object_selection_dialog,
         const std::string& action)
@@ -80,14 +80,14 @@ void load_mesh(
                 WORKER_THREAD_ID, action,
                 [&]()
                 {
-                        WorkerThreads::Function f = process::action_load_mesh(path, use_object_selection_dialog);
+                        com::WorkerThreads::Function f = process::action_load_mesh(path, use_object_selection_dialog);
                         // model_tree->clear();
                         // view->send(view::command::ResetView());
                         return f;
                 });
 }
 
-void load_volume(WorkerThreads* const threads, const std::filesystem::path& path, const std::string& action)
+void load_volume(com::WorkerThreads* const threads, const std::filesystem::path& path, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -97,7 +97,7 @@ void load_volume(WorkerThreads* const threads, const std::filesystem::path& path
                 });
 }
 
-void save_mesh(WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
+void save_mesh(com::WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -107,13 +107,13 @@ void save_mesh(WorkerThreads* const threads, const ModelTree* const model_tree, 
                         if (!object)
                         {
                                 message_warning("No mesh to save");
-                                return WorkerThreads::Function();
+                                return com::WorkerThreads::Function();
                         }
                         return process::action_save(*object);
                 });
 }
 
-void save_view_image(WorkerThreads* const threads, view::View* const view, const std::string& action)
+void save_view_image(com::WorkerThreads* const threads, view::View* const view, const std::string& action)
 {
         threads->terminate_and_start(
                 SAVE_THREAD_ID, action,
@@ -124,7 +124,7 @@ void save_view_image(WorkerThreads* const threads, view::View* const view, const
                         if (!image)
                         {
                                 message_error("Failed to receive view image");
-                                return WorkerThreads::Function();
+                                return com::WorkerThreads::Function();
                         }
 
                         return process::action_save(std::chrono::system_clock::now(), std::move(image->image));
@@ -132,7 +132,7 @@ void save_view_image(WorkerThreads* const threads, view::View* const view, const
 }
 
 void painter(
-        WorkerThreads* const threads,
+        com::WorkerThreads* const threads,
         const ModelTree* const model_tree,
         view::View* const view,
         const LightingWidget* const lighting,
@@ -147,7 +147,7 @@ void painter(
                         if (objects.empty())
                         {
                                 message_warning("No objects to paint");
-                                return WorkerThreads::Function();
+                                return com::WorkerThreads::Function();
                         }
 
                         std::optional<view::info::Camera> camera;
@@ -156,7 +156,7 @@ void painter(
                         if (!camera || !clip_plane)
                         {
                                 message_error("Failed to receive view information");
-                                return WorkerThreads::Function();
+                                return com::WorkerThreads::Function();
                         }
 
                         return process::action_painter(
@@ -165,7 +165,7 @@ void painter(
                 });
 }
 
-void bound_cocone(WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
+void bound_cocone(com::WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -175,13 +175,13 @@ void bound_cocone(WorkerThreads* const threads, const ModelTree* const model_tre
                         if (!object)
                         {
                                 message_warning("No object to compute BoundCocone");
-                                return WorkerThreads::Function();
+                                return com::WorkerThreads::Function();
                         }
                         return process::action_bound_cocone(*object);
                 });
 }
 
-void volume_3d_slice(WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
+void volume_3d_slice(com::WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -191,13 +191,13 @@ void volume_3d_slice(WorkerThreads* const threads, const ModelTree* const model_
                         if (!object)
                         {
                                 message_warning("No volume object");
-                                return WorkerThreads::Function();
+                                return com::WorkerThreads::Function();
                         }
                         return process::action_3d_slice(*object);
                 });
 }
 
-void self_test(WorkerThreads* const threads, const process::TestType test_type, const std::string& action)
+void self_test(com::WorkerThreads* const threads, const process::TestType test_type, const std::string& action)
 {
         threads->terminate_and_start(
                 SELF_TEST_THREAD_ID, action,
@@ -208,8 +208,8 @@ void self_test(WorkerThreads* const threads, const process::TestType test_type, 
 }
 
 void create_menu(
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
+        std::vector<com::Connection>* const connections,
+        com::WorkerThreads* const threads,
         QAction* const action_self_test,
         QAction* const action_benchmark,
         QMenu* const menu_file,
@@ -297,7 +297,7 @@ void create_menu(
 }
 
 Actions::Actions(
-        const CommandLineOptions& options,
+        const com::CommandLineOptions& options,
         QStatusBar* const status_bar,
         QAction* const action_self_test,
         QAction* const action_benchmark,
@@ -310,7 +310,7 @@ Actions::Actions(
         ModelTree* const model_tree,
         const LightingWidget* const lighting,
         const ColorsWidget* const colors)
-        : worker_threads_(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
+        : worker_threads_(com::create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
 {
         create_menu(
                 &connections_, worker_threads_.get(), action_self_test, action_benchmark, menu_file, menu_edit,

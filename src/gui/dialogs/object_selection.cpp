@@ -59,7 +59,7 @@ DialogParameters& dialog_parameters()
 ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         const ObjectSelectionParameters& input,
         std::optional<ObjectSelectionParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           parameters_(parameters)
 {
         ui_.setupUi(this);
@@ -81,7 +81,7 @@ ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         ui_.check_box_convex_hull->setChecked(input.convex_hull);
         ui_.check_box_minumum_spanning_tree->setChecked(input.mst);
 
-        set_dialog_size(this);
+        com::set_dialog_size(this);
 }
 
 void ObjectSelectionParametersDialog::set_all(const bool checked)
@@ -113,7 +113,8 @@ std::optional<ObjectSelectionParameters> ObjectSelectionParametersDialog::show()
 {
         std::optional<ObjectSelectionParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(dialog_parameters().read(), &parameters));
+        const com::QtObjectInDynamicMemory w(
+                new ObjectSelectionParametersDialog(dialog_parameters().read(), &parameters));
 
         if (!w->exec() || w.isNull())
         {

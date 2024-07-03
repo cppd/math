@@ -190,9 +190,9 @@ void ColorsWidget::set_background_color(const QColor& c)
         background_color_ = c;
         if (view_)
         {
-                view_->send(view::command::SetBackgroundColor(qcolor_to_color(c)));
+                view_->send(view::command::SetBackgroundColor(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_background_color, c);
+        com::set_widget_color(ui_.widget_background_color, c);
 }
 
 void ColorsWidget::set_wireframe_color(const QColor& c)
@@ -200,9 +200,9 @@ void ColorsWidget::set_wireframe_color(const QColor& c)
         wireframe_color_ = c;
         if (view_)
         {
-                view_->send(view::command::SetWireframeColor(qcolor_to_color(c)));
+                view_->send(view::command::SetWireframeColor(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_wireframe_color, c);
+        com::set_widget_color(ui_.widget_wireframe_color, c);
 }
 
 void ColorsWidget::set_clip_plane_color(const QColor& c)
@@ -210,9 +210,9 @@ void ColorsWidget::set_clip_plane_color(const QColor& c)
         clip_plane_color_ = c;
         if (view_)
         {
-                view_->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
+                view_->send(view::command::SetClipPlaneColor(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_clip_plane_color, c);
+        com::set_widget_color(ui_.widget_clip_plane_color, c);
 }
 
 void ColorsWidget::set_normal_color_positive(const QColor& c)
@@ -220,9 +220,9 @@ void ColorsWidget::set_normal_color_positive(const QColor& c)
         normal_color_positive_ = c;
         if (view_)
         {
-                view_->send(view::command::SetNormalColorPositive(qcolor_to_color(c)));
+                view_->send(view::command::SetNormalColorPositive(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_normal_color_positive, c);
+        com::set_widget_color(ui_.widget_normal_color_positive, c);
 }
 
 void ColorsWidget::set_normal_color_negative(const QColor& c)
@@ -230,9 +230,9 @@ void ColorsWidget::set_normal_color_negative(const QColor& c)
         normal_color_negative_ = c;
         if (view_)
         {
-                view_->send(view::command::SetNormalColorNegative(qcolor_to_color(c)));
+                view_->send(view::command::SetNormalColorNegative(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_normal_color_negative, c);
+        com::set_widget_color(ui_.widget_normal_color_negative, c);
 }
 
 void ColorsWidget::set_dft_background_color(const QColor& c)
@@ -240,9 +240,9 @@ void ColorsWidget::set_dft_background_color(const QColor& c)
         dft_background_color_ = c;
         if (view_)
         {
-                view_->send(view::command::DftSetBackgroundColor(qcolor_to_color(c)));
+                view_->send(view::command::DftSetBackgroundColor(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_dft_background_color, c);
+        com::set_widget_color(ui_.widget_dft_background_color, c);
 }
 
 void ColorsWidget::set_dft_color(const QColor& c)
@@ -250,24 +250,24 @@ void ColorsWidget::set_dft_color(const QColor& c)
         dft_color_ = c;
         if (view_)
         {
-                view_->send(view::command::DftSetColor(qcolor_to_color(c)));
+                view_->send(view::command::DftSetColor(com::qcolor_to_color(c)));
         }
-        set_widget_color(ui_.widget_dft_color, c);
+        com::set_widget_color(ui_.widget_dft_color, c);
 }
 
 std::vector<view::Command> ColorsWidget::commands() const
 {
-        return {view::command::SetBackgroundColor(qcolor_to_color(background_color_)),
-                view::command::SetWireframeColor(qcolor_to_color(wireframe_color_)),
-                view::command::SetClipPlaneColor(qcolor_to_color(clip_plane_color_)),
-                view::command::SetNormalColorPositive(qcolor_to_color(normal_color_positive_)),
-                view::command::SetNormalColorNegative(qcolor_to_color(normal_color_negative_)),
-                view::command::DftSetBackgroundColor(qcolor_to_color(dft_background_color_)),
-                view::command::DftSetColor(qcolor_to_color(dft_color_))};
+        return {view::command::SetBackgroundColor(com::qcolor_to_color(background_color_)),
+                view::command::SetWireframeColor(com::qcolor_to_color(wireframe_color_)),
+                view::command::SetClipPlaneColor(com::qcolor_to_color(clip_plane_color_)),
+                view::command::SetNormalColorPositive(com::qcolor_to_color(normal_color_positive_)),
+                view::command::SetNormalColorNegative(com::qcolor_to_color(normal_color_negative_)),
+                view::command::DftSetBackgroundColor(com::qcolor_to_color(dft_background_color_)),
+                view::command::DftSetColor(com::qcolor_to_color(dft_color_))};
 }
 
 color::Color ColorsWidget::background_color() const
 {
-        return qcolor_to_color(background_color_);
+        return com::qcolor_to_color(background_color_);
 }
 }

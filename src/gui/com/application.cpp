@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <string>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 Application::Application(int* const argc, char** const argv)
         : QApplication(*argc, argv)

@@ -30,7 +30,7 @@ namespace ns::gui::dialogs
 {
 void color_dialog(const std::string& title, const QColor& current_color, const std::function<void(const QColor& c)>& f)
 {
-        const QtObjectInDynamicMemory<QColorDialog> dialog(parent_for_dialog());
+        const com::QtObjectInDynamicMemory<QColorDialog> dialog(com::parent_for_dialog());
 
         dialog->setWindowTitle(QString::fromStdString(title));
         dialog->setOptions(QColorDialog::NoButtons | QColorDialog::DontUseNativeDialog);

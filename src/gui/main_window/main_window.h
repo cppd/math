@@ -78,7 +78,7 @@ private:
         std::unique_ptr<MeshWidget> mesh_widget_;
         std::unique_ptr<VolumeWidget> volume_widget_;
 
-        std::unique_ptr<ModelEvents> model_events_;
+        std::unique_ptr<com::ModelEvents> model_events_;
         std::unique_ptr<Actions> actions_;
 
         QTimer timer_;

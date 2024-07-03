@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <string_view>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 // Using dynamic memory and QPointer to avoid multiple deletions
 // of Qt object with parent.

@@ -76,7 +76,7 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         const std::array<const char*, 2>& integrators,
         const int integrator_index,
         std::optional<std::tuple<PainterParameters, PainterParameters3d>>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
                   max_thread_count,
@@ -117,7 +117,7 @@ PainterParameters3dDialog::PainterParameters3dDialog(
 
         ui_.vertical_layout_parameters->addWidget(parameters_widget_);
 
-        set_dialog_size(this);
+        com::set_dialog_size(this);
 }
 
 void PainterParameters3dDialog::on_width_value_changed(int)
@@ -193,7 +193,7 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
 
         std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
 
-        const QtObjectInDynamicMemory w(new PainterParameters3dDialog(
+        const com::QtObjectInDynamicMemory w(new PainterParameters3dDialog(
                 max_thread_count, width, height, max_screen_size, samples_per_pixel, max_samples_per_pixel, precisions,
                 precision_index, colors, color_index, integrators, integrator_index, &parameters));
 

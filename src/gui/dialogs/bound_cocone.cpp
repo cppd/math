@@ -69,7 +69,7 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
         const int minimum_alpha_exponent,
         const BoundCoconeParameters& input,
         std::optional<BoundCoconeParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           parameters_(parameters)
 {
         if (!(-10 <= minimum_rho_exponent && minimum_rho_exponent < 0))
@@ -107,7 +107,7 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
         ui_.double_spin_box_rho->setValue(min_rho_);
         ui_.double_spin_box_alpha->setValue(min_alpha_);
 
-        set_dialog_size(this);
+        com::set_dialog_size(this);
 
         ui_.double_spin_box_rho->setValue(
                 std::isfinite(input.rho) ? std::clamp(input.rho, min_rho_, max_rho_) : min_rho_);
@@ -154,7 +154,7 @@ std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
 {
         std::optional<BoundCoconeParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
+        const com::QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
                 MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, dialog_parameters().read(), &parameters));
 
         if (!w->exec() || w.isNull())

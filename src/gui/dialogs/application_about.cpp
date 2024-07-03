@@ -85,8 +85,8 @@ QString title()
 
 void application_about(const bool ray_tracing)
 {
-        const QtObjectInDynamicMemory<QMessageBox> w(
-                QMessageBox::NoIcon, title(), message(ray_tracing), QMessageBox::Ok, parent_for_dialog());
+        const com::QtObjectInDynamicMemory<QMessageBox> w(
+                QMessageBox::NoIcon, title(), message(ray_tracing), QMessageBox::Ok, com::parent_for_dialog());
 
         w->exec();
 }

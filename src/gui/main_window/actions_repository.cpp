@@ -56,7 +56,7 @@ std::vector<std::string>& sorted(std::vector<std::string>& v)
 
 void load_point_mesh(
         const unsigned thread_id,
-        WorkerThreads* const threads,
+        com::WorkerThreads* const threads,
         const storage::Repository* const repository,
         const int dimension,
         const std::string& object_name,
@@ -66,7 +66,8 @@ void load_point_mesh(
                 thread_id, action,
                 [&]()
                 {
-                        WorkerThreads::Function f = process::action_load_point_mesh(repository, dimension, object_name);
+                        com::WorkerThreads::Function f =
+                                process::action_load_point_mesh(repository, dimension, object_name);
                         // model_tree->clear();
                         // view->send(view::command::ResetView());
                         return f;
@@ -75,7 +76,7 @@ void load_point_mesh(
 
 void load_facet_mesh(
         const unsigned thread_id,
-        WorkerThreads* const threads,
+        com::WorkerThreads* const threads,
         const storage::Repository* const repository,
         const int dimension,
         const std::string& object_name,
@@ -85,7 +86,8 @@ void load_facet_mesh(
                 thread_id, action,
                 [&]()
                 {
-                        WorkerThreads::Function f = process::action_load_facet_mesh(repository, dimension, object_name);
+                        com::WorkerThreads::Function f =
+                                process::action_load_facet_mesh(repository, dimension, object_name);
                         // model_tree->clear();
                         // view->send(view::command::ResetView());
                         return f;
@@ -94,7 +96,7 @@ void load_facet_mesh(
 
 void load_volume(
         const unsigned thread_id,
-        WorkerThreads* const threads,
+        com::WorkerThreads* const threads,
         const storage::Repository* const repository,
         const int dimension,
         const std::string& object_name,
@@ -112,8 +114,8 @@ void create_point_mesh_menu(
         const unsigned thread_id,
         const int dimension,
         std::vector<std::string>&& object_names,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
+        std::vector<com::Connection>* const connections,
+        com::WorkerThreads* const threads,
         QMenu* const menu,
         const storage::Repository* const repository)
 {
@@ -146,8 +148,8 @@ void create_facet_mesh_menu(
         const unsigned thread_id,
         const int dimension,
         std::vector<std::string>&& object_names,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
+        std::vector<com::Connection>* const connections,
+        com::WorkerThreads* const threads,
         QMenu* const menu,
         const storage::Repository* const repository)
 {
@@ -180,8 +182,8 @@ void create_volume_menu(
         const unsigned thread_id,
         const int dimension,
         std::vector<std::string>&& object_names,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
+        std::vector<com::Connection>* const connections,
+        com::WorkerThreads* const threads,
         QMenu* const menu,
         const storage::Repository* const repository)
 {
@@ -213,8 +215,8 @@ void create_volume_menu(
 
 void create_repository_menu(
         const unsigned thread_id,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
+        std::vector<com::Connection>* const connections,
+        com::WorkerThreads* const threads,
         QMenu* const menu_create,
         const storage::Repository* const repository)
 {

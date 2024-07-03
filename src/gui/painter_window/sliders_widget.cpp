@@ -62,7 +62,7 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
                 slider->setValue(positions[number]);
 
                 auto* const label = new QLabel(this);
-                set_label_minimum_width_for_text(label, to_string_digit_groups(dimension_max_value));
+                com::set_label_minimum_width_for_text(label, to_string_digit_groups(dimension_max_value));
                 label->setText(QString::fromStdString(to_string_digit_groups(positions[number])));
 
                 const QString label_d_text = QString::fromStdString("d[" + to_string(dimension + 1) + "]");
@@ -89,7 +89,7 @@ void SlidersWidget::on_slider_changed(int)
         ASSERT(iter->second.number < slider_positions_.size());
 
         const int value = iter->first->value();
-        set_label_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
+        com::set_label_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
         slider_positions_[iter->second.number] = value;
 
         Q_EMIT changed(slider_positions_);

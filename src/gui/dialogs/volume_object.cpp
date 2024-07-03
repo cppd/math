@@ -78,7 +78,7 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         const int min_image_size,
         const int max_image_size,
         std::optional<VolumeObjectParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           min_image_size_(min_image_size),
           max_image_size_(max_image_size),
           parameters_(parameters)
@@ -96,7 +96,7 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         ui_.spin_box_image_size->setSingleStep(std::max(1, max_image_size / 1000));
         ui_.spin_box_image_size->setValue(default_image_size);
 
-        set_dialog_size(this);
+        com::set_dialog_size(this);
 }
 
 void VolumeObjectParametersDialog::done(const int r)
@@ -132,7 +132,7 @@ std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
 {
         std::optional<VolumeObjectParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
+        const com::QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
                 dimension, object_name, default_image_size, min_image_size, max_image_size, &parameters));
 
         if (!w->exec() || w.isNull())

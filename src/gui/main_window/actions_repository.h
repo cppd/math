@@ -29,8 +29,8 @@ namespace ns::gui::main_window
 {
 void create_repository_menu(
         unsigned thread_id,
-        std::vector<Connection>* connections,
-        WorkerThreads* threads,
+        std::vector<com::Connection>* connections,
+        com::WorkerThreads* threads,
         QMenu* menu_create,
         const storage::Repository* repository);
 }

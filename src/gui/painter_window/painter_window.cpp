@@ -160,7 +160,7 @@ void PainterWindow::create_interface(
                 [this](int)
                 {
                         pixels_->set_brightness_parameter(
-                                std::clamp(slider_position(brightness_parameter_slider_.get()), 0.0, 1.0));
+                                std::clamp(com::slider_position(brightness_parameter_slider_.get()), 0.0, 1.0));
                 });
         image_layout->addWidget(brightness_parameter_slider_.get());
 

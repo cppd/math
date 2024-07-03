@@ -78,7 +78,7 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         const int min_point_count,
         const int max_point_count,
         std::optional<PointObjectParameters>* const parameters)
-        : QDialog(parent_for_dialog()),
+        : QDialog(com::parent_for_dialog()),
           min_point_count_(min_point_count),
           max_point_count_(max_point_count),
           parameters_(parameters)
@@ -96,7 +96,7 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         ui_.spin_box_point_count->setSingleStep(std::max(1, max_point_count / 1000));
         ui_.spin_box_point_count->setValue(default_point_count);
 
-        set_dialog_size(this);
+        com::set_dialog_size(this);
 }
 
 void PointObjectParametersDialog::done(const int r)
@@ -132,7 +132,7 @@ std::optional<PointObjectParameters> PointObjectParametersDialog::show(
 {
         std::optional<PointObjectParameters> parameters;
 
-        const QtObjectInDynamicMemory w(new PointObjectParametersDialog(
+        const com::QtObjectInDynamicMemory w(new PointObjectParametersDialog(
                 dimension, object_name, default_point_count, min_point_count, max_point_count, &parameters));
 
         if (!w->exec() || w.isNull())

@@ -57,25 +57,25 @@ void message_event(const MessageEvent& event)
 
 int run_application(int argc, char** const argv)
 {
-        const ApplicationMessage application_message;
+        const com::ApplicationMessage application_message;
 
-        const Application a(&argc, argv);
+        const com::Application a(&argc, argv);
 
         const MessageEventsObserver message_observer(
                 [](const MessageEvent& event)
                 {
-                        Application::run(
+                        com::Application::run(
                                 [event]()
                                 {
                                         message_event(event);
                                 });
                 });
 
-        LOG(command_line_description());
+        LOG(com::command_line_description());
 
-        create_delete_on_close_window<gui::main_window::MainWindow>()->show();
+        com::create_delete_on_close_window<main_window::MainWindow>()->show();
 
-        const int res = Application::exec();
+        const int res = com::Application::exec();
 
         return res;
 }

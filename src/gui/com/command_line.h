@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <string>
 
-namespace ns::gui
+namespace ns::gui::com
 {
 std::string command_line_description();
 

@@ -37,7 +37,7 @@ private:
         double last_min_;
         double last_max_;
 
-        std::vector<Connection> connections_;
+        std::vector<com::Connection> connections_;
 
         void on_min_value_changed();
         void on_max_value_changed();
