@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::com
 {
 template <std::size_t N, typename T>
 struct Normals final

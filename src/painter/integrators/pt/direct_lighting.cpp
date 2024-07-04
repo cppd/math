@@ -67,7 +67,7 @@ template <std::size_t N, typename T, typename Color>
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
         const numerical::Vector<N, T>& v,
-        const Normals<N, T>& normals,
+        const com::Normals<N, T>& normals,
         PCG& engine)
 {
         const numerical::Vector<N, T>& n = normals.shading;
@@ -109,7 +109,7 @@ template <std::size_t N, typename T, typename Color>
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
         const numerical::Vector<N, T>& v,
-        const Normals<N, T>& normals,
+        const com::Normals<N, T>& normals,
         PCG& engine)
 {
         if (light.is_delta())
@@ -160,7 +160,7 @@ std::optional<Color> direct_lighting(
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
         const numerical::Vector<N, T>& v,
-        const Normals<N, T>& normals,
+        const com::Normals<N, T>& normals,
         PCG& engine)
 {
         std::optional<Color> res;
@@ -175,7 +175,7 @@ std::optional<Color> direct_lighting(
 #define TEMPLATE(N, T, C)                                                                                         \
         template std::optional<C> direct_lighting(                                                                \
                 const Scene<(N), T, C>&, const SurfaceIntersection<(N), T, C>&, const numerical::Vector<(N), T>&, \
-                const Normals<(N), T>&, PCG&);
+                const com::Normals<(N), T>&, PCG&);
 
 TEMPLATE_INSTANTIATION_N_T_C(TEMPLATE)
 }

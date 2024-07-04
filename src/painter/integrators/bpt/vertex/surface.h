@@ -32,7 +32,7 @@ template <std::size_t N, typename T, typename Color>
 class Surface final
 {
         SurfaceIntersection<N, T, Color> surface_;
-        Normals<N, T> normals_;
+        com::Normals<N, T> normals_;
         Color beta_;
         numerical::Vector<N, T> dir_to_prev_;
         T pdf_forward_ = 0;
@@ -40,7 +40,7 @@ class Surface final
 
 public:
         Surface(const SurfaceIntersection<N, T, Color>& surface,
-                const Normals<N, T>& normals,
+                const com::Normals<N, T>& normals,
                 const Color& beta,
                 const numerical::Vector<N, T>& dir_to_prev)
                 : surface_(surface),
@@ -66,7 +66,7 @@ public:
                 return normals_.shading;
         }
 
-        [[nodiscard]] const Normals<N, T>& normals() const
+        [[nodiscard]] const com::Normals<N, T>& normals() const
         {
                 return normals_;
         }

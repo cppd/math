@@ -32,6 +32,6 @@ template <std::size_t N, typename T, typename Color>
         const Scene<N, T, Color>& scene,
         const SurfaceIntersection<N, T, Color>& surface,
         const numerical::Vector<N, T>& v,
-        const Normals<N, T>& normals,
+        const com::Normals<N, T>& normals,
         PCG& engine);
 }

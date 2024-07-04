@@ -61,14 +61,14 @@ template <std::size_t N, typename T, typename Color>
 [[nodiscard]] bool surface_found(
         const numerical::Ray<N, T>& ray,
         const SurfaceIntersection<N, T, Color>& surface,
-        const Normals<N, T>& normals)
+        const com::Normals<N, T>& normals)
 {
         return surface && dot(normals.shading, -ray.dir()) > 0;
 }
 
 template <std::size_t N, typename T>
 [[nodiscard]] T correct_normals(
-        const Normals<N, T>& normals,
+        const com::Normals<N, T>& normals,
         const numerical::Vector<N, T>& v,
         const numerical::Vector<N, T>& l)
 {
@@ -83,12 +83,12 @@ template <std::size_t N, typename T>
 
 template <std::size_t N, typename T, typename Color>
 void add_sample(
-        const std::optional<SurfaceSamplePdf<N, T, Color>>& sample,
+        const std::optional<com::SurfaceSamplePdf<N, T, Color>>& sample,
         const Color& beta,
         const T pdf_forward,
         const numerical::Ray<N, T>& ray,
         const SurfaceIntersection<N, T, Color>& surface,
-        const Normals<N, T>& normals,
+        const com::Normals<N, T>& normals,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
         if (!sample)
@@ -123,12 +123,12 @@ void walk(
         ASSERT(!path->empty());
 
         SurfaceIntersection<N, T, Color> surface;
-        Normals<N, T> normals;
+        com::Normals<N, T> normals;
 
         std::tie(surface, normals) = [&]
         {
                 static constexpr std::optional<numerical::Vector<N, T>> GEOMETRIC_NORMAL;
-                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
+                return com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 
         T pdf_forward = pdf;
@@ -169,7 +169,8 @@ void walk(
                 }
 
                 ray = {surface.point(), sample->l};
-                std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
+                std::tie(surface, normals) =
+                        com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
         }
 }
 

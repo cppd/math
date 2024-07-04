@@ -78,7 +78,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
         const Scene<N, T, Color>& scene,
         numerical::Ray<N, T> ray,
         SurfaceIntersection<N, T, Color> surface,
-        Normals<N, T> normals,
+        com::Normals<N, T> normals,
         Color color)
 {
         Color beta(1);
@@ -111,7 +111,8 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
                 }
 
                 ray = {surface.point(), sample->l};
-                std::tie(surface, normals) = scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
+                std::tie(surface, normals) =
+                        com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
 
                 if (!surface)
                 {
@@ -129,7 +130,7 @@ std::optional<Color> pt(const Scene<N, T, Color>& scene, const numerical::Ray<N,
         const auto [surface, normals] = [&]
         {
                 static constexpr std::optional<numerical::Vector<N, T>> GEOMETRIC_NORMAL;
-                return scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
+                return com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
         }();
 
         if (!surface)

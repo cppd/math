@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <type_traits>
 
-namespace ns::painter::integrators
+namespace ns::painter::integrators::com
 {
 namespace
 {
