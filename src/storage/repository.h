@@ -61,15 +61,15 @@ public:
 
                 const auto f = [&]<std::size_t N>(const Repositories<N>& v)
                 {
-                        names.resize(names.size() + 1);
-                        names.back().dimension = N;
-                        names.back().point_mesh_names = v.meshes->point_object_names();
-                        names.back().facet_mesh_names = v.meshes->facet_object_names();
-                        names.back().volume_names = v.volumes->object_names();
+                        names.push_back(
+                                {.dimension = N,
+                                 .point_mesh_names = v.meshes->point_object_names(),
+                                 .facet_mesh_names = v.meshes->facet_object_names(),
+                                 .volume_names = v.volumes->object_names()});
                 };
 
                 std::apply(
-                        [&f](const auto&... v)
+                        [&](const auto&... v)
                         {
                                 (f(v), ...);
                         },
