@@ -38,6 +38,10 @@ class Repository final
         template <std::size_t N>
         struct Repositories final
         {
+                Repositories()
+                {
+                }
+
                 std::unique_ptr<const repository::MeshObjects<N>> meshes = repository::create_mesh_objects<N>();
                 std::unique_ptr<const repository::VolumeObjects<N>> volumes = repository::create_volume_objects<N>();
         };
