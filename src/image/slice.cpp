@@ -37,9 +37,17 @@ namespace ns::image
 namespace
 {
 template <std::size_t N, std::size_t S>
-std::array<Slice, S> sort_slices(const Image<N>& image, const std::array<Slice, S>& slices)
+void check_image_and_slices(const Image<N>& image, const std::array<Slice, S>& slices)
 {
         static_assert(S > 0 && S < N);
+
+        for (std::size_t i = 0; i < image.size.size(); ++i)
+        {
+                if (image.size[i] <= 0)
+                {
+                        error("Image size is not positive " + to_string(image.size));
+                }
+        }
 
         for (const Slice& s : slices)
         {
@@ -47,31 +55,38 @@ std::array<Slice, S> sort_slices(const Image<N>& image, const std::array<Slice, 
                 {
                         error("Dimension " + to_string(s.dimension) + " is out of the range [0, " + to_string(N) + ")");
                 }
+
                 if (s.coordinate >= static_cast<std::size_t>(image.size[s.dimension]))
                 {
                         error("Index " + to_string(s.coordinate) + " is out of the range [0, "
                               + to_string(image.size[s.dimension]) + ")");
                 }
         }
+}
 
-        std::array<Slice, S> res = slices;
+template <std::size_t N, std::size_t S>
+std::array<std::size_t, S> sort_slice_dimensions(const std::array<Slice, S>& slices)
+{
+        static_assert(S > 0 && S < N);
 
-        std::sort(
-                res.begin(), res.end(),
-                [](const Slice& a, const Slice& b)
-                {
-                        return a.dimension < b.dimension;
-                });
+        std::array<std::size_t, S> d;
+
+        for (std::size_t i = 0; i < S; ++i)
+        {
+                d[i] = slices[i].dimension;
+        }
+
+        std::sort(d.begin(), d.end());
 
         for (std::size_t i = 0; i < S - 1; ++i)
         {
-                if (res[i].dimension == res[i + 1].dimension)
+                if (d[i] == d[i + 1])
                 {
-                        error("Not unique dimension " + to_string(res[i].dimension));
+                        error("Not unique dimension " + to_string(d[i]));
                 }
         }
 
-        return res;
+        return d;
 }
 
 template <std::size_t N, std::size_t S>
@@ -79,28 +94,32 @@ std::array<int, N - S> create_coordinate_map(const std::array<Slice, S>& slices)
 {
         static_assert(S > 0 && S < N);
 
+        const std::array<std::size_t, S> sorted_dimensions = sort_slice_dimensions<N>(slices);
+
         std::array<int, N - S> map;
 
-        std::size_t i = 0;
+        std::size_t dimension = 0;
         std::size_t slice_i = 0;
         std::size_t map_i = 0;
 
-        for (; i < N && slice_i < slices.size(); ++i)
+        while (dimension < N && slice_i < sorted_dimensions.size())
         {
-                if (i != slices[slice_i].dimension)
+                ASSERT(dimension <= sorted_dimensions[slice_i]);
+                if (dimension < sorted_dimensions[slice_i])
                 {
-                        map[map_i++] = i;
+                        map[map_i++] = dimension++;
                 }
                 else
                 {
                         ++slice_i;
+                        ++dimension;
                 }
         }
         ASSERT(slice_i == slices.size());
 
-        for (; i < N; ++i)
+        while (dimension < N)
         {
-                map[map_i++] = i;
+                map[map_i++] = dimension++;
         }
         ASSERT(map_i == map.size());
 
@@ -177,22 +196,14 @@ Image<N - S> slice(const Image<N>& image, const std::array<Slice, S>& slices)
 {
         static_assert(S > 0 && S < N);
 
-        for (std::size_t i = 0; i < image.size.size(); ++i)
-        {
-                if (image.size[i] <= 0)
-                {
-                        error("Image size is not positive " + to_string(image.size));
-                }
-        }
+        check_image_and_slices(image, slices);
 
-        const std::array<Slice, S> sorted_slices = sort_slices(image, slices);
-
-        const std::array<int, N - S> map = create_coordinate_map<N>(sorted_slices);
+        const std::array<int, N - S> map = create_coordinate_map<N>(slices);
 
         std::array<int, N> coordinates;
-        for (std::size_t i = 0; i < sorted_slices.size(); ++i)
+        for (const Slice& slice : slices)
         {
-                coordinates[sorted_slices[i].dimension] = sorted_slices[i].coordinate;
+                coordinates[slice.dimension] = slice.coordinate;
         }
 
         switch (image.color_format)
