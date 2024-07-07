@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "image.h"
 
 #include <src/com/alg.h>
+#include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/print.h>
 #include <src/settings/instantiation.h>
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstring>
@@ -43,7 +43,7 @@ void check_image_and_slices(const Image<N>& image, const std::array<Slice, S>& s
 
         for (std::size_t i = 0; i < image.size.size(); ++i)
         {
-                if (image.size[i] <= 0)
+                if (!(image.size[i] > 0))
                 {
                         error("Image size is not positive " + to_string(image.size));
                 }
@@ -51,42 +51,39 @@ void check_image_and_slices(const Image<N>& image, const std::array<Slice, S>& s
 
         for (const Slice& s : slices)
         {
-                if (s.dimension >= N)
+                if (!(s.dimension < N))
                 {
                         error("Dimension " + to_string(s.dimension) + " is out of the range [0, " + to_string(N) + ")");
                 }
 
-                if (s.coordinate >= static_cast<std::size_t>(image.size[s.dimension]))
+                if (!(s.coordinate < static_cast<std::size_t>(image.size[s.dimension])))
                 {
-                        error("Index " + to_string(s.coordinate) + " is out of the range [0, "
+                        error("Slice coordinate " + to_string(s.coordinate) + " is out of the range [0, "
                               + to_string(image.size[s.dimension]) + ")");
                 }
         }
 }
 
 template <std::size_t N, std::size_t S>
-std::array<std::size_t, S> sort_slice_dimensions(const std::array<Slice, S>& slices)
+std::array<bool, N> find_slice_dimensions(const std::array<Slice, S>& slices)
 {
         static_assert(S > 0 && S < N);
 
-        std::array<std::size_t, S> d;
-
+        std::array<bool, N> res = make_array_value<bool, N>(false);
         for (std::size_t i = 0; i < S; ++i)
         {
-                d[i] = slices[i].dimension;
-        }
-
-        std::sort(d.begin(), d.end());
-
-        for (std::size_t i = 0; i < S - 1; ++i)
-        {
-                if (d[i] == d[i + 1])
+                const std::size_t d = slices[i].dimension;
+                if (!(d < N))
                 {
-                        error("Not unique dimension " + to_string(d[i]));
+                        error("Slice dimension " + to_string(d) + " is out of the range [0, " + to_string(N) + ")");
                 }
+                if (res[d])
+                {
+                        error("Not unique slice dimension " + to_string(d));
+                }
+                res[d] = true;
         }
-
-        return d;
+        return res;
 }
 
 template <std::size_t N, std::size_t S>
@@ -94,35 +91,18 @@ std::array<int, N - S> create_coordinate_map(const std::array<Slice, S>& slices)
 {
         static_assert(S > 0 && S < N);
 
-        const std::array<std::size_t, S> sorted_dimensions = sort_slice_dimensions<N>(slices);
+        const std::array<bool, N> slice_dimensions = find_slice_dimensions<N>(slices);
 
         std::array<int, N - S> map;
-
-        std::size_t dimension = 0;
-        std::size_t slice_i = 0;
         std::size_t map_i = 0;
-
-        while (dimension < N && slice_i < sorted_dimensions.size())
+        for (std::size_t i = 0; i < N; ++i)
         {
-                ASSERT(dimension <= sorted_dimensions[slice_i]);
-                if (dimension < sorted_dimensions[slice_i])
+                if (!slice_dimensions[i])
                 {
-                        map[map_i++] = dimension++;
+                        map[map_i++] = i;
                 }
-                else
-                {
-                        ++slice_i;
-                        ++dimension;
-                }
-        }
-        ASSERT(slice_i == slices.size());
-
-        while (dimension < N)
-        {
-                map[map_i++] = dimension++;
         }
         ASSERT(map_i == map.size());
-
         return map;
 }
 
