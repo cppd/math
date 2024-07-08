@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <span>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 void write_pixels_to_image(
         VkDevice device,

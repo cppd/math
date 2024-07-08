@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <span>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 namespace
 {

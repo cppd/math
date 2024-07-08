@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 VkFormat find_supported_format(
         VkPhysicalDevice physical_device,

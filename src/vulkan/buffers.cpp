@@ -132,12 +132,12 @@ BufferWithMemory::BufferWithMemory(
         const VkDeviceSize size)
         : physical_device_(device.physical_device()),
           family_indices_(sort_and_unique(family_indices)),
-          buffer_(create_buffer(device.handle(), size, usage, family_indices)),
+          buffer_(buffers::create_buffer(device.handle(), size, usage, family_indices)),
           memory_properties_(
                   memory_type == BufferMemoryType::HOST_VISIBLE
                           ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
                           : (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          device_memory_(create_device_memory(
+          device_memory_(buffers::create_device_memory(
                   device.handle(),
                   device.physical_device(),
                   buffer_.handle(),
@@ -165,7 +165,7 @@ void BufferWithMemory::write(
 
         check_family_index(command_pool, queue, family_indices_);
 
-        write_data_to_buffer(
+        buffers::write_data_to_buffer(
                 buffer_.device(), physical_device_, command_pool, queue, buffer_.handle(), offset, size, data);
 }
 
@@ -247,34 +247,34 @@ ImageWithMemory::ImageWithMemory(
         const VkImageUsageFlags usage)
         : physical_device_(device.physical_device()),
           family_indices_(sort_and_unique(family_indices)),
-          image_(create_image(
+          image_(buffers::create_image(
                   device.handle(),
                   physical_device_,
                   type,
-                  correct_image_extent(type, extent),
-                  find_supported_image_format(
+                  buffers::correct_image_extent(type, extent),
+                  buffers::find_supported_image_format(
                           physical_device_,
                           color_formats(formats),
                           type,
                           VK_IMAGE_TILING_OPTIMAL,
-                          format_features_for_image_usage(usage),
+                          buffers::format_features_for_image_usage(usage),
                           usage,
                           sample_count),
                   family_indices,
                   sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
                   usage)),
-          device_memory_(create_device_memory(
+          device_memory_(buffers::create_device_memory(
                   device.handle(),
                   physical_device_,
                   image_.handle(),
                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
-        if (has_usage_for_image_view(usage))
+        if (buffers::has_usage_for_image_view(usage))
         {
-                image_view_ = create_image_view(image_, VK_IMAGE_ASPECT_COLOR_BIT);
+                image_view_ = buffers::create_image_view(image_, VK_IMAGE_ASPECT_COLOR_BIT);
         }
-        else if (!has_usage_for_transfer(usage))
+        else if (!buffers::has_usage_for_transfer(usage))
         {
                 error("Unsupported image usage " + to_string_binary(usage) + " for image");
         }
@@ -297,7 +297,7 @@ ImageWithMemory::ImageWithMemory(
         {
                 check_family_index(command_pool, queue, family_indices_);
 
-                transition_image_layout(
+                buffers::transition_image_layout(
                         VK_IMAGE_ASPECT_COLOR_BIT, device.handle(), command_pool.handle(), queue.handle(),
                         image_.handle(), layout);
         }
@@ -315,7 +315,7 @@ void ImageWithMemory::write(
 
         check_family_index(command_pool, queue, family_indices_);
 
-        write_pixels_to_image(
+        buffers::write_pixels_to_image(
                 image_.device(), physical_device_, command_pool, queue, image_.handle(), image_.format(),
                 image_.extent(), VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
@@ -332,7 +332,7 @@ void ImageWithMemory::read(
 
         check_family_index(command_pool, queue, family_indices_);
 
-        read_pixels_from_image(
+        buffers::read_pixels_from_image(
                 image_.device(), physical_device_, command_pool, queue, image_.handle(), image_.format(),
                 image_.extent(), VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
@@ -358,11 +358,11 @@ DepthImageWithMemory::DepthImageWithMemory(
         const std::uint32_t width,
         const std::uint32_t height,
         const VkImageUsageFlags usage)
-        : image_(create_image(
+        : image_(buffers::create_image(
                   device.handle(),
                   device.physical_device(),
                   VK_IMAGE_TYPE_2D,
-                  limit_image_extent(
+                  buffers::limit_image_extent(
                           VK_IMAGE_TYPE_2D,
                           make_extent(width, height),
                           device.physical_device(),
@@ -374,7 +374,7 @@ DepthImageWithMemory::DepthImageWithMemory(
                   sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
                   usage)),
-          device_memory_(create_device_memory(
+          device_memory_(buffers::create_device_memory(
                   device.handle(),
                   device.physical_device(),
                   image_.handle(),
@@ -385,11 +385,11 @@ DepthImageWithMemory::DepthImageWithMemory(
                 error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
         }
 
-        if (has_usage_for_image_view(usage))
+        if (buffers::has_usage_for_image_view(usage))
         {
-                image_view_ = create_image_view(image_, VK_IMAGE_ASPECT_DEPTH_BIT);
+                image_view_ = buffers::create_image_view(image_, VK_IMAGE_ASPECT_DEPTH_BIT);
         }
-        else if (!has_usage_for_transfer(usage))
+        else if (!buffers::has_usage_for_transfer(usage))
         {
                 error("Unsupported image usage " + to_string_binary(usage) + " for depth image");
         }
@@ -406,12 +406,12 @@ DepthImageWithMemory::DepthImageWithMemory(
         : DepthImageWithMemory(
                   device,
                   family_indices,
-                  find_supported_image_format(
+                  buffers::find_supported_image_format(
                           device.physical_device(),
                           depth_formats(formats),
                           VK_IMAGE_TYPE_2D,
                           VK_IMAGE_TILING_OPTIMAL,
-                          format_features_for_image_usage(usage),
+                          buffers::format_features_for_image_usage(usage),
                           usage,
                           sample_count),
                   sample_count,
@@ -436,7 +436,7 @@ DepthImageWithMemory::DepthImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_image_layout(
+                buffers::transition_image_layout(
                         VK_IMAGE_ASPECT_DEPTH_BIT, device.handle(), command_pool, queue, image_.handle(), layout);
         }
 }

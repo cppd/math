@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <span>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 void write_data_to_buffer(
         VkDevice device,

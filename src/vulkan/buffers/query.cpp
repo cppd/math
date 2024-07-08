@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 VkFormat find_supported_format(
         const VkPhysicalDevice device,

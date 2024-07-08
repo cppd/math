@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 namespace
 {

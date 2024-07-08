@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdint>
 
-namespace ns::vulkan
+namespace ns::vulkan::buffers
 {
 namespace
 {
