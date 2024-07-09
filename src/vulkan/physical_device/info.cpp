@@ -48,9 +48,9 @@ void check_api_version(const VkPhysicalDevice device)
 
         std::ostringstream oss;
         oss << "Vulkan physical device version ";
-        oss << api_version_to_string(properties.apiVersion);
+        oss << strings::api_version_to_string(properties.apiVersion);
         oss << " is not supported, minimum required version is ";
-        oss << api_version_to_string(API_VERSION);
+        oss << strings::api_version_to_string(API_VERSION);
         error(oss.str());
 }
 

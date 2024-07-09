@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view separator)
 {

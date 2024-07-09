@@ -374,7 +374,7 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
 
         std::ostringstream oss;
         oss << "No Vulkan physical device found with minimum required version ";
-        oss << api_version_to_string(API_VERSION);
+        oss << strings::api_version_to_string(API_VERSION);
         oss << '\n';
         oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
         for (const VkPhysicalDevice device : all_devices)
@@ -383,7 +383,7 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(device, &properties);
                 oss << static_cast<const char*>(properties.deviceName) << "\n";
-                oss << "  API version " << api_version_to_string(properties.apiVersion);
+                oss << "  API version " << strings::api_version_to_string(properties.apiVersion);
         }
 
         error(oss.str());

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string image_layout_to_string(VkImageLayout image_layout);
 }

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string shader_float_controls_independence_to_string(
         VkShaderFloatControlsIndependence shader_float_controls_independence);

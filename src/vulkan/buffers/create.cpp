@@ -68,24 +68,24 @@ void check_image_size(
                 }
                 break;
         default:
-                error("Unknown image type " + image_type_to_string(type));
+                error("Unknown image type " + strings::image_type_to_string(type));
         }
 #pragma GCC diagnostic pop
 
         const VkExtent3D max_extent = find_max_image_extent(physical_device, format, type, tiling, usage);
         if (extent.width > max_extent.width)
         {
-                error("Image " + format_to_string(format) + " extent width " + to_string(extent.width)
+                error("Image " + strings::format_to_string(format) + " extent width " + to_string(extent.width)
                       + " is out of range [1, " + to_string(max_extent.width) + "]");
         }
         if (extent.height > max_extent.height)
         {
-                error("Image " + format_to_string(format) + " extent height " + to_string(extent.height)
+                error("Image " + strings::format_to_string(format) + " extent height " + to_string(extent.height)
                       + " is out of range [1, " + to_string(max_extent.height) + "]");
         }
         if (extent.depth > max_extent.depth)
         {
-                error("Image " + format_to_string(format) + " extent depth " + to_string(extent.depth)
+                error("Image " + strings::format_to_string(format) + " extent depth " + to_string(extent.depth)
                       + " is out of range [1, " + to_string(max_extent.depth) + "]");
         }
 }
@@ -197,7 +197,7 @@ ImageView create_image_view(const Image& image, const VkImageAspectFlags aspect_
                 info.viewType = VK_IMAGE_VIEW_TYPE_3D;
                 break;
         default:
-                error("Unknown image type " + image_type_to_string(image.type()));
+                error("Unknown image type " + strings::image_type_to_string(image.type()));
         }
 #pragma GCC diagnostic pop
 

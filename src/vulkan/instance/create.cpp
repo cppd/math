@@ -51,9 +51,9 @@ void check_api_version()
 
         std::ostringstream oss;
         oss << "Vulkan instance API version ";
-        oss << api_version_to_string(api_version);
+        oss << strings::api_version_to_string(api_version);
         oss << " is not supported, minimum required version is ";
-        oss << api_version_to_string(API_VERSION);
+        oss << strings::api_version_to_string(API_VERSION);
         error(oss.str());
 }
 
@@ -113,8 +113,8 @@ handle::Instance create_instance(
         check_layer_support(required_layers);
         check_extension_support(required_extensions);
 
-        const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
-        const std::vector<const char*> layers = strings_to_char_pointers(required_layers);
+        const std::vector<const char*> extensions = strings::strings_to_char_pointers(required_extensions);
+        const std::vector<const char*> layers = strings::strings_to_char_pointers(required_layers);
 
         LOG(instance_info(extensions, layers));
 

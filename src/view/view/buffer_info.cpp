@@ -142,7 +142,7 @@ std::string render_buffer_info(
         if (!depth.empty())
         {
                 oss << "Render buffers depth attachment format = "
-                    << vulkan::format_to_string(depth[0].image().format());
+                    << vulkan::strings::format_to_string(depth[0].image().format());
         }
         else
         {
@@ -153,7 +153,7 @@ std::string render_buffer_info(
         if (!color.empty())
         {
                 oss << "Render buffers color attachment format = "
-                    << vulkan::format_to_string(color[0].image().format());
+                    << vulkan::strings::format_to_string(color[0].image().format());
         }
         else
         {

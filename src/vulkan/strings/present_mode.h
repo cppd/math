@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string present_mode_to_string(VkPresentModeKHR present_mode);
 }

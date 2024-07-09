@@ -100,7 +100,7 @@ FormatInfo format_info(const VkFormat format)
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
                 return {.format = image::ColorFormat::R32, .swap = false, .color = false};
         default:
-                error("Unsupported image format " + format_to_string(format) + " for writing");
+                error("Unsupported image format " + strings::format_to_string(format) + " for writing");
         }
 #pragma GCC diagnostic pop
 }
@@ -134,7 +134,7 @@ void write_pixels_to_image(
         if ((!info.color && aspect_flag == VK_IMAGE_ASPECT_COLOR_BIT)
             || (info.color && aspect_flag == VK_IMAGE_ASPECT_DEPTH_BIT))
         {
-                error("Unsupported image format " + format_to_string(format) + " and image aspect "
+                error("Unsupported image format " + strings::format_to_string(format) + " and image aspect "
                       + to_string_binary(aspect_flag) + " for writing");
         }
 
@@ -237,7 +237,7 @@ void read_pixels_from_image(
                 color = false;
                 break;
         default:
-                error("Unsupported image format " + format_to_string(format) + " for reading");
+                error("Unsupported image format " + strings::format_to_string(format) + " for reading");
         }
 #pragma GCC diagnostic pop
 

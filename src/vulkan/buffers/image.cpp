@@ -63,7 +63,7 @@ VkExtent3D correct_image_extent(const VkImageType type, const VkExtent3D extent)
         case VK_IMAGE_TYPE_3D:
                 return extent;
         default:
-                error("Unknown image type " + image_type_to_string(type));
+                error("Unknown image type " + strings::image_type_to_string(type));
         }
 #pragma GCC diagnostic pop
 }
@@ -93,7 +93,7 @@ VkExtent3D limit_image_extent(
                         .height = std::min(extent.height, max_extent.height),
                         .depth = std::min(extent.depth, max_extent.depth)};
         default:
-                error("Unknown image type " + image_type_to_string(type));
+                error("Unknown image type " + strings::image_type_to_string(type));
         }
 #pragma GCC diagnostic pop
 }

@@ -74,10 +74,12 @@ VkSurfaceFormatKHR choose_surface_format(
                 {
                         s += '\n';
                 }
-                s += format_to_string(format.format) + ", " + color_space_to_string(format.colorSpace);
+                s += strings::format_to_string(format.format) + ", "
+                     + strings::color_space_to_string(format.colorSpace);
         }
-        error("Failed to find surface format " + format_to_string(required_surface_format.format) + ", "
-              + color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n" + s);
+        error("Failed to find surface format " + strings::format_to_string(required_surface_format.format) + ", "
+              + strings::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n"
+              + s);
 }
 
 VkPresentModeKHR choose_present_mode(
@@ -241,7 +243,7 @@ std::string surface_formats_to_string(const std::vector<VkSurfaceFormatKHR>& sur
                 {
                         s += ", ";
                 }
-                s += format_to_string(format.format);
+                s += strings::format_to_string(format.format);
         }
         return s;
 }
@@ -255,7 +257,7 @@ std::string color_spaces_to_string(const std::vector<VkSurfaceFormatKHR>& surfac
                 {
                         s += ", ";
                 }
-                s += color_space_to_string(format.colorSpace);
+                s += strings::color_space_to_string(format.colorSpace);
         }
         return s;
 }
@@ -269,7 +271,7 @@ std::string present_modes_to_string(const std::vector<VkPresentModeKHR>& present
                 {
                         s += ", ";
                 }
-                s += present_mode_to_string(mode);
+                s += strings::present_mode_to_string(mode);
         }
         return s;
 }
@@ -291,15 +293,15 @@ std::string swapchain_info_string(
              + extent_to_string(surface_capabilities.maxImageExtent) + ")";
         s += '\n';
 
-        s += "Swapchain surface format: " + format_to_string(surface_format.format) + " ("
+        s += "Swapchain surface format: " + strings::format_to_string(surface_format.format) + " ("
              + surface_formats_to_string(surface_formats) + ")";
         s += '\n';
 
-        s += "Swapchain color space: " + color_space_to_string(surface_format.colorSpace) + " ("
+        s += "Swapchain color space: " + strings::color_space_to_string(surface_format.colorSpace) + " ("
              + color_spaces_to_string(surface_formats) + ")";
         s += '\n';
 
-        s += "Swapchain present mode: " + present_mode_to_string(present_mode) + " ("
+        s += "Swapchain present mode: " + strings::present_mode_to_string(present_mode) + " ("
              + present_modes_to_string(present_modes) + ")";
         s += '\n';
 

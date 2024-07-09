@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         case parameter: \
                 return #parameter;
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string image_type_to_string(const VkImageType image_type)
 {

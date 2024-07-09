@@ -99,7 +99,7 @@ const vulkan::Shader* PointsProgram::topology_shader(const VkPrimitiveTopology p
         {
                 return &vertex_shader_1d_;
         }
-        error("Unsupported primitive topology " + vulkan::primitive_topology_to_string(primitive_topology)
+        error("Unsupported primitive topology " + vulkan::strings::primitive_topology_to_string(primitive_topology)
               + " for renderer points program");
 }
 

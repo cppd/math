@@ -180,7 +180,7 @@ std::string buffer_info(
 
         std::ostringstream oss;
 
-        oss << "Depth buffers format " << vulkan::format_to_string(depth[0].image().format());
+        oss << "Depth buffers format " << vulkan::strings::format_to_string(depth[0].image().format());
         oss << '\n';
         oss << "Depth buffers zoom = " << to_string_fixed(zoom, 5);
         oss << '\n';

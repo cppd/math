@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string api_version_to_string(const std::uint32_t api_version)
 {

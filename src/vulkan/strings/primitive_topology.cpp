@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         case parameter: \
                 return #parameter;
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string primitive_topology_to_string(const VkPrimitiveTopology primitive_topology)
 {

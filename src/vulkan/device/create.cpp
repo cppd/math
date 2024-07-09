@@ -103,7 +103,7 @@ std::string info_string(
         info += static_cast<const char*>(physical_device.properties().properties_10.deviceName);
 
         info += "\nVulkan device API version: ";
-        info += api_version_to_string(physical_device.properties().properties_10.apiVersion);
+        info += strings::api_version_to_string(physical_device.properties().properties_10.apiVersion);
 
         info += "\nVulkan device extensions: {";
         info += strings_to_sorted_string(required_extensions, ", ");
@@ -151,7 +151,7 @@ handle::Device create_device(
         info.queueCreateInfoCount = queue_create_infos.size();
         info.pQueueCreateInfos = queue_create_infos.data();
 
-        const std::vector<const char*> extensions = strings_to_char_pointers(required_extensions);
+        const std::vector<const char*> extensions = strings::strings_to_char_pointers(required_extensions);
         info.enabledExtensionCount = extensions.size();
         info.ppEnabledExtensionNames = extensions.data();
 

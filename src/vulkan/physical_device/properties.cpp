@@ -48,7 +48,7 @@ void add_value(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, point_clipping_behavior_to_string(value));
+        strings->emplace_back(name, strings::point_clipping_behavior_to_string(value));
 }
 
 void add_value(
@@ -56,7 +56,7 @@ void add_value(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, shader_float_controls_independence_to_string(value));
+        strings->emplace_back(name, strings::shader_float_controls_independence_to_string(value));
 }
 
 void add_sample_count(
@@ -64,7 +64,7 @@ void add_sample_count(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, sample_counts_to_string(flags));
+        strings->emplace_back(name, strings::sample_counts_to_string(flags));
 }
 
 void add_shader_stage(
@@ -72,7 +72,7 @@ void add_shader_stage(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, shader_stages_to_string(flags));
+        strings->emplace_back(name, strings::shader_stages_to_string(flags));
 }
 
 void add_subgroup_feature(
@@ -80,7 +80,7 @@ void add_subgroup_feature(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, subgroup_features_to_string(flags));
+        strings->emplace_back(name, strings::subgroup_features_to_string(flags));
 }
 
 void add_resolve_mode(
@@ -88,7 +88,7 @@ void add_resolve_mode(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        strings->emplace_back(name, resolve_modes_to_string(flags));
+        strings->emplace_back(name, strings::resolve_modes_to_string(flags));
 }
 }
 

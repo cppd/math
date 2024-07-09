@@ -87,7 +87,7 @@ void device_type(const PhysicalDevice& device, const std::size_t device_node, St
         const std::size_t node = tree->add(device_node, "Device Type");
         try
         {
-                tree->add(node, physical_device_type_to_string(device.properties().properties_10.deviceType));
+                tree->add(node, strings::physical_device_type_to_string(device.properties().properties_10.deviceType));
         }
         catch (const std::exception& e)
         {
@@ -100,7 +100,7 @@ void api_version(const PhysicalDevice& device, const std::size_t device_node, St
         const std::size_t node = tree->add(device_node, "API Version");
         try
         {
-                tree->add(node, api_version_to_string(device.properties().properties_10.apiVersion));
+                tree->add(node, strings::api_version_to_string(device.properties().properties_10.apiVersion));
         }
         catch (const std::exception& e)
         {
@@ -182,7 +182,7 @@ void family_queues(
                         return;
                 }
 
-                tree->add(node, "queueFlags = " + queues_to_string(family_properties.queueFlags));
+                tree->add(node, "queueFlags = " + strings::queues_to_string(family_properties.queueFlags));
 
                 if (device.queue_family_supports_presentation(family_index))
                 {
@@ -216,7 +216,7 @@ void api_version(StringTree* const tree)
         const std::size_t node = tree->add("API Version");
         try
         {
-                tree->add(node, api_version_to_string(supported_instance_api_version()));
+                tree->add(node, strings::api_version_to_string(supported_instance_api_version()));
         }
         catch (const std::exception& e)
         {

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::strings
 {
 std::string physical_device_type_to_string(VkPhysicalDeviceType physical_device_type);
 }

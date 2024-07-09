@@ -86,7 +86,7 @@ const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
                             return depth->contains(format);
                     }))
         {
-                error("Not a depth format: " + formats_to_sorted_string(formats, ", "));
+                error("Not a depth format: " + strings::formats_to_sorted_string(formats, ", "));
         }
 
         return formats;
@@ -101,7 +101,7 @@ const std::vector<VkFormat>& color_formats(const std::vector<VkFormat>& formats)
                             return depth->contains(format) || stencil->contains(format);
                     }))
         {
-                error("Not a color format: " + formats_to_sorted_string(formats, ", "));
+                error("Not a color format: " + strings::formats_to_sorted_string(formats, ", "));
         }
 
         return formats;

@@ -210,7 +210,7 @@ VkClearValue create_color_clear_value(const VkFormat format, const numerical::Ve
                 return clear_value;
         }
         default:
-                error("Unsupported format " + format_to_string(format) + " for color clear value");
+                error("Unsupported format " + strings::format_to_string(format) + " for color clear value");
         }
 #pragma GCC diagnostic pop
 }

@@ -69,7 +69,7 @@ VkFormat find_supported_format(
         std::ostringstream oss;
 
         oss << "Failed to find supported 2D image format.";
-        oss << " Format candidates " << formats_to_sorted_string(candidates, ", ") << ".";
+        oss << " Format candidates " << strings::formats_to_sorted_string(candidates, ", ") << ".";
         oss << " Tiling " << enum_to_int(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
@@ -125,8 +125,8 @@ VkFormat find_supported_image_format(
         std::ostringstream oss;
 
         oss << "Failed to find supported image format.";
-        oss << " Format candidates " << formats_to_sorted_string(candidates, ", ") << ".";
-        oss << " Image type " << image_type_to_string(image_type) << ".";
+        oss << " Format candidates " << strings::formats_to_sorted_string(candidates, ", ") << ".";
+        oss << " Image type " << strings::image_type_to_string(image_type) << ".";
         oss << " Tiling " << enum_to_int(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
