@@ -157,7 +157,7 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         const VkPrimitiveTopology primitive_topology,
         const numerical::Region<2, int>& viewport) const
 {
-        vulkan::GraphicsPipelineCreateInfo info;
+        vulkan::pipeline::GraphicsPipelineCreateInfo info;
 
         info.device = device_;
         info.render_pass = &render_pass;
@@ -169,6 +169,6 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         info.primitive_topology = primitive_topology;
         info.shaders = {&vertex_shader_, &fragment_shader_};
 
-        return vulkan::create_graphics_pipeline(info);
+        return vulkan::pipeline::create_graphics_pipeline(info);
 }
 }

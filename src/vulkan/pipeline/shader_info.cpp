@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::pipeline
 {
 namespace
 {

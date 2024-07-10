@@ -187,17 +187,17 @@ void FftSharedProgram::create_pipelines(
 {
         SpecializationConstants constants(data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
 
-        vulkan::ComputePipelineCreateInfo info;
+        vulkan::pipeline::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constants.info();
 
         constants.set_inverse(false);
-        pipeline_forward_ = create_compute_pipeline(info);
+        pipeline_forward_ = vulkan::pipeline::create_compute_pipeline(info);
 
         constants.set_inverse(true);
-        pipeline_inverse_ = create_compute_pipeline(info);
+        pipeline_inverse_ = vulkan::pipeline::create_compute_pipeline(info);
 }
 
 void FftSharedProgram::delete_pipelines()

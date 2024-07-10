@@ -183,17 +183,17 @@ void MulDProgram::create_pipelines(
 {
         SpecializationConstants constants(group_size_x, group_size_y);
 
-        vulkan::ComputePipelineCreateInfo info;
+        vulkan::pipeline::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constants.info();
 
         constants.set_rows_columns(n_2, m_1);
-        pipeline_rows_ = create_compute_pipeline(info);
+        pipeline_rows_ = vulkan::pipeline::create_compute_pipeline(info);
 
         constants.set_rows_columns(n_1, m_2);
-        pipeline_columns_ = create_compute_pipeline(info);
+        pipeline_columns_ = vulkan::pipeline::create_compute_pipeline(info);
 }
 
 void MulDProgram::delete_pipelines()

@@ -159,7 +159,7 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         const numerical::Region<2, int>& viewport,
         const VolumeProgramPipelineType type) const
 {
-        vulkan::GraphicsPipelineCreateInfo info;
+        vulkan::pipeline::GraphicsPipelineCreateInfo info;
 
         info.device = device_;
         info.render_pass = &render_pass;
@@ -187,6 +187,6 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
 
         info.shaders = {&vertex_shader_, fragment_shader(type)};
 
-        return vulkan::create_graphics_pipeline(info);
+        return vulkan::pipeline::create_graphics_pipeline(info);
 }
 }

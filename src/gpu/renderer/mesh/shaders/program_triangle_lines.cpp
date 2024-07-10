@@ -93,7 +93,7 @@ vulkan::handle::Pipeline TriangleLinesProgram::create_pipeline(
         const numerical::Region<2, int>& viewport,
         const bool transparency) const
 {
-        vulkan::GraphicsPipelineCreateInfo info;
+        vulkan::pipeline::GraphicsPipelineCreateInfo info;
 
         info.device = device_;
         info.render_pass = &render_pass;
@@ -108,6 +108,6 @@ vulkan::handle::Pipeline TriangleLinesProgram::create_pipeline(
         info.binding_descriptions = TrianglesVertex::binding_descriptions();
         info.attribute_descriptions = TrianglesVertex::attribute_descriptions_triangle_lines();
 
-        return vulkan::create_graphics_pipeline(info);
+        return vulkan::pipeline::create_graphics_pipeline(info);
 }
 }

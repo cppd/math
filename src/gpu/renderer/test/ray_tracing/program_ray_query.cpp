@@ -89,12 +89,12 @@ RayQueryProgram::RayQueryProgram(const VkDevice device, const unsigned local_siz
 
         const SpecializationConstants constants(local_size);
 
-        vulkan::ComputePipelineCreateInfo compute_info;
+        vulkan::pipeline::ComputePipelineCreateInfo compute_info;
         compute_info.device = device;
         compute_info.pipeline_layout = pipeline_layout_;
         compute_info.shader = &shader;
         compute_info.constants = &constants.info();
-        pipeline_ = vulkan::create_compute_pipeline(compute_info);
+        pipeline_ = vulkan::pipeline::create_compute_pipeline(compute_info);
 }
 
 VkDescriptorSetLayout RayQueryProgram::descriptor_set_layout() const

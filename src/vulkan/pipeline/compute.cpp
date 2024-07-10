@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan_core.h>
 
-namespace ns::vulkan
+namespace ns::vulkan::pipeline
 {
 handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 {

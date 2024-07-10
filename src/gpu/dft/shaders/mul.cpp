@@ -239,31 +239,31 @@ void MulProgram::create_pipelines(
 {
         SpecializationConstants constants(n_1, n_2, m_1, m_2, group_size_x, group_size_y);
 
-        vulkan::ComputePipelineCreateInfo info;
+        vulkan::pipeline::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constants.info();
 
         constants.set_function(0, false);
-        pipeline_rows_to_buffer_forward_ = create_compute_pipeline(info);
+        pipeline_rows_to_buffer_forward_ = vulkan::pipeline::create_compute_pipeline(info);
         constants.set_function(0, true);
-        pipeline_rows_to_buffer_inverse_ = create_compute_pipeline(info);
+        pipeline_rows_to_buffer_inverse_ = vulkan::pipeline::create_compute_pipeline(info);
 
         constants.set_function(1, false);
-        pipeline_rows_from_buffer_forward_ = create_compute_pipeline(info);
+        pipeline_rows_from_buffer_forward_ = vulkan::pipeline::create_compute_pipeline(info);
         constants.set_function(1, true);
-        pipeline_rows_from_buffer_inverse_ = create_compute_pipeline(info);
+        pipeline_rows_from_buffer_inverse_ = vulkan::pipeline::create_compute_pipeline(info);
 
         constants.set_function(2, false);
-        pipeline_columns_to_buffer_forward_ = create_compute_pipeline(info);
+        pipeline_columns_to_buffer_forward_ = vulkan::pipeline::create_compute_pipeline(info);
         constants.set_function(2, true);
-        pipeline_columns_to_buffer_inverse_ = create_compute_pipeline(info);
+        pipeline_columns_to_buffer_inverse_ = vulkan::pipeline::create_compute_pipeline(info);
 
         constants.set_function(3, false);
-        pipeline_columns_from_buffer_forward_ = create_compute_pipeline(info);
+        pipeline_columns_from_buffer_forward_ = vulkan::pipeline::create_compute_pipeline(info);
         constants.set_function(3, true);
-        pipeline_columns_from_buffer_inverse_ = create_compute_pipeline(info);
+        pipeline_columns_from_buffer_inverse_ = vulkan::pipeline::create_compute_pipeline(info);
 }
 
 void MulProgram::delete_pipelines()

@@ -178,7 +178,7 @@ vulkan::handle::Pipeline Program::create_pipeline(
         const bool sample_shading,
         const numerical::Region<2, int>& viewport) const
 {
-        vulkan::GraphicsPipelineCreateInfo info;
+        vulkan::pipeline::GraphicsPipelineCreateInfo info;
 
         info.device = device_;
         info.render_pass = &render_pass;
@@ -205,6 +205,6 @@ vulkan::handle::Pipeline Program::create_pipeline(
         state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         state.alphaBlendOp = VK_BLEND_OP_ADD;
 
-        return vulkan::create_graphics_pipeline(info);
+        return vulkan::pipeline::create_graphics_pipeline(info);
 }
 }

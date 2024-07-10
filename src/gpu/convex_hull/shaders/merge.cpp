@@ -132,12 +132,12 @@ void MergeProgram::create_pipeline(const unsigned height, const unsigned local_s
 {
         const SpecializationConstants constants(height, iteration_count, local_size_x);
 
-        vulkan::ComputePipelineCreateInfo info;
+        vulkan::pipeline::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constants.info();
-        pipeline_ = create_compute_pipeline(info);
+        pipeline_ = vulkan::pipeline::create_compute_pipeline(info);
 }
 
 void MergeProgram::delete_pipeline()

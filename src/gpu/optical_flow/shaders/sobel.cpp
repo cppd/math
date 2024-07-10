@@ -219,12 +219,12 @@ void SobelProgram::create_pipeline(const std::uint32_t local_size_x, const std::
 {
         const SpecializationConstants constants(local_size_x, local_size_y);
 
-        vulkan::ComputePipelineCreateInfo info;
+        vulkan::pipeline::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constants.info();
-        pipeline_ = create_compute_pipeline(info);
+        pipeline_ = vulkan::pipeline::create_compute_pipeline(info);
 }
 
 void SobelProgram::delete_pipeline()

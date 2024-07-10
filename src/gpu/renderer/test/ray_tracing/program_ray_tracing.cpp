@@ -82,7 +82,7 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
 
         const vulkan::Shader ray_miss_shader(device.handle(), code_ray_miss_rmiss(), VK_SHADER_STAGE_MISS_BIT_KHR);
 
-        vulkan::RayTracingPipelineCreateInfo info;
+        vulkan::pipeline::RayTracingPipelineCreateInfo info;
 
         info.device = device.handle();
         info.pipeline_layout = pipeline_layout_;
@@ -112,7 +112,7 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
         info.shader_groups.back().anyHitShader = VK_SHADER_UNUSED_KHR;
         info.shader_groups.back().intersectionShader = VK_SHADER_UNUSED_KHR;
 
-        pipeline_ = vulkan::create_ray_tracing_pipeline(info);
+        pipeline_ = vulkan::pipeline::create_ray_tracing_pipeline(info);
 
         //
 

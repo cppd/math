@@ -155,12 +155,12 @@ void BitReverseProgram::create_pipeline(
 {
         const SpecializationConstants constants(group_size, data_size, n_mask, n_bits);
 
-        vulkan::ComputePipelineCreateInfo info;
+        vulkan::pipeline::ComputePipelineCreateInfo info;
         info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constants.info();
-        pipeline_ = create_compute_pipeline(info);
+        pipeline_ = vulkan::pipeline::create_compute_pipeline(info);
 }
 
 void BitReverseProgram::delete_pipeline()
