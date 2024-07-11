@@ -41,9 +41,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 Device::Device(
-        const PhysicalDevice* const physical_device,
+        const physical_device::PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
-        const DeviceFunctionality& functionality)
+        const physical_device::DeviceFunctionality& functionality)
         : physical_device_(physical_device),
           features_(make_features(
                   functionality.required_features,
@@ -69,7 +69,7 @@ VkPhysicalDevice Device::physical_device() const
         return physical_device_->device();
 }
 
-const PhysicalDeviceProperties& Device::properties() const
+const physical_device::PhysicalDeviceProperties& Device::properties() const
 {
         return physical_device_->properties();
 }
@@ -79,7 +79,7 @@ const std::unordered_set<std::string>& Device::extensions() const
         return extensions_;
 }
 
-const PhysicalDeviceFeatures& Device::features() const
+const physical_device::PhysicalDeviceFeatures& Device::features() const
 {
         return features_;
 }

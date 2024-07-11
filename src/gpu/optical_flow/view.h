@@ -33,7 +33,7 @@ namespace ns::gpu::optical_flow
 class View
 {
 public:
-        static vulkan::DeviceFunctionality device_functionality();
+        static vulkan::physical_device::DeviceFunctionality device_functionality();
 
         virtual ~View() = default;
 

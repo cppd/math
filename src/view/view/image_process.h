@@ -63,7 +63,7 @@ class ImageProcess final
         void cmd(const command::OpticalFlowShow& v);
 
 public:
-        static vulkan::DeviceFunctionality device_functionality();
+        static vulkan::physical_device::DeviceFunctionality device_functionality();
 
         ImageProcess(
                 bool sample_shading,

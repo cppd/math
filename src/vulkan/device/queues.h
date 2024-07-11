@@ -50,7 +50,9 @@ struct QueueDistribution final
         std::vector<QueueFamilyDevice> device_queues;
 };
 
-QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& infos);
+QueueDistribution distribute_queues(
+        const physical_device::PhysicalDevice& physical_device,
+        const std::vector<QueueFamilyInfo>& infos);
 
 std::string device_queues_description(
         const std::vector<std::string_view>& names,

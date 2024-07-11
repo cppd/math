@@ -276,7 +276,7 @@ public:
 };
 }
 
-vulkan::DeviceFunctionality View::device_functionality()
+vulkan::physical_device::DeviceFunctionality View::device_functionality()
 {
         return {};
 }

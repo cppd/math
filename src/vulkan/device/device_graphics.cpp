@@ -38,7 +38,7 @@ constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
 constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
 constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
 
-std::uint32_t find_graphics_compute_family_index(const PhysicalDevice& device)
+std::uint32_t find_graphics_compute_family_index(const physical_device::PhysicalDevice& device)
 {
         if (const auto index = device.find_family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
         {
@@ -48,7 +48,7 @@ std::uint32_t find_graphics_compute_family_index(const PhysicalDevice& device)
         error("Graphics compute queue family index not found");
 }
 
-std::uint32_t find_compute_family_index(const PhysicalDevice& device)
+std::uint32_t find_compute_family_index(const physical_device::PhysicalDevice& device)
 {
         if (const auto index = device.find_family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT))
         {
@@ -63,7 +63,7 @@ std::uint32_t find_compute_family_index(const PhysicalDevice& device)
         error("Compute queue family index not found");
 }
 
-std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
+std::uint32_t find_transfer_family_index(const physical_device::PhysicalDevice& device)
 {
         if (const auto index =
                     device.find_family_index(VK_QUEUE_TRANSFER_BIT, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
@@ -88,10 +88,13 @@ std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
 
 DeviceGraphics::DeviceGraphics(
         const VkInstance instance,
-        const DeviceFunctionality& device_functionality,
+        const physical_device::DeviceFunctionality& device_functionality,
         const VkSurfaceKHR surface)
-        : physical_device_(
-                  find_physical_device(PhysicalDeviceSearchType::BEST, instance, surface, device_functionality)),
+        : physical_device_(find_physical_device(
+                  physical_device::PhysicalDeviceSearchType::BEST,
+                  instance,
+                  surface,
+                  device_functionality)),
           graphics_compute_family_index_(find_graphics_compute_family_index(physical_device_)),
           compute_family_index_(find_compute_family_index(physical_device_)),
           transfer_family_index_(find_transfer_family_index(physical_device_)),

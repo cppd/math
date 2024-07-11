@@ -581,9 +581,9 @@ public:
 };
 }
 
-vulkan::DeviceFunctionality Renderer::device_functionality()
+vulkan::physical_device::DeviceFunctionality Renderer::device_functionality()
 {
-        vulkan::DeviceFunctionality res = renderer::device_functionality();
+        vulkan::physical_device::DeviceFunctionality res = renderer::device_functionality();
         if (RAY_TRACING)
         {
                 res.merge(renderer::device_ray_tracing_functionality());

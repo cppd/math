@@ -214,9 +214,9 @@ public:
 };
 }
 
-vulkan::DeviceFunctionality View::device_functionality()
+vulkan::physical_device::DeviceFunctionality View::device_functionality()
 {
-        vulkan::DeviceFunctionality res;
+        vulkan::physical_device::DeviceFunctionality res;
         res.required_features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
         res.required_features.features_13.maintenance4 = VK_TRUE;
         return res;

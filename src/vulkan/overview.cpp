@@ -53,7 +53,10 @@ std::vector<std::string> sorted(const T& s)
         return res;
 }
 
-void conformance_version(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void conformance_version(
+        const physical_device::PhysicalDevice& device,
+        const std::size_t device_node,
+        StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Conformance Version");
 
@@ -66,14 +69,14 @@ void conformance_version(const PhysicalDevice& device, const std::size_t device_
         tree->add(node, oss.str());
 }
 
-void device_name(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void device_name(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Device Name");
         const std::string device_name = static_cast<const char*>(device.properties().properties_10.deviceName);
         tree->add(node, device_name);
 }
 
-void driver_info(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void driver_info(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Driver");
         const std::string driver_name = static_cast<const char*>(device.properties().properties_12.driverName);
@@ -82,7 +85,7 @@ void driver_info(const PhysicalDevice& device, const std::size_t device_node, St
         tree->add(node, "Info = " + driver_info);
 }
 
-void device_type(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void device_type(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Device Type");
         try
@@ -95,7 +98,7 @@ void device_type(const PhysicalDevice& device, const std::size_t device_node, St
         }
 }
 
-void api_version(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void api_version(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "API Version");
         try
@@ -108,7 +111,7 @@ void api_version(const PhysicalDevice& device, const std::size_t device_node, St
         }
 }
 
-void extensions(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void extensions(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Extensions");
         try
@@ -124,7 +127,7 @@ void extensions(const PhysicalDevice& device, const std::size_t device_node, Str
         }
 }
 
-void properties(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void properties(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "Properties");
         try
@@ -142,7 +145,7 @@ void properties(const PhysicalDevice& device, const std::size_t device_node, Str
         }
 }
 
-void features(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void features(const physical_device::PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         const std::size_t features_node = tree->add(device_node, "Features");
         const std::size_t supported_node = tree->add(features_node, "Supported");
@@ -166,7 +169,7 @@ void features(const PhysicalDevice& device, const std::size_t device_node, Strin
 }
 
 void family_queues(
-        const PhysicalDevice& device,
+        const physical_device::PhysicalDevice& device,
         const VkQueueFamilyProperties& family_properties,
         const std::size_t family_index,
         const std::size_t queue_families_node,
@@ -195,7 +198,10 @@ void family_queues(
         }
 }
 
-void queue_families(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
+void queue_families(
+        const physical_device::PhysicalDevice& device,
+        const std::size_t device_node,
+        StringTree* const tree)
 {
         const std::size_t node = tree->add(device_node, "QueueFamilies");
         try
@@ -288,9 +294,9 @@ std::string overview_physical_devices(const VkInstance instance, const VkSurface
 
         std::unordered_set<std::string> uuids;
 
-        for (const VkPhysicalDevice device : find_physical_devices(instance))
+        for (const VkPhysicalDevice device : physical_device::find_physical_devices(instance))
         {
-                const PhysicalDevice physical_device(device, surface);
+                const physical_device::PhysicalDevice physical_device(device, surface);
 
                 if (!uuids.emplace(to_string(physical_device.properties().properties_10.pipelineCacheUUID)).second)
                 {

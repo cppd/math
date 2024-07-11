@@ -36,7 +36,7 @@ namespace
 constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
 constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
 
-std::uint32_t find_compute_family_index(const PhysicalDevice& device)
+std::uint32_t find_compute_family_index(const physical_device::PhysicalDevice& device)
 {
         if (const auto index = device.find_family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT))
         {
@@ -51,7 +51,7 @@ std::uint32_t find_compute_family_index(const PhysicalDevice& device)
         error("Compute queue family index not found");
 }
 
-std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
+std::uint32_t find_transfer_family_index(const physical_device::PhysicalDevice& device)
 {
         if (const auto index =
                     device.find_family_index(VK_QUEUE_TRANSFER_BIT, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
@@ -75,9 +75,9 @@ std::uint32_t find_transfer_family_index(const PhysicalDevice& device)
 }
 
 DeviceCompute::DeviceCompute(
-        const PhysicalDeviceSearchType search_type,
+        const physical_device::PhysicalDeviceSearchType search_type,
         const VkInstance instance,
-        const DeviceFunctionality& device_functionality)
+        const physical_device::DeviceFunctionality& device_functionality)
         : physical_device_(find_physical_device(search_type, instance, VK_NULL_HANDLE, device_functionality)),
           compute_family_index_(find_compute_family_index(physical_device_)),
           transfer_family_index_(find_transfer_family_index(physical_device_))

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::physical_device
 {
 void add_features(PhysicalDeviceFeatures* dst, const PhysicalDeviceFeatures& src);
 

@@ -36,7 +36,7 @@ namespace ns::vulkan
 {
 class DeviceGraphics final
 {
-        const PhysicalDevice physical_device_;
+        const physical_device::PhysicalDevice physical_device_;
 
         const std::uint32_t graphics_compute_family_index_;
         const std::uint32_t compute_family_index_;
@@ -52,7 +52,10 @@ class DeviceGraphics final
         std::vector<Queue> presentation_queues_;
 
 public:
-        DeviceGraphics(VkInstance instance, const DeviceFunctionality& device_functionality, VkSurfaceKHR surface);
+        DeviceGraphics(
+                VkInstance instance,
+                const physical_device::DeviceFunctionality& device_functionality,
+                VkSurfaceKHR surface);
 
         DeviceGraphics(const DeviceGraphics&) = delete;
         DeviceGraphics(DeviceGraphics&&) = delete;

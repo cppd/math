@@ -43,9 +43,9 @@ constexpr std::array RAY_TRACING_EXTENSIONS
 };
 // clang-format on
 
-constexpr vulkan::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
+constexpr vulkan::physical_device::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
 {
-        vulkan::PhysicalDeviceFeatures res;
+        vulkan::physical_device::PhysicalDeviceFeatures res;
 
         // res.features_12.descriptorIndexing = VK_TRUE;
         res.features_12.bufferDeviceAddress = VK_TRUE;
@@ -64,9 +64,9 @@ constexpr vulkan::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
 }();
 }
 
-vulkan::DeviceFunctionality device_ray_tracing_functionality()
+vulkan::physical_device::DeviceFunctionality device_ray_tracing_functionality()
 {
-        vulkan::DeviceFunctionality res;
+        vulkan::physical_device::DeviceFunctionality res;
 
         res.optional_extensions.insert(RAY_TRACING_EXTENSIONS.cbegin(), RAY_TRACING_EXTENSIONS.cend());
         res.optional_features = RAY_TRACING_FEATURES;
@@ -74,9 +74,9 @@ vulkan::DeviceFunctionality device_ray_tracing_functionality()
         return res;
 }
 
-vulkan::DeviceFunctionality device_functionality()
+vulkan::physical_device::DeviceFunctionality device_functionality()
 {
-        vulkan::DeviceFunctionality res;
+        vulkan::physical_device::DeviceFunctionality res;
 
         res.required_features.features_10.geometryShader = VK_TRUE;
         res.required_features.features_10.fragmentStoresAndAtomics = VK_TRUE;
@@ -100,7 +100,8 @@ bool ray_tracing_supported(const vulkan::Device& device)
         if (!check_features(RAY_TRACING_FEATURES, device.features()))
         {
                 LOG("Renderer ray tracing features are not supported: "
-                    + strings_to_sorted_string(vulkan::features_to_strings(RAY_TRACING_FEATURES, true), ", "));
+                    + strings_to_sorted_string(
+                            vulkan::physical_device::features_to_strings(RAY_TRACING_FEATURES, true), ", "));
                 return false;
         }
 

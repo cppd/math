@@ -97,9 +97,9 @@ constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
 constexpr color::Color DEFAULT_TEXT_COLOR{color::RGB8(255, 255, 255)};
 
-vulkan::DeviceFunctionality device_functionality()
+vulkan::physical_device::DeviceFunctionality device_functionality()
 {
-        vulkan::DeviceFunctionality res;
+        vulkan::physical_device::DeviceFunctionality res;
 
         if (SAMPLE_RATE_SHADING)
         {

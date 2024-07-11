@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 handle::Device create_device(
-        const PhysicalDevice* physical_device,
+        const physical_device::PhysicalDevice* physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         const std::unordered_set<std::string>& required_extensions,
-        const PhysicalDeviceFeatures& required_features);
+        const physical_device::PhysicalDeviceFeatures& required_features);
 }

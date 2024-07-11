@@ -118,7 +118,9 @@ std::string create_queue_description_string(
 }
 }
 
-QueueDistribution distribute_queues(const PhysicalDevice& physical_device, const std::vector<QueueFamilyInfo>& infos)
+QueueDistribution distribute_queues(
+        const physical_device::PhysicalDevice& physical_device,
+        const std::vector<QueueFamilyInfo>& infos)
 {
         QueueDistribution res;
 

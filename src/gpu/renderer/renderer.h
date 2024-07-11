@@ -35,7 +35,7 @@ namespace ns::gpu::renderer
 class Renderer
 {
 public:
-        static vulkan::DeviceFunctionality device_functionality();
+        static vulkan::physical_device::DeviceFunctionality device_functionality();
 
         virtual ~Renderer() = default;
 

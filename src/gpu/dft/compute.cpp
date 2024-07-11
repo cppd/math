@@ -81,9 +81,9 @@ namespace
 {
 constexpr numerical::Vector2i GROUP_SIZE_2D = numerical::Vector2i(16, 16);
 
-vulkan::DeviceFunctionality device_functionality()
+vulkan::physical_device::DeviceFunctionality device_functionality()
 {
-        vulkan::DeviceFunctionality res;
+        vulkan::physical_device::DeviceFunctionality res;
         res.required_features.features_13.maintenance4 = VK_TRUE;
         return res;
 }
@@ -283,7 +283,7 @@ class DftVector final : public ComputeVector
         }
 
 public:
-        explicit DftVector(const vulkan::PhysicalDeviceSearchType search_type)
+        explicit DftVector(const vulkan::physical_device::PhysicalDeviceSearchType search_type)
                 : device_compute_(search_type, vulkan::Instance::handle(), device_functionality()),
                   compute_command_pool_(vulkan::create_command_pool(
                           device_compute_.device().handle(),
@@ -320,7 +320,8 @@ std::unique_ptr<ComputeImage> create_compute_image(
                 device, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
 }
 
-std::unique_ptr<ComputeVector> create_compute_vector(const vulkan::PhysicalDeviceSearchType search_type)
+std::unique_ptr<ComputeVector> create_compute_vector(
+        const vulkan::physical_device::PhysicalDeviceSearchType search_type)
 {
         return std::make_unique<DftVector>(search_type);
 }

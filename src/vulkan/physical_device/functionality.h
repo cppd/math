@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <unordered_set>
 
-namespace ns::vulkan
+namespace ns::vulkan::physical_device
 {
 struct DeviceFunctionality final
 {

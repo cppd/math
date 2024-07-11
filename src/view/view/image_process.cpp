@@ -40,9 +40,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view::view
 {
-vulkan::DeviceFunctionality ImageProcess::device_functionality()
+vulkan::physical_device::DeviceFunctionality ImageProcess::device_functionality()
 {
-        vulkan::DeviceFunctionality res;
+        vulkan::physical_device::DeviceFunctionality res;
         res.merge(gpu::convex_hull::View::device_functionality());
         res.merge(gpu::dft::View::device_functionality());
         res.merge(gpu::optical_flow::View::device_functionality());

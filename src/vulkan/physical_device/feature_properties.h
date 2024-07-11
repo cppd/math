@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::physical_device
 {
 template <typename T>
 struct FeatureProperties;

@@ -34,7 +34,7 @@ namespace ns::vulkan
 {
 class DeviceCompute final
 {
-        const PhysicalDevice physical_device_;
+        const physical_device::PhysicalDevice physical_device_;
 
         const std::uint32_t compute_family_index_;
         const std::uint32_t transfer_family_index_;
@@ -46,9 +46,9 @@ class DeviceCompute final
 
 public:
         DeviceCompute(
-                PhysicalDeviceSearchType search_type,
+                physical_device::PhysicalDeviceSearchType search_type,
                 VkInstance instance,
-                const DeviceFunctionality& device_functionality);
+                const physical_device::DeviceFunctionality& device_functionality);
 
         DeviceCompute(const DeviceCompute&) = delete;
         DeviceCompute(DeviceCompute&&) = delete;
