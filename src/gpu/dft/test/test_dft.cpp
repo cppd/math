@@ -472,7 +472,7 @@ void test(progress::Ratio* const progress)
         ASSERT(progress);
 
         const std::unique_ptr<ComputeVector> dft =
-                create_compute_vector(vulkan::physical_device::PhysicalDeviceSearchType::RANDOM);
+                create_compute_vector(vulkan::physical_device::DeviceSearchType::RANDOM);
 
         constant_data_test(dft.get(), progress);
 

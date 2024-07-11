@@ -163,7 +163,7 @@ std::size_t find_random_physical_device(const std::vector<std::size_t>& suitable
 }
 
 std::size_t find_physical_device(
-        const PhysicalDeviceSearchType search_type,
+        const DeviceSearchType search_type,
         const std::vector<PhysicalDevice>& physical_devices,
         const std::vector<std::size_t>& suitable_devices)
 {
@@ -174,9 +174,9 @@ std::size_t find_physical_device(
 
         switch (search_type)
         {
-        case PhysicalDeviceSearchType::BEST:
+        case DeviceSearchType::BEST:
                 return find_best_physical_device(physical_devices, suitable_devices);
-        case PhysicalDeviceSearchType::RANDOM:
+        case DeviceSearchType::RANDOM:
                 return find_random_physical_device(suitable_devices);
         }
 
@@ -275,14 +275,14 @@ std::vector<std::size_t> suitable_physical_devices(
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
         : physical_device_(physical_device),
-          info_(find_physical_device_info(physical_device)),
+          info_(find_device_info(physical_device)),
           presentation_support_(find_queue_family_presentation_support(surface, physical_device_))
 {
         ASSERT(physical_device_ != VK_NULL_HANDLE);
         ASSERT(info_.queue_families.size() == presentation_support_.size());
 }
 
-const PhysicalDeviceInfo& PhysicalDevice::info() const
+const DeviceInfo& PhysicalDevice::info() const
 {
         return info_;
 }
@@ -297,12 +297,12 @@ const std::unordered_set<std::string>& PhysicalDevice::extensions() const
         return info_.extensions;
 }
 
-const PhysicalDeviceProperties& PhysicalDevice::properties() const
+const Properties& PhysicalDevice::properties() const
 {
         return info_.properties;
 }
 
-const PhysicalDeviceFeatures& PhysicalDevice::features() const
+const Features& PhysicalDevice::features() const
 {
         return info_.features;
 }
@@ -341,7 +341,7 @@ bool PhysicalDevice::queue_family_supports_presentation(const std::uint32_t inde
 
 //
 
-std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
+std::vector<VkPhysicalDevice> find_devices(const VkInstance instance)
 {
         std::uint32_t count;
         VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, nullptr));
@@ -389,15 +389,15 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
         error(oss.str());
 }
 
-PhysicalDevice find_physical_device(
-        const PhysicalDeviceSearchType search_type,
+PhysicalDevice find_device(
+        const DeviceSearchType search_type,
         const VkInstance instance,
         const VkSurfaceKHR surface,
         const DeviceFunctionality& device_functionality)
 {
         LOG(overview_physical_devices(instance, surface));
 
-        const std::vector<VkPhysicalDevice> handles = find_physical_devices(instance);
+        const std::vector<VkPhysicalDevice> handles = find_devices(instance);
 
         std::vector<PhysicalDevice> devices;
         devices.reserve(handles.size());

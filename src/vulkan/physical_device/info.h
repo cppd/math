@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::physical_device
 {
-struct PhysicalDeviceProperties final
+struct Properties final
 {
         VkPhysicalDeviceProperties properties_10;
         VkPhysicalDeviceVulkan11Properties properties_11;
@@ -36,7 +36,7 @@ struct PhysicalDeviceProperties final
         std::optional<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> ray_tracing_pipeline;
 };
 
-struct PhysicalDeviceFeatures final
+struct Features final
 {
         VkPhysicalDeviceFeatures features_10{};
         VkPhysicalDeviceVulkan11Features features_11{};
@@ -47,23 +47,20 @@ struct PhysicalDeviceFeatures final
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR ray_tracing_pipeline{};
 };
 
-struct PhysicalDeviceInfo final
+struct DeviceInfo final
 {
         std::unordered_set<std::string> extensions;
-        PhysicalDeviceProperties properties;
-        PhysicalDeviceFeatures features;
+        Properties properties;
+        Features features;
         std::vector<VkQueueFamilyProperties> queue_families;
 };
 
-PhysicalDeviceInfo find_physical_device_info(VkPhysicalDevice device);
+DeviceInfo find_device_info(VkPhysicalDevice device);
 
-void make_physical_device_features(
-        const PhysicalDeviceFeatures& features,
-        VkPhysicalDeviceFeatures2* features_2,
-        PhysicalDeviceFeatures* device_features);
+void make_features(const Features& features, VkPhysicalDeviceFeatures2* features_2, Features* device_features);
 
 std::unordered_set<std::string> make_extensions(
-        const PhysicalDeviceFeatures& required_features,
+        const Features& required_features,
         const std::unordered_set<std::string>& required_extensions,
         const std::unordered_set<std::string>& optional_extensions,
         const std::unordered_set<std::string>& supported_extensions);

@@ -46,7 +46,7 @@ class DeviceCompute final
 
 public:
         DeviceCompute(
-                physical_device::PhysicalDeviceSearchType search_type,
+                physical_device::DeviceSearchType search_type,
                 VkInstance instance,
                 const physical_device::DeviceFunctionality& device_functionality);
 

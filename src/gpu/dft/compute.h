@@ -66,5 +66,5 @@ std::unique_ptr<ComputeImage> create_compute_image(
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue);
 
-std::unique_ptr<ComputeVector> create_compute_vector(vulkan::physical_device::PhysicalDeviceSearchType search_type);
+std::unique_ptr<ComputeVector> create_compute_vector(vulkan::physical_device::DeviceSearchType search_type);
 }

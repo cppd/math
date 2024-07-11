@@ -294,7 +294,7 @@ std::string overview_physical_devices(const VkInstance instance, const VkSurface
 
         std::unordered_set<std::string> uuids;
 
-        for (const VkPhysicalDevice device : physical_device::find_physical_devices(instance))
+        for (const VkPhysicalDevice device : physical_device::find_devices(instance))
         {
                 const physical_device::PhysicalDevice physical_device(device, surface);
 

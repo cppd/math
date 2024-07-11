@@ -33,7 +33,7 @@ namespace ns::vulkan::physical_device
 class PhysicalDevice final
 {
         VkPhysicalDevice physical_device_;
-        PhysicalDeviceInfo info_;
+        DeviceInfo info_;
         std::vector<bool> presentation_support_;
 
 public:
@@ -41,10 +41,10 @@ public:
 
         [[nodiscard]] VkPhysicalDevice device() const;
 
-        [[nodiscard]] const PhysicalDeviceInfo& info() const;
+        [[nodiscard]] const DeviceInfo& info() const;
         [[nodiscard]] const std::unordered_set<std::string>& extensions() const;
-        [[nodiscard]] const PhysicalDeviceProperties& properties() const;
-        [[nodiscard]] const PhysicalDeviceFeatures& features() const;
+        [[nodiscard]] const Properties& properties() const;
+        [[nodiscard]] const Features& features() const;
         [[nodiscard]] const std::vector<VkQueueFamilyProperties>& queue_families() const;
 
         [[nodiscard]] std::optional<std::uint32_t> find_family_index(
@@ -56,16 +56,16 @@ public:
         [[nodiscard]] bool queue_family_supports_presentation(std::uint32_t index) const;
 };
 
-std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);
+std::vector<VkPhysicalDevice> find_devices(VkInstance instance);
 
-enum class PhysicalDeviceSearchType
+enum class DeviceSearchType
 {
         BEST,
         RANDOM
 };
 
-PhysicalDevice find_physical_device(
-        PhysicalDeviceSearchType search_type,
+PhysicalDevice find_device(
+        DeviceSearchType search_type,
         VkInstance instance,
         VkSurfaceKHR surface,
         const DeviceFunctionality& device_functionality);

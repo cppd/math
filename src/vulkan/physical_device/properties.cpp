@@ -118,8 +118,7 @@ void add_resolve_mode(
 #define ADD_VALUE_RAY_TRACING_PIPELINE(v) \
         add_value(properties.ray_tracing_pipeline->v, "RayTracingPipeline::" #v, &strings)
 
-std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
-        const PhysicalDeviceProperties& properties)
+std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(const Properties& properties)
 {
         std::vector<std::tuple<std::string, std::string>> strings;
 

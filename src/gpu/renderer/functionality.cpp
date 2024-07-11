@@ -43,9 +43,9 @@ constexpr std::array RAY_TRACING_EXTENSIONS
 };
 // clang-format on
 
-constexpr vulkan::physical_device::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
+constexpr vulkan::physical_device::Features RAY_TRACING_FEATURES = []
 {
-        vulkan::physical_device::PhysicalDeviceFeatures res;
+        vulkan::physical_device::Features res;
 
         // res.features_12.descriptorIndexing = VK_TRUE;
         res.features_12.bufferDeviceAddress = VK_TRUE;

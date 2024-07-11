@@ -95,7 +95,7 @@ void check_required_extensions(
 std::string info_string(
         const physical_device::PhysicalDevice& physical_device,
         const std::unordered_set<std::string>& required_extensions,
-        const physical_device::PhysicalDeviceFeatures& required_features)
+        const physical_device::Features& required_features)
 {
         std::string info;
 
@@ -121,7 +121,7 @@ handle::Device create_device(
         const physical_device::PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         const std::unordered_set<std::string>& required_extensions,
-        const physical_device::PhysicalDeviceFeatures& required_features)
+        const physical_device::Features& required_features)
 {
         check_queue_families(*physical_device, queue_families);
         check_required_extensions(*physical_device, required_extensions);
@@ -156,8 +156,8 @@ handle::Device create_device(
         info.ppEnabledExtensionNames = extensions.data();
 
         VkPhysicalDeviceFeatures2 features_2;
-        physical_device::PhysicalDeviceFeatures features;
-        make_physical_device_features(required_features, &features_2, &features);
+        physical_device::Features features;
+        physical_device::make_features(required_features, &features_2, &features);
         info.pNext = &features_2;
 
         return {physical_device->device(), info};

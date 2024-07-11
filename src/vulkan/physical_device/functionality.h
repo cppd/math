@@ -28,8 +28,8 @@ struct DeviceFunctionality final
 {
         std::unordered_set<std::string> required_extensions;
         std::unordered_set<std::string> optional_extensions;
-        PhysicalDeviceFeatures required_features;
-        PhysicalDeviceFeatures optional_features;
+        Features required_features;
+        Features optional_features;
 
         void merge(const DeviceFunctionality& functionality);
 };

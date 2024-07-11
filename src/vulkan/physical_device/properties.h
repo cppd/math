@@ -25,6 +25,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::physical_device
 {
-std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
-        const PhysicalDeviceProperties& properties);
+std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(const Properties& properties);
 }

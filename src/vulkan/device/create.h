@@ -32,5 +32,5 @@ handle::Device create_device(
         const physical_device::PhysicalDevice* physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         const std::unordered_set<std::string>& required_extensions,
-        const physical_device::PhysicalDeviceFeatures& required_features);
+        const physical_device::Features& required_features);
 }

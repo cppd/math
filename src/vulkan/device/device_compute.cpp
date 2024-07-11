@@ -75,10 +75,10 @@ std::uint32_t find_transfer_family_index(const physical_device::PhysicalDevice& 
 }
 
 DeviceCompute::DeviceCompute(
-        const physical_device::PhysicalDeviceSearchType search_type,
+        const physical_device::DeviceSearchType search_type,
         const VkInstance instance,
         const physical_device::DeviceFunctionality& device_functionality)
-        : physical_device_(find_physical_device(search_type, instance, VK_NULL_HANDLE, device_functionality)),
+        : physical_device_(find_device(search_type, instance, VK_NULL_HANDLE, device_functionality)),
           compute_family_index_(find_compute_family_index(physical_device_)),
           transfer_family_index_(find_transfer_family_index(physical_device_))
 {

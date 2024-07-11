@@ -35,7 +35,7 @@ namespace ns::vulkan
 class Device final
 {
         const physical_device::PhysicalDevice* physical_device_ = nullptr;
-        physical_device::PhysicalDeviceFeatures features_;
+        physical_device::Features features_;
         std::unordered_set<std::string> extensions_;
         handle::Device device_;
         std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues_;
@@ -54,9 +54,9 @@ public:
 
         [[nodiscard]] VkPhysicalDevice physical_device() const;
 
-        [[nodiscard]] const physical_device::PhysicalDeviceProperties& properties() const;
+        [[nodiscard]] const physical_device::Properties& properties() const;
         [[nodiscard]] const std::unordered_set<std::string>& extensions() const;
-        [[nodiscard]] const physical_device::PhysicalDeviceFeatures& features() const;
+        [[nodiscard]] const physical_device::Features& features() const;
 
         [[nodiscard]] Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
         [[nodiscard]] std::uint32_t queue_count(std::uint32_t family_index) const;

@@ -69,7 +69,7 @@ VkPhysicalDevice Device::physical_device() const
         return physical_device_->device();
 }
 
-const physical_device::PhysicalDeviceProperties& Device::properties() const
+const physical_device::Properties& Device::properties() const
 {
         return physical_device_->properties();
 }
@@ -79,7 +79,7 @@ const std::unordered_set<std::string>& Device::extensions() const
         return extensions_;
 }
 
-const physical_device::PhysicalDeviceFeatures& Device::features() const
+const physical_device::Features& Device::features() const
 {
         return features_;
 }

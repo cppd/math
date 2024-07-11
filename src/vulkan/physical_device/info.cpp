@@ -87,7 +87,7 @@ void connect(void**& last, T& s)
         last = &s.pNext;
 }
 
-void set_nullptr_next(PhysicalDeviceProperties* const properties)
+void set_nullptr_next(Properties* const properties)
 {
         properties->properties_11.pNext = nullptr;
         properties->properties_12.pNext = nullptr;
@@ -102,7 +102,7 @@ void set_nullptr_next(PhysicalDeviceProperties* const properties)
         }
 }
 
-void set_nullptr_next(PhysicalDeviceFeatures* const features)
+void set_nullptr_next(Features* const features)
 {
         features->features_11.pNext = nullptr;
         features->features_12.pNext = nullptr;
@@ -112,11 +112,9 @@ void set_nullptr_next(PhysicalDeviceFeatures* const features)
         features->ray_tracing_pipeline.pNext = nullptr;
 }
 
-PhysicalDeviceProperties find_properties(
-        const VkPhysicalDevice device,
-        const std::unordered_set<std::string>& extensions)
+Properties find_properties(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
 {
-        PhysicalDeviceProperties res;
+        Properties res;
 
         void** last = nullptr;
 
@@ -157,9 +155,9 @@ PhysicalDeviceProperties find_properties(
         return res;
 }
 
-PhysicalDeviceFeatures find_features(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
+Features find_features(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
 {
-        PhysicalDeviceFeatures res;
+        Features res;
 
         void** last = nullptr;
 
@@ -232,7 +230,7 @@ std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice 
         return queue_families;
 }
 
-std::vector<std::string> extensions_for_features(const PhysicalDeviceFeatures& features)
+std::vector<std::string> extensions_for_features(const Features& features)
 {
         std::vector<std::string> extensions;
 
@@ -263,11 +261,11 @@ std::vector<std::string> extensions_for_features(const PhysicalDeviceFeatures& f
 }
 }
 
-PhysicalDeviceInfo find_physical_device_info(const VkPhysicalDevice device)
+DeviceInfo find_device_info(const VkPhysicalDevice device)
 {
         check_api_version(device);
 
-        PhysicalDeviceInfo info;
+        DeviceInfo info;
         info.extensions = find_extensions(device);
         info.properties = find_properties(device, info.extensions);
         info.features = find_features(device, info.extensions);
@@ -275,10 +273,10 @@ PhysicalDeviceInfo find_physical_device_info(const VkPhysicalDevice device)
         return info;
 }
 
-void make_physical_device_features(
-        const PhysicalDeviceFeatures& features,
+void make_features(
+        const Features& features,
         VkPhysicalDeviceFeatures2* const features_2,
-        PhysicalDeviceFeatures* const device_features)
+        Features* const device_features)
 {
         *device_features = features;
 
@@ -319,7 +317,7 @@ void make_physical_device_features(
 }
 
 std::unordered_set<std::string> make_extensions(
-        const PhysicalDeviceFeatures& required_features,
+        const Features& required_features,
         const std::unordered_set<std::string>& required_extensions,
         const std::unordered_set<std::string>& optional_extensions,
         const std::unordered_set<std::string>& supported_extensions)

@@ -24,16 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::physical_device
 {
-void add_features(PhysicalDeviceFeatures* dst, const PhysicalDeviceFeatures& src);
+void add_features(Features* dst, const Features& src);
 
-PhysicalDeviceFeatures make_features(
-        const PhysicalDeviceFeatures& required,
-        const PhysicalDeviceFeatures& optional,
-        const PhysicalDeviceFeatures& supported);
+Features make_features(const Features& required, const Features& optional, const Features& supported);
 
-[[nodiscard]] bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDeviceFeatures& supported);
+[[nodiscard]] bool check_features(const Features& required, const Features& supported);
 
-std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, bool enabled);
+std::vector<std::string> features_to_strings(const Features& features, bool enabled);
 
 template <typename Features>
 bool any_feature_enabled(const Features& features);

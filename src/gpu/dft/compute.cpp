@@ -283,7 +283,7 @@ class DftVector final : public ComputeVector
         }
 
 public:
-        explicit DftVector(const vulkan::physical_device::PhysicalDeviceSearchType search_type)
+        explicit DftVector(const vulkan::physical_device::DeviceSearchType search_type)
                 : device_compute_(search_type, vulkan::Instance::handle(), device_functionality()),
                   compute_command_pool_(vulkan::create_command_pool(
                           device_compute_.device().handle(),
@@ -320,8 +320,7 @@ std::unique_ptr<ComputeImage> create_compute_image(
                 device, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
 }
 
-std::unique_ptr<ComputeVector> create_compute_vector(
-        const vulkan::physical_device::PhysicalDeviceSearchType search_type)
+std::unique_ptr<ComputeVector> create_compute_vector(const vulkan::physical_device::DeviceSearchType search_type)
 {
         return std::make_unique<DftVector>(search_type);
 }

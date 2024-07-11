@@ -160,10 +160,7 @@ void features_to_strings(const Features& features, const bool enabled, std::vect
 }
 
 template <bool REQUIRED>
-void set_features(
-        const PhysicalDeviceFeatures& features,
-        const PhysicalDeviceFeatures& supported,
-        PhysicalDeviceFeatures* const result)
+void set_features(const Features& features, const Features& supported, Features* const result)
 {
         set_features<REQUIRED>(features.features_10, supported.features_10, &result->features_10);
 
@@ -183,7 +180,7 @@ void set_features(
 }
 }
 
-void add_features(PhysicalDeviceFeatures* const dst, const PhysicalDeviceFeatures& src)
+void add_features(Features* const dst, const Features& src)
 {
         add_features(&dst->features_10, src.features_10);
         add_features(&dst->features_11, src.features_11);
@@ -194,12 +191,9 @@ void add_features(PhysicalDeviceFeatures* const dst, const PhysicalDeviceFeature
         add_features(&dst->ray_tracing_pipeline, src.ray_tracing_pipeline);
 }
 
-PhysicalDeviceFeatures make_features(
-        const PhysicalDeviceFeatures& required,
-        const PhysicalDeviceFeatures& optional,
-        const PhysicalDeviceFeatures& supported)
+Features make_features(const Features& required, const Features& optional, const Features& supported)
 {
-        PhysicalDeviceFeatures res = {};
+        Features res = {};
 
         try
         {
@@ -222,7 +216,7 @@ PhysicalDeviceFeatures make_features(
         return res;
 }
 
-bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDeviceFeatures& supported)
+bool check_features(const Features& required, const Features& supported)
 {
         try
         {
@@ -241,7 +235,7 @@ bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDevice
         return true;
 }
 
-std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, const bool enabled)
+std::vector<std::string> features_to_strings(const Features& features, const bool enabled)
 {
         std::vector<std::string> res;
 

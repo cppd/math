@@ -44,12 +44,12 @@ PixelSizes pixel_sizes(
 VkSampleCountFlagBits sample_count_flag_preferred(
         bool multisampling,
         int preferred_sample_count,
-        const vulkan::physical_device::PhysicalDeviceProperties& properties);
+        const vulkan::physical_device::Properties& properties);
 
 std::optional<VkSampleCountFlagBits> sample_count_flag(
         bool multisampling,
         int sample_count,
-        const vulkan::physical_device::PhysicalDeviceProperties& properties);
+        const vulkan::physical_device::Properties& properties);
 
-std::set<int> sample_counts(bool multisampling, const vulkan::physical_device::PhysicalDeviceProperties& properties);
+std::set<int> sample_counts(bool multisampling, const vulkan::physical_device::Properties& properties);
 }
