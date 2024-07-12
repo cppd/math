@@ -229,6 +229,6 @@ void SobelProgram::create_pipeline(const std::uint32_t local_size_x, const std::
 
 void SobelProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 }

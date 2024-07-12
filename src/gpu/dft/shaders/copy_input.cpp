@@ -195,6 +195,6 @@ void CopyInputProgram::create_pipeline(
 
 void CopyInputProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 }

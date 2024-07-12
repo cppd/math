@@ -208,6 +208,6 @@ void ComputeProgram::create_pipeline(const unsigned group_size, const numerical:
 
 void ComputeProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 }

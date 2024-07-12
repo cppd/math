@@ -142,7 +142,7 @@ void MergeProgram::create_pipeline(const unsigned height, const unsigned local_s
 
 void MergeProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 
 VkDescriptorSetLayout MergeProgram::descriptor_set_layout() const

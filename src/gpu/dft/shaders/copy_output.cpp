@@ -180,6 +180,6 @@ void CopyOutputProgram::create_pipeline(
 
 void CopyOutputProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 }

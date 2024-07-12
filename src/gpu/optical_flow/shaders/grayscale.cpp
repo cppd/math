@@ -221,6 +221,6 @@ void GrayscaleProgram::create_pipeline(
 
 void GrayscaleProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 }

@@ -165,6 +165,6 @@ void BitReverseProgram::create_pipeline(
 
 void BitReverseProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::handle::Pipeline();
+        pipeline_ = {};
 }
 }
