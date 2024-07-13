@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/descriptor.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 

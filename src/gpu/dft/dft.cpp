@@ -35,7 +35,7 @@ CRC Press LLC, 2000.
 #include <src/com/group_count.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>

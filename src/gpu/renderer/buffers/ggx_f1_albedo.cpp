@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/format.h>
 #include <src/shading/ggx/f1_albedo.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>

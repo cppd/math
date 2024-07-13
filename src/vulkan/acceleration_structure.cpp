@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 #include "commands.h"
+#include "device.h"
 #include "extensions.h"
 #include "objects.h"
-
-#include "device/device.h"
 
 #include <src/com/container.h>
 #include <src/com/error.h>

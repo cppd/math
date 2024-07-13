@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/com/string/strings.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/physical_device/features.h>
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/physical_device/info.h>

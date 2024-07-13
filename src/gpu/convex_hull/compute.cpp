@@ -36,7 +36,7 @@ Princeton University Press, 2011.
 #include <src/com/error.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>

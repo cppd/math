@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "device.h"
-
 #include <src/com/error.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/physical_device/physical_device.h>
@@ -30,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::device
 {
 class DeviceCompute final
 {

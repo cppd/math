@@ -125,7 +125,7 @@ class Impl final
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const vulkan::handle::SurfaceKHR surface_;
-        const vulkan::DeviceGraphics device_graphics_;
+        const vulkan::device::DeviceGraphics device_graphics_;
         const vulkan::CommandPool graphics_compute_command_pool_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;

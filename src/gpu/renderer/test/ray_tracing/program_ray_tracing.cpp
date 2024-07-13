@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/descriptor.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/extensions.h>
 #include <src/vulkan/pipeline/ray_tracing.h>

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/render_buffers.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 
 #include <vulkan/vulkan_core.h>
 

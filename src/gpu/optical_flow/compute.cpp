@@ -42,7 +42,7 @@ Packt Publishing, 2015.
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
 

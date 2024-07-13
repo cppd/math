@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "device.h"
 #include "error.h"
 #include "objects.h"
 #include "strings.h"
@@ -27,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/image_copy.h"
 #include "buffers/memory.h"
 #include "buffers/query.h"
-#include "device/device.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <unordered_set>
 
-namespace ns::vulkan
+namespace ns::vulkan::device
 {
 handle::Device create_device(
         const physical_device::PhysicalDevice* physical_device,

@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "queues.h"
 
-#include "device.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/physical_device/physical_device.h>
 
@@ -36,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
-namespace ns::vulkan
+namespace ns::vulkan::device
 {
 namespace
 {

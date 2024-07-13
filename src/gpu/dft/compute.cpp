@@ -57,7 +57,7 @@ There are errors in chapter 13 when calculating H2
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/device/device.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/device/device_compute.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance/instance.h>
@@ -201,7 +201,7 @@ public:
 
 class DftVector final : public ComputeVector
 {
-        const vulkan::DeviceCompute device_compute_;
+        const vulkan::device::DeviceCompute device_compute_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
 
