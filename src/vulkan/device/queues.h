@@ -53,7 +53,7 @@ QueueDistribution distribute_queues(
         const physical_device::PhysicalDevice& physical_device,
         const std::vector<QueueFamilyInfo>& infos);
 
-std::string describe_queues(
+std::string queues_to_string(
         const std::vector<std::string_view>& names,
         const std::vector<QueueFamilyDevice>& device_queues);
 

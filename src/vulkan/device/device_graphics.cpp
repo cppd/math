@@ -119,7 +119,7 @@ DeviceGraphics::DeviceGraphics(
 
         const QueueDistribution distribution = distribute_queues(physical_device_, family_info);
 
-        LOG(describe_queues({"graphics compute", "compute", "transfer", "presentation"}, distribution.device_queues));
+        LOG(queues_to_string({"graphics compute", "compute", "transfer", "presentation"}, distribution.device_queues));
 
         device_.emplace(&physical_device_, distribution.index_to_count, device_functionality);
 
