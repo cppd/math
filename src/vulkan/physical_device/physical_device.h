@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "functionality.h"
 #include "info.h"
 
 #include <vulkan/vulkan_core.h>
@@ -55,18 +54,4 @@ public:
 
         [[nodiscard]] bool queue_family_supports_presentation(std::uint32_t index) const;
 };
-
-std::vector<VkPhysicalDevice> find_devices(VkInstance instance);
-
-enum class DeviceSearchType
-{
-        BEST,
-        RANDOM
-};
-
-PhysicalDevice find_device(
-        DeviceSearchType search_type,
-        VkInstance instance,
-        VkSurfaceKHR surface,
-        const DeviceFunctionality& device_functionality);
 }

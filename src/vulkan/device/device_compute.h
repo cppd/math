@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
+#include <src/vulkan/physical_device/find.h>
 #include <src/vulkan/physical_device/functionality.h>
 #include <src/vulkan/physical_device/physical_device.h>
 

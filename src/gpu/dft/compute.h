@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
-#include <src/vulkan/physical_device/physical_device.h>
+#include <src/vulkan/physical_device/find.h>
 
 #include <vulkan/vulkan_core.h>
 

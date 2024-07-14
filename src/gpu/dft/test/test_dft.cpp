@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 #include <src/settings/directory.h>
 #include <src/test/test.h>
-#include <src/vulkan/physical_device/physical_device.h>
+#include <src/vulkan/physical_device/find.h>
 
 #include <array>
 #include <cmath>

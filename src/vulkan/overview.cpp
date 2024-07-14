@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "instance/info.h"
 #include "physical_device/features.h"
+#include "physical_device/find.h"
 #include "physical_device/physical_device.h"
 #include "physical_device/properties.h"
 
