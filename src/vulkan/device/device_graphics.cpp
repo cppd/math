@@ -118,16 +118,15 @@ DeviceGraphics::DeviceGraphics(
 
         const QueueDistribution distribution = distribute_queues(physical_device_, family_info);
 
-        LOG(device_queues_description(
-                {"graphics compute", "compute", "transfer", "presentation"}, distribution.device_queues));
+        LOG(describe_queues({"graphics compute", "compute", "transfer", "presentation"}, distribution.device_queues));
 
         device_.emplace(&physical_device_, distribution.index_to_count, device_functionality);
 
         device_extension_functions_.emplace(device_->handle());
 
-        graphics_compute_queues_ = create_device_queues(*device_, distribution.device_queues[GRAPHICS_COMPUTE]);
-        compute_queues_ = create_device_queues(*device_, distribution.device_queues[COMPUTE]);
-        transfer_queues_ = create_device_queues(*device_, distribution.device_queues[TRANSFER]);
-        presentation_queues_ = create_device_queues(*device_, distribution.device_queues[PRESENTATION]);
+        graphics_compute_queues_ = create_queues(*device_, distribution.device_queues[GRAPHICS_COMPUTE]);
+        compute_queues_ = create_queues(*device_, distribution.device_queues[COMPUTE]);
+        transfer_queues_ = create_queues(*device_, distribution.device_queues[TRANSFER]);
+        presentation_queues_ = create_queues(*device_, distribution.device_queues[PRESENTATION]);
 }
 }

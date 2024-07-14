@@ -146,7 +146,7 @@ QueueDistribution distribute_queues(
         return res;
 }
 
-std::string device_queues_description(
+std::string describe_queues(
         const std::vector<std::string_view>& names,
         const std::vector<QueueFamilyDevice>& device_queues)
 {
@@ -154,7 +154,7 @@ std::string device_queues_description(
                 "queue distribution: ", create_queue_description_map(names, device_queues));
 }
 
-std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues)
+std::vector<Queue> create_queues(const Device& device, const QueueFamilyDevice& device_queues)
 {
         std::vector<Queue> res;
         res.reserve(device_queues.device_queues.size());
@@ -165,7 +165,7 @@ std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyD
         return res;
 }
 
-std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
+std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_queues(
         const VkDevice device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families)
 {

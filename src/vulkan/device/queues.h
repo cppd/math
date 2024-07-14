@@ -53,13 +53,13 @@ QueueDistribution distribute_queues(
         const physical_device::PhysicalDevice& physical_device,
         const std::vector<QueueFamilyInfo>& infos);
 
-std::string device_queues_description(
+std::string describe_queues(
         const std::vector<std::string_view>& names,
         const std::vector<QueueFamilyDevice>& device_queues);
 
-std::vector<Queue> create_device_queues(const Device& device, const QueueFamilyDevice& device_queues);
+std::vector<Queue> create_queues(const Device& device, const QueueFamilyDevice& device_queues);
 
-std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
+std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_queues(
         VkDevice device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families);
 }

@@ -95,11 +95,11 @@ DeviceCompute::DeviceCompute(
 
         const QueueDistribution distribution = distribute_queues(physical_device_, family_info);
 
-        LOG(device_queues_description({"compute", "transfer"}, distribution.device_queues));
+        LOG(describe_queues({"compute", "transfer"}, distribution.device_queues));
 
         device_.emplace(&physical_device_, distribution.index_to_count, device_functionality);
 
-        compute_queues_ = create_device_queues(*device_, distribution.device_queues[COMPUTE]);
-        transfer_queues_ = create_device_queues(*device_, distribution.device_queues[TRANSFER]);
+        compute_queues_ = create_queues(*device_, distribution.device_queues[COMPUTE]);
+        transfer_queues_ = create_queues(*device_, distribution.device_queues[TRANSFER]);
 }
 }

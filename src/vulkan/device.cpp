@@ -56,7 +56,7 @@ Device::Device(
                   functionality.optional_extensions,
                   physical_device_->extensions())),
           device_(device::create_device(physical_device_, queue_families, extensions_, features_)),
-          queues_(device::find_device_queues(device_, queue_families))
+          queues_(device::find_queues(device_, queue_families))
 {
 }
 
