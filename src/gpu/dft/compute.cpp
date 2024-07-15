@@ -60,7 +60,7 @@ There are errors in chapter 13 when calculating H2
 #include <src/vulkan/device.h>
 #include <src/vulkan/device/device_compute.h>
 #include <src/vulkan/error.h>
-#include <src/vulkan/instance/instance.h>
+#include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/physical_device/find.h>
 #include <src/vulkan/physical_device/functionality.h>

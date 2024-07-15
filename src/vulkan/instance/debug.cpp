@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns::vulkan
+namespace ns::vulkan::instance
 {
 namespace
 {

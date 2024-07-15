@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "instance.h"
 
-#include "create.h"
-#include "debug.h"
-#include "info.h"
+#include "instance/create.h"
+#include "instance/debug.h"
+#include "instance/info.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/extensions.h>
@@ -47,7 +47,7 @@ std::unordered_set<std::string> layers()
 
         if (!layers.empty())
         {
-                const std::unordered_set<std::string> supported = supported_instance_layers();
+                const std::unordered_set<std::string> supported = instance::supported_instance_layers();
                 for (const std::string& s : layers)
                 {
                         if (!supported.contains(s))
@@ -70,7 +70,7 @@ std::unordered_set<std::string> extensions()
 
         if (!extensions.empty())
         {
-                const std::unordered_set<std::string> supported = supported_instance_extensions();
+                const std::unordered_set<std::string> supported = instance::supported_instance_extensions();
                 for (const std::string& s : extensions)
                 {
                         if (!supported.contains(s))
@@ -91,12 +91,12 @@ class Instance::Impl final
         handle::DebugUtilsMessengerEXT messenger_;
 
         Impl(const std::unordered_set<std::string>& layers, const std::unordered_set<std::string>& extensions)
-                : instance_(create_instance(layers, extensions)),
+                : instance_(instance::create_instance(layers, extensions)),
                   instance_extension_functions_(instance_)
         {
                 if (extensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
                 {
-                        messenger_ = create_debug_utils_messenger(instance_);
+                        messenger_ = instance::create_debug_utils_messenger(instance_);
                 }
         }
 

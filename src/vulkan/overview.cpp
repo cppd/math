@@ -223,7 +223,7 @@ void api_version(StringTree* const tree)
         const std::size_t node = tree->add("API Version");
         try
         {
-                tree->add(node, strings::api_version_to_string(supported_instance_api_version()));
+                tree->add(node, strings::api_version_to_string(instance::supported_instance_api_version()));
         }
         catch (const std::exception& e)
         {
@@ -236,7 +236,7 @@ void extensions(StringTree* const tree)
         const std::size_t node = tree->add("Extensions");
         try
         {
-                for (const std::string& extension : sorted(supported_instance_extensions()))
+                for (const std::string& extension : sorted(instance::supported_instance_extensions()))
                 {
                         tree->add(node, extension);
                 }
@@ -252,7 +252,7 @@ void layers(StringTree* const tree)
         const std::size_t node = tree->add("Layers");
         try
         {
-                for (const std::string& layer : sorted(supported_instance_layers()))
+                for (const std::string& layer : sorted(instance::supported_instance_layers()))
                 {
                         tree->add(node, layer);
                 }
