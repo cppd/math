@@ -42,7 +42,7 @@ namespace
 {
 void check_api_version()
 {
-        const std::uint32_t api_version = supported_instance_api_version();
+        const std::uint32_t api_version = supported_api_version();
 
         if (api_version_suitable(api_version))
         {
@@ -64,7 +64,7 @@ void check_layer_support(const std::unordered_set<std::string>& required_layers)
                 return;
         }
 
-        const std::unordered_set<std::string> supported = supported_instance_layers();
+        const std::unordered_set<std::string> supported = supported_layers();
 
         for (const std::string& layer : required_layers)
         {
@@ -82,7 +82,7 @@ void check_extension_support(const std::unordered_set<std::string>& required_ext
                 return;
         }
 
-        const std::unordered_set<std::string> supported = supported_instance_extensions();
+        const std::unordered_set<std::string> supported = supported_extensions();
 
         for (const std::string& extension : required_extensions)
         {

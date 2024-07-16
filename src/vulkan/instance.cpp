@@ -47,7 +47,7 @@ std::unordered_set<std::string> layers()
 
         if (!layers.empty())
         {
-                const std::unordered_set<std::string> supported = instance::supported_instance_layers();
+                const std::unordered_set<std::string> supported = instance::supported_layers();
                 for (const std::string& s : layers)
                 {
                         if (!supported.contains(s))
@@ -70,7 +70,7 @@ std::unordered_set<std::string> extensions()
 
         if (!extensions.empty())
         {
-                const std::unordered_set<std::string> supported = instance::supported_instance_extensions();
+                const std::unordered_set<std::string> supported = instance::supported_extensions();
                 for (const std::string& s : extensions)
                 {
                         if (!supported.contains(s))

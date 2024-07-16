@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::instance
 {
-std::unordered_set<std::string> supported_instance_extensions();
+std::unordered_set<std::string> supported_extensions();
 
-std::unordered_set<std::string> supported_instance_layers();
+std::unordered_set<std::string> supported_layers();
 
-std::uint32_t supported_instance_api_version();
+std::uint32_t supported_api_version();
 }

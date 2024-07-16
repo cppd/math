@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::instance
 {
-std::unordered_set<std::string> supported_instance_extensions()
+std::unordered_set<std::string> supported_extensions()
 {
         std::uint32_t extension_count;
         VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr));
@@ -50,7 +50,7 @@ std::unordered_set<std::string> supported_instance_extensions()
         return res;
 }
 
-std::unordered_set<std::string> supported_instance_layers()
+std::unordered_set<std::string> supported_layers()
 {
         std::uint32_t layer_count;
         VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
@@ -72,7 +72,7 @@ std::unordered_set<std::string> supported_instance_layers()
         return res;
 }
 
-std::uint32_t supported_instance_api_version()
+std::uint32_t supported_api_version()
 {
         std::uint32_t api_version;
         VULKAN_CHECK(vkEnumerateInstanceVersion(&api_version));
