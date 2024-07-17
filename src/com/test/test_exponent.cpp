@@ -15,9 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/test/test.h>
+
+#include <type_traits>
 
 namespace ns
+{
+namespace
 {
 static_assert(power<0>(10) == 1);
 static_assert(power<0>(-10) == 1);
@@ -67,4 +75,50 @@ static_assert(power<23>(F128{10}) == 1000 * square(square(S128{100'000})));
 static_assert(power<23>(-F128{10}) == -1000 * square(square(S128{100'000})));
 static_assert(power<24>(S128{10}) == 10'000 * square(square(S128{100'000})));
 static_assert(power<25>(S128{10}) == 100'000 * square(square(S128{100'000})));
+
+template <typename T>
+void compare(const T a, const T b, const T precision)
+{
+        if (a == b)
+        {
+                return;
+        }
+
+        const T abs = std::abs(a - b);
+        if (!(abs <= precision))
+        {
+                error("abs error: " + to_string(a) + " is not equal to " + to_string(b));
+        }
+
+        const T rel = abs / std::max(std::abs(a), std::abs(b));
+        if (!(rel <= precision))
+        {
+                error("rel error: " + to_string(a) + " is not equal to " + to_string(b));
+        }
+}
+
+template <typename T>
+void test_exponent(const std::type_identity_t<T>& precision)
+{
+        compare<T>(1, sqrt_s(T{1}), precision);
+        compare<T>(1.41421356237309504876L, sqrt_s(T{2}), precision);
+        compare<T>(2, sqrt_s(T{4}), precision);
+
+        compare<T>(0, sqrt_s(T{-0.0001L}), precision);
+        compare<T>(0.01L, sqrt_s(T{0.0001L}), precision);
+}
+
+void test()
+{
+        LOG("Test exponent");
+
+        test_exponent<float>(0);
+        test_exponent<double>(0);
+        test_exponent<long double>(0);
+
+        LOG("Test exponent passed");
+}
+
+TEST_SMALL("Exponent", test)
+}
 }

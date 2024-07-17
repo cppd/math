@@ -17,16 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <algorithm>
+#include <cmath>
+
 namespace ns
 {
 template <typename T>
-constexpr T square(const T& v)
+[[nodiscard]] constexpr T square(const T& v)
 {
         return v * v;
 }
 
+template <typename T>
+[[nodiscard]] T sqrt_s(const T v)
+{
+        return std::sqrt(std::max(T{0}, v));
+}
+
 template <unsigned EXPONENT, typename T>
-constexpr T power(const T& base)
+[[nodiscard]] constexpr T power(const T& base)
 {
         switch (EXPONENT)
         {
