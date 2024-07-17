@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/exponent.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/determinant.h>
 #include <src/numerical/gram.h>
@@ -43,7 +44,7 @@ T parallelotope_volume(const std::array<numerical::Vector<N, T>, M>& vectors)
         }
         else
         {
-                return std::sqrt(std::max(T{0}, numerical::gram_matrix(vectors).determinant()));
+                return sqrt_s(numerical::gram_matrix(vectors).determinant());
         }
 }
 }
