@@ -91,7 +91,7 @@ template <typename T, typename RandomEngine>
         // Section 4.3: reprojection onto hemisphere
         const numerical::Vector<3, T> nh = [&]
         {
-                const T z = std::sqrt(std::max(T{0}, 1 - dot(t, t)));
+                const T z = sqrt_s(1 - dot(t, t));
                 return t[0] * t0 + t[1] * t1 + z * vh;
         }();
 
@@ -207,7 +207,7 @@ template <std::size_t N, typename T, typename RandomEngine>
         // Section 4.3: reprojection onto hemisphere
         const numerical::Vector<N, T> nh = [&]
         {
-                numerical::Vector<N, T> v = vh * std::sqrt(std::max(T{0}, 1 - dot(t, t)));
+                numerical::Vector<N, T> v = vh * sqrt_s(1 - dot(t, t));
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         v.multiply_add(t[i], orthonormal_basis[i]);
