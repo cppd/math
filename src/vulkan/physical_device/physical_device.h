@@ -32,7 +32,7 @@ namespace ns::vulkan::physical_device
 class PhysicalDevice final
 {
         VkPhysicalDevice physical_device_;
-        DeviceInfo info_;
+        DeviceInfo device_info_;
         std::vector<bool> presentation_support_;
 
 public:

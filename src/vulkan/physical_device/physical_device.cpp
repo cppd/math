@@ -95,16 +95,16 @@ std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surf
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
         : physical_device_(physical_device),
-          info_(find_device_info(physical_device)),
+          device_info_(device_info(physical_device)),
           presentation_support_(find_queue_family_presentation_support(surface, physical_device_))
 {
         ASSERT(physical_device_ != VK_NULL_HANDLE);
-        ASSERT(info_.queue_families.size() == presentation_support_.size());
+        ASSERT(device_info_.queue_families.size() == presentation_support_.size());
 }
 
 const DeviceInfo& PhysicalDevice::info() const
 {
-        return info_;
+        return device_info_;
 }
 
 VkPhysicalDevice PhysicalDevice::device() const
@@ -114,29 +114,29 @@ VkPhysicalDevice PhysicalDevice::device() const
 
 const std::unordered_set<std::string>& PhysicalDevice::extensions() const
 {
-        return info_.extensions;
+        return device_info_.extensions;
 }
 
 const Properties& PhysicalDevice::properties() const
 {
-        return info_.properties;
+        return device_info_.properties;
 }
 
 const Features& PhysicalDevice::features() const
 {
-        return info_.features;
+        return device_info_.features;
 }
 
 const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() const
 {
-        return info_.queue_families;
+        return device_info_.queue_families;
 }
 
 std::optional<std::uint32_t> PhysicalDevice::find_family_index(
         const VkQueueFlags present_flags,
         const VkQueueFlags absent_flags) const
 {
-        return find_family(info_.queue_families, present_flags, absent_flags);
+        return find_family(device_info_.queue_families, present_flags, absent_flags);
 }
 
 std::uint32_t PhysicalDevice::presentation_family_index() const

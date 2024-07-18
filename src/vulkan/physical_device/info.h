@@ -55,7 +55,7 @@ struct DeviceInfo final
         std::vector<VkQueueFamilyProperties> queue_families;
 };
 
-DeviceInfo find_device_info(VkPhysicalDevice device);
+DeviceInfo device_info(VkPhysicalDevice device);
 
 void make_features(const Features& features, VkPhysicalDeviceFeatures2* features_2, Features* device_features);
 

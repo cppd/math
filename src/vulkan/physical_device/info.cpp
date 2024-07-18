@@ -261,7 +261,7 @@ std::vector<std::string> extensions_for_features(const Features& features)
 }
 }
 
-DeviceInfo find_device_info(const VkPhysicalDevice device)
+DeviceInfo device_info(const VkPhysicalDevice device)
 {
         check_api_version(device);
 
