@@ -25,11 +25,12 @@ Elsevier, 2017.
 
 #pragma once
 
+#include <src/com/primes.h>
 #include <src/com/radical_inverse.h>
 #include <src/numerical/vector.h>
 
-#include <array>
 #include <cstddef>
+#include <iterator>
 #include <utility>
 
 namespace ns::sampling
@@ -37,8 +38,6 @@ namespace ns::sampling
 template <std::size_t N, typename T>
 class HaltonSampler final
 {
-        static constexpr std::array PRIMES = std::to_array<unsigned>({2, 3, 5, 7, 11, 13, 17, 19, 23, 29});
-
         unsigned sample_ = 0;
 
 public:
@@ -51,7 +50,7 @@ public:
                 return []<std::size_t... I>(const unsigned sample, std::integer_sequence<std::size_t, I...>&&)
                 {
                         static_assert(sizeof...(I) == N);
-                        static_assert(N <= std::size(PRIMES));
+                        static_assert(((I < std::size(PRIMES)) && ...));
 
                         return numerical::Vector<N, T>{radical_inverse<PRIMES[I], T>(sample)...};
                 }(sample_++, std::make_integer_sequence<std::size_t, N>());
