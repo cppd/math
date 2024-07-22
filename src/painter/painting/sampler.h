@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter::painting
 {
 template <std::size_t N, typename T>
-class SamplerHalton final
+class HaltonSampler final
 {
         sampling::HaltonSampler<N, T> sampler_;
         std::vector<numerical::Vector<N, T>> samples_;
@@ -45,7 +45,7 @@ class SamplerHalton final
         }
 
 public:
-        explicit SamplerHalton(const int samples_per_pixel)
+        explicit HaltonSampler(const int samples_per_pixel)
                 : samples_per_pixel_(samples_per_pixel)
         {
                 if (samples_per_pixel <= 0)
@@ -69,7 +69,7 @@ public:
 };
 
 template <std::size_t N, typename T>
-class SamplerStratifiedJittered final
+class StratifiedJitteredSampler final
 {
         static constexpr T MIN = 0;
         static constexpr T MAX = 1;
@@ -78,7 +78,7 @@ class SamplerStratifiedJittered final
         sampling::StratifiedJitteredSampler<N, T> sampler_;
 
 public:
-        explicit SamplerStratifiedJittered(const int samples_per_pixel)
+        explicit StratifiedJitteredSampler(const int samples_per_pixel)
                 : sampler_(MIN, MAX, samples_per_pixel, SHUFFLE)
         {
         }

@@ -45,7 +45,7 @@ class IntegratorBPT final
         Notifier<N - 1>* const notifier_;
         pixels::Pixels<N - 1, T, Color>* const pixels_;
 
-        const SamplerStratifiedJittered<N - 1, T> sampler_;
+        const StratifiedJitteredSampler<N - 1, T> sampler_;
         Paintbrush<N - 1> paintbrush_;
 
         std::vector<integrators::bpt::LightDistribution<N, T, Color>> light_distributions_;
