@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::sampling
+namespace ns::numerical
 {
 template <typename T>
 T erf_inv(const T arg)

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/sampling/erf.h>
+#include <src/numerical/erf_inv.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
-namespace ns::sampling::test
+namespace ns::numerical
 {
 namespace
 {
@@ -248,7 +248,7 @@ void test_erf_inv_array(const std::type_identity_t<T> precision)
 }
 
 template <typename T>
-void test_performance()
+void test_erf_inv_performance()
 {
         constexpr int DATA_SIZE = 10'000;
         constexpr int COUNT = 1000;
@@ -280,7 +280,7 @@ void test_performance()
         LOG(std::string("Inverse error function <") + type_name<T>() + ">: " + to_string_digit_groups(p) + " o/s");
 }
 
-void test_erf()
+void test()
 {
         LOG("Test erf_inv array");
         test_erf_inv_array<float>(0.003);
@@ -295,14 +295,14 @@ void test_erf()
         LOG("Test erf_inv passed");
 }
 
-void test_erf_performance()
+void test_performance()
 {
-        test_performance<float>();
-        test_performance<double>();
-        test_performance<long double>();
+        test_erf_inv_performance<float>();
+        test_erf_inv_performance<double>();
+        test_erf_inv_performance<long double>();
 }
 
-TEST_SMALL("Inverse Error Function", test_erf)
-TEST_PERFORMANCE("Inverse Error Function", test_erf_performance)
+TEST_SMALL("Inverse Error Function", test)
+TEST_PERFORMANCE("Inverse Error Function", test_performance)
 }
 }
