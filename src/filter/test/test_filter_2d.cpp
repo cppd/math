@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "create_filters.h"
-#include "simulator.h"
 
+#include "simulator/simulator.h"
 #include "view/write.h"
 
 #include <src/com/log.h>
@@ -168,7 +168,7 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
 }
 
 template <typename T>
-void run(const Track<2, T>& track)
+void run(const simulator::Track<2, T>& track)
 {
         Filters<T> filters = create_filters<T>();
 
@@ -194,7 +194,7 @@ void run(const Track<2, T>& track)
 template <typename T>
 void test_impl()
 {
-        run(track<2, T>());
+        run(simulator::track<2, T>());
 }
 
 void test()
