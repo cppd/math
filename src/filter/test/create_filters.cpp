@@ -58,24 +58,24 @@ template <typename T>
 using DiscreteNoise = filters::DiscreteNoiseModel<T>;
 
 template <typename T>
-struct Position final
+struct PositionConfig final
 {
-        static constexpr DiscreteNoise<T> NOISE_MODEL_0{.variance = square(0.5)};
-        static constexpr T FADING_MEMORY_ALPHA_0 = 1;
-        static constexpr std::optional<T> GATE_0{};
+        DiscreteNoise<T> noise_model_0{.variance = square(0.5)};
+        T fading_memory_alpha_0 = 1;
+        std::optional<T> gate_0{};
 
-        static constexpr DiscreteNoise<T> NOISE_MODEL_1{.variance = square(1)};
-        static constexpr T FADING_MEMORY_ALPHA_1 = 1;
-        static constexpr std::optional<T> GATE_1{10};
+        DiscreteNoise<T> noise_model_1{.variance = square(1)};
+        T fading_memory_alpha_1 = 1;
+        std::optional<T> gate_1{10};
 
-        static constexpr DiscreteNoise<T> NOISE_MODEL_2{.variance = square(0.5)};
-        static constexpr T FADING_MEMORY_ALPHA_2 = 1;
-        static constexpr std::optional<T> GATE_2{5};
+        DiscreteNoise<T> noise_model_2{.variance = square(0.5)};
+        T fading_memory_alpha_2 = 1;
+        std::optional<T> gate_2{5};
 
-        static constexpr std::array THETAS = std::to_array<T>({0});
-        static constexpr T RESET_DT = 10;
-        static constexpr T LINEAR_DT = 2;
-        static constexpr filters::position::Init<T> INIT{
+        std::array<T, 1> thetas = std::to_array<T>({0});
+        T reset_dt = 10;
+        T linear_dt = 2;
+        filters::position::Init<T> init{
                 .speed = 0,
                 .speed_variance = square<T>(30),
                 .acceleration = 0,
@@ -83,12 +83,12 @@ struct Position final
 };
 
 template <typename T>
-struct PositionVariance final
+struct PositionVarianceConfig final
 {
-        static constexpr T RESET_DT = 10;
-        static constexpr DiscreteNoise<T> NOISE_MODEL_2{.variance = square(0.5)};
-        static constexpr T FADING_MEMORY_ALPHA_2 = 1;
-        static constexpr filters::position::Init<T> INIT{
+        T reset_dt = 10;
+        DiscreteNoise<T> noise_model_2{.variance = square(0.5)};
+        T fading_memory_alpha_2 = 1;
+        filters::position::Init<T> init{
                 .speed = 0,
                 .speed_variance = square<T>(30),
                 .acceleration = 0,
@@ -96,21 +96,21 @@ struct PositionVariance final
 };
 
 template <typename T>
-struct Acceleration final
+struct AccelerationConfig final
 {
-        static constexpr DiscreteNoise<T> POSITION_NOISE_MODEL{.variance = square(1.0)};
-        static constexpr DiscreteNoise<T> ANGLE_NOISE_MODEL_0{.variance = square(degrees_to_radians(1.0))};
-        static constexpr DiscreteNoise<T> ANGLE_R_NOISE_MODEL_0{.variance = square(degrees_to_radians(1.0))};
-        static constexpr DiscreteNoise<T> ANGLE_NOISE_MODEL_1{.variance = square(degrees_to_radians(0.001))};
-        static constexpr DiscreteNoise<T> ANGLE_R_NOISE_MODEL_1{.variance = square(degrees_to_radians(0.001))};
-        static constexpr T ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
-        static constexpr T FADING_MEMORY_ALPHA_0 = 1.001;
-        static constexpr T FADING_MEMORY_ALPHA_1 = 1.001;
-        static constexpr std::array UKF_ALPHAS = std::to_array<T>({0.1, 1.0});
-        static constexpr T RESET_DT = 10;
-        static constexpr std::optional<T> GATE{};
-        static constexpr std::size_t MEASUREMENT_QUEUE_SIZE = 20;
-        static constexpr filters::acceleration::Init<T> INIT{
+        DiscreteNoise<T> position_noise_model{.variance = square(1.0)};
+        DiscreteNoise<T> angle_noise_model_0{.variance = square(degrees_to_radians(1.0))};
+        DiscreteNoise<T> angle_r_noise_model_0{.variance = square(degrees_to_radians(1.0))};
+        DiscreteNoise<T> angle_noise_model_1{.variance = square(degrees_to_radians(0.001))};
+        DiscreteNoise<T> angle_r_noise_model_1{.variance = square(degrees_to_radians(0.001))};
+        T angle_estimation_variance = square(degrees_to_radians(20.0));
+        T fading_memory_alpha_0 = 1.001;
+        T fading_memory_alpha_1 = 1.001;
+        std::array<T, 2> ukf_alphas = std::to_array<T>({0.1, 1.0});
+        T reset_dt = 10;
+        std::optional<T> gate{};
+        std::size_t measurement_queue_size = 20;
+        filters::acceleration::Init<T> init{
                 .angle = 0,
                 .angle_variance = square(degrees_to_radians(100.0)),
                 .acceleration = 0,
@@ -122,23 +122,23 @@ struct Acceleration final
 };
 
 template <typename T>
-struct Direction final
+struct DirectionConfig final
 {
-        static constexpr DiscreteNoise<T> POSITION_NOISE_MODEL_1_0{.variance = square(2.0)};
-        static constexpr DiscreteNoise<T> POSITION_NOISE_MODEL_1_1{.variance = square(2.0)};
-        static constexpr DiscreteNoise<T> POSITION_NOISE_MODEL_2_1{.variance = square(1.0)};
-        static constexpr DiscreteNoise<T> ANGLE_NOISE_MODEL_1_0{.variance = square(degrees_to_radians(0.2))};
-        static constexpr DiscreteNoise<T> ANGLE_NOISE_MODEL_1_1{.variance = square(degrees_to_radians(0.001))};
-        static constexpr DiscreteNoise<T> ANGLE_NOISE_MODEL_2_1{.variance = square(degrees_to_radians(0.001))};
-        static constexpr T ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
-        static constexpr T FADING_MEMORY_ALPHA_1_0 = 1.001;
-        static constexpr T FADING_MEMORY_ALPHA_1_1 = 1.001;
-        static constexpr T FADING_MEMORY_ALPHA_2_1 = 1;
-        static constexpr std::array UKF_ALPHAS = std::to_array<T>({1.0});
-        static constexpr T RESET_DT = 10;
-        static constexpr std::optional<T> GATE{};
-        static constexpr std::size_t MEASUREMENT_QUEUE_SIZE = 20;
-        static constexpr filters::direction::Init<T> INIT{
+        DiscreteNoise<T> position_noise_model_1_0{.variance = square(2.0)};
+        DiscreteNoise<T> position_noise_model_1_1{.variance = square(2.0)};
+        DiscreteNoise<T> position_noise_model_2_1{.variance = square(1.0)};
+        DiscreteNoise<T> angle_noise_model_1_0{.variance = square(degrees_to_radians(0.2))};
+        DiscreteNoise<T> angle_noise_model_1_1{.variance = square(degrees_to_radians(0.001))};
+        DiscreteNoise<T> angle_noise_model_2_1{.variance = square(degrees_to_radians(0.001))};
+        T angle_estimation_variance = square(degrees_to_radians(20.0));
+        T fading_memory_alpha_1_0 = 1.001;
+        T fading_memory_alpha_1_1 = 1.001;
+        T fading_memory_alpha_2_1 = 1;
+        std::array<T, 1> ukf_alphas = std::to_array<T>({1.0});
+        T reset_dt = 10;
+        std::optional<T> gate{};
+        std::size_t measurement_queue_size = 20;
+        filters::direction::Init<T> init{
                 .angle = 0,
                 .angle_variance = square(degrees_to_radians(100.0)),
                 .acceleration = 0,
@@ -148,18 +148,18 @@ struct Direction final
 };
 
 template <typename T>
-struct Speed final
+struct SpeedConfig final
 {
-        static constexpr DiscreteNoise<T> NOISE_MODEL_1{.variance = square(2.0)};
-        static constexpr DiscreteNoise<T> NOISE_MODEL_2{.variance = square(2.0)};
-        static constexpr T ANGLE_ESTIMATION_VARIANCE = square(degrees_to_radians(20.0));
-        static constexpr T FADING_MEMORY_ALPHA_1 = 1.001;
-        static constexpr T FADING_MEMORY_ALPHA_2 = 1.001;
-        static constexpr std::array UKF_ALPHAS = std::to_array<T>({1.0});
-        static constexpr T RESET_DT = 10;
-        static constexpr std::optional<T> GATE{};
-        static constexpr std::size_t MEASUREMENT_QUEUE_SIZE = 20;
-        static constexpr filters::speed::Init<T> INIT{.acceleration = 0, .acceleration_variance = square(10)};
+        DiscreteNoise<T> noise_model_1{.variance = square(2.0)};
+        DiscreteNoise<T> noise_model_2{.variance = square(2.0)};
+        T angle_estimation_variance = square(degrees_to_radians(20.0));
+        T fading_memory_alpha_1 = 1.001;
+        T fading_memory_alpha_2 = 1.001;
+        std::array<T, 1> ukf_alphas = std::to_array<T>({1.0});
+        T reset_dt = 10;
+        std::optional<T> gate{};
+        std::size_t measurement_queue_size = 20;
+        filters::speed::Init<T> init{.acceleration = 0, .acceleration_variance = square(10)};
 };
 
 template <std::size_t N, typename T>
@@ -192,20 +192,20 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_variance()
+std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_variance(
+        const PositionVarianceConfig<T>& config)
 {
         return std::make_unique<filters::estimation::PositionVariance<N, T>>(
-                PositionVariance<T>::RESET_DT, PositionVariance<T>::NOISE_MODEL_2,
-                PositionVariance<T>::FADING_MEMORY_ALPHA_2, PositionVariance<T>::INIT);
+                config.reset_dt, config.noise_model_2, config.fading_memory_alpha_2, config.init);
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
+TestFilterPosition<N, T> create_position(const PositionConfig<T>& config, const unsigned i, const T theta)
 {
         ASSERT(theta >= 0 && theta <= 1);
         ASSERT(i <= 4);
 
-        const int precision = compute_string_precision(Position<T>::THETAS);
+        const int precision = compute_string_precision(config.thetas);
 
         const auto name = [&]
         {
@@ -220,18 +220,18 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
         {
         case 0:
                 return {filters::position::create_position_0<N, T>(
-                                Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_0, Position<T>::INIT,
-                                theta, Position<T>::NOISE_MODEL_0, Position<T>::FADING_MEMORY_ALPHA_0),
+                                config.reset_dt, config.linear_dt, config.gate_0, config.init, theta,
+                                config.noise_model_0, config.fading_memory_alpha_0),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
         case 1:
                 return {filters::position::create_position_1<N, T>(
-                                Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_1, Position<T>::INIT,
-                                theta, Position<T>::NOISE_MODEL_1, Position<T>::FADING_MEMORY_ALPHA_1),
+                                config.reset_dt, config.linear_dt, config.gate_1, config.init, theta,
+                                config.noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
         case 2:
                 return {filters::position::create_position_2<N, T>(
-                                Position<T>::RESET_DT, Position<T>::LINEAR_DT, Position<T>::GATE_2, Position<T>::INIT,
-                                theta, Position<T>::NOISE_MODEL_2, Position<T>::FADING_MEMORY_ALPHA_2),
+                                config.reset_dt, config.linear_dt, config.gate_2, config.init, theta,
+                                config.noise_model_2, config.fading_memory_alpha_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
         default:
                 ASSERT(false);
@@ -239,27 +239,27 @@ TestFilterPosition<N, T> create_position(const unsigned i, const T theta)
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<TestFilterPosition<N, T>> create_positions()
+std::vector<TestFilterPosition<N, T>> create_positions(const PositionConfig<T>& config)
 {
         std::vector<TestFilterPosition<N, T>> res;
 
-        const auto thetas = sort(std::array(Position<T>::THETAS));
+        const auto thetas = sort(std::array(config.thetas));
 
         for (std::size_t i = 0; i < thetas.size(); ++i)
         {
-                res.push_back(create_position<N, T, ORDER>(i, thetas[i]));
+                res.push_back(create_position<N, T, ORDER>(config, i, thetas[i]));
         }
 
         return res;
 }
 
 template <typename T, std::size_t ORDER>
-TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
+TestFilter<2, T> create_acceleration(const AccelerationConfig<T>& config, const unsigned i, const T alpha)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
 
-        const int precision = compute_string_precision(Acceleration<T>::UKF_ALPHAS);
+        const int precision = compute_string_precision(config.ukf_alphas);
 
         const auto name = [&]
         {
@@ -274,19 +274,15 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
         {
         case 0:
                 return {filters::acceleration::create_acceleration_0<T>(
-                                Acceleration<T>::MEASUREMENT_QUEUE_SIZE, Acceleration<T>::RESET_DT,
-                                Acceleration<T>::ANGLE_ESTIMATION_VARIANCE, Acceleration<T>::GATE,
-                                Acceleration<T>::INIT, alpha, Acceleration<T>::POSITION_NOISE_MODEL,
-                                Acceleration<T>::ANGLE_NOISE_MODEL_0, Acceleration<T>::ANGLE_R_NOISE_MODEL_0,
-                                Acceleration<T>::FADING_MEMORY_ALPHA_0),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.position_noise_model,
+                                config.angle_noise_model_0, config.angle_r_noise_model_0, config.fading_memory_alpha_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         case 1:
                 return {filters::acceleration::create_acceleration_1<T>(
-                                Acceleration<T>::MEASUREMENT_QUEUE_SIZE, Acceleration<T>::RESET_DT,
-                                Acceleration<T>::ANGLE_ESTIMATION_VARIANCE, Acceleration<T>::GATE,
-                                Acceleration<T>::INIT, alpha, Acceleration<T>::POSITION_NOISE_MODEL,
-                                Acceleration<T>::ANGLE_NOISE_MODEL_1, Acceleration<T>::ANGLE_R_NOISE_MODEL_1,
-                                Acceleration<T>::FADING_MEMORY_ALPHA_1),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.position_noise_model,
+                                config.angle_noise_model_1, config.angle_r_noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
         default:
                 ASSERT(false);
@@ -294,40 +290,39 @@ TestFilter<2, T> create_acceleration(const unsigned i, const T alpha)
 }
 
 template <typename T>
-std::vector<TestFilter<2, T>> create_accelerations()
+std::vector<TestFilter<2, T>> create_accelerations(const AccelerationConfig<T>& config)
 {
         std::vector<TestFilter<2, T>> res;
 
         res.emplace_back(
                 filters::acceleration::create_acceleration_ekf<T>(
-                        Acceleration<T>::MEASUREMENT_QUEUE_SIZE, Acceleration<T>::RESET_DT,
-                        Acceleration<T>::ANGLE_ESTIMATION_VARIANCE, Acceleration<T>::GATE, Acceleration<T>::INIT,
-                        Acceleration<T>::POSITION_NOISE_MODEL, Acceleration<T>::ANGLE_NOISE_MODEL_1,
-                        Acceleration<T>::ANGLE_R_NOISE_MODEL_1, Acceleration<T>::FADING_MEMORY_ALPHA_1),
+                        config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance, config.gate,
+                        config.init, config.position_noise_model, config.angle_noise_model_1,
+                        config.angle_r_noise_model_1, config.fading_memory_alpha_1),
                 view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));
 
-        const auto alphas = sort(std::array(Direction<T>::UKF_ALPHAS));
+        const auto alphas = sort(std::array(config.ukf_alphas));
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_acceleration<T, 0>(i, alphas[i]));
+                res.push_back(create_acceleration<T, 0>(config, i, alphas[i]));
         }
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_acceleration<T, 1>(i, alphas[i]));
+                res.push_back(create_acceleration<T, 1>(config, i, alphas[i]));
         }
 
         return res;
 }
 
 template <typename T, std::size_t ORDER>
-TestFilter<2, T> create_direction(const unsigned i, const T alpha)
+TestFilter<2, T> create_direction(const DirectionConfig<T>& config, const unsigned i, const T alpha)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 4);
 
-        const int precision = compute_string_precision(Direction<T>::UKF_ALPHAS);
+        const int precision = compute_string_precision(config.ukf_alphas);
 
         const auto name = [&]
         {
@@ -342,24 +337,21 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
         {
         case 10:
                 return {filters::direction::create_direction_1_0<T>(
-                                Direction<T>::MEASUREMENT_QUEUE_SIZE, Direction<T>::RESET_DT,
-                                Direction<T>::ANGLE_ESTIMATION_VARIANCE, Direction<T>::GATE, Direction<T>::INIT, alpha,
-                                Direction<T>::POSITION_NOISE_MODEL_1_0, Direction<T>::ANGLE_NOISE_MODEL_1_0,
-                                Direction<T>::FADING_MEMORY_ALPHA_1_0),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.position_noise_model_1_0,
+                                config.angle_noise_model_1_0, config.fading_memory_alpha_1_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
         case 11:
                 return {filters::direction::create_direction_1_1<T>(
-                                Direction<T>::MEASUREMENT_QUEUE_SIZE, Direction<T>::RESET_DT,
-                                Direction<T>::ANGLE_ESTIMATION_VARIANCE, Direction<T>::GATE, Direction<T>::INIT, alpha,
-                                Direction<T>::POSITION_NOISE_MODEL_1_1, Direction<T>::ANGLE_NOISE_MODEL_1_1,
-                                Direction<T>::FADING_MEMORY_ALPHA_1_1),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.position_noise_model_1_1,
+                                config.angle_noise_model_1_1, config.fading_memory_alpha_1_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
         case 21:
                 return {filters::direction::create_direction_2_1<T>(
-                                Direction<T>::MEASUREMENT_QUEUE_SIZE, Direction<T>::RESET_DT,
-                                Direction<T>::ANGLE_ESTIMATION_VARIANCE, Direction<T>::GATE, Direction<T>::INIT, alpha,
-                                Direction<T>::POSITION_NOISE_MODEL_2_1, Direction<T>::ANGLE_NOISE_MODEL_2_1,
-                                Direction<T>::FADING_MEMORY_ALPHA_2_1),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.position_noise_model_2_1,
+                                config.angle_noise_model_2_1, config.fading_memory_alpha_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
         default:
                 ASSERT(false);
@@ -367,37 +359,37 @@ TestFilter<2, T> create_direction(const unsigned i, const T alpha)
 }
 
 template <typename T>
-std::vector<TestFilter<2, T>> create_directions()
+std::vector<TestFilter<2, T>> create_directions(const DirectionConfig<T>& config)
 {
         std::vector<TestFilter<2, T>> res;
 
-        const auto alphas = sort(std::array(Direction<T>::UKF_ALPHAS));
+        const auto alphas = sort(std::array(config.ukf_alphas));
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_direction<T, 10>(i, alphas[i]));
+                res.push_back(create_direction<T, 10>(config, i, alphas[i]));
         }
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_direction<T, 11>(i, alphas[i]));
+                res.push_back(create_direction<T, 11>(config, i, alphas[i]));
         }
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_direction<T, 21>(i, alphas[i]));
+                res.push_back(create_direction<T, 21>(config, i, alphas[i]));
         }
 
         return res;
 }
 
 template <typename T, std::size_t ORDER_P>
-TestFilter<2, T> create_speed(const unsigned i, const T alpha)
+TestFilter<2, T> create_speed(const SpeedConfig<T>& config, const unsigned i, const T alpha)
 {
         ASSERT(alpha > 0 && alpha <= 1);
         ASSERT(i <= 2);
 
-        const int precision = compute_string_precision(Speed<T>::UKF_ALPHAS);
+        const int precision = compute_string_precision(config.ukf_alphas);
 
         const auto name = [&]
         {
@@ -412,15 +404,13 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
         {
         case 1:
                 return {filters::speed::create_speed_1<2, T>(
-                                Speed<T>::MEASUREMENT_QUEUE_SIZE, Speed<T>::RESET_DT,
-                                Speed<T>::ANGLE_ESTIMATION_VARIANCE, Speed<T>::GATE, Speed<T>::INIT, alpha,
-                                Speed<T>::NOISE_MODEL_1, Speed<T>::FADING_MEMORY_ALPHA_1),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
         case 2:
                 return {filters::speed::create_speed_2<2, T>(
-                                Speed<T>::MEASUREMENT_QUEUE_SIZE, Speed<T>::RESET_DT,
-                                Speed<T>::ANGLE_ESTIMATION_VARIANCE, Speed<T>::GATE, Speed<T>::INIT, alpha,
-                                Speed<T>::NOISE_MODEL_2, Speed<T>::FADING_MEMORY_ALPHA_2),
+                                config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
+                                config.gate, config.init, alpha, config.noise_model_2, config.fading_memory_alpha_2),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
         default:
                 ASSERT(false);
@@ -428,20 +418,20 @@ TestFilter<2, T> create_speed(const unsigned i, const T alpha)
 }
 
 template <typename T>
-std::vector<TestFilter<2, T>> create_speeds()
+std::vector<TestFilter<2, T>> create_speeds(const SpeedConfig<T>& config)
 {
         std::vector<TestFilter<2, T>> res;
 
-        const auto alphas = sort(std::array(Speed<T>::UKF_ALPHAS));
+        const auto alphas = sort(std::array(config.ukf_alphas));
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_speed<T, 1>(i, alphas[i]));
+                res.push_back(create_speed<T, 1>(config, i, alphas[i]));
         }
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
-                res.push_back(create_speed<T, 2>(i, alphas[i]));
+                res.push_back(create_speed<T, 2>(config, i, alphas[i]));
         }
 
         return res;
@@ -451,17 +441,23 @@ std::vector<TestFilter<2, T>> create_speeds()
 template <typename T>
 Filters<T> create_filters()
 {
+        const PositionVarianceConfig<T> position_variance;
+        const PositionConfig<T> position;
+        const AccelerationConfig<T> acceleration;
+        const DirectionConfig<T> direction;
+        const SpeedConfig<T> speed;
+
         Filters<T> res;
 
-        res.position_variance = create_position_variance<2, T>();
+        res.position_variance = create_position_variance<2, T>(position_variance);
 
-        res.positions_0 = create_positions<2, T, 0>();
-        res.positions_1 = create_positions<2, T, 1>();
-        res.positions_2 = create_positions<2, T, 2>();
+        res.positions_0 = create_positions<2, T, 0>(position);
+        res.positions_1 = create_positions<2, T, 1>(position);
+        res.positions_2 = create_positions<2, T, 2>(position);
 
-        res.accelerations = create_accelerations<T>();
-        res.directions = create_directions<T>();
-        res.speeds = create_speeds<T>();
+        res.accelerations = create_accelerations<T>(acceleration);
+        res.directions = create_directions<T>(direction);
+        res.speeds = create_speeds<T>(speed);
 
         res.position_estimation =
                 std::make_unique<filters::estimation::PositionEstimation<2, T>>(res.positions_2.front().filter.get());
