@@ -17,23 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create_filters.h"
 
+#include "config.h"
+
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
-#include <src/com/conversion.h>
 #include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/com/sort.h>
 #include <src/filter/filters/acceleration/acceleration.h>
-#include <src/filter/filters/acceleration/init.h>
 #include <src/filter/filters/direction/direction.h>
-#include <src/filter/filters/direction/init.h>
 #include <src/filter/filters/estimation/position_estimation.h>
 #include <src/filter/filters/estimation/position_variance.h>
-#include <src/filter/filters/noise_model.h>
-#include <src/filter/filters/position/init.h>
 #include <src/filter/filters/position/position.h>
-#include <src/filter/filters/speed/init.h>
 #include <src/filter/filters/speed/speed.h>
 #include <src/filter/utility/instantiation.h>
 
@@ -53,114 +48,6 @@ namespace
 {
 const auto* const ALPHA = reinterpret_cast<const char*>(u8"\u03b1");
 const auto* const THETA = reinterpret_cast<const char*>(u8"\u03b8");
-
-template <typename T>
-using DiscreteNoise = filters::DiscreteNoiseModel<T>;
-
-template <typename T>
-struct PositionConfig final
-{
-        DiscreteNoise<T> noise_model_0{.variance = square(0.5)};
-        T fading_memory_alpha_0 = 1;
-        std::optional<T> gate_0{};
-
-        DiscreteNoise<T> noise_model_1{.variance = square(1)};
-        T fading_memory_alpha_1 = 1;
-        std::optional<T> gate_1{10};
-
-        DiscreteNoise<T> noise_model_2{.variance = square(0.5)};
-        T fading_memory_alpha_2 = 1;
-        std::optional<T> gate_2{5};
-
-        std::array<T, 1> thetas = std::to_array<T>({0});
-        T reset_dt = 10;
-        T linear_dt = 2;
-        filters::position::Init<T> init{
-                .speed = 0,
-                .speed_variance = square<T>(30),
-                .acceleration = 0,
-                .acceleration_variance = square<T>(10)};
-};
-
-template <typename T>
-struct PositionVarianceConfig final
-{
-        T reset_dt = 10;
-        DiscreteNoise<T> noise_model_2{.variance = square(0.5)};
-        T fading_memory_alpha_2 = 1;
-        filters::position::Init<T> init{
-                .speed = 0,
-                .speed_variance = square<T>(30),
-                .acceleration = 0,
-                .acceleration_variance = square<T>(10)};
-};
-
-template <typename T>
-struct AccelerationConfig final
-{
-        DiscreteNoise<T> position_noise_model{.variance = square(1.0)};
-        DiscreteNoise<T> angle_noise_model_0{.variance = square(degrees_to_radians(1.0))};
-        DiscreteNoise<T> angle_r_noise_model_0{.variance = square(degrees_to_radians(1.0))};
-        DiscreteNoise<T> angle_noise_model_1{.variance = square(degrees_to_radians(0.001))};
-        DiscreteNoise<T> angle_r_noise_model_1{.variance = square(degrees_to_radians(0.001))};
-        T angle_estimation_variance = square(degrees_to_radians(20.0));
-        T fading_memory_alpha_0 = 1.001;
-        T fading_memory_alpha_1 = 1.001;
-        std::array<T, 2> ukf_alphas = std::to_array<T>({0.1, 1.0});
-        T reset_dt = 10;
-        std::optional<T> gate{};
-        std::size_t measurement_queue_size = 20;
-        filters::acceleration::Init<T> init{
-                .angle = 0,
-                .angle_variance = square(degrees_to_radians(100.0)),
-                .acceleration = 0,
-                .acceleration_variance = square(10),
-                .angle_speed = 0,
-                .angle_speed_variance = square(degrees_to_radians(1.0)),
-                .angle_r = 0,
-                .angle_r_variance = square(degrees_to_radians(50.0))};
-};
-
-template <typename T>
-struct DirectionConfig final
-{
-        DiscreteNoise<T> position_noise_model_1_0{.variance = square(2.0)};
-        DiscreteNoise<T> position_noise_model_1_1{.variance = square(2.0)};
-        DiscreteNoise<T> position_noise_model_2_1{.variance = square(1.0)};
-        DiscreteNoise<T> angle_noise_model_1_0{.variance = square(degrees_to_radians(0.2))};
-        DiscreteNoise<T> angle_noise_model_1_1{.variance = square(degrees_to_radians(0.001))};
-        DiscreteNoise<T> angle_noise_model_2_1{.variance = square(degrees_to_radians(0.001))};
-        T angle_estimation_variance = square(degrees_to_radians(20.0));
-        T fading_memory_alpha_1_0 = 1.001;
-        T fading_memory_alpha_1_1 = 1.001;
-        T fading_memory_alpha_2_1 = 1;
-        std::array<T, 1> ukf_alphas = std::to_array<T>({1.0});
-        T reset_dt = 10;
-        std::optional<T> gate{};
-        std::size_t measurement_queue_size = 20;
-        filters::direction::Init<T> init{
-                .angle = 0,
-                .angle_variance = square(degrees_to_radians(100.0)),
-                .acceleration = 0,
-                .acceleration_variance = square(10),
-                .angle_speed = 0,
-                .angle_speed_variance = square(degrees_to_radians(1.0))};
-};
-
-template <typename T>
-struct SpeedConfig final
-{
-        DiscreteNoise<T> noise_model_1{.variance = square(2.0)};
-        DiscreteNoise<T> noise_model_2{.variance = square(2.0)};
-        T angle_estimation_variance = square(degrees_to_radians(20.0));
-        T fading_memory_alpha_1 = 1.001;
-        T fading_memory_alpha_2 = 1.001;
-        std::array<T, 1> ukf_alphas = std::to_array<T>({1.0});
-        T reset_dt = 10;
-        std::optional<T> gate{};
-        std::size_t measurement_queue_size = 20;
-        filters::speed::Init<T> init{.acceleration = 0, .acceleration_variance = square(10)};
-};
 
 template <std::size_t N, typename T>
 [[nodiscard]] int compute_string_precision(const std::array<T, N>& data)
