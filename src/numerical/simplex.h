@@ -95,7 +95,7 @@ void print_simplex_algorithm_data_impl(
 
         oss << std::setfill('-');
         oss << std::setw(float_w + 4 + int_w) << "b(v)";
-        for (unsigned n = 0; n < N; ++n)
+        for (std::size_t n = 0; n < N; ++n)
         {
                 oss << std::setw(float_w - int_w - 1) << "[" << std::setw(int_w) << map_n[n] << "]";
         }
@@ -104,7 +104,7 @@ void print_simplex_algorithm_data_impl(
 
         oss << "z = " << std::setw(int_w) << " ";
         oss << std::setw(float_w) << v;
-        for (unsigned n = 0; n < N; ++n)
+        for (std::size_t n = 0; n < N; ++n)
         {
                 oss << std::setw(float_w) << c[n];
         }
@@ -112,12 +112,12 @@ void print_simplex_algorithm_data_impl(
         oss << "\n";
         oss << "---";
 
-        for (unsigned m = 0; m < M; ++m)
+        for (std::size_t m = 0; m < M; ++m)
         {
                 oss << '\n';
                 oss << "[" << std::setw(int_w) << map_m[m] << "]: ";
                 oss << std::setw(float_w) << b[m];
-                for (unsigned n = 0; n < N; ++n)
+                for (std::size_t n = 0; n < N; ++n)
                 {
                         oss << std::setw(float_w) << a[m][n];
                 }
@@ -155,11 +155,11 @@ template <std::size_t N, std::size_t M, typename T>
 void pivot_equation_coefficients(
         std::array<T, M>& b,
         std::array<Vector<N, T>, M>& a,
-        const unsigned l,
-        const unsigned e)
+        const std::size_t l,
+        const std::size_t e)
 {
         b[l] = -b[l] / a[l][e];
-        for (unsigned j = 0; j < N; ++j)
+        for (std::size_t j = 0; j < N; ++j)
         {
                 if (j == e)
                 {
@@ -178,17 +178,17 @@ template <std::size_t N, std::size_t M, typename T>
 void pivot_constraint_coefficients(
         std::array<T, M>& b,
         std::array<Vector<N, T>, M>& a,
-        const unsigned l,
-        const unsigned e)
+        const std::size_t l,
+        const std::size_t e)
 {
-        for (unsigned i = 0; i < M; ++i)
+        for (std::size_t i = 0; i < M; ++i)
         {
                 if (i == l)
                 {
                         continue;
                 }
                 b[i] = b[i] + a[i][e] * b[l];
-                for (unsigned j = 0; j < N; ++j)
+                for (std::size_t j = 0; j < N; ++j)
                 {
                         if (j == e)
                         {
@@ -210,11 +210,11 @@ void pivot_objective_function(
         const std::array<Vector<N, T>, M>& a,
         T& v,
         Vector<N, T>& c,
-        const unsigned l,
-        const unsigned e)
+        const std::size_t l,
+        const std::size_t e)
 {
         v = v + c[e] * b[l];
-        for (unsigned j = 0; j < N; ++j)
+        for (std::size_t j = 0; j < N; ++j)
         {
                 if (j == e)
                 {
@@ -233,8 +233,8 @@ void pivot(
         std::array<Vector<N, T>, M>& a,
         T& v,
         Vector<N, T>& c,
-        const unsigned l,
-        const unsigned e)
+        const std::size_t l,
+        const std::size_t e)
 {
         static_assert(FloatingPoint<T>);
 
@@ -257,10 +257,10 @@ void make_aux_and_maps(
         std::array<unsigned, N_SOURCE + 1>* const map_n,
         std::array<unsigned, M>* const map_m)
 {
-        for (unsigned m = 0; m < M; ++m)
+        for (std::size_t m = 0; m < M; ++m)
         {
                 T max = std::abs(a_input[m][0]);
-                for (unsigned n = 1; n < N_SOURCE; ++n)
+                for (std::size_t n = 1; n < N_SOURCE; ++n)
                 {
                         max = std::max(max, std::abs(a_input[m][n]));
                 }
@@ -271,7 +271,7 @@ void make_aux_and_maps(
 
                 (*b)[m] *= max_reciprocal;
                 (*a)[m][0] = 1;
-                for (unsigned n = 0; n < N_SOURCE; ++n)
+                for (std::size_t n = 0; n < N_SOURCE; ++n)
                 {
                         (*a)[m][n + 1] = a_input[m][n] * max_reciprocal;
                 }
@@ -279,25 +279,25 @@ void make_aux_and_maps(
 
         //
 
-        static constexpr unsigned N = N_SOURCE + 1;
+        static constexpr std::size_t N = N_SOURCE + 1;
 
         //
 
         *v = 0;
 
         (*c)[0] = -1;
-        for (unsigned i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 (*c)[i] = 0;
         }
 
         //
 
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 (*map_n)[i] = i;
         }
-        for (unsigned i = 0; i < M; ++i)
+        for (std::size_t i = 0; i < M; ++i)
         {
                 (*map_m)[i] = i + N;
         }
@@ -309,7 +309,7 @@ bool variable_x0_is_zero(
         const std::array<unsigned, N>& map_n,
         const std::array<unsigned, M>& map_m)
 {
-        for (unsigned n = 0; n < N; ++n)
+        for (std::size_t n = 0; n < N; ++n)
         {
                 if (map_n[n] == 0)
                 {
@@ -317,7 +317,7 @@ bool variable_x0_is_zero(
                 }
         }
 
-        for (unsigned m = 0; m < M; ++m)
+        for (std::size_t m = 0; m < M; ++m)
         {
                 if (map_m[m] == 0 && b[m] <= 0)
                 {
@@ -329,12 +329,12 @@ bool variable_x0_is_zero(
 }
 
 template <std::size_t N, typename T>
-std::optional<unsigned> find_positive_index(const Vector<N, T>& c)
+std::optional<std::size_t> find_positive_index(const Vector<N, T>& c)
 {
         const T max_abs_c = [&]
         {
                 T res = std::abs(c[0]);
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         res = std::max(res, std::abs(c[i]));
                 }
@@ -343,7 +343,7 @@ std::optional<unsigned> find_positive_index(const Vector<N, T>& c)
 
         const T eps_c = max_abs_c * (2 * Limits<T>::epsilon());
 
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (c[i] > eps_c)
                 {
@@ -357,7 +357,7 @@ std::optional<unsigned> find_positive_index(const Vector<N, T>& c)
 template <std::size_t M, typename T>
 bool min_is_non_negative(const std::array<T, M>& b)
 {
-        for (unsigned m = 0; m < M; ++m)
+        for (std::size_t m = 0; m < M; ++m)
         {
                 if (!(b[m] >= 0))
                 {
@@ -368,11 +368,11 @@ bool min_is_non_negative(const std::array<T, M>& b)
 }
 
 template <std::size_t M, typename T>
-unsigned find_index_of_min(const std::array<T, M>& b)
+std::size_t find_index_of_min(const std::array<T, M>& b)
 {
         T min = b[0];
-        unsigned k = 0;
-        for (unsigned m = 1; m < M; ++m)
+        std::size_t k = 0;
+        for (std::size_t m = 1; m < M; ++m)
         {
                 if (b[m] < min)
                 {
@@ -388,7 +388,7 @@ unsigned find_index_of_min(const std::array<T, M>& b)
 // Lines 5–12 of SIMPLEX.
 template <std::size_t N, std::size_t M, typename T>
 std::optional<ConstraintSolution> simplex_iteration(
-        const unsigned e,
+        const std::size_t e,
         std::array<Vector<N, T>, M>& a,
         std::array<T, M>& b,
         Vector<N, T>& c,
@@ -396,12 +396,12 @@ std::optional<ConstraintSolution> simplex_iteration(
         std::array<unsigned, N>& map_n,
         std::array<unsigned, M>& map_m)
 {
-        static_assert(M > 0 && M - 1 < Limits<unsigned>::max());
+        static_assert(M > 0);
 
         T max_delta = Limits<T>::lowest();
-        unsigned l = Limits<unsigned>::max();
+        std::optional<std::size_t> l;
 
-        for (unsigned i = 0; i < M; ++i)
+        for (std::size_t i = 0; i < M; ++i)
         {
                 b[i] = std::max(static_cast<T>(0), b[i]);
 
@@ -409,7 +409,7 @@ std::optional<ConstraintSolution> simplex_iteration(
                 {
                         const T delta = b[i] / a[i][e];
 
-                        if (delta > max_delta || l == Limits<unsigned>::max())
+                        if (delta > max_delta || !l)
                         {
                                 max_delta = delta;
                                 l = i;
@@ -417,13 +417,13 @@ std::optional<ConstraintSolution> simplex_iteration(
                 }
         }
 
-        if (l == Limits<unsigned>::max())
+        if (!l)
         {
                 return ConstraintSolution::UNBOUND;
         }
 
-        pivot(b, a, v, c, l, e);
-        std::swap(map_m[l], map_n[e]);
+        pivot(b, a, v, c, *l, e);
+        std::swap(map_m[*l], map_n[e]);
 
         return std::nullopt;
 }
@@ -482,7 +482,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         //
 
-        static constexpr unsigned N = N_SOURCE + 1;
+        static constexpr std::size_t N = N_SOURCE + 1;
 
         T v;
         Vector<N, T> c;
@@ -500,7 +500,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         //
 
-        const unsigned k = find_index_of_min(b);
+        const std::size_t k = find_index_of_min(b);
         if (b[k] >= 0)
         {
                 return ConstraintSolution::FEASIBLE;

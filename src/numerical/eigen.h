@@ -57,8 +57,8 @@ T threshold(const Matrix<N, N, T>& a)
 
 template <std::size_t N, typename T>
 void rotate(
-        const unsigned k,
-        const unsigned l,
+        const std::size_t k,
+        const std::size_t l,
         Matrix<N, N, T>* const m,
         std::array<Vector<N, T>, N>* const eigenvectors)
 {
@@ -89,7 +89,7 @@ void rotate(
         a[k, k] = a[k, k] - t * a_kl;
         a[l, l] = a[l, l] + t * a_kl;
 
-        for (unsigned i = 0; i < k; ++i)
+        for (std::size_t i = 0; i < k; ++i)
         {
                 const T a_ik = a[i, k];
                 const T a_il = a[i, l];
@@ -97,7 +97,7 @@ void rotate(
                 a[i, l] = a_il + s * (a_ik - tau * a_il);
         }
 
-        for (unsigned i = k + 1; i < l; ++i)
+        for (std::size_t i = k + 1; i < l; ++i)
         {
                 const T a_ki = a[k, i];
                 const T a_il = a[i, l];
@@ -105,7 +105,7 @@ void rotate(
                 a[i, l] = a_il + s * (a_ki - tau * a_il);
         }
 
-        for (unsigned i = l + 1; i < N; ++i)
+        for (std::size_t i = l + 1; i < N; ++i)
         {
                 const T a_ki = a[k, i];
                 const T a_li = a[l, i];
@@ -113,7 +113,7 @@ void rotate(
                 a[l, i] = a_li + s * (a_ki - tau * a_li);
         }
 
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 const T p_ik = (*eigenvectors)[k][i];
                 const T p_il = (*eigenvectors)[l][i];
@@ -149,13 +149,13 @@ Eigen<N, T> eigen_symmetric_upper_triangular(Matrix<N, N, T> a, const T& toleran
 
         std::array<Vector<N, T>, N> vectors = IDENTITY_ARRAY<N, T>;
 
-        for (unsigned n = 0; n < 20; ++n)
+        for (int n = 0; n < 20; ++n)
         {
                 const T mu = impl::threshold(a);
 
-                for (unsigned k = 0; k < N - 1; ++k)
+                for (std::size_t k = 0; k < N - 1; ++k)
                 {
-                        for (unsigned l = k + 1; l < N; ++l)
+                        for (std::size_t l = k + 1; l < N; ++l)
                         {
                                 if (std::abs(a[k, l]) >= mu)
                                 {
