@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 namespace ns
@@ -62,8 +63,8 @@ void test()
 {
         const std::vector<bool> data = sieve_of_eratosthenes(PRIMES.back());
 
-        unsigned i = 0;
-        for (unsigned j = 2; j < data.size(); ++j)
+        std::size_t i = 0;
+        for (std::size_t j = 2; j < data.size(); ++j)
         {
                 if (!data[j])
                 {

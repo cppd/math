@@ -70,9 +70,9 @@ template <typename Dst, std::size_t N, typename Src>
 [[nodiscard]] constexpr std140::Matrix<N, Dst> to_std140(const numerical::Matrix<N, N, Src>& m)
 {
         std140::Matrix<N, Dst> res;
-        for (unsigned r = 0; r < N; ++r)
+        for (std::size_t r = 0; r < N; ++r)
         {
-                for (unsigned c = 0; c < N; ++c)
+                for (std::size_t c = 0; c < N; ++c)
                 {
                         res.columns[c].data[r] = m[r, c];
                 }

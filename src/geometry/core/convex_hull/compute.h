@@ -221,7 +221,7 @@ void create_facets_for_point_and_horizon(
         std::size_t index = thread_id;
         for (const Facet* const facet : point_conflicts[point])
         {
-                for (unsigned r = 0; r < facet->vertices().size(); ++r)
+                for (std::size_t r = 0; r < facet->vertices().size(); ++r)
                 {
                         Facet* const link_facet = facet->link(r);
 

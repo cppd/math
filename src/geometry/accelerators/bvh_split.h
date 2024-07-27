@@ -201,7 +201,7 @@ bool compare_cost(
         const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& forward_sum,
         const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& backward_sum)
 {
-        for (unsigned i = 0; i < forward_sum.size(); ++i)
+        for (std::size_t i = 0; i < forward_sum.size(); ++i)
         {
                 const T relative_error = std::abs(1 - (forward_sum[i].cost + backward_sum[i].cost) / cost);
                 if (!(relative_error < T{1e-5}))
@@ -223,7 +223,7 @@ std::tuple<T, unsigned> minimum_surface_area_heuristic_split(
 
         T split_cost = Limits<T>::max();
         unsigned index = Limits<unsigned>::max();
-        for (unsigned i = 0; i < forward_sum.size(); ++i)
+        for (std::size_t i = 0; i < forward_sum.size(); ++i)
         {
                 const T f = forward_sum[i].cost * forward_sum[i].bounds.surface();
                 const T b = backward_sum[i].cost * backward_sum[i].bounds.surface();

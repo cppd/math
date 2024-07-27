@@ -43,7 +43,7 @@ class PointSearch final
 {
         static bool inside(const numerical::Vector<N, T>& p, const std::array<std::array<T, 2>, N>& box)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (!(p[i] >= box[i][0] && p[i] < box[i][1]))
                         {
@@ -81,7 +81,7 @@ void check_point_range(
         const std::type_identity_t<T>& min,
         const std::type_identity_t<T>& max)
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (!(p[i] >= min && p[i] < max))
                 {
@@ -117,7 +117,7 @@ std::array<std::array<T, 2>, N> make_random_box(
 
         if (std::bernoulli_distribution(0.9)(engine))
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         const auto [v0, v1] = make_box_coordinates<T>(min, max, engine);
                         box[i][0] = v0;
@@ -127,7 +127,7 @@ std::array<std::array<T, 2>, N> make_random_box(
         else
         {
                 const auto [v0, v1] = make_box_coordinates<T>(min, max, engine);
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         box[i][0] = v0;
                         box[i][1] = v1;
@@ -141,7 +141,7 @@ template <std::size_t N, typename T>
 T compute_box_volume(const std::array<std::array<T, 2>, N>& box)
 {
         T volume = 1;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 ASSERT(box[i][1] > box[i][0]);
                 volume *= box[i][1] - box[i][0];

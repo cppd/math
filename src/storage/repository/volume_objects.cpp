@@ -132,7 +132,7 @@ std::unique_ptr<model::volume::Volume<N>> scalar_cube(const unsigned size)
         check_volume_size<N>(size);
 
         std::array<int, N> sizes;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 sizes[i] = size;
         }
@@ -146,9 +146,9 @@ std::unique_ptr<model::volume::Volume<N>> scalar_cube(const unsigned size)
                 volume.image.size,
                 [&](const numerical::Vector<N, float>& coordinates)
                 {
-                        numerical::Vector<N, float> p = coordinates - center;
+                        const numerical::Vector<N, float> p = coordinates - center;
                         bool cube = true;
-                        for (unsigned i = 0; i < N; ++i)
+                        for (std::size_t i = 0; i < N; ++i)
                         {
                                 if (std::abs(p[i]) > 0.4f)
                                 {
@@ -185,7 +185,7 @@ std::unique_ptr<model::volume::Volume<N>> scalar_ellipsoid(const unsigned size)
 
         std::array<int, N> sizes;
         sizes[0] = size;
-        for (unsigned i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 sizes[i] = size / 2;
         }
@@ -221,7 +221,7 @@ std::unique_ptr<model::volume::Volume<N>> color_cube(const unsigned size)
         check_volume_size<N>(size);
 
         std::array<int, N> sizes;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 sizes[i] = size;
         }

@@ -121,7 +121,7 @@ public:
                 check_input_type<T>();
 
                 IndexType res = p[0];
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         res += strides_[i] * p[i];
                 }

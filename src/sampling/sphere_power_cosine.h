@@ -140,7 +140,7 @@ public:
                 const numerical::Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(engine);
 
                 numerical::Vector<N, T> res;
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         res[i] = v[i];
                 }
@@ -185,7 +185,7 @@ numerical::Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const s
         v *= std::sqrt(new_length_squared / v_length_square);
 
         numerical::Vector<N, T> res;
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 res[i] = v[i];
         }
