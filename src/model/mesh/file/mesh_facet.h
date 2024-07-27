@@ -80,7 +80,7 @@ void check_facet_indices(const Mesh<N>& mesh)
 
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         check_facet_indices<N>(i, vertex_count, texcoord_count, normal_count, facet);
                 }

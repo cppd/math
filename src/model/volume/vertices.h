@@ -63,7 +63,7 @@ std::array<numerical::Vector<N, double>, (1 << N)> vertices(const Volume<N>& vol
         const numerical::Vector<N, double> org = transform(numerical::Vector<N, double>(0));
 
         std::array<numerical::Vector<N, double>, N> vectors;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 vectors[i] = numerical::Vector<N, double>(0);
                 vectors[i][i] = 1;

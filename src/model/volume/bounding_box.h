@@ -42,7 +42,7 @@ namespace bounding_box_implementation
 template <std::size_t N, typename T>
 bool min_max_found(const numerical::Vector<N, T>& min, const numerical::Vector<N, T>& max)
 {
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (!std::isfinite(min[i]))
                 {

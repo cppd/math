@@ -111,7 +111,7 @@ template <std::size_t N>
 void write_vertex(std::ostream& file, const numerical::Vector<N, float>& vertex)
 {
         write_vertex(file);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 file << ' ' << vertex[i];
         }
@@ -122,7 +122,7 @@ template <std::size_t N>
 void write_normal(std::ostream& file, const numerical::Vector<N, float>& normal)
 {
         write_normal(file);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 file << ' ' << normal[i];
         }
@@ -133,7 +133,7 @@ template <std::size_t N>
 void write_face(std::ostream& file, const std::array<int, N>& vertices)
 {
         write_face(file);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 file << ' ' << (vertices[i] + 1);
         }
@@ -144,7 +144,7 @@ template <std::size_t N>
 void write_face(std::ostream& file, const std::array<int, N>& vertices, const std::array<int, N>& normals)
 {
         write_face(file);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 file << ' ' << (vertices[i] + 1) << "//" << (normals[i] + 1);
         }

@@ -59,7 +59,7 @@ T facet_normat_weight_at_vertex(
                 ASSERT(facet_vertex_index >= 0 && facet_vertex_index < static_cast<int>(N));
 
                 std::array<numerical::Vector<N, T>, N - 1> vectors;
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         const int index = (facet_vertex_index + 1 + i) % N;
                         vectors[i] = points[facet[index]] - points[facet[facet_vertex_index]];
@@ -117,11 +117,11 @@ numerical::Vector<N, T> compute_normal(
                 const T weight = facet_normat_weight_at_vertex(vertices, facet_vertices, f.facet_vertex);
                 weighted_normals.push_back(weight * facet_normals[f.facet_index]);
 
-                for (unsigned fv = 0; fv < f.facet_vertex; ++fv)
+                for (std::size_t fv = 0; fv < f.facet_vertex; ++fv)
                 {
                         vicinity_int.push_back(facet_vertices[fv]);
                 }
-                for (unsigned fv = f.facet_vertex + 1; fv < N; ++fv)
+                for (std::size_t fv = f.facet_vertex + 1; fv < N; ++fv)
                 {
                         vicinity_int.push_back(facet_vertices[fv]);
                 }
@@ -168,7 +168,7 @@ void compute_normals(Mesh<N>* const mesh)
 
                 facet_normals[f] = numerical::orthogonal_complement(vertices, facet.vertices).normalized();
 
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         const int vertex = facet.vertices[i];
                         ASSERT(vertex < static_cast<int>(vertex_facets.size()));
