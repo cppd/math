@@ -27,6 +27,7 @@ Elsevier, 2017.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/random/uniform.h>
 #include <src/com/shuffle.h>
 #include <src/numerical/vector.h>
 
@@ -124,8 +125,6 @@ public:
         template <typename RandomEngine>
         void generate(RandomEngine& engine, std::vector<numerical::Vector<N, T>>* const samples) const
         {
-                constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
-
                 samples->resize(sample_count_);
 
                 for (std::size_t i = 0; i < sample_count_; ++i)
@@ -136,11 +135,7 @@ public:
                         numerical::Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
-                                // Distribution may return max if T is float
-                                do
-                                {
-                                        sample[n] = urd(engine);
-                                } while (IS_FLOAT && sample[n] >= max);
+                                sample[n] = uniform_distribution(engine, urd);
                         }
                 }
 

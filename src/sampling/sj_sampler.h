@@ -29,6 +29,7 @@ Elsevier, 2017.
 #include <src/com/exponent.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/com/random/uniform.h>
 #include <src/numerical/vector.h>
 
 #include <algorithm>
@@ -185,8 +186,6 @@ public:
         template <typename RandomEngine>
         void generate(RandomEngine& engine, std::vector<numerical::Vector<N, T>>* const samples) const
         {
-                constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
-
                 samples->resize(indices_.size());
 
                 for (std::size_t i = 0; i < indices_.size(); ++i)
@@ -197,11 +196,8 @@ public:
                         {
                                 const T min = offsets_[indices[n]];
                                 const T max = offsets_[indices[n] + 1];
-                                // Distribution may return max if T is float
-                                do
-                                {
-                                        sample[n] = std::uniform_real_distribution<T>(min, max)(engine);
-                                } while (IS_FLOAT && sample[n] >= max);
+                                std::uniform_real_distribution<T> urd(min, max);
+                                sample[n] = uniform_distribution(engine, urd);
                         }
                 }
 
