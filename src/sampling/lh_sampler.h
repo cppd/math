@@ -38,59 +38,64 @@ Elsevier, 2017.
 
 namespace ns::sampling
 {
+namespace lh_sampler_implementation
+{
+template <typename T>
+std::vector<T> make_offsets(const T min, const T max, const int sample_count)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        if (!(min < max))
+        {
+                error("Latin hypercube sampler: min " + to_string(min) + " must be greater than max " + to_string(max));
+        }
+
+        if (sample_count < 1)
+        {
+                error("Latin hypercube sampler: sample count (" + to_string(sample_count)
+                      + ") is not a positive integer");
+        }
+
+        std::vector<T> offsets;
+        offsets.reserve(sample_count + 1);
+
+        const T offset_size = (max - min) / sample_count;
+        offsets.push_back(min);
+        for (int i = 1; i < sample_count; ++i)
+        {
+                offsets.push_back(min + i * offset_size);
+        }
+        offsets.push_back(max);
+
+        ASSERT(offsets.size() == 1 + static_cast<std::size_t>(sample_count));
+
+        for (std::size_t i = 1; i < offsets.size(); ++i)
+        {
+                const T prev = offsets[i - 1];
+                const T next = offsets[i];
+                if (!(prev < next))
+                {
+                        error("Latin hypercube sampler: error creating offset values " + to_string(prev) + " and "
+                              + to_string(next));
+                }
+        }
+
+        return offsets;
+}
+}
+
 template <std::size_t N, typename T>
 class LatinHypercubeSampler final
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
 
-        static std::vector<T> make_offsets(const T min, const T max, const int sample_count)
-        {
-                if (!(min < max))
-                {
-                        error("Latin hypercube sampler: min " + to_string(min) + " must be greater than max "
-                              + to_string(max));
-                }
-
-                if (sample_count < 1)
-                {
-                        error("Latin hypercube sampler: sample count (" + to_string(sample_count)
-                              + ") is not a positive integer");
-                }
-
-                std::vector<T> offsets;
-                offsets.reserve(sample_count + 1);
-
-                const T offset_size = (max - min) / sample_count;
-                offsets.push_back(min);
-                for (int i = 1; i < sample_count; ++i)
-                {
-                        offsets.push_back(min + i * offset_size);
-                }
-                offsets.push_back(max);
-
-                ASSERT(offsets.size() == 1 + static_cast<std::size_t>(sample_count));
-
-                for (std::size_t i = 1; i < offsets.size(); ++i)
-                {
-                        const T prev = offsets[i - 1];
-                        const T next = offsets[i];
-                        if (!(prev < next))
-                        {
-                                error("Latin hypercube sampler: error creating offset values " + to_string(prev)
-                                      + " and " + to_string(next));
-                        }
-                }
-
-                return offsets;
-        }
-
-        std::vector<T> offsets_;
-        std::size_t initial_shuffle_dimension_;
-        std::size_t sample_count_;
         T min_;
         T max_;
+        std::size_t sample_count_;
+        std::vector<T> offsets_;
         bool shuffle_;
+        std::size_t initial_shuffle_dimension_;
 
 public:
         LatinHypercubeSampler(
@@ -98,12 +103,12 @@ public:
                 const std::type_identity_t<T> max,
                 const int sample_count,
                 const bool shuffle)
-                : offsets_(make_offsets(min, max, sample_count)),
-                  initial_shuffle_dimension_(shuffle ? 0 : 1),
-                  sample_count_(sample_count),
-                  min_(min),
+                : min_(min),
                   max_(max),
-                  shuffle_(shuffle)
+                  sample_count_(sample_count),
+                  offsets_(lh_sampler_implementation::make_offsets<T>(min, max, sample_count)),
+                  shuffle_(shuffle),
+                  initial_shuffle_dimension_(shuffle ? 0 : 1)
         {
         }
 
