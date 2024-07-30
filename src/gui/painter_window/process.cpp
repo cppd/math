@@ -236,6 +236,7 @@ void save_image(
                 return directory;
         };
 
+        ASSERT(!parameters.empty());
         for (std::size_t i = 0; i < parameters.size() - 1; ++i)
         {
                 save_to_file(
