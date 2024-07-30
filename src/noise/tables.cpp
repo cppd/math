@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cstddef>
 #include <numeric>
-#include <utility>
 #include <vector>
 
 namespace ns::noise
@@ -72,13 +71,15 @@ NoiseTables<N, T> noise_tables(const unsigned size)
 {
         PCG pcg(PCG_INIT_VALUE);
 
-        std::vector<unsigned> permutations = permutation_table(size, pcg);
-        std::vector<numerical::Vector<N, T>> gradients = gradient_table<N, T>(size, pcg);
+        NoiseTables<N, T> res;
 
-        ASSERT(permutations.size() == 2ull * size);
-        ASSERT(gradients.size() == size);
+        res.permutations = permutation_table(size, pcg);
+        ASSERT(res.permutations.size() == 2ull * size);
 
-        return {.permutations = std::move(permutations), .gradients = std::move(gradients)};
+        res.gradients = gradient_table<N, T>(size, pcg);
+        ASSERT(res.gradients.size() == size);
+
+        return res;
 }
 
 #define TEMPLATE(N, T) template NoiseTables<N, T> noise_tables(unsigned);
