@@ -300,13 +300,13 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
 
 void test()
 {
-        LOG("Test Filter");
+        LOG("Test Filters");
         test_impl<float>(1e-3, 5e-3);
         test_impl<double>(1e-12, 5e-12);
         test_impl<long double>(1e-15, 3e-15);
-        LOG("Test Filter passed");
+        LOG("Test Filters passed");
 }
 
-TEST_SMALL("Filter", test)
+TEST_SMALL("Filters", test)
 }
 }

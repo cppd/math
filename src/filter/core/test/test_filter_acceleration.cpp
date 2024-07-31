@@ -192,30 +192,29 @@ void test_impl()
         const SimulationConfig<T> simulation_config;
         const FilterConfig<T> filter_config;
 
-        const std::vector<Measurements<T>> measurements = simulator::simulate_acceleration<T>(
-                simulation_config.length, simulation_config.init_x, simulation_config.dt,
-                simulation_config.acceleration, simulation_config.velocity_variance,
-                simulation_config.measurement_variance_x, simulation_config.measurement_variance_v);
+        const simulator::SimulatorMeasurements<T> measurements =
+                simulator::prepare_measurements(simulator::simulate_acceleration<T>(
+                        simulation_config.length, simulation_config.init_x, simulation_config.dt,
+                        simulation_config.acceleration, simulation_config.velocity_variance,
+                        simulation_config.measurement_variance_x, simulation_config.measurement_variance_v));
+        ASSERT(measurements.variance_correction);
 
-        const auto test_measurements = simulator::prepare_measurements(measurements);
-        ASSERT(test_measurements.variance_correction);
-
-        const std::string annotation = make_annotation(simulation_config, filter_config, test_measurements.config);
+        const std::string annotation = make_annotation(simulation_config, filter_config, measurements.config);
 
         test_impl<T>(
-                "view", annotation, filter_config, test_measurements.measurements,
-                test_measurements.variance_correction.get());
+                "acceleration", annotation, filter_config, measurements.measurements,
+                measurements.variance_correction.get());
 }
 
 void test()
 {
-        LOG("Test Filter View");
+        LOG("Test Filter Acceleration");
         test_impl<float>();
         test_impl<double>();
         test_impl<long double>();
-        LOG("Test Filter View passed");
+        LOG("Test Filter Acceleration passed");
 }
 
-TEST_SMALL("Filter View", test)
+TEST_SMALL("Filter Acceleration", test)
 }
 }
