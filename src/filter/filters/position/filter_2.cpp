@@ -215,9 +215,13 @@ class FilterImpl final : public Filter2<N, T>
 
                 const numerical::Matrix<N, N, T> r = position_r(variance);
 
-                const core::UpdateInfo update = filter_->update(
-                        PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), theta_, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                const core::UpdateInfo update =
+                        theta_ ? filter_->update(
+                                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate,
+                                         NORMALIZED_INNOVATION, LIKELIHOOD, *theta_)
+                               : filter_->update(
+                                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate,
+                                         NORMALIZED_INNOVATION, LIKELIHOOD);
 
                 return update;
         }

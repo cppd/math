@@ -41,9 +41,6 @@ namespace ns::filter::filters::acceleration
 {
 namespace
 {
-template <typename T>
-constexpr std::optional<T> THETA{};
-
 constexpr bool NORMALIZED_INNOVATION{true};
 constexpr bool LIKELIHOOD{false};
 
@@ -1195,7 +1192,7 @@ class Filter final : public FilterEkf<T>
 
                 return filter_->update(
                         position_h<T>, position_hj<T>, position_r(position.variance), position.value, add_x<T>,
-                        position_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        position_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<3, T> update_position_speed(
@@ -1208,7 +1205,7 @@ class Filter final : public FilterEkf<T>
                 return filter_->update(
                         position_speed_h<T>, position_speed_hj<T>, position_speed_r(position.variance, speed.variance),
                         numerical::Vector<3, T>(position.value[0], position.value[1], speed.value[0]), add_x<T>,
-                        position_speed_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        position_speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<6, T> update_position_speed_direction_acceleration(
@@ -1227,8 +1224,8 @@ class Filter final : public FilterEkf<T>
                         numerical::Vector<6, T>(
                                 position.value[0], position.value[1], speed.value[0], direction.value[0],
                                 acceleration.value[0], acceleration.value[1]),
-                        add_x<T>, position_speed_direction_acceleration_residual<T>, THETA<T>, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, position_speed_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION,
+                        LIKELIHOOD);
         }
 
         core::UpdateInfo<4, T> update_position_speed_direction(
@@ -1244,8 +1241,7 @@ class Filter final : public FilterEkf<T>
                         position_speed_direction_r(position.variance, speed.variance, direction.variance),
                         numerical::Vector<4, T>(
                                 position.value[0], position.value[1], speed.value[0], direction.value[0]),
-                        add_x<T>, position_speed_direction_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        add_x<T>, position_speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<5, T> update_position_speed_acceleration(
@@ -1262,8 +1258,7 @@ class Filter final : public FilterEkf<T>
                         numerical::Vector<5, T>(
                                 position.value[0], position.value[1], speed.value[0], acceleration.value[0],
                                 acceleration.value[1]),
-                        add_x<T>, position_speed_acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        add_x<T>, position_speed_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<5, T> update_position_direction_acceleration(
@@ -1280,8 +1275,7 @@ class Filter final : public FilterEkf<T>
                         numerical::Vector<5, T>(
                                 position.value[0], position.value[1], direction.value[0], acceleration.value[0],
                                 acceleration.value[1]),
-                        add_x<T>, position_direction_acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        add_x<T>, position_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<3, T> update_position_direction(
@@ -1295,7 +1289,7 @@ class Filter final : public FilterEkf<T>
                         position_direction_h<T>, position_direction_hj<T>,
                         position_direction_r(position.variance, direction.variance),
                         numerical::Vector<3, T>(position.value[0], position.value[1], direction.value[0]), add_x<T>,
-                        position_direction_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        position_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<4, T> update_position_acceleration(
@@ -1310,7 +1304,7 @@ class Filter final : public FilterEkf<T>
                         position_acceleration_r(position.variance, acceleration.variance),
                         numerical::Vector<4, T>(
                                 position.value[0], position.value[1], acceleration.value[0], acceleration.value[1]),
-                        add_x<T>, position_acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, position_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<4, T> update_speed_direction_acceleration(
@@ -1326,8 +1320,7 @@ class Filter final : public FilterEkf<T>
                         speed_direction_acceleration_r(speed.variance, direction.variance, acceleration.variance),
                         numerical::Vector<4, T>(
                                 speed.value[0], direction.value[0], acceleration.value[0], acceleration.value[1]),
-                        add_x<T>, speed_direction_acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        add_x<T>, speed_direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<2, T> update_speed_direction(
@@ -1341,7 +1334,7 @@ class Filter final : public FilterEkf<T>
                         speed_direction_h<T>, speed_direction_hj<T>,
                         speed_direction_r(speed.variance, direction.variance),
                         numerical::Vector<2, T>(speed.value[0], direction.value[0]), add_x<T>,
-                        speed_direction_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        speed_direction_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<3, T> update_direction_acceleration(
@@ -1355,8 +1348,7 @@ class Filter final : public FilterEkf<T>
                         direction_acceleration_h<T>, direction_acceleration_hj<T>,
                         direction_acceleration_r(direction.variance, acceleration.variance),
                         numerical::Vector<3, T>(direction.value[0], acceleration.value[0], acceleration.value[1]),
-                        add_x<T>, direction_acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        add_x<T>, direction_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<2, T> update_acceleration(const Measurement<2, T>& acceleration, const std::optional<T> gate)
@@ -1366,7 +1358,7 @@ class Filter final : public FilterEkf<T>
 
                 return filter_->update(
                         acceleration_h<T>, acceleration_hj<T>, acceleration_r(acceleration.variance),
-                        acceleration.value, add_x<T>, acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION,
+                        acceleration.value, add_x<T>, acceleration_residual<T>, gate, NORMALIZED_INNOVATION,
                         LIKELIHOOD);
         }
 
@@ -1377,7 +1369,7 @@ class Filter final : public FilterEkf<T>
 
                 return filter_->update(
                         direction_h<T>, direction_hj<T>, direction_r(direction.variance),
-                        numerical::Vector<1, T>(direction.value), add_x<T>, direction_residual<T>, THETA<T>, gate,
+                        numerical::Vector<1, T>(direction.value), add_x<T>, direction_residual<T>, gate,
                         NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
@@ -1387,7 +1379,7 @@ class Filter final : public FilterEkf<T>
 
                 return filter_->update(
                         speed_h<T>, speed_hj<T>, speed_r(speed.variance), numerical::Vector<1, T>(speed.value),
-                        add_x<T>, speed_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        add_x<T>, speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<3, T> update_speed_acceleration(
@@ -1401,7 +1393,7 @@ class Filter final : public FilterEkf<T>
                         speed_acceleration_h<T>, speed_acceleration_hj<T>,
                         speed_acceleration_r(speed.variance, acceleration.variance),
                         numerical::Vector<3, T>(speed.value[0], acceleration.value[0], acceleration.value[1]), add_x<T>,
-                        speed_acceleration_residual<T>, THETA<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        speed_acceleration_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] numerical::Vector<2, T> position() const override

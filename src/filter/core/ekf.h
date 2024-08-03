@@ -56,19 +56,11 @@ Sequential filters
 
 #include <cstddef>
 #include <optional>
-#include <string>
 
 namespace ns::filter::core
 {
 namespace ekf_implementation
 {
-template <std::size_t M, typename T>
-struct Matrices final
-{
-        numerical::Matrix<M, M, T> s;
-        numerical::Matrix<M, M, T> s_inversed;
-};
-
 // Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
 // 11 The H infinity filter
 // 11.89, 11.90
@@ -76,7 +68,6 @@ struct Matrices final
 // H infinity filter
 template <std::size_t N, std::size_t M, typename T>
 [[nodiscard]] numerical::Matrix<N, M, T> h_infinity_k(
-        const char* const name,
         const T theta,
         const numerical::Matrix<N, N, T>& p,
         const numerical::Matrix<M, N, T>& h,
@@ -88,67 +79,13 @@ template <std::size_t N, std::size_t M, typename T>
                 const numerical::Matrix<N, N, T> m = p.inversed() - theta * I + ht_ri * h;
                 if (!positive_definite(m))
                 {
-                        error(std::string(name) + ", H infinity condition is not hold\n"
-                              + "matrix is not positive_definite\n" + to_string(m));
+                        error("H infinity condition is not hold\n"
+                              "matrix is not positive_definite\n"
+                              + to_string(m));
                 }
         }
 
         return p * (I - theta * p + ht_ri * h * p).inversed() * ht_ri;
-}
-
-template <std::size_t M, std::size_t N, typename T>
-[[nodiscard]] std::optional<Matrices<M, T>> make_s_matrices(
-        const numerical::Matrix<M, M, T>& r,
-        const std::optional<T> theta,
-        const std::optional<T> gate,
-        const bool normalized_innovation,
-        const bool likelihood,
-        const numerical::Matrix<M, N, T>& hjx,
-        const numerical::Matrix<N, M, T>& p_hjxt)
-{
-        if (!theta || gate || likelihood || normalized_innovation)
-        {
-                const numerical::Matrix<M, M, T> s = hjx * p_hjxt + r;
-                return {
-                        {.s = s, .s_inversed = s.inversed()}
-                };
-        }
-        return {};
-}
-
-template <std::size_t M, typename T>
-[[nodiscard]] UpdateInfo<M, T> make_update(
-        const std::optional<T> gate,
-        const bool normalized_innovation,
-        const bool likelihood,
-        const std::optional<Matrices<M, T>>& matrices,
-        const numerical::Vector<M, T>& residual)
-{
-        if (gate || likelihood || normalized_innovation)
-        {
-                ASSERT(matrices);
-                return make_update_info(
-                        residual, matrices->s, matrices->s_inversed, gate, likelihood, normalized_innovation);
-        }
-        return make_update_info(residual);
-}
-
-template <std::size_t M, std::size_t N, typename T>
-[[nodiscard]] numerical::Matrix<N, M, T> make_k_matrix(
-        const numerical::Matrix<N, N, T>& p,
-        const numerical::Matrix<M, M, T>& r,
-        const std::optional<T> theta,
-        const std::optional<Matrices<M, T>>& matrices,
-        const numerical::Matrix<M, N, T>& hjx,
-        const numerical::Matrix<N, M, T>& p_hjxt)
-{
-        if (!theta)
-        {
-                ASSERT(matrices);
-                return p_hjxt * matrices->s_inversed;
-        }
-        const numerical::Matrix<N, M, T> ht_ri = hjx.transposed() * r.inversed();
-        return h_infinity_k("EKF update", *theta, p, hjx, ht_ri);
 }
 }
 
@@ -230,8 +167,6 @@ public:
                 // The residual between the two measurement vectors
                 // numerical::Vector<M, T> f(const numerical::Vector<M, T>& a, const numerical::Vector<M, T>& b)
                 const ResidualZ residual_z,
-                // H infinity parameter
-                const std::optional<T> theta,
                 // Mahalanobis distance gate
                 const std::optional<T> gate,
                 // compute normalized innovation
@@ -239,25 +174,23 @@ public:
                 // compute likelihood
                 const bool likelihood)
         {
-                namespace impl = ekf_implementation;
-
                 const numerical::Matrix<M, N, T> hjx = hj(x_);
                 const numerical::Matrix<N, M, T> p_hjxt = p_ * hjx.transposed();
 
-                const std::optional<impl::Matrices<M, T>> matrices =
-                        impl::make_s_matrices(r, theta, gate, normalized_innovation, likelihood, hjx, p_hjxt);
+                const numerical::Matrix<M, M, T> s = hjx * p_hjxt + r;
+                const numerical::Matrix<M, M, T> s_inv = s.inversed();
 
                 const numerical::Vector<M, T> residual = residual_z(z, h(x_));
 
                 const UpdateInfo<M, T> res =
-                        impl::make_update(gate, normalized_innovation, likelihood, matrices, residual);
+                        make_update_info(residual, s, s_inv, gate, likelihood, normalized_innovation);
 
                 if (res.gate)
                 {
                         return res;
                 }
 
-                const numerical::Matrix<N, M, T> k = impl::make_k_matrix(p_, r, theta, matrices, hjx, p_hjxt);
+                const numerical::Matrix<N, M, T> k = p_hjxt * s_inv;
 
                 x_ = add_x(x_, k * residual);
 
@@ -265,6 +198,68 @@ public:
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
 
                 check_x_p("EKF update", x_, p_);
+
+                return res;
+        }
+
+        template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
+        UpdateInfo<M, T> update(
+                // Measurement function
+                // numerical::Vector<M, T> f(const numerical::Vector<N, T>& x)
+                const H h,
+                // Measurement function Jacobian
+                // numerical::Matrix<M, N, T> f(const numerical::Vector<N, T>& x)
+                const HJ hj,
+                // Measurement covariance
+                const numerical::Matrix<M, M, T>& r,
+                // Measurement
+                const numerical::Vector<M, T>& z,
+                // The sum of the two state vectors
+                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
+                const AddX add_x,
+                // The residual between the two measurement vectors
+                // numerical::Vector<M, T> f(const numerical::Vector<M, T>& a, const numerical::Vector<M, T>& b)
+                const ResidualZ residual_z,
+                // Mahalanobis distance gate
+                const std::optional<T> gate,
+                // compute normalized innovation
+                const bool normalized_innovation,
+                // compute likelihood
+                const bool likelihood,
+                // H infinity parameter
+                const T theta)
+        {
+                namespace impl = ekf_implementation;
+
+                const numerical::Matrix<M, N, T> hjx = hj(x_);
+                const numerical::Matrix<N, M, T> hjxt = hjx.transposed();
+
+                const numerical::Vector<M, T> residual = residual_z(z, h(x_));
+
+                const UpdateInfo<M, T> res = [&]
+                {
+                        if (gate || likelihood || normalized_innovation)
+                        {
+                                const numerical::Matrix<M, M, T> s = hjx * p_ * hjxt + r;
+                                const numerical::Matrix<M, M, T> s_inv = s.inversed();
+                                return make_update_info(residual, s, s_inv, gate, likelihood, normalized_innovation);
+                        }
+                        return make_update_info(residual);
+                }();
+
+                if (res.gate)
+                {
+                        return res;
+                }
+
+                const numerical::Matrix<N, M, T> k = impl::h_infinity_k(theta, p_, hjx, hjxt * r.inversed());
+
+                x_ = add_x(x_, k * residual);
+
+                const numerical::Matrix<N, N, T> i_kh = numerical::IDENTITY_MATRIX<N, T> - k * hjx;
+                p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
+
+                check_x_p("EKF H INFINITY update", x_, p_);
 
                 return res;
         }

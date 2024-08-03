@@ -32,14 +32,32 @@ namespace ns::filter::core::test::filters
 {
 namespace
 {
-template <typename T, bool INF>
-class Filter final : public FilterEkf<T, INF>
+template <typename T, bool H_INFINITY>
+class Filter final : public FilterEkf<T, H_INFINITY>
 {
         static constexpr bool NORMALIZED_INNOVATION{true};
         static constexpr bool LIKELIHOOD{true};
-        static constexpr std::optional<T> THETA{INF ? 0.01L : std::optional<T>()};
+
+        static constexpr T THETA{0.01L};
 
         std::optional<Ekf<2, T>> filter_;
+
+        void filter_update(const auto& h, const auto& hj, const auto& r, const auto& z, const auto& gate)
+        {
+                ASSERT(filter_);
+                if constexpr (H_INFINITY)
+                {
+                        filter_->update(
+                                h, hj, r, z, ekf_model::Add(), ekf_model::Residual(), gate, NORMALIZED_INNOVATION,
+                                LIKELIHOOD, THETA);
+                }
+                else
+                {
+                        filter_->update(
+                                h, hj, r, z, ekf_model::Add(), ekf_model::Residual(), gate, NORMALIZED_INNOVATION,
+                                LIKELIHOOD);
+                }
+        }
 
         void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) override
         {
@@ -68,10 +86,9 @@ class Filter final : public FilterEkf<T, INF>
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                filter_update(
                         ekf_model::position_h<T>, ekf_model::position_hj<T>,
-                        ekf_model::position_r<T>(position_variance), numerical::Vector<1, T>(position),
-                        ekf_model::Add(), ekf_model::Residual(), THETA, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        ekf_model::position_r<T>(position_variance), numerical::Vector<1, T>(position), gate);
         }
 
         void update_position_speed(
@@ -83,21 +100,19 @@ class Filter final : public FilterEkf<T, INF>
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                filter_update(
                         ekf_model::position_speed_h<T>, ekf_model::position_speed_hj<T>,
                         ekf_model::position_speed_r<T>(position_variance, speed_variance),
-                        numerical::Vector<2, T>(position, speed), ekf_model::Add(), ekf_model::Residual(), THETA, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        numerical::Vector<2, T>(position, speed), gate);
         }
 
         void update_speed(const T speed, const T speed_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
-                filter_->update(
+                filter_update(
                         ekf_model::speed_h<T>, ekf_model::speed_hj<T>, ekf_model::speed_r<T>(speed_variance),
-                        numerical::Vector<1, T>(speed), ekf_model::Add(), ekf_model::Residual(), THETA, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        numerical::Vector<1, T>(speed), gate);
         }
 
         [[nodiscard]] T position() const override
@@ -147,10 +162,10 @@ public:
 };
 }
 
-template <typename T, bool INF>
-[[nodiscard]] std::unique_ptr<FilterEkf<T, INF>> create_filter_ekf()
+template <typename T, bool H_INFINITY>
+[[nodiscard]] std::unique_ptr<FilterEkf<T, H_INFINITY>> create_filter_ekf()
 {
-        return std::make_unique<Filter<T, INF>>();
+        return std::make_unique<Filter<T, H_INFINITY>>();
 }
 
 #define INSTANTIATION(T)                                                   \

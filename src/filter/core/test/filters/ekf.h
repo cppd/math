@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::core::test::filters
 {
-template <typename T, bool INF>
+template <typename T, bool H_INFINITY>
 class FilterEkf
 {
 public:
@@ -60,6 +60,6 @@ public:
         [[nodiscard]] virtual T speed_p() const = 0;
 };
 
-template <typename T, bool INF>
-[[nodiscard]] std::unique_ptr<FilterEkf<T, INF>> create_filter_ekf();
+template <typename T, bool H_INFINITY>
+[[nodiscard]] std::unique_ptr<FilterEkf<T, H_INFINITY>> create_filter_ekf();
 }
