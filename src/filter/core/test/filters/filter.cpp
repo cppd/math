@@ -35,8 +35,26 @@ namespace ns::filter::core::test::filters
 {
 namespace
 {
+template <typename T>
+numerical::Vector<2, T> init_x(const Measurements<T>& m, const T init_v)
+{
+        ASSERT(m.x);
+        const T x = m.x->value;
+        const T v = m.v ? m.v->value : init_v;
+        return {x, v};
+}
+
+template <typename T>
+numerical::Vector<2, T> init_variance(const Measurements<T>& m, const T init_v_variance)
+{
+        ASSERT(m.x);
+        const T x_variance = m.x->variance;
+        const T v_variance = m.v ? m.v->variance : init_v_variance;
+        return {x_variance, v_variance};
+}
+
 template <typename Filter>
-void reset_filter(
+UpdateInfo<typename Filter::Type> reset_filter(
         Filter* const filter,
         const Measurements<typename Filter::Type>& m,
         const typename Filter::Type init_v,
@@ -45,18 +63,26 @@ void reset_filter(
         using T = Filter::Type;
 
         ASSERT(filter);
-        ASSERT(m.x);
 
-        const numerical::Vector<2, T> x(m.x->value, m.v ? m.v->value : init_v);
+        const numerical::Vector<2, T> x = init_x(m, init_v);
+        const numerical::Vector<2, T> variance = init_variance(m, init_v_variance);
 
-        const auto x_variance = m.x->variance;
-        const auto v_variance = m.v ? m.v->variance : init_v_variance;
         const numerical::Matrix<2, 2, T> p{
-                {x_variance,          0},
-                {         0, v_variance}
+                {variance[0],           0},
+                {          0, variance[1]}
         };
 
         filter->reset(x, p);
+
+        ASSERT(filter->position_speed() == x);
+        ASSERT(filter->position_speed_p() == p);
+
+        return {
+                .x = x[0],
+                .x_stddev = std::sqrt(variance[0]),
+                .v = x[1],
+                .v_stddev = std::sqrt(variance[1]),
+        };
 }
 
 template <typename Filter>
@@ -122,16 +148,8 @@ class FilterImpl : public Filter<typename F::Type>
                         {
                                 return std::nullopt;
                         }
-
                         last_time_ = m.time;
-                        reset_filter(filter_.get(), m, init_v_, init_v_variance_);
-
-                        return {
-                                {.x = filter_->position(),
-                                 .x_stddev = std::sqrt(filter_->position_p()),
-                                 .v = filter_->speed(),
-                                 .v_stddev = std::sqrt(filter_->speed_p())}
-                        };
+                        return reset_filter(filter_.get(), m, init_v_, init_v_variance_);
                 }
 
                 const T dt = m.time - *last_time_;
