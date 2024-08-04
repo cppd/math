@@ -52,6 +52,26 @@ template <std::size_t N, typename T, std::size_t COLUMN>
 }
 }
 
+template <std::size_t R, std::size_t C, typename T>
+[[nodiscard]] constexpr bool operator==(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b)
+{
+        static_assert(std::is_reference_v<decltype(a.row(0))>);
+
+        for (std::size_t r = 0; r < R; ++r)
+        {
+                const Vector<C, T>& a_row = a.row(r);
+                const Vector<C, T>& b_row = b.row(r);
+                for (std::size_t c = 0; c < C; ++c)
+                {
+                        if (!(a_row[c] == b_row[c]))
+                        {
+                                return false;
+                        }
+                }
+        }
+        return true;
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
 {
