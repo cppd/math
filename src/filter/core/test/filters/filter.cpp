@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter.h"
 
 #include "ekf.h"
+#include "info.h"
 #include "noise_model.h"
 #include "ukf.h"
 
@@ -112,6 +113,31 @@ bool update_filter(
         return false;
 }
 
+template <typename T>
+void update_filter(FilterInfo<T>* const filter, const Measurements<T>& m)
+{
+        ASSERT(filter);
+        ASSERT(m.x || m.v);
+
+        if (m.x)
+        {
+                if (m.v)
+                {
+                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance);
+                        return;
+                }
+                filter->update_position(m.x->value, m.x->variance);
+                return;
+        }
+        if (m.v)
+        {
+                filter->update_speed(m.v->value, m.v->variance);
+                return;
+        }
+
+        ASSERT(false);
+}
+
 template <typename F>
 class FilterImpl : public Filter<typename F::Type>
 {
@@ -199,6 +225,79 @@ public:
         {
         }
 };
+
+template <typename T>
+class FilterImpl<FilterInfo<T>> : public Filter<T>
+{
+        NoiseModel<T> noise_model_;
+        T reset_dt_;
+        std::unique_ptr<FilterInfo<T>> filter_;
+
+        NormalizedSquared<T> nees_;
+
+        std::optional<T> last_time_;
+
+        void reset() override
+        {
+                last_time_.reset();
+        }
+
+        [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<T>& m) override
+        {
+                if (!(m.x || m.v))
+                {
+                        return std::nullopt;
+                }
+
+                if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
+                {
+                        if (!m.x)
+                        {
+                                return std::nullopt;
+                        }
+                        last_time_ = m.time;
+                        const numerical::Vector<2, T> x{0, 0};
+                        const numerical::Matrix<2, 2, T> i{
+                                {0, 0},
+                                {0, 0}
+                        };
+                        filter_->reset(x, i);
+                }
+
+                ASSERT(last_time_);
+                const T dt = m.time - *last_time_;
+                ASSERT(dt >= 0);
+                last_time_ = m.time;
+
+                filter_->predict(dt, noise_model_);
+
+                update_filter(filter_.get(), m);
+
+                nees_.add(
+                        numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
+                        filter_->position_speed_p());
+
+                return {
+                        {.x = filter_->position(),
+                         .x_stddev = std::sqrt(filter_->position_p()),
+                         .v = filter_->speed(),
+                         .v_stddev = std::sqrt(filter_->speed_p())}
+                };
+        }
+
+        [[nodiscard]] const NormalizedSquared<T>& nees() const override
+        {
+                return nees_;
+        }
+
+public:
+        FilterImpl(const NoiseModel<T>& noise_model, const T reset_dt, std::unique_ptr<FilterInfo<T>>&& filter)
+                : noise_model_(noise_model),
+                  reset_dt_(reset_dt),
+                  filter_(std::move(filter))
+        {
+        }
+};
 }
 
 template <typename T>
@@ -230,6 +329,13 @@ std::unique_ptr<Filter<T>> create_h_infinity(
 }
 
 template <typename T>
+std::unique_ptr<Filter<T>> create_info(const NoiseModel<T>& noise_model, const T reset_dt)
+{
+        return std::make_unique<FilterImpl<filters::FilterInfo<T>>>(
+                noise_model, reset_dt, filters::create_filter_info<T>());
+}
+
+template <typename T>
 std::unique_ptr<Filter<T>> create_ukf(
         const T init_v,
         const T init_v_variance,
@@ -246,6 +352,7 @@ std::unique_ptr<Filter<T>> create_ukf(
 #define INSTANTIATION(T)                                                                                           \
         template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);        \
         template std::unique_ptr<Filter<T>> create_h_infinity(T, T, const NoiseModel<T>&, T, T, std::optional<T>); \
+        template std::unique_ptr<Filter<T>> create_info(const NoiseModel<T>&, T);                                  \
         template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);
 
 INSTANTIATION(float)

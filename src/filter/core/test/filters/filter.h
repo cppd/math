@@ -68,6 +68,9 @@ std::unique_ptr<Filter<T>> create_h_infinity(
         std::optional<T> gate);
 
 template <typename T>
+std::unique_ptr<Filter<T>> create_info(const NoiseModel<T>& noise_model, T reset_dt);
+
+template <typename T>
 std::unique_ptr<Filter<T>> create_ukf(
         T init_v,
         T init_v_variance,
