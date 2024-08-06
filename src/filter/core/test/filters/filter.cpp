@@ -229,6 +229,8 @@ public:
 template <typename T>
 class FilterImpl<FilterInfo<T>> : public Filter<T>
 {
+        T init_v_;
+        T init_v_variance_;
         NoiseModel<T> noise_model_;
         T reset_dt_;
         std::unique_ptr<FilterInfo<T>> filter_;
@@ -262,16 +264,26 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                                 {0, 0}
                         };
                         filter_->reset(x, i);
+                        if (m.v)
+                        {
+                                update_filter(filter_.get(), m);
+                        }
+                        else
+                        {
+                                auto mv = m;
+                                mv.v = {.value = init_v_, .variance = init_v_variance_};
+                                update_filter(filter_.get(), mv);
+                        }
                 }
-
-                ASSERT(last_time_);
-                const T dt = m.time - *last_time_;
-                ASSERT(dt >= 0);
-                last_time_ = m.time;
-
-                filter_->predict(dt, noise_model_);
-
-                update_filter(filter_.get(), m);
+                else
+                {
+                        ASSERT(last_time_);
+                        const T dt = m.time - *last_time_;
+                        ASSERT(dt >= 0);
+                        last_time_ = m.time;
+                        filter_->predict(dt, noise_model_);
+                        update_filter(filter_.get(), m);
+                }
 
                 nees_.add(
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
@@ -291,8 +303,15 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
         }
 
 public:
-        FilterImpl(const NoiseModel<T>& noise_model, const T reset_dt, std::unique_ptr<FilterInfo<T>>&& filter)
-                : noise_model_(noise_model),
+        FilterImpl(
+                const T init_v,
+                const T init_v_variance,
+                const NoiseModel<T>& noise_model,
+                const T reset_dt,
+                std::unique_ptr<FilterInfo<T>>&& filter)
+                : init_v_(init_v),
+                  init_v_variance_(init_v_variance),
+                  noise_model_(noise_model),
                   reset_dt_(reset_dt),
                   filter_(std::move(filter))
         {
@@ -329,10 +348,14 @@ std::unique_ptr<Filter<T>> create_h_infinity(
 }
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_info(const NoiseModel<T>& noise_model, const T reset_dt)
+std::unique_ptr<Filter<T>> create_info(
+        const T init_v,
+        const T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        const T reset_dt)
 {
         return std::make_unique<FilterImpl<filters::FilterInfo<T>>>(
-                noise_model, reset_dt, filters::create_filter_info<T>());
+                init_v, init_v_variance, noise_model, reset_dt, filters::create_filter_info<T>());
 }
 
 template <typename T>
@@ -352,7 +375,7 @@ std::unique_ptr<Filter<T>> create_ukf(
 #define INSTANTIATION(T)                                                                                           \
         template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);        \
         template std::unique_ptr<Filter<T>> create_h_infinity(T, T, const NoiseModel<T>&, T, T, std::optional<T>); \
-        template std::unique_ptr<Filter<T>> create_info(const NoiseModel<T>&, T);                                  \
+        template std::unique_ptr<Filter<T>> create_info(T, T, const NoiseModel<T>&, T);                            \
         template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);
 
 INSTANTIATION(float)
