@@ -67,14 +67,13 @@ public:
                 // State transition function Jacobian
                 // numerical::Matrix<N, N, T> f(const numerical::Vector<N, T>& x)
                 const FJ fj,
-                // Process covariance
-                const numerical::Matrix<N, N, T>& q)
+                // Process covariance inversed
+                const numerical::Matrix<N, N, T>& q_inv)
         {
                 x_ = f(x_);
 
                 const numerical::Matrix<N, N, T> fjx = fj(x_);
                 const numerical::Matrix<N, N, T> fjx_t = fjx.transposed();
-                const numerical::Matrix<N, N, T> q_inv = q.inversed();
 
                 i_ = q_inv - q_inv * fjx * (i_ + fjx_t * q_inv * fjx).inversed() * fjx_t * q_inv;
         }
@@ -87,8 +86,8 @@ public:
                 // Measurement function Jacobian
                 // numerical::Matrix<M, N, T> f(const numerical::Vector<N, T>& x)
                 const HJ hj,
-                // Measurement covariance
-                const numerical::Matrix<M, M, T>& r,
+                // Measurement covariance inversed
+                const numerical::Matrix<M, M, T>& r_inv,
                 // Measurement
                 const numerical::Vector<M, T>& z,
                 // The sum of the two state vectors
@@ -100,7 +99,6 @@ public:
         {
                 const numerical::Matrix<M, N, T> hjx = hj(x_);
                 const numerical::Matrix<N, M, T> hjx_t = hjx.transposed();
-                const numerical::Matrix<M, M, T> r_inv = r.inversed();
 
                 i_ = i_ + hjx_t * r_inv * hjx;
                 p_ = i_.inversed();

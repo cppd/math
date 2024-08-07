@@ -54,6 +54,7 @@ class Filter final : public FilterInfo<T>
                 ASSERT(filter_);
 
                 const numerical::Matrix<2, 2, T> f_matrix = ekf_model::f(dt);
+                const numerical::Matrix<2, 2, T> q_inv = ekf_model::q(dt, noise_model).inversed();
 
                 filter_->predict(
                         [&](const numerical::Vector<2, T>& x)
@@ -64,16 +65,17 @@ class Filter final : public FilterInfo<T>
                         {
                                 return f_matrix;
                         },
-                        ekf_model::q(dt, noise_model));
+                        q_inv);
         }
 
         void update_position(const T position, const T position_variance) override
         {
                 ASSERT(filter_);
 
+                const auto r_inv = ekf_model::position_r<T>(position_variance).inversed();
+
                 filter_update(
-                        ekf_model::position_h<T>, ekf_model::position_hj<T>,
-                        ekf_model::position_r<T>(position_variance), numerical::Vector<1, T>(position));
+                        ekf_model::position_h<T>, ekf_model::position_hj<T>, r_inv, numerical::Vector<1, T>(position));
         }
 
         void update_position_speed(const T position, const T position_variance, const T speed, const T speed_variance)
@@ -81,9 +83,10 @@ class Filter final : public FilterInfo<T>
         {
                 ASSERT(filter_);
 
+                const auto r_inv = ekf_model::position_speed_r<T>(position_variance, speed_variance).inversed();
+
                 filter_update(
-                        ekf_model::position_speed_h<T>, ekf_model::position_speed_hj<T>,
-                        ekf_model::position_speed_r<T>(position_variance, speed_variance),
+                        ekf_model::position_speed_h<T>, ekf_model::position_speed_hj<T>, r_inv,
                         numerical::Vector<2, T>(position, speed));
         }
 
@@ -91,9 +94,9 @@ class Filter final : public FilterInfo<T>
         {
                 ASSERT(filter_);
 
-                filter_update(
-                        ekf_model::speed_h<T>, ekf_model::speed_hj<T>, ekf_model::speed_r<T>(speed_variance),
-                        numerical::Vector<1, T>(speed));
+                const auto r_inv = ekf_model::position_r<T>(speed_variance).inversed();
+
+                filter_update(ekf_model::speed_h<T>, ekf_model::speed_hj<T>, r_inv, numerical::Vector<1, T>(speed));
         }
 
         [[nodiscard]] T position() const override
