@@ -228,6 +228,8 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
         constexpr T FILTER_INIT_V_VARIANCE = 2 * SIMULATION_VELOCITY_MEAN;
         constexpr filters::NoiseModel<T> FILTER_NOISE_MODEL =
                 filters::DiscreteNoiseModel<T>{.variance = SIMULATION_VELOCITY_VARIANCE};
+        constexpr filters::NoiseModel<T> FILTER_INFO_NOISE_MODEL =
+                filters::ContinuousNoiseModel<T>{.spectral_density = SIMULATION_DT * SIMULATION_VELOCITY_VARIANCE};
         constexpr T FILTER_NO_FADING_MEMORY = 1;
         constexpr T FILTER_FADING_MEMORY_ALPHA = 1.01;
         constexpr T FILTER_RESET_DT = 10;
@@ -295,6 +297,15 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                         FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, FILTER_FADING_MEMORY_ALPHA,
                         FILTER_RESET_DT, FILTER_GATE),
                 measurements, precision_x, precision_xv, 1.51047329031311578808L, 0.483217371469443008448L, 5,
+                distribution, min_max_nees_x, min_max_nees_xv);
+
+        //
+
+        test_impl<T>(
+                "INFO", annotation,
+                filters::create_info<T>(
+                        FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_INFO_NOISE_MODEL, FILTER_RESET_DT),
+                measurements, precision_x, precision_xv, 1.43109224963343917639L, 0.351851021981079359921L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 }
 
