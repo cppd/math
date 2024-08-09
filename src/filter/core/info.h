@@ -68,12 +68,20 @@ public:
                 // numerical::Matrix<N, N, T> f(const numerical::Vector<N, T>& x)
                 const FJ fj,
                 // Process covariance inversed
-                const numerical::Matrix<N, N, T>& q_inv)
+                const numerical::Matrix<N, N, T>& q_inv,
+                // Fading memory alpha
+                const T fading_memory_alpha = 1)
         {
                 x_ = f(x_);
 
                 const numerical::Matrix<N, N, T> fjx = fj(x_);
                 const numerical::Matrix<N, N, T> fjx_t = fjx.transposed();
+
+                if (!(fading_memory_alpha == 1))
+                {
+                        const T factor = 1 / square(fading_memory_alpha);
+                        i_ = factor * i_;
+                }
 
                 i_ = q_inv - q_inv * fjx * (i_ + fjx_t * q_inv * fjx).inversed() * fjx_t * q_inv;
         }

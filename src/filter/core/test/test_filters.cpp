@@ -266,6 +266,14 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
+                "INFO", annotation,
+                filters::create_info<T>(
+                        FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_INFO_NOISE_MODEL, FILTER_NO_FADING_MEMORY,
+                        FILTER_RESET_DT),
+                measurements, precision_x, precision_xv, 1.43109224963343917639L, 0.351851021981079359921L, 5,
+                distribution, min_max_nees_x, min_max_nees_xv);
+
+        test_impl<T>(
                 "UKF", annotation,
                 filters::create_ukf<T>(
                         FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, FILTER_NO_FADING_MEMORY,
@@ -292,20 +300,19 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                 distribution, min_max_nees_x, min_max_nees_xv);
 
         test_impl<T>(
+                "INFO_FM", annotation,
+                filters::create_info<T>(
+                        FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_INFO_NOISE_MODEL, FILTER_FADING_MEMORY_ALPHA,
+                        FILTER_RESET_DT),
+                measurements, precision_x, precision_xv, 1.47758703673015917579L, 0.489399903037307279361L, 5,
+                distribution, min_max_nees_x, min_max_nees_xv);
+
+        test_impl<T>(
                 "UKF_FM", annotation,
                 filters::create_ukf<T>(
                         FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_NOISE_MODEL, FILTER_FADING_MEMORY_ALPHA,
                         FILTER_RESET_DT, FILTER_GATE),
                 measurements, precision_x, precision_xv, 1.51047329031311578808L, 0.483217371469443008448L, 5,
-                distribution, min_max_nees_x, min_max_nees_xv);
-
-        //
-
-        test_impl<T>(
-                "INFO", annotation,
-                filters::create_info<T>(
-                        FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_INFO_NOISE_MODEL, FILTER_RESET_DT),
-                measurements, precision_x, precision_xv, 1.43109224963343917639L, 0.351851021981079359921L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 }
 
@@ -313,8 +320,8 @@ void test()
 {
         LOG("Test Filters");
         test_impl<float>(1e-3, 5e-3);
-        test_impl<double>(1e-12, 5e-12);
-        test_impl<long double>(1e-15, 3e-15);
+        test_impl<double>(2e-12, 5e-12);
+        test_impl<long double>(4e-16, 3e-15);
         LOG("Test Filters passed");
 }
 
