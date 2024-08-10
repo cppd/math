@@ -245,6 +245,35 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                 last_time_.reset();
         }
 
+        [[nodiscard]] bool init_update(const Measurements<T>& m)
+        {
+                if (!m.x)
+                {
+                        return false;
+                }
+
+                last_time_ = m.time;
+
+                const numerical::Vector<2, T> x{0, 0};
+                const numerical::Matrix<2, 2, T> i{
+                        {0, 0},
+                        {0, 0}
+                };
+                filter_->reset(x, i);
+
+                if (m.v)
+                {
+                        update_filter(filter_.get(), m);
+                }
+                else
+                {
+                        Measurements<T> mv = m;
+                        mv.v = {.value = init_v_, .variance = init_v_variance_};
+                        update_filter(filter_.get(), mv);
+                }
+                return true;
+        }
+
         [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<T>& m) override
         {
                 if (!(m.x || m.v))
@@ -254,26 +283,9 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
 
                 if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
                 {
-                        if (!m.x)
+                        if (!init_update(m))
                         {
                                 return std::nullopt;
-                        }
-                        last_time_ = m.time;
-                        const numerical::Vector<2, T> x{0, 0};
-                        const numerical::Matrix<2, 2, T> i{
-                                {0, 0},
-                                {0, 0}
-                        };
-                        filter_->reset(x, i);
-                        if (m.v)
-                        {
-                                update_filter(filter_.get(), m);
-                        }
-                        else
-                        {
-                                auto mv = m;
-                                mv.v = {.value = init_v_, .variance = init_v_variance_};
-                                update_filter(filter_.get(), mv);
                         }
                 }
                 else
