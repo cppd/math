@@ -15,6 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Dan Simon.
+Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
+John Wiley & Sons, 2006.
+
+6.2 Information filtering
+7.4 Kalman filtering with fading memory
+*/
+
+/*
+Yaakov Bar-Shalom, X.-Rong Li, Thiagalingam Kirubarajan.
+Estimation with Applications To Tracking and Navigation.
+John Wiley & Sons, 2001.
+
+7.2 THE INFORMATION FILTER
+*/
+
 #pragma once
 
 #include <src/numerical/matrix.h>
