@@ -177,11 +177,20 @@ void test_impl(
                 config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha,
                 config.reset_dt, config.gate);
 
+        const auto i = filters::create_info<T>(
+                config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
+                config.reset_dt);
+
         std::vector<view::Filter<T>> filters;
+
         filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions, correction));
         filters.emplace_back("C Measurements", color::RGB8(0, 180, 0), test_filter(c.get(), measurements, correction));
+
         filters.emplace_back("D Positions", color::RGB8(128, 0, 0), test_filter(d.get(), positions, correction));
         filters.emplace_back("D Measurements", color::RGB8(0, 128, 0), test_filter(d.get(), measurements, correction));
+
+        filters.emplace_back("I Positions", color::RGB8(255, 0, 0), test_filter(i.get(), positions, correction));
+        filters.emplace_back("I Measurements", color::RGB8(0, 255, 0), test_filter(i.get(), measurements, correction));
 
         view::write(name, annotation, measurements, DATA_CONNECT_INTERVAL<T>, filters);
 }
