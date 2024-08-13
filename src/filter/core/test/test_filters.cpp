@@ -269,7 +269,7 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                 "INFO", annotation,
                 filters::create_info<T>(
                         FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_INFO_NOISE_MODEL, FILTER_NO_FADING_MEMORY,
-                        FILTER_RESET_DT),
+                        FILTER_RESET_DT, FILTER_GATE),
                 measurements, precision_x, precision_xv, 1.43109224963343917639L, 0.351851021981079359921L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 
@@ -303,7 +303,7 @@ void test_impl(const std::type_identity_t<T> precision_x, const std::type_identi
                 "INFO_FM", annotation,
                 filters::create_info<T>(
                         FILTER_INIT_V, FILTER_INIT_V_VARIANCE, FILTER_INFO_NOISE_MODEL, FILTER_FADING_MEMORY_ALPHA,
-                        FILTER_RESET_DT),
+                        FILTER_RESET_DT, FILTER_GATE),
                 measurements, precision_x, precision_xv, 1.47758703673015917579L, 0.489399903037307279361L, 5,
                 distribution, min_max_nees_x, min_max_nees_xv);
 

@@ -34,6 +34,8 @@ John Wiley & Sons, 2001.
 
 #pragma once
 
+#include "update_info.h"
+
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -104,7 +106,7 @@ public:
         }
 
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
-        void update(
+        UpdateInfo<M, T> update(
                 // Measurement function
                 // numerical::Vector<M, T> f(const numerical::Vector<N, T>& x)
                 const H h,
@@ -120,18 +122,39 @@ public:
                 const AddX add_x,
                 // The residual between the two measurement vectors
                 // numerical::Vector<M, T> f(const numerical::Vector<M, T>& a, const numerical::Vector<M, T>& b)
-                const ResidualZ residual_z)
+                const ResidualZ residual_z,
+                // Mahalanobis distance gate
+                const std::optional<T> gate)
         {
                 const numerical::Matrix<M, N, T> hjx = hj(x_);
                 const numerical::Matrix<N, M, T> hjx_t = hjx.transposed();
+
+                const numerical::Vector<M, T> residual = residual_z(z, h(x_));
+
+                const UpdateInfo<M, T> res = [&]
+                {
+                        if (gate)
+                        {
+                                const numerical::Matrix<M, M, T> s_inv =
+                                        r_inv - r_inv * hjx * (i_ + hjx_t * r_inv * hjx).inversed() * hjx_t * r_inv;
+                                return make_update_info(residual, s_inv, gate);
+                        }
+                        return make_update_info(residual);
+                }();
+
+                if (res.gate)
+                {
+                        return res;
+                }
 
                 i_ = i_ + hjx_t * r_inv * hjx;
                 p_ = i_.inversed();
 
                 const numerical::Matrix<N, M, T> k = *p_ * hjx_t * r_inv;
-                const numerical::Vector<M, T> residual = residual_z(z, h(x_));
 
                 x_ = add_x(x_, k * residual);
+
+                return res;
         }
 };
 }

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <memory>
+#include <optional>
 
 namespace ns::filter::core::test::filters
 {
@@ -38,11 +39,16 @@ public:
 
         virtual void predict(T dt, const NoiseModel<T>& noise_model, T fading_memory_alpha) = 0;
 
-        virtual void update_position(T position, T position_variance) = 0;
+        virtual void update_position(T position, T position_variance, std::optional<T> gate) = 0;
 
-        virtual void update_position_speed(T position, T position_variance, T speed, T speed_variance) = 0;
+        virtual void update_position_speed(
+                T position,
+                T position_variance,
+                T speed,
+                T speed_variance,
+                std::optional<T> gate) = 0;
 
-        virtual void update_speed(T speed, T speed_variance) = 0;
+        virtual void update_speed(T speed, T speed_variance, std::optional<T> gate) = 0;
 
         [[nodiscard]] virtual T position() const = 0;
         [[nodiscard]] virtual T position_p() const = 0;

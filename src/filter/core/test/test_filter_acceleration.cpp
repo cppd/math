@@ -179,7 +179,7 @@ void test_impl(
 
         const auto i = filters::create_info<T>(
                 config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
-                config.reset_dt);
+                config.reset_dt, config.gate);
 
         std::vector<view::Filter<T>> filters;
 

@@ -113,31 +113,6 @@ bool update_filter(
         return false;
 }
 
-template <typename T>
-void update_filter(FilterInfo<T>* const filter, const Measurements<T>& m)
-{
-        ASSERT(filter);
-        ASSERT(m.x || m.v);
-
-        if (m.x)
-        {
-                if (m.v)
-                {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance);
-                        return;
-                }
-                filter->update_position(m.x->value, m.x->variance);
-                return;
-        }
-        if (m.v)
-        {
-                filter->update_speed(m.v->value, m.v->variance);
-                return;
-        }
-
-        ASSERT(false);
-}
-
 template <typename F>
 class FilterImpl : public Filter<typename F::Type>
 {
@@ -234,6 +209,7 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
         NoiseModel<T> noise_model_;
         T fading_memory_alpha_;
         T reset_dt_;
+        std::optional<T> gate_;
         std::unique_ptr<FilterInfo<T>> filter_;
 
         NormalizedSquared<T> nees_;
@@ -263,13 +239,13 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
 
                 if (m.v)
                 {
-                        update_filter(filter_.get(), m);
+                        update_filter(filter_.get(), m, gate_);
                 }
                 else
                 {
                         Measurements<T> mv = m;
                         mv.v = {.value = init_v_, .variance = init_v_variance_};
-                        update_filter(filter_.get(), mv);
+                        update_filter(filter_.get(), mv, gate_);
                 }
                 return true;
         }
@@ -295,7 +271,7 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         ASSERT(dt >= 0);
                         last_time_ = m.time;
                         filter_->predict(dt, noise_model_, fading_memory_alpha_);
-                        update_filter(filter_.get(), m);
+                        update_filter(filter_.get(), m, gate_);
                 }
 
                 nees_.add(
@@ -322,12 +298,14 @@ public:
                 const NoiseModel<T>& noise_model,
                 const T fading_memory_alpha,
                 const T reset_dt,
+                const std::optional<T> gate,
                 std::unique_ptr<FilterInfo<T>>&& filter)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),
                   noise_model_(noise_model),
                   fading_memory_alpha_(fading_memory_alpha),
                   reset_dt_(reset_dt),
+                  gate_(gate),
                   filter_(std::move(filter))
         {
         }
@@ -368,10 +346,12 @@ std::unique_ptr<Filter<T>> create_info(
         const T init_v_variance,
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha,
-        const T reset_dt)
+        const T reset_dt,
+        const std::optional<T> gate)
 {
         return std::make_unique<FilterImpl<filters::FilterInfo<T>>>(
-                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, filters::create_filter_info<T>());
+                init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate,
+                filters::create_filter_info<T>());
 }
 
 template <typename T>
@@ -391,7 +371,7 @@ std::unique_ptr<Filter<T>> create_ukf(
 #define INSTANTIATION(T)                                                                                           \
         template std::unique_ptr<Filter<T>> create_ekf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);        \
         template std::unique_ptr<Filter<T>> create_h_infinity(T, T, const NoiseModel<T>&, T, T, std::optional<T>); \
-        template std::unique_ptr<Filter<T>> create_info(T, T, const NoiseModel<T>&, T, T);                         \
+        template std::unique_ptr<Filter<T>> create_info(T, T, const NoiseModel<T>&, T, T, std::optional<T>);       \
         template std::unique_ptr<Filter<T>> create_ukf(T, T, const NoiseModel<T>&, T, T, std::optional<T>);
 
 INSTANTIATION(float)
