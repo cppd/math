@@ -49,6 +49,33 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] UpdateInfo<N, T> make_update_info(
         const numerical::Vector<N, T>& residual,
+        const numerical::Matrix<N, N, T>& s_inversed,
+        const std::optional<T> gate)
+{
+        UpdateInfo<N, T> res;
+
+        res.residual = residual;
+
+        if (!gate)
+        {
+                return res;
+        }
+
+        const T mahalanobis_distance_squared = compute_mahalanobis_distance_squared(residual, s_inversed);
+
+        res.normalized_innovation_squared = mahalanobis_distance_squared;
+
+        if (!(mahalanobis_distance_squared <= square(*gate)))
+        {
+                res.gate = true;
+        }
+
+        return res;
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] UpdateInfo<N, T> make_update_info(
+        const numerical::Vector<N, T>& residual,
         const numerical::Matrix<N, N, T>& s,
         const numerical::Matrix<N, N, T>& s_inversed,
         const std::optional<T> gate,
