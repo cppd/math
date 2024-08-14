@@ -20,6 +20,7 @@ Dan Simon.
 Optimal State Estimation. Kalman, H Infinity, and Nonlinear Approaches.
 John Wiley & Sons, 2006.
 
+1.1.2 The matrix inversion lemma
 6.2 Information filtering
 7.4 Kalman filtering with fading memory
 */
@@ -44,6 +45,22 @@ John Wiley & Sons, 2001.
 
 namespace ns::filter::core
 {
+namespace info_implementation
+{
+// The matrix inversion lemma.
+// inv(A + B * inv(D) * C)
+// = inv(A) - inv(A) * B * inv(D + C * inv(A) * B) * C * inv(A)
+template <std::size_t N, std::size_t M, typename T>
+numerical::Matrix<N, N, T> inversion(
+        const numerical::Matrix<N, N, T>& a_inv,
+        const numerical::Matrix<N, M, T>& b,
+        const numerical::Matrix<M, N, T>& c,
+        const numerical::Matrix<M, M, T>& d)
+{
+        return a_inv - a_inv * b * (d + c * a_inv * b).inversed() * c * a_inv;
+}
+}
+
 template <std::size_t N, typename T>
 class Info final
 {
@@ -91,6 +108,8 @@ public:
                 // Fading memory alpha
                 const T fading_memory_alpha = 1)
         {
+                namespace impl = info_implementation;
+
                 x_ = f(x_);
 
                 const numerical::Matrix<N, N, T> fjx = fj(x_);
@@ -102,7 +121,8 @@ public:
                         i_ = factor * i_;
                 }
 
-                i_ = q_inv - q_inv * fjx * (i_ + fjx_t * q_inv * fjx).inversed() * fjx_t * q_inv;
+                // inv(q + f * inv(i) * t(f))
+                i_ = impl::inversion(q_inv, fjx, fjx_t, i_);
         }
 
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
@@ -126,6 +146,8 @@ public:
                 // Mahalanobis distance gate
                 const std::optional<T> gate)
         {
+                namespace impl = info_implementation;
+
                 const numerical::Matrix<M, N, T> hjx = hj(x_);
                 const numerical::Matrix<N, M, T> hjx_t = hjx.transposed();
 
@@ -135,8 +157,9 @@ public:
                 {
                         if (gate)
                         {
-                                const numerical::Matrix<M, M, T> s_inv =
-                                        r_inv - r_inv * hjx * (i_ + hjx_t * r_inv * hjx).inversed() * hjx_t * r_inv;
+                                // inv(r + h * inv(i) * t(h))
+                                const numerical::Matrix<M, M, T> s_inv = impl::inversion(r_inv, hjx, hjx_t, i_);
+
                                 return make_update_info(residual, s_inv, gate);
                         }
                         return make_update_info(residual);
