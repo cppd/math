@@ -169,28 +169,34 @@ void test_impl(
 {
         const auto positions = reset_v(measurements);
 
-        const auto c = filters::create_ekf<T>(
+        const auto ekf_continuous = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
                 config.reset_dt, config.gate);
 
-        const auto d = filters::create_ekf<T>(
+        const auto ekf_discrete = filters::create_ekf<T>(
                 config.init_v, config.init_v_variance, config.discrete_noise, config.fading_memory_alpha,
                 config.reset_dt, config.gate);
 
-        const auto i = filters::create_info<T>(
+        const auto info_continuous = filters::create_info<T>(
                 config.init_v, config.init_v_variance, config.continuous_noise, config.fading_memory_alpha,
                 config.reset_dt, config.gate);
 
         std::vector<view::Filter<T>> filters;
 
-        filters.emplace_back("C Positions", color::RGB8(180, 0, 0), test_filter(c.get(), positions, correction));
-        filters.emplace_back("C Measurements", color::RGB8(0, 180, 0), test_filter(c.get(), measurements, correction));
+        filters.emplace_back(
+                "C Positions", color::RGB8(180, 0, 0), test_filter(ekf_continuous.get(), positions, correction));
+        filters.emplace_back(
+                "C Measurements", color::RGB8(0, 180, 0), test_filter(ekf_continuous.get(), measurements, correction));
 
-        filters.emplace_back("D Positions", color::RGB8(128, 0, 0), test_filter(d.get(), positions, correction));
-        filters.emplace_back("D Measurements", color::RGB8(0, 128, 0), test_filter(d.get(), measurements, correction));
+        filters.emplace_back(
+                "D Positions", color::RGB8(128, 0, 0), test_filter(ekf_discrete.get(), positions, correction));
+        filters.emplace_back(
+                "D Measurements", color::RGB8(0, 128, 0), test_filter(ekf_discrete.get(), measurements, correction));
 
-        filters.emplace_back("I Positions", color::RGB8(255, 0, 0), test_filter(i.get(), positions, correction));
-        filters.emplace_back("I Measurements", color::RGB8(0, 255, 0), test_filter(i.get(), measurements, correction));
+        filters.emplace_back(
+                "I Positions", color::RGB8(230, 0, 0), test_filter(info_continuous.get(), positions, correction));
+        filters.emplace_back(
+                "I Measurements", color::RGB8(0, 230, 0), test_filter(info_continuous.get(), measurements, correction));
 
         view::write(name, annotation, measurements, DATA_CONNECT_INTERVAL<T>, filters);
 }
