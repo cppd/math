@@ -68,36 +68,5 @@ void update_nis(const core::UpdateInfo<N, T>& update, Nis<T>& nis)
 }
 
 template <typename T>
-std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis)
-{
-        std::string s;
-
-        const auto new_line = [&]
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-        };
-
-        if (!nees.position.empty())
-        {
-                new_line();
-                s += "NEES Position; " + nees.position.check_string();
-        }
-
-        if (!nees.speed.empty())
-        {
-                new_line();
-                s += "NEES Speed; " + nees.speed.check_string();
-        }
-
-        if (!nis.position.empty())
-        {
-                new_line();
-                s += "NIS Position; " + nis.position.check_string();
-        }
-
-        return s;
-}
+std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis);
 }
