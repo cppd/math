@@ -36,12 +36,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::acceleration
 {
+namespace model = filter_0_model;
+
 namespace
 {
 constexpr bool NORMALIZED_INNOVATION{true};
 constexpr bool LIKELIHOOD{false};
-
-namespace model = filter_0_model;
 
 template <typename T>
 class Filter final : public Filter0<T>
