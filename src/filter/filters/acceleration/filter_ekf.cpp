@@ -82,15 +82,15 @@ class Filter final : public FilterEkf<T>
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
-                const numerical::Matrix<9, 9, T> f_matrix = model::f(dt);
+                const numerical::Matrix<9, 9, T> f = model::f(dt);
                 filter_->predict(
                         [&](const numerical::Vector<9, T>& x)
                         {
-                                return f_matrix * x;
+                                return f * x;
                         },
                         [&](const numerical::Vector<9, T>& /*x*/)
                         {
-                                return f_matrix;
+                                return f;
                         },
                         model::q(dt, position_noise_model, angle_noise_model, angle_r_noise_model),
                         fading_memory_alpha);
