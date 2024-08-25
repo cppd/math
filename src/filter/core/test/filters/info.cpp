@@ -30,19 +30,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::core::test::filters
 {
+namespace model = ekf_model;
+
 namespace
 {
 template <typename T>
 class Filter final : public FilterInfo<T>
 {
         std::optional<Info<2, T>> filter_;
-
-        void filter_update(const auto& h, const auto& hj, const auto& r, const auto& z, const auto& gate)
-        {
-                ASSERT(filter_);
-
-                filter_->update(h, hj, r, z, ekf_model::Add(), ekf_model::Residual(), gate);
-        }
 
         void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& i) override
         {
@@ -53,17 +48,17 @@ class Filter final : public FilterInfo<T>
         {
                 ASSERT(filter_);
 
-                const numerical::Matrix<2, 2, T> f_matrix = ekf_model::f(dt);
-                const numerical::Matrix<2, 2, T> q_inv = ekf_model::q(dt, noise_model).inversed();
+                const numerical::Matrix<2, 2, T> f = model::f(dt);
+                const numerical::Matrix<2, 2, T> q_inv = model::q(dt, noise_model).inversed();
 
                 filter_->predict(
                         [&](const numerical::Vector<2, T>& x)
                         {
-                                return f_matrix * x;
+                                return f * x;
                         },
                         [&](const numerical::Vector<2, T>& /*x*/)
                         {
-                                return f_matrix;
+                                return f;
                         },
                         q_inv, fading_memory_alpha);
         }
@@ -72,11 +67,11 @@ class Filter final : public FilterInfo<T>
         {
                 ASSERT(filter_);
 
-                const auto r_inv = ekf_model::position_r<T>(position_variance).inversed();
+                const auto r_inv = model::position_r<T>(position_variance).inversed();
 
-                filter_update(
-                        ekf_model::position_h<T>, ekf_model::position_hj<T>, r_inv, numerical::Vector<1, T>(position),
-                        gate);
+                filter_->update(
+                        model::position_h<T>, model::position_hj<T>, r_inv, numerical::Vector<1, T>(position),
+                        model::add_x<T>, model::position_residual<T>, gate);
         }
 
         void update_position_speed(
@@ -88,21 +83,23 @@ class Filter final : public FilterInfo<T>
         {
                 ASSERT(filter_);
 
-                const auto r_inv = ekf_model::position_speed_r<T>(position_variance, speed_variance).inversed();
+                const auto r_inv = model::position_speed_r<T>(position_variance, speed_variance).inversed();
 
-                filter_update(
-                        ekf_model::position_speed_h<T>, ekf_model::position_speed_hj<T>, r_inv,
-                        numerical::Vector<2, T>(position, speed), gate);
+                filter_->update(
+                        model::position_speed_h<T>, model::position_speed_hj<T>, r_inv,
+                        numerical::Vector<2, T>(position, speed), model::add_x<T>, model::position_speed_residual<T>,
+                        gate);
         }
 
         void update_speed(const T speed, const T speed_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
-                const auto r_inv = ekf_model::position_r<T>(speed_variance).inversed();
+                const auto r_inv = model::speed_r<T>(speed_variance).inversed();
 
-                filter_update(
-                        ekf_model::speed_h<T>, ekf_model::speed_hj<T>, r_inv, numerical::Vector<1, T>(speed), gate);
+                filter_->update(
+                        model::speed_h<T>, model::speed_hj<T>, r_inv, numerical::Vector<1, T>(speed), model::add_x<T>,
+                        model::speed_residual<T>, gate);
         }
 
         [[nodiscard]] T position() const override

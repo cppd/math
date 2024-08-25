@@ -24,31 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-#include <cstddef>
-
 namespace ns::filter::core::test::filters::ekf_model
 {
-struct Add final
+template <typename T>
+numerical::Vector<2, T> add_x(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
-                const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
-        {
-                return a + b;
-        }
-};
-
-struct Residual final
-{
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
-                const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
-        {
-                return a - b;
-        }
-};
+        return a + b;
+}
 
 template <typename T>
 numerical::Matrix<2, 2, T> f(const T dt)
@@ -108,6 +90,12 @@ numerical::Matrix<1, 2, T> position_hj(const numerical::Vector<2, T>& /*x*/)
         };
 }
 
+template <typename T>
+numerical::Vector<1, T> position_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
+{
+        return a - b;
+}
+
 //
 
 template <typename T>
@@ -141,6 +129,12 @@ numerical::Matrix<2, 2, T> position_speed_hj(const numerical::Vector<2, T>& /*x*
         };
 }
 
+template <typename T>
+numerical::Vector<2, T> position_speed_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
+{
+        return a - b;
+}
+
 //
 
 template <typename T>
@@ -165,5 +159,11 @@ numerical::Matrix<1, 2, T> speed_hj(const numerical::Vector<2, T>& /*x*/)
         return {
                 {0, 1},
         };
+}
+
+template <typename T>
+numerical::Vector<1, T> speed_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
+{
+        return a - b;
 }
 }
