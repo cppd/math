@@ -18,120 +18,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ukf.h"
 
 #include "noise_model.h"
+#include "ukf_model.h"
 
 #include <src/com/error.h>
-#include <src/com/variant.h>
-#include <src/filter/core/kinematic_models.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-#include <cstddef>
 #include <memory>
 #include <optional>
 
 namespace ns::filter::core::test::filters
 {
+namespace model = ukf_model;
+
 namespace
 {
-struct Add final
-{
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
-                const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
-        {
-                return a + b;
-        }
-};
-
-struct Residual final
-{
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
-                const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
-        {
-                return a - b;
-        }
-};
-
-template <typename T>
-numerical::Vector<2, T> f(const T dt, const numerical::Vector<2, T>& x)
-{
-        return {x[0] + dt * x[1], x[1]};
-}
-
-template <typename T>
-numerical::Matrix<2, 2, T> q(const T dt, const NoiseModel<T>& noise_model)
-{
-        const auto visitors = Visitors{
-                [&](const ContinuousNoiseModel<T>& model)
-                {
-                        return continuous_white_noise<2, T>(dt, model.spectral_density);
-                },
-                [&](const DiscreteNoiseModel<T>& model)
-                {
-                        const T dt_2 = power<2>(dt) / 2;
-                        const numerical::Matrix<2, 1, T> noise_transition{{dt_2}, {dt}};
-                        const numerical::Matrix<1, 1, T> covariance{{model.variance}};
-                        return noise_transition * covariance * noise_transition.transposed();
-                }};
-        return std::visit(visitors, noise_model);
-}
-
-//
-
-template <typename T>
-numerical::Matrix<1, 1, T> position_r(const T position_variance)
-{
-        return {{position_variance}};
-}
-
-template <typename T>
-numerical::Vector<1, T> position_h(const numerical::Vector<2, T>& x)
-{
-        // x = x[0]
-        return numerical::Vector<1, T>(x[0]);
-}
-
-//
-
-template <typename T>
-numerical::Matrix<2, 2, T> position_speed_r(const T position_variance, const T speed_variance)
-{
-        return {
-                {position_variance,              0},
-                {                0, speed_variance}
-        };
-}
-
-template <typename T>
-numerical::Vector<2, T> position_speed_h(const numerical::Vector<2, T>& x)
-{
-        // x = x[0]
-        // v = x[1]
-        return x;
-}
-
-//
-
-template <typename T>
-numerical::Matrix<1, 1, T> speed_r(const T speed_variance)
-{
-        return {{speed_variance}};
-}
-
-template <typename T>
-numerical::Vector<1, T> speed_h(const numerical::Vector<2, T>& x)
-{
-        // v = x[1]
-        return numerical::Vector<1, T>(x[1]);
-}
-
-//
-
 template <typename T>
 class Filter final : public FilterUkf<T>
 {
@@ -154,9 +57,9 @@ class Filter final : public FilterUkf<T>
                 filter_->predict(
                         [dt](const numerical::Vector<2, T>& x)
                         {
-                                return f(dt, x);
+                                return model::f(dt, x);
                         },
-                        q(dt, noise_model), fading_memory_alpha);
+                        model::q(dt, noise_model), fading_memory_alpha);
         }
 
         void update_position(const T position, const T position_variance, const std::optional<T> gate) override
@@ -164,8 +67,9 @@ class Filter final : public FilterUkf<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_h<T>, position_r<T>(position_variance), numerical::Vector<1, T>(position), Add(),
-                        Residual(), gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        model::position_h<T>, model::position_r<T>(position_variance),
+                        numerical::Vector<1, T>(position), model::add_x<T>, model::position_residual<T>, gate,
+                        NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_position_speed(
@@ -178,9 +82,9 @@ class Filter final : public FilterUkf<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        position_speed_h<T>, position_speed_r<T>(position_variance, speed_variance),
-                        numerical::Vector<2, T>(position, speed), Add(), Residual(), gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        model::position_speed_h<T>, model::position_speed_r<T>(position_variance, speed_variance),
+                        numerical::Vector<2, T>(position, speed), model::add_x<T>, model::position_speed_residual<T>,
+                        gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         void update_speed(const T speed, const T speed_variance, const std::optional<T> gate) override
@@ -188,8 +92,8 @@ class Filter final : public FilterUkf<T>
                 ASSERT(filter_);
 
                 filter_->update(
-                        speed_h<T>, speed_r<T>(speed_variance), numerical::Vector<1, T>(speed), Add(), Residual(), gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        model::speed_h<T>, model::speed_r<T>(speed_variance), numerical::Vector<1, T>(speed),
+                        model::add_x<T>, model::speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] T position() const override
