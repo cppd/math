@@ -17,13 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_2.h"
 
+#include "filter_2_model.h"
 #include "init.h"
 
 #include <src/com/error.h>
-#include <src/com/exponent.h>
-#include <src/com/variant.h>
 #include <src/filter/core/ekf.h>
-#include <src/filter/core/kinematic_models.h>
 #include <src/filter/core/update_info.h>
 #include <src/filter/filters/com/utility.h>
 #include <src/filter/filters/noise_model.h>
@@ -37,140 +35,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::position
 {
+namespace model = filter_2_model;
+
 namespace
 {
 constexpr bool NORMALIZED_INNOVATION{true};
 constexpr bool LIKELIHOOD{false};
-
-template <std::size_t N, typename T>
-numerical::Vector<3 * N, T> init_x(const numerical::Vector<N, T>& position, const Init<T>& init)
-{
-        ASSERT(is_finite(position));
-
-        numerical::Vector<3 * N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                const std::size_t b = 3 * i;
-                res[b + 0] = position[i];
-                res[b + 1] = init.speed;
-                res[b + 2] = init.acceleration;
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<3 * N, 3 * N, T> init_p(const numerical::Vector<N, T>& position_variance, const Init<T>& init)
-{
-        ASSERT(is_finite(position_variance));
-
-        numerical::Matrix<3 * N, 3 * N, T> res(0);
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                const std::size_t b = 3 * i;
-                res[b + 0, b + 0] = position_variance[i];
-                res[b + 1, b + 1] = init.speed_variance;
-                res[b + 2, b + 2] = init.acceleration_variance;
-        }
-        return res;
-}
-
-struct AddX final
-{
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
-                const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
-        {
-                return a + b;
-        }
-};
-
-template <std::size_t N, typename T>
-numerical::Matrix<3 * N, 3 * N, T> f_matrix(const T dt)
-{
-        const T dt_2 = power<2>(dt) / 2;
-
-        return block_diagonal<N>(numerical::Matrix<3, 3, T>{
-                {1, dt, dt_2},
-                {0,  1,   dt},
-                {0,  0,    1}
-        });
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<3 * N, 3 * N, T> q(const T dt, const NoiseModel<T>& noise_model)
-{
-        const auto visitors = Visitors{
-                [&](const ContinuousNoiseModel<T>& model)
-                {
-                        return block_diagonal<N>(core::continuous_white_noise<3, T>(dt, model.spectral_density));
-                },
-                [&](const DiscreteNoiseModel<T>& model)
-                {
-                        const T dt_2 = power<2>(dt) / 2;
-                        const T dt_3 = power<3>(dt) / 6;
-
-                        const numerical::Matrix<3 * N, N, T> noise_transition =
-                                block_diagonal<N>(numerical::Matrix<3, 1, T>{{dt_3}, {dt_2}, {dt}});
-                        const numerical::Matrix<N, N, T> process_covariance =
-                                numerical::make_diagonal_matrix(numerical::Vector<N, T>(model.variance));
-
-                        return noise_transition * process_covariance * noise_transition.transposed();
-                }};
-        return std::visit(visitors, noise_model);
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<N, N, T> position_r(const numerical::Vector<N, T>& measurement_variance)
-{
-        return numerical::make_diagonal_matrix(measurement_variance);
-}
-
-struct PositionH final
-{
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N / 3, T> operator()(const numerical::Vector<N, T>& x) const
-        {
-                static_assert(N % 3 == 0);
-                // px = px
-                // py = py
-                numerical::Vector<N / 3, T> res;
-                for (std::size_t i = 0; i < N / 3; ++i)
-                {
-                        res[i] = x[3 * i];
-                }
-                return res;
-        }
-};
-
-struct PositionHJ final
-{
-        template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Matrix<N / 3, N, T> operator()(const numerical::Vector<N, T>& /*x*/) const
-        {
-                static_assert(N % 3 == 0);
-                // px = px
-                // py = py
-                // Jacobian
-                numerical::Matrix<N / 3, N, T> res(0);
-                for (std::size_t i = 0; i < N / 3; ++i)
-                {
-                        res[i, 3 * i] = 1;
-                }
-                return res;
-        }
-};
-
-struct PositionResidual final
-{
-        template <std::size_t N, typename T>
-        numerical::Vector<N, T> operator()(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b) const
-        {
-                return a - b;
-        }
-};
-
-//
 
 template <std::size_t N, typename T>
 class FilterImpl final : public Filter2<N, T>
@@ -183,7 +53,7 @@ class FilterImpl final : public Filter2<N, T>
                 const numerical::Vector<N, T>& variance,
                 const Init<T>& init) override
         {
-                filter_.emplace(init_x(position, init), init_p(variance, init));
+                filter_.emplace(model::x(position, init), model::p(variance, init));
         }
 
         void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
@@ -191,7 +61,7 @@ class FilterImpl final : public Filter2<N, T>
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
-                const numerical::Matrix<3 * N, 3 * N, T> f = f_matrix<N, T>(dt);
+                const numerical::Matrix<3 * N, 3 * N, T> f = model::f<N, T>(dt);
                 filter_->predict(
                         [&](const numerical::Vector<3 * N, T>& x)
                         {
@@ -201,7 +71,7 @@ class FilterImpl final : public Filter2<N, T>
                         {
                                 return f;
                         },
-                        q<N, T>(dt, noise_model), fading_memory_alpha);
+                        model::q<N, T>(dt, noise_model), fading_memory_alpha);
         }
 
         [[nodiscard]] core::UpdateInfo<N, T> update(
@@ -213,17 +83,18 @@ class FilterImpl final : public Filter2<N, T>
                 ASSERT(is_finite(position));
                 ASSERT(com::check_variance(variance));
 
-                const numerical::Matrix<N, N, T> r = position_r(variance);
+                if (theta_)
+                {
+                        return filter_->update(
+                                model::position_h<3 * N, T>, model::position_hj<3 * N, T>, model::position_r(variance),
+                                position, model::add_x<3 * N, T>, model::position_residual<N, T>, gate,
+                                NORMALIZED_INNOVATION, LIKELIHOOD, *theta_);
+                }
 
-                const core::UpdateInfo update =
-                        theta_ ? filter_->update(
-                                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate,
-                                         NORMALIZED_INNOVATION, LIKELIHOOD, *theta_)
-                               : filter_->update(
-                                         PositionH(), PositionHJ(), r, position, AddX(), PositionResidual(), gate,
-                                         NORMALIZED_INNOVATION, LIKELIHOOD);
-
-                return update;
+                return filter_->update(
+                        model::position_h<3 * N, T>, model::position_hj<3 * N, T>, model::position_r(variance),
+                        position, model::add_x<3 * N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION,
+                        LIKELIHOOD);
         }
 
         [[nodiscard]] numerical::Vector<N, T> position() const override
