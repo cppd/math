@@ -62,7 +62,7 @@ numerical::Matrix<2 * N, 2 * N, T> p(const numerical::Vector<N, T>& position_var
 }
 
 template <std::size_t N, typename T>
-numerical::Vector<N, T> add_x(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
+numerical::Vector<2 * N, T> add_x(const numerical::Vector<2 * N, T>& a, const numerical::Vector<2 * N, T>& b)
 {
         return a + b;
 }
@@ -105,13 +105,12 @@ numerical::Matrix<N, N, T> position_r(const numerical::Vector<N, T>& measurement
 }
 
 template <std::size_t N, typename T>
-numerical::Vector<N / 2, T> position_h(const numerical::Vector<N, T>& x)
+numerical::Vector<N, T> position_h(const numerical::Vector<2 * N, T>& x)
 {
-        static_assert(N % 2 == 0);
         // px = px
         // py = py
-        numerical::Vector<N / 2, T> res;
-        for (std::size_t i = 0; i < N / 2; ++i)
+        numerical::Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = x[2 * i];
         }
@@ -119,14 +118,13 @@ numerical::Vector<N / 2, T> position_h(const numerical::Vector<N, T>& x)
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<N / 2, N, T> position_hj(const numerical::Vector<N, T>& /*x*/)
+numerical::Matrix<N, 2 * N, T> position_hj(const numerical::Vector<2 * N, T>& /*x*/)
 {
-        static_assert(N % 2 == 0);
         // px = px
         // py = py
         // Jacobian
-        numerical::Matrix<N / 2, N, T> res(0);
-        for (std::size_t i = 0; i < N / 2; ++i)
+        numerical::Matrix<N, 2 * N, T> res(0);
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, 2 * i] = 1;
         }

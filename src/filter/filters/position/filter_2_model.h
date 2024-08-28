@@ -64,7 +64,7 @@ numerical::Matrix<3 * N, 3 * N, T> p(const numerical::Vector<N, T>& position_var
 }
 
 template <std::size_t N, typename T>
-numerical::Vector<N, T> add_x(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
+numerical::Vector<3 * N, T> add_x(const numerical::Vector<3 * N, T>& a, const numerical::Vector<3 * N, T>& b)
 {
         return a + b;
 }
@@ -111,13 +111,12 @@ numerical::Matrix<N, N, T> position_r(const numerical::Vector<N, T>& measurement
 }
 
 template <std::size_t N, typename T>
-numerical::Vector<N / 3, T> position_h(const numerical::Vector<N, T>& x)
+numerical::Vector<N, T> position_h(const numerical::Vector<3 * N, T>& x)
 {
-        static_assert(N % 3 == 0);
         // px = px
         // py = py
-        numerical::Vector<N / 3, T> res;
-        for (std::size_t i = 0; i < N / 3; ++i)
+        numerical::Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = x[3 * i];
         }
@@ -125,14 +124,13 @@ numerical::Vector<N / 3, T> position_h(const numerical::Vector<N, T>& x)
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<N / 3, N, T> position_hj(const numerical::Vector<N, T>& /*x*/)
+numerical::Matrix<N, 3 * N, T> position_hj(const numerical::Vector<3 * N, T>& /*x*/)
 {
-        static_assert(N % 3 == 0);
         // px = px
         // py = py
         // Jacobian
-        numerical::Matrix<N / 3, N, T> res(0);
-        for (std::size_t i = 0; i < N / 3; ++i)
+        numerical::Matrix<N, 3 * N, T> res(0);
+        for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, 3 * i] = 1;
         }

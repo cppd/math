@@ -86,15 +86,14 @@ class FilterImpl final : public Filter1<N, T>
                 if (theta_)
                 {
                         return filter_->update(
-                                model::position_h<2 * N, T>, model::position_hj<2 * N, T>, model::position_r(variance),
-                                position, model::add_x<2 * N, T>, model::position_residual<N, T>, gate,
+                                model::position_h<N, T>, model::position_hj<N, T>, model::position_r(variance),
+                                position, model::add_x<N, T>, model::position_residual<N, T>, gate,
                                 NORMALIZED_INNOVATION, LIKELIHOOD, *theta_);
                 }
 
                 return filter_->update(
-                        model::position_h<2 * N, T>, model::position_hj<2 * N, T>, model::position_r(variance),
-                        position, model::add_x<2 * N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION,
-                        LIKELIHOOD);
+                        model::position_h<N, T>, model::position_hj<N, T>, model::position_r(variance), position,
+                        model::add_x<N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] numerical::Vector<N, T> position() const override
