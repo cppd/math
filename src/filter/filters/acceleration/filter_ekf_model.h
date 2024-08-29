@@ -86,7 +86,7 @@ numerical::Matrix<9, 9, T> p(const numerical::Matrix<4, 4, T>& position_velocity
 }
 
 template <typename T>
-[[nodiscard]] numerical::Vector<9, T> add_x(const numerical::Vector<9, T>& a, const numerical::Vector<9, T>& b)
+numerical::Vector<9, T> add_x(const numerical::Vector<9, T>& a, const numerical::Vector<9, T>& b)
 {
         numerical::Vector<9, T> res = a + b;
         res[6] = normalize_angle(res[6]);
@@ -112,7 +112,7 @@ numerical::Matrix<9, 9, T> f(const T dt)
 }
 
 template <typename T>
-constexpr numerical::Matrix<9, 9, T> q(
+numerical::Matrix<9, 9, T> q(
         const T dt,
         const NoiseModel<T>& position_noise_model,
         const NoiseModel<T>& angle_noise_model,
