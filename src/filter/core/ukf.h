@@ -127,9 +127,9 @@ template <std::size_t N, typename T, typename F, std::size_t COUNT>
 struct Add final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
+        [[nodiscard]] static numerical::Vector<N, T> operator()(
                 const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
+                const numerical::Vector<N, T>& b)
         {
                 return a + b;
         }
@@ -138,9 +138,9 @@ struct Add final
 struct Subtract final
 {
         template <std::size_t N, typename T>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
+        [[nodiscard]] static numerical::Vector<N, T> operator()(
                 const numerical::Vector<N, T>& a,
-                const numerical::Vector<N, T>& b) const
+                const numerical::Vector<N, T>& b)
         {
                 return a - b;
         }
@@ -149,9 +149,9 @@ struct Subtract final
 struct Mean final
 {
         template <std::size_t N, typename T, std::size_t COUNT>
-        [[nodiscard]] numerical::Vector<N, T> operator()(
+        [[nodiscard]] static numerical::Vector<N, T> operator()(
                 const std::array<numerical::Vector<N, T>, COUNT>& p,
-                const numerical::Vector<COUNT, T>& w) const
+                const numerical::Vector<COUNT, T>& w)
         {
                 static_assert(COUNT > 0);
                 numerical::Vector<N, T> x = p[0] * w[0];
