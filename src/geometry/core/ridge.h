@@ -258,7 +258,7 @@ namespace std
 template <std::size_t N>
 struct hash<::ns::geometry::core::Ridge<N>> final
 {
-        std::size_t operator()(const ::ns::geometry::core::Ridge<N>& v) const
+        [[nodiscard]] static std::size_t operator()(const ::ns::geometry::core::Ridge<N>& v)
         {
                 return v.hash();
         }

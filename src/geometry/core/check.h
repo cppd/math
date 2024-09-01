@@ -44,7 +44,7 @@ namespace check_implementation
 struct RidgeHash final
 {
         template <std::size_t N>
-        [[nodiscard]] std::size_t operator()(const std::array<int, N>& v) const
+        [[nodiscard]] static std::size_t operator()(const std::array<int, N>& v)
         {
                 return compute_hash(v);
         }

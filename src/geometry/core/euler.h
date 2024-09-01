@@ -40,7 +40,7 @@ long long simplex_count(const std::vector<std::array<int, N>>& facets)
 
         struct Hash final
         {
-                std::size_t operator()(const std::array<int, VERTEX_COUNT>& v) const
+                [[nodiscard]] static std::size_t operator()(const std::array<int, VERTEX_COUNT>& v)
                 {
                         return compute_hash(v);
                 }
