@@ -31,7 +31,7 @@ namespace std
 template <size_t N, typename T>
 struct hash<::ns::numerical::Vector<N, T>> final
 {
-        size_t operator()(const ::ns::numerical::Vector<N, T>& v) const
+        [[nodiscard]] static size_t operator()(const ::ns::numerical::Vector<N, T>& v)
         {
                 return v.hash();
         }

@@ -132,7 +132,7 @@ public:
 
         struct Hash final
         {
-                [[nodiscard]] std::size_t operator()(const MapVertex& v) const
+                [[nodiscard]] static std::size_t operator()(const MapVertex& v)
                 {
                         return v.hash();
                 }

@@ -56,7 +56,7 @@ namespace std
 template <>
 struct hash<::ns::model::ObjectId> final
 {
-        std::size_t operator()(const ::ns::model::ObjectId id) const noexcept
+        [[nodiscard]] static size_t operator()(const ::ns::model::ObjectId id) noexcept
         {
                 return id.hash();
         }
