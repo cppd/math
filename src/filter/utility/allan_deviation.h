@@ -25,10 +25,10 @@ namespace ns::filter::utility
 template <typename T>
 struct AllanDeviation final
 {
-        std::vector<T> taus;
-        std::vector<T> deviations;
+        T tau;
+        T deviation;
 };
 
 template <typename T>
-AllanDeviation<T> allan_deviation(const std::vector<T>& data, T frequency, std::size_t output_count);
+std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>& data, T frequency, std::size_t output_count);
 }

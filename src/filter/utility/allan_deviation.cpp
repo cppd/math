@@ -71,7 +71,10 @@ std::vector<std::size_t> log_space(const std::size_t max_m, const std::size_t ou
 }
 
 template <typename T>
-AllanDeviation<T> allan_deviation(const std::vector<T>& data, const T frequency, const std::size_t output_count)
+std::vector<AllanDeviation<T>> allan_deviation(
+        const std::vector<T>& data,
+        const T frequency,
+        const std::size_t output_count)
 {
         check(data, frequency, output_count);
 
@@ -81,14 +84,13 @@ AllanDeviation<T> allan_deviation(const std::vector<T>& data, const T frequency,
 
         const std::vector<std::size_t> m = log_space<T>(max_m, output_count);
 
-        AllanDeviation<T> res;
+        std::vector<AllanDeviation<T>> res;
 
-        res.taus.resize(m.size());
-        res.deviations.resize(m.size());
+        res.resize(m.size());
 
         for (std::size_t i = 0; i < m.size(); ++i)
         {
-                res.taus[i] = m[i] * ts;
+                res[i].tau = m[i] * ts;
 
                 T sum = 0;
                 const std::size_t count = data.size() - 2 * m[i];
@@ -100,13 +102,13 @@ AllanDeviation<T> allan_deviation(const std::vector<T>& data, const T frequency,
                         sum += square(data[j] - 2 * data[j + m[i]] + data[j + 2 * m[i]]);
                 }
 
-                res.deviations[i] = std::sqrt(sum / (2 * square(res.taus[i]) * count));
+                res[i].deviation = std::sqrt(sum / (2 * square(res[i].tau) * count));
         }
 
         return res;
 }
 
-#define TEMPLATE(T) template AllanDeviation<T> allan_deviation(const std::vector<T>&, T, std::size_t);
+#define TEMPLATE(T) template std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>&, T, std::size_t);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
