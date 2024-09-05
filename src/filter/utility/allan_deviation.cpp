@@ -43,7 +43,7 @@ void check(const std::vector<T>& data, const T frequency, const std::size_t outp
                 error("Output count (" + to_string(output_count) + ") must be greater than or equal to 1");
         }
 
-        if (frequency > 0)
+        if (!(frequency > 0))
         {
                 error("Frequency (" + to_string(frequency) + ") must be greater than 0");
         }
