@@ -79,26 +79,20 @@ std::vector<AllanDeviation<T>> allan_deviation(
         check(data, frequency, output_count);
 
         const T ts = 1 / frequency;
-
         const std::size_t max_m = (data.size() - 1) / 2;
-
         const std::vector<std::size_t> m = log_space<T>(max_m, output_count);
 
-        std::vector<AllanDeviation<T>> res;
-
-        res.resize(m.size());
+        std::vector<AllanDeviation<T>> res(m.size());
 
         for (std::size_t i = 0; i < m.size(); ++i)
         {
                 res[i].tau = m[i] * ts;
 
                 T sum = 0;
+                ASSERT(data.size() > 2 * m[i]);
                 const std::size_t count = data.size() - 2 * m[i];
-                ASSERT(count < data.size());
-                ASSERT(count > 0);
                 for (std::size_t j = 0; j < count; ++j)
                 {
-                        ASSERT(j + 2 * m[i] < data.size());
                         sum += square(data[j] - 2 * data[j + m[i]] + data[j + 2 * m[i]]);
                 }
 
