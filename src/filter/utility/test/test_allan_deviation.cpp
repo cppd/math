@@ -42,9 +42,11 @@ void test_impl()
         std::normal_distribution<T> nd;
 
         std::vector<T> data(count);
+        T b = 1;
         for (std::size_t i = 0; i < count; ++i)
         {
-                data[i] = nd(engine);
+                b += T{1e-5} * i;
+                data[i] = b + nd(engine);
         }
 
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
