@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/constant.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
@@ -34,38 +37,60 @@ namespace ns::filter::utility::test
 namespace
 {
 template <typename T>
-void test_impl()
+void save_to_file(const std::vector<AllanDeviation<T>> deviations)
 {
-        const std::size_t count = 10'000;
-
-        PCG engine;
-        std::normal_distribution<T> nd;
-
-        std::vector<T> data(count);
-        T b = 1;
-        for (std::size_t i = 0; i < count; ++i)
-        {
-                b += T{1e-5} * i;
-                data[i] = b + nd(engine);
-        }
-
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
-        const T frequency = 1;
-        const std::size_t output_count = 100;
-        for (const AllanDeviation<T>& ad : allan_deviation(data, frequency, output_count))
+        for (const AllanDeviation<T>& ad : deviations)
         {
                 file << ad.tau << ' ' << ad.deviation << '\n';
         }
 }
 
+template <typename T>
+void test_impl()
+{
+        const std::size_t count = 100'000;
+        const T frequency = 100;
+        const T bias_interval = 500;
+        const std::size_t output_count = 500;
+
+        PCG engine;
+        std::normal_distribution<T> nd;
+
+        std::vector<T> data(count);
+        T sum = 0;
+        for (std::size_t i = 0; i < count; ++i)
+        {
+                const T bias = std::sin(i * (2 * PI<T> / (frequency * bias_interval)));
+                const T speed = bias + nd(engine);
+                sum += speed / frequency;
+                data[i] = sum;
+        }
+
+        const std::vector<AllanDeviation<T>> deviations = allan_deviation(data, frequency, output_count);
+
+        save_to_file(deviations);
+
+        const T b = bias_instability(deviations);
+
+        LOG("Bias instability " + to_string(b));
+
+        if (!(b > 0.074 && b < 0.092))
+        {
+                error("Bias instability (" + to_string(b) + ") is out of range");
+        }
+}
+
 void test()
 {
+        LOG("Test Allan deviation");
         test_impl<float>();
         test_impl<double>();
         test_impl<long double>();
+        LOG("Test Allan deviation passed");
 }
 
 TEST_SMALL("Allan Deviation", test)
