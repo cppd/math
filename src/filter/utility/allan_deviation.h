@@ -30,5 +30,11 @@ struct AllanDeviation final
 };
 
 template <typename T>
-std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>& data, T frequency, std::size_t output_count);
+[[nodiscard]] std::vector<AllanDeviation<T>> allan_deviation(
+        const std::vector<T>& data,
+        T frequency,
+        std::size_t output_count);
+
+template <typename T>
+[[nodiscard]] T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
 }

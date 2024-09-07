@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/print.h>
 
+#include <cmath>
 #include <cstddef>
 #include <vector>
 
@@ -30,6 +31,11 @@ namespace ns::filter::utility
 {
 namespace
 {
+
+// sqrt(2 * ln(2) / pi)
+template <typename T>
+constexpr T BIAS_INSTABILITY_SCALING = 0.6642824702679600191174022L;
+
 template <typename T>
 void check(const std::vector<T>& data, const T frequency, const std::size_t output_count)
 {
@@ -102,7 +108,33 @@ std::vector<AllanDeviation<T>> allan_deviation(
         return res;
 }
 
-#define TEMPLATE(T) template std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>&, T, std::size_t);
+template <typename T>
+T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
+{
+        if (allan_deviation.size() < 2)
+        {
+                error("Allan deviation size " + to_string(allan_deviation.size())
+                      + " is too small for bias instability");
+        }
+
+        const std::size_t end = allan_deviation.size() - 1;
+        std::size_t i = 0;
+        for (; i < end; ++i)
+        {
+                if (allan_deviation[i].deviation <= allan_deviation[i + 1].deviation)
+                {
+                        break;
+                }
+        }
+
+        ASSERT(i < allan_deviation.size());
+
+        return allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>;
+}
+
+#define TEMPLATE(T)                                                                                     \
+        template std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>&, T, std::size_t); \
+        template T bias_instability(const std::vector<AllanDeviation<T>>&);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
