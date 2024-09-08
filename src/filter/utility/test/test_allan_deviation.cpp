@@ -74,13 +74,19 @@ void test_impl()
 
         save_to_file(deviations);
 
-        const T b = bias_instability(deviations);
-
-        LOG("Bias instability " + to_string(b));
-
-        if (!(b > 0.074 && b < 0.092))
         {
-                error("Bias instability (" + to_string(b) + ") is out of range");
+                const T b = bias_instability(deviations);
+                if (!(b > T{0.074} && b < T{0.092}))
+                {
+                        error("Bias instability (" + to_string(b) + ") is out of range");
+                }
+        }
+        {
+                const T a = angle_random_walk(deviations);
+                if (!(a > T{0.093} && a < T{0.107}))
+                {
+                        error("Angle randon walk (" + to_string(a) + ") is out of range");
+                }
         }
 }
 
