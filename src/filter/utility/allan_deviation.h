@@ -37,4 +37,7 @@ template <typename T>
 
 template <typename T>
 [[nodiscard]] T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
+
+template <typename T>
+[[nodiscard]] T angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
 }

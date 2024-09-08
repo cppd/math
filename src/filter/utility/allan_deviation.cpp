@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <cstddef>
+#include <ranges>
 #include <vector>
 
 namespace ns::filter::utility
@@ -132,9 +133,34 @@ T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
         return allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>;
 }
 
+template <typename T>
+T angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
+{
+        if (allan_deviation.empty())
+        {
+                error("Allan deviation is empty");
+        }
+
+        if (allan_deviation.front().tau >= 1)
+        {
+                error("Allan deviation first tau (" + to_string(allan_deviation.front().tau) + ") must be less than 1");
+        }
+
+        for (const AllanDeviation<T>& ad : std::ranges::drop_view(allan_deviation, 1))
+        {
+                if (ad.tau >= 1)
+                {
+                        return ad.deviation;
+                }
+        }
+
+        error("Failed to determine angle random walk");
+}
+
 #define TEMPLATE(T)                                                                                     \
         template std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>&, T, std::size_t); \
-        template T bias_instability(const std::vector<AllanDeviation<T>>&);
+        template T bias_instability(const std::vector<AllanDeviation<T>>&);                             \
+        template T angle_random_walk(const std::vector<AllanDeviation<T>>&);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
