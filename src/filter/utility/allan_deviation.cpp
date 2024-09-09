@@ -32,7 +32,6 @@ namespace ns::filter::utility
 {
 namespace
 {
-
 // sqrt(2 * ln(2) / pi)
 template <typename T>
 constexpr T BIAS_INSTABILITY_SCALING = 0.6642824702679600191174022L;
