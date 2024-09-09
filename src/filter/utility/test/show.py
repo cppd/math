@@ -15,10 +15,11 @@
 
 
 import argparse
+import ast
 import sys
 import tempfile
+from collections import namedtuple
 
-import numpy as np
 import plotly.graph_objects as go
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
@@ -26,21 +27,89 @@ FILE_PREFIX = "figure_"
 FILE_SUFFIX = ".html"
 
 
-def show_data(file):
+Info = namedtuple("Info", "annotation data")
 
-    data = np.genfromtxt(file, delimiter=" ")
+
+def error(message):
+    raise Exception(message)
+
+
+def show_data(info):
+
+    data = info.data
     assert len(data) > 0
 
     figure = go.Figure()
 
-    figure.add_trace(go.Scatter(x=data[:, 0], y=data[:, 1], mode="lines"))
+    figure.add_trace(go.Scatter(x=[p[0] for p in data], y=[p[1] for p in data], name="Allan Deviation", mode="lines"))
 
     figure.update_xaxes(showgrid=True, visible=True, type="log")
     figure.update_yaxes(showgrid=True, visible=True, type="log")
 
-    figure.update_layout(title=None, xaxis_title="\u03C4", yaxis_title="Deviation")
+    if info.annotation:
+        figure.add_annotation(
+            text=info.annotation,
+            align="left",
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+            x=1.02,
+            y=0.01,
+            xanchor="left",
+            yanchor="bottom",
+        )
+
+    figure.update_layout(title=None, xaxis_title="\u03C4", yaxis_title="Deviation", showlegend=True)
     file = tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX)
     figure.write_html(file.name, auto_open=True)
+
+
+def parse_data(text):
+    try:
+        data = ast.literal_eval(text)
+    except ValueError:
+        error("Malformed input:\n{0}".format(text))
+
+    if isinstance(data, str):
+        return data
+
+    if not isinstance(data, tuple):
+        error("Not tuple input:\n{0}".format(text))
+
+    for d in data:
+        if not (d is None or isinstance(d, float)):
+            error("Input type error:\n{0}".format(text))
+
+    return data
+
+
+def read_file(file_name):
+    res = []
+    annotation = None
+
+    with open(file_name, encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue
+
+            data = parse_data(line)
+
+            if isinstance(data, str):
+                if annotation is not None:
+                    error("Too many annotations")
+                annotation = data
+                continue
+
+            if len(data) != 2:
+                error("Dimension ({0}) must be equal to 2".format(len(data)))
+
+            res.append(data)
+
+    if not res:
+        error("No data")
+
+    return Info(annotation, res)
 
 
 def use_dialog(args):
@@ -54,7 +123,7 @@ def use_dialog(args):
         if not dialog.exec():
             return
         name = dialog.selectedFiles()[0]
-        show_data(name)
+        show_data(read_file(name))
     except Exception as e:
         QMessageBox.critical(None, "Error", "{0}".format(e))
 
@@ -64,6 +133,6 @@ if __name__ == "__main__":
     parser.add_argument("file", nargs="?", type=str)
     parsed_args, unparsed_args = parser.parse_known_args()
     if parsed_args.file:
-        show_data(parsed_args.file)
+        show_data(read_file(parsed_args.file))
     else:
         use_dialog(sys.argv[:1] + unparsed_args)

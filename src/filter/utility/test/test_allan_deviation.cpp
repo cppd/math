@@ -30,22 +30,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <ios>
 #include <random>
+#include <string_view>
 #include <vector>
 
 namespace ns::filter::utility::test
 {
 namespace
 {
+constexpr std::string_view DEGREE = "&#x00b0;";
+constexpr std::string_view SQUARE_ROOT = "&#8730;";
+
 template <typename T>
-void save_to_file(const std::vector<AllanDeviation<T>> deviations)
+void save_to_file(const std::vector<AllanDeviation<T>> deviations, const T bias_instability, const T angle_random_walk)
 {
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
+
+        file << '\"';
+        file << "<b>Bias Instability</b>";
+        file << "<br>";
+        file << bias_instability * 3600 << DEGREE << "/h";
+        file << "<br>";
+        file << "<br>";
+        file << "<b>Angle Random Walk</b>";
+        file << "<br>";
+        file << angle_random_walk * 60 << DEGREE << "/" << SQUARE_ROOT << "h";
+        file << '\"';
+        file << '\n';
+
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 
         for (const AllanDeviation<T>& ad : deviations)
         {
-                file << ad.tau << ' ' << ad.deviation << '\n';
+                file << "(" << ad.tau << ", " << ad.deviation << ")\n";
         }
 }
 
@@ -72,21 +89,19 @@ void test_impl()
 
         const std::vector<AllanDeviation<T>> deviations = allan_deviation(data, frequency, output_count);
 
-        save_to_file(deviations);
+        const T bi = bias_instability(deviations);
+        const T arw = angle_random_walk(deviations);
 
+        save_to_file(deviations, bi, arw);
+
+        if (!(bi > T{0.074} && bi < T{0.092}))
         {
-                const T b = bias_instability(deviations);
-                if (!(b > T{0.074} && b < T{0.092}))
-                {
-                        error("Bias instability (" + to_string(b) + ") is out of range");
-                }
+                error("Bias instability (" + to_string(bi) + ") is out of range");
         }
+
+        if (!(arw > T{0.093} && arw < T{0.107}))
         {
-                const T a = angle_random_walk(deviations);
-                if (!(a > T{0.093} && a < T{0.107}))
-                {
-                        error("Angle randon walk (" + to_string(a) + ") is out of range");
-                }
+                error("Angle randon walk (" + to_string(arw) + ") is out of range");
         }
 }
 
