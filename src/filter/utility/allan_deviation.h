@@ -36,8 +36,22 @@ template <typename T>
         std::size_t output_count);
 
 template <typename T>
-[[nodiscard]] T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
+struct BiasInstability final
+{
+        T bias_instability;
+        std::size_t index;
+};
 
 template <typename T>
-[[nodiscard]] T angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
+[[nodiscard]] BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
+
+template <typename T>
+struct AngleRandomWalk final
+{
+        T angle_random_walk;
+        std::size_t index;
+};
+
+template <typename T>
+[[nodiscard]] AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
 }

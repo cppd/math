@@ -41,19 +41,22 @@ constexpr std::string_view DEGREE = "&#x00b0;";
 constexpr std::string_view SQUARE_ROOT = "&#8730;";
 
 template <typename T>
-void save_to_file(const std::vector<AllanDeviation<T>> deviations, const T bias_instability, const T angle_random_walk)
+void save_to_file(
+        const std::vector<AllanDeviation<T>> deviations,
+        const BiasInstability<T>& bias_instability,
+        const AngleRandomWalk<T>& angle_random_walk)
 {
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
 
         file << '\"';
         file << "<b>Bias Instability</b>";
         file << "<br>";
-        file << bias_instability * 3600 << DEGREE << "/h";
+        file << bias_instability.bias_instability * 3600 << DEGREE << "/h";
         file << "<br>";
         file << "<br>";
         file << "<b>Angle Random Walk</b>";
         file << "<br>";
-        file << angle_random_walk * 60 << DEGREE << "/" << SQUARE_ROOT << "h";
+        file << angle_random_walk.angle_random_walk * 60 << DEGREE << "/" << SQUARE_ROOT << "h";
         file << '\"';
         file << '\n';
 
@@ -89,19 +92,19 @@ void test_impl()
 
         const std::vector<AllanDeviation<T>> deviations = allan_deviation(data, frequency, output_count);
 
-        const T bi = bias_instability(deviations);
-        const T arw = angle_random_walk(deviations);
+        const BiasInstability<T> bi = bias_instability(deviations);
+        const AngleRandomWalk<T> arw = angle_random_walk(deviations);
 
         save_to_file(deviations, bi, arw);
 
-        if (!(bi > T{0.074} && bi < T{0.092}))
+        if (!(bi.bias_instability > T{0.074} && bi.bias_instability < T{0.092}))
         {
-                error("Bias instability (" + to_string(bi) + ") is out of range");
+                error("Bias instability (" + to_string(bi.bias_instability) + ") is out of range");
         }
 
-        if (!(arw > T{0.093} && arw < T{0.107}))
+        if (!(arw.angle_random_walk > T{0.093} && arw.angle_random_walk < T{0.107}))
         {
-                error("Angle randon walk (" + to_string(arw) + ") is out of range");
+                error("Angle randon walk (" + to_string(arw.angle_random_walk) + ") is out of range");
         }
 }
 

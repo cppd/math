@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <cstddef>
-#include <ranges>
 #include <vector>
 
 namespace ns::filter::utility
@@ -109,7 +108,7 @@ std::vector<AllanDeviation<T>> allan_deviation(
 }
 
 template <typename T>
-T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
+BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
 {
         if (allan_deviation.size() < 2)
         {
@@ -129,11 +128,13 @@ T bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
 
         ASSERT(i < allan_deviation.size());
 
-        return allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>;
+        const T bias_instability = allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>;
+
+        return {.bias_instability = bias_instability, .index = i};
 }
 
 template <typename T>
-T angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
+AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
 {
         if (allan_deviation.empty())
         {
@@ -145,11 +146,11 @@ T angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
                 error("Allan deviation first tau (" + to_string(allan_deviation.front().tau) + ") must be less than 1");
         }
 
-        for (const AllanDeviation<T>& ad : std::ranges::drop_view(allan_deviation, 1))
+        for (std::size_t i = 1; i < allan_deviation.size(); ++i)
         {
-                if (ad.tau >= 1)
+                if (allan_deviation[i].tau >= 1)
                 {
-                        return ad.deviation;
+                        return {.angle_random_walk = allan_deviation[i].deviation, .index = i};
                 }
         }
 
@@ -158,8 +159,8 @@ T angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
 
 #define TEMPLATE(T)                                                                                     \
         template std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>&, T, std::size_t); \
-        template T bias_instability(const std::vector<AllanDeviation<T>>&);                             \
-        template T angle_random_walk(const std::vector<AllanDeviation<T>>&);
+        template BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>&);            \
+        template AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>&);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
