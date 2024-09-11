@@ -48,17 +48,19 @@ void save_to_file(
 {
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
 
-        file << '\"';
-        file << "<b>Bias Instability</b>";
-        file << "<br>";
-        file << bias_instability.bias_instability * 3600 << DEGREE << "/h";
-        file << "<br>";
-        file << "<br>";
-        file << "<b>Angle Random Walk</b>";
-        file << "<br>";
-        file << angle_random_walk.angle_random_walk * 60 << DEGREE << "/" << SQUARE_ROOT << "h";
-        file << '\"';
-        file << '\n';
+        const T bi = bias_instability.bias_instability * 3600;
+        const T arw = angle_random_walk.angle_random_walk * 60;
+
+        file << "[";
+        file << "{'text':'<b>Bias Instability</b><br>" << bi << DEGREE << "/h'";
+        file << ", 'x':" << deviations[bias_instability.index].tau;
+        file << ", 'y':" << deviations[bias_instability.index].deviation;
+        file << "},";
+        file << "{'text':'<b>Angle Random Walk</b><br>" << arw << DEGREE << "/" << SQUARE_ROOT << "h'";
+        file << ", 'x':" << deviations[angle_random_walk.index].tau;
+        file << ", 'y':" << deviations[angle_random_walk.index].deviation;
+        file << "}";
+        file << "]\n";
 
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;

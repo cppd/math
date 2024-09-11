@@ -16,6 +16,7 @@
 
 import argparse
 import ast
+import math
 import sys
 import tempfile
 from collections import namedtuple
@@ -27,7 +28,7 @@ FILE_PREFIX = "figure_"
 FILE_SUFFIX = ".html"
 
 
-Info = namedtuple("Info", "annotation data")
+Info = namedtuple("Info", "annotations data")
 
 
 def error(message):
@@ -46,20 +47,19 @@ def show_data(info):
     figure.update_xaxes(showgrid=True, visible=True, type="log")
     figure.update_yaxes(showgrid=True, visible=True, type="log")
 
-    if info.annotation:
+    for a in info.annotations:
         figure.add_annotation(
-            text=info.annotation,
-            align="left",
-            showarrow=False,
-            xref="paper",
-            yref="paper",
-            x=1.02,
-            y=0.01,
-            xanchor="left",
-            yanchor="bottom",
+            text=a["text"],
+            x=math.log10(a["x"]),
+            y=math.log10(a["y"]),
+            showarrow=True,
+            arrowhead=2,
+            arrowwidth=1.2,
+            ax=-20,
+            ay=-50,
         )
 
-    figure.update_layout(title=None, xaxis_title="\u03C4", yaxis_title="Deviation", showlegend=True)
+    figure.update_layout(title=None, xaxis_title="\u03C4", yaxis_title="Deviation")
     file = tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX)
     figure.write_html(file.name, auto_open=True)
 
@@ -70,7 +70,7 @@ def parse_data(text):
     except ValueError:
         error("Malformed input:\n{0}".format(text))
 
-    if isinstance(data, str):
+    if isinstance(data, list):
         return data
 
     if not isinstance(data, tuple):
@@ -85,7 +85,7 @@ def parse_data(text):
 
 def read_file(file_name):
     res = []
-    annotation = None
+    annotations = None
 
     with open(file_name, encoding="utf-8") as file:
         for line in file:
@@ -95,10 +95,10 @@ def read_file(file_name):
 
             data = parse_data(line)
 
-            if isinstance(data, str):
-                if annotation is not None:
+            if isinstance(data, list):
+                if annotations is not None:
                     error("Too many annotations")
-                annotation = data
+                annotations = data
                 continue
 
             if len(data) != 2:
@@ -109,7 +109,7 @@ def read_file(file_name):
     if not res:
         error("No data")
 
-    return Info(annotation, res)
+    return Info(annotations, res)
 
 
 def use_dialog(args):
