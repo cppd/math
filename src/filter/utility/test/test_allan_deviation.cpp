@@ -51,14 +51,17 @@ void save_to_file(
         const T bi = bias_instability.bias_instability * 3600;
         const T arw = angle_random_walk.angle_random_walk * 60;
 
+        const AllanDeviation<T>& ad_bi = deviations[bias_instability.index];
+        const AllanDeviation<T>& ad_arw = deviations[angle_random_walk.index];
+
         file << "[";
         file << "{'text':'<b>Bias Instability</b><br>" << bi << DEGREE << "/h'";
-        file << ", 'x':" << deviations[bias_instability.index].tau;
-        file << ", 'y':" << deviations[bias_instability.index].deviation;
+        file << ", 'x':" << ad_bi.tau;
+        file << ", 'y':" << ad_bi.deviation;
         file << "},";
         file << "{'text':'<b>Angle Random Walk</b><br>" << arw << DEGREE << "/" << SQUARE_ROOT << "h'";
-        file << ", 'x':" << deviations[angle_random_walk.index].tau;
-        file << ", 'y':" << deviations[angle_random_walk.index].deviation;
+        file << ", 'x':" << ad_arw.tau;
+        file << ", 'y':" << ad_arw.deviation;
         file << "}";
         file << "]\n";
 
