@@ -46,7 +46,8 @@ void save_to_file(
         const BiasInstability<T>& bias_instability,
         const AngleRandomWalk<T>& angle_random_walk)
 {
-        std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
+        constexpr int TEXT_PRECISION = 3;
+        constexpr int DATA_PRECISION = Limits<T>::max_digits10();
 
         const T bi = bias_instability.bias_instability * 3600;
         const T arw = angle_random_walk.angle_random_walk * 60;
@@ -54,20 +55,28 @@ void save_to_file(
         const AllanDeviation<T>& ad_bi = deviations[bias_instability.index];
         const AllanDeviation<T>& ad_arw = deviations[angle_random_walk.index];
 
+        std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
+
         file << "[";
+
+        file << std::setprecision(TEXT_PRECISION);
         file << "{'text':'<b>Bias Instability</b><br>" << bi << DEGREE << "/h'";
+        file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << ad_bi.tau;
         file << ", 'y':" << ad_bi.deviation;
         file << "},";
+
+        file << std::setprecision(TEXT_PRECISION);
         file << "{'text':'<b>Angle Random Walk</b><br>" << arw << DEGREE << "/" << SQUARE_ROOT << "h'";
+        file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << ad_arw.tau;
         file << ", 'y':" << ad_arw.deviation;
-        file << "}";
+        file << "},";
+
         file << "]\n";
 
-        file << std::setprecision(Limits<T>::max_digits10());
+        file << std::setprecision(DATA_PRECISION);
         file << std::scientific;
-
         for (const AllanDeviation<T>& ad : deviations)
         {
                 file << "(" << ad.tau << ", " << ad.deviation << ")\n";
@@ -82,18 +91,21 @@ void test_impl()
         const T bias_interval = 500;
         const std::size_t output_count = 500;
 
-        PCG engine;
-        std::normal_distribution<T> nd;
-
-        std::vector<T> data(count);
-        T sum = 0;
-        for (std::size_t i = 0; i < count; ++i)
+        const std::vector<T> data = [&]
         {
-                const T bias = std::sin(i * (2 * PI<T> / (frequency * bias_interval)));
-                const T speed = bias + nd(engine);
-                sum += speed / frequency;
-                data[i] = sum;
-        }
+                PCG engine;
+                std::normal_distribution<T> nd;
+                std::vector<T> res(count);
+                T sum = 0;
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                        const T bias = std::sin(i * (2 * PI<T> / (frequency * bias_interval)));
+                        const T speed = bias + nd(engine);
+                        sum += speed / frequency;
+                        res[i] = sum;
+                }
+                return res;
+        }();
 
         const std::vector<AllanDeviation<T>> deviations = allan_deviation(data, frequency, output_count);
 
