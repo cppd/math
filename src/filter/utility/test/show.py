@@ -45,7 +45,7 @@ def show_data(info):
     figure.add_trace(go.Scatter(x=[p[0] for p in data], y=[p[1] for p in data], name="Allan Deviation", mode="lines"))
 
     figure.update_xaxes(showgrid=True, visible=True, type="log")
-    figure.update_yaxes(showgrid=True, visible=True, type="log")
+    figure.update_yaxes(showgrid=True, visible=True, type="log", scaleanchor="x", scaleratio=1)
 
     for a in info.annotations:
         figure.add_annotation(
@@ -57,6 +57,14 @@ def show_data(info):
             arrowwidth=1.2,
             ax=-20,
             ay=-50,
+        )
+        figure.add_trace(
+            go.Scatter(
+                x=[p[0] for p in data],
+                y=[a["y"] * math.pow(p[0] / a["x"], a["log_slope"]) for p in data],
+                mode="lines",
+                line={"width": 1, "dash": "dash"},
+            )
         )
 
     figure.update_layout(title=None, xaxis_title="\u03C4", yaxis_title="Deviation")

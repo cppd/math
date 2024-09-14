@@ -64,6 +64,7 @@ void save_to_file(
         file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << ad_bi.tau;
         file << ", 'y':" << ad_bi.deviation;
+        file << ", 'log_slope':" << T{0};
         file << "},";
 
         file << std::setprecision(TEXT_PRECISION);
@@ -71,6 +72,7 @@ void save_to_file(
         file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << ad_arw.tau;
         file << ", 'y':" << ad_arw.deviation;
+        file << ", 'log_slope':" << T{-0.5};
         file << "},";
 
         file << "]\n";
