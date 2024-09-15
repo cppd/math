@@ -39,7 +39,8 @@ template <typename T>
 struct BiasInstability final
 {
         T bias_instability;
-        std::size_t index;
+        T tau;
+        T deviation;
 };
 
 template <typename T>
@@ -49,7 +50,8 @@ template <typename T>
 struct AngleRandomWalk final
 {
         T angle_random_walk;
-        std::size_t index;
+        T tau;
+        T deviation;
 };
 
 template <typename T>

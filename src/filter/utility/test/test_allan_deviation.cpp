@@ -52,9 +52,6 @@ void save_to_file(
         const T bi = bias_instability.bias_instability * 3600;
         const T arw = angle_random_walk.angle_random_walk * 60;
 
-        const AllanDeviation<T>& ad_bi = deviations[bias_instability.index];
-        const AllanDeviation<T>& ad_arw = deviations[angle_random_walk.index];
-
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
 
         file << "[";
@@ -62,16 +59,16 @@ void save_to_file(
         file << std::setprecision(TEXT_PRECISION);
         file << "{'text':'<b>Bias Instability</b><br>" << bi << DEGREE << "/h'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << ad_bi.tau;
-        file << ", 'y':" << ad_bi.deviation;
+        file << ", 'x':" << bias_instability.tau;
+        file << ", 'y':" << bias_instability.deviation;
         file << ", 'log_slope':" << T{0};
         file << "},";
 
         file << std::setprecision(TEXT_PRECISION);
         file << "{'text':'<b>Angle Random Walk</b><br>" << arw << DEGREE << "/" << SQUARE_ROOT << "h'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << ad_arw.tau;
-        file << ", 'y':" << ad_arw.deviation;
+        file << ", 'x':" << angle_random_walk.tau;
+        file << ", 'y':" << angle_random_walk.deviation;
         file << ", 'log_slope':" << T{-0.5};
         file << "},";
 
