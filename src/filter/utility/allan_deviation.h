@@ -56,4 +56,15 @@ struct AngleRandomWalk final
 
 template <typename T>
 [[nodiscard]] AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
+
+template <typename T>
+struct RateRandomWalk final
+{
+        T rate_random_walk;
+        T tau;
+        T deviation;
+};
+
+template <typename T>
+[[nodiscard]] RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
 }

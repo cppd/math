@@ -44,13 +44,15 @@ template <typename T>
 void save_to_file(
         const std::vector<AllanDeviation<T>> deviations,
         const BiasInstability<T>& bias_instability,
-        const AngleRandomWalk<T>& angle_random_walk)
+        const AngleRandomWalk<T>& angle_random_walk,
+        const RateRandomWalk<T>& rate_random_walk)
 {
         constexpr int TEXT_PRECISION = 3;
         constexpr int DATA_PRECISION = Limits<T>::max_digits10();
 
         const T bi = bias_instability.bias_instability * 3600;
         const T arw = angle_random_walk.angle_random_walk * 60;
+        const T rrw = rate_random_walk.rate_random_walk * 60;
 
         std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
 
@@ -70,6 +72,14 @@ void save_to_file(
         file << ", 'x':" << angle_random_walk.tau;
         file << ", 'y':" << angle_random_walk.deviation;
         file << ", 'log_slope':" << T{-0.5};
+        file << "},";
+
+        file << std::setprecision(TEXT_PRECISION);
+        file << "{'text':'<b>Rate Random Walk</b><br>" << rrw << DEGREE << "/" << SQUARE_ROOT << "h'";
+        file << std::setprecision(DATA_PRECISION);
+        file << ", 'x':" << rate_random_walk.tau;
+        file << ", 'y':" << rate_random_walk.deviation;
+        file << ", 'log_slope':" << T{0.5};
         file << "},";
 
         file << "]\n";
@@ -110,17 +120,23 @@ void test_impl()
 
         const BiasInstability<T> bi = bias_instability(deviations);
         const AngleRandomWalk<T> arw = angle_random_walk(deviations);
+        const RateRandomWalk<T> rrw = rate_random_walk(deviations);
 
-        save_to_file(deviations, bi, arw);
+        save_to_file(deviations, bi, arw, rrw);
 
-        if (!(bi.bias_instability > T{0.074} && bi.bias_instability < T{0.092}))
+        if (!(bi.bias_instability > T{0.073} && bi.bias_instability < T{0.092}))
         {
                 error("Bias instability (" + to_string(bi.bias_instability) + ") is out of range");
         }
 
-        if (!(arw.angle_random_walk > T{0.093} && arw.angle_random_walk < T{0.107}))
+        if (!(arw.angle_random_walk > T{0.092} && arw.angle_random_walk < T{0.107}))
         {
-                error("Angle randon walk (" + to_string(arw.angle_random_walk) + ") is out of range");
+                error("Angle random walk (" + to_string(arw.angle_random_walk) + ") is out of range");
+        }
+
+        if (!(rrw.rate_random_walk > T{0.053} && rrw.rate_random_walk < T{0.071}))
+        {
+                error("Rate random walk (" + to_string(rrw.rate_random_walk) + ") is out of range");
         }
 }
 

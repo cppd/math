@@ -161,10 +161,42 @@ AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan
         error("Failed to determine angle random walk");
 }
 
+template <typename T>
+RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
+{
+        if (allan_deviation.empty())
+        {
+                error("Allan deviation is empty");
+        }
+
+        if (allan_deviation.front().tau >= 3)
+        {
+                error("Allan deviation first tau (" + to_string(allan_deviation.front().tau) + ") must be less than 3");
+        }
+
+        for (std::size_t i = 1; i < allan_deviation.size(); ++i)
+        {
+                const AllanDeviation<T>& p = allan_deviation[i - 1];
+                const AllanDeviation<T>& n = allan_deviation[i];
+
+                const T dx = n.tau / p.tau;
+                const T dy = n.deviation / p.deviation;
+                if (dy >= std::sqrt(dx))
+                {
+                        const T tau = 3;
+                        const T deviation = std::sqrt(tau / p.tau) * p.deviation;
+                        return {.rate_random_walk = p.deviation, .tau = tau, .deviation = deviation};
+                }
+        }
+
+        error("Failed to determine rate random walk");
+}
+
 #define TEMPLATE(T)                                                                                     \
         template std::vector<AllanDeviation<T>> allan_deviation(const std::vector<T>&, T, std::size_t); \
         template BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>&);            \
-        template AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>&);
+        template AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>&);           \
+        template RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>&);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }
