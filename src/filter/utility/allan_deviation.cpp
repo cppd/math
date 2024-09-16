@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 
 #include <cmath>
 #include <cstddef>
@@ -116,6 +117,7 @@ BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_
                       + " is too small for bias instability");
         }
 
+        // Line with a slope of 0 on a log-log plot
         const std::size_t end = allan_deviation.size() - 1;
         std::size_t i = 0;
         for (; i < end; ++i)
@@ -125,12 +127,9 @@ BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_
                         break;
                 }
         }
-
         ASSERT(i < allan_deviation.size());
 
-        const T bias_instability = allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>;
-
-        return {.bias_instability = bias_instability,
+        return {.bias_instability = allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>,
                 .tau = allan_deviation[i].tau,
                 .deviation = allan_deviation[i].deviation};
 }
@@ -148,17 +147,39 @@ AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan
                 error("Allan deviation first tau (" + to_string(allan_deviation.front().tau) + ") must be less than 1");
         }
 
+        // Line with a slope of -1/2 on a log-log plot
+        // dy = pow(dx, -0.5)
+        T min = Limits<T>::max();
+        std::size_t min_i = -1;
         for (std::size_t i = 1; i < allan_deviation.size(); ++i)
         {
-                if (allan_deviation[i].tau >= 1)
+                const AllanDeviation<T>& p = allan_deviation[i - 1];
+                const AllanDeviation<T>& n = allan_deviation[i];
+
+                if (n.deviation >= p.deviation)
                 {
-                        return {.angle_random_walk = allan_deviation[i].deviation,
-                                .tau = allan_deviation[i].tau,
-                                .deviation = allan_deviation[i].deviation};
+                        break;
+                }
+
+                const T dx = n.tau / p.tau;
+                const T dy = n.deviation / p.deviation;
+                const T diff = std::abs(dy - 1 / std::sqrt(dx));
+                if (diff < min)
+                {
+                        min = diff;
+                        min_i = i;
                 }
         }
+        if (!(min_i < allan_deviation.size()))
+        {
+                error("Failed to determine angle random walk");
+        }
 
-        error("Failed to determine angle random walk");
+        ASSERT(min_i > 0);
+        const AllanDeviation<T>& p = allan_deviation[min_i - 1];
+        const T tau = 1;
+        const T deviation = p.deviation / std::sqrt(tau / p.tau);
+        return {.angle_random_walk = deviation, .tau = tau, .deviation = deviation};
 }
 
 template <typename T>
@@ -174,6 +195,8 @@ RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_d
                 error("Allan deviation first tau (" + to_string(allan_deviation.front().tau) + ") must be less than 3");
         }
 
+        // Line with a slope of 1/2 on a log-log plot
+        // dy = pow(dx, 0.5)
         for (std::size_t i = 1; i < allan_deviation.size(); ++i)
         {
                 const AllanDeviation<T>& p = allan_deviation[i - 1];
@@ -185,7 +208,7 @@ RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_d
                 {
                         const T tau = 3;
                         const T deviation = std::sqrt(tau / p.tau) * p.deviation;
-                        return {.rate_random_walk = p.deviation, .tau = tau, .deviation = deviation};
+                        return {.rate_random_walk = deviation, .tau = tau, .deviation = deviation};
                 }
         }
 

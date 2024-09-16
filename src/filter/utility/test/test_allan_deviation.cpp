@@ -129,12 +129,12 @@ void test_impl()
                 error("Bias instability (" + to_string(bi.bias_instability) + ") is out of range");
         }
 
-        if (!(arw.angle_random_walk > T{0.092} && arw.angle_random_walk < T{0.107}))
+        if (!(arw.angle_random_walk > T{0.092} && arw.angle_random_walk < T{0.12}))
         {
                 error("Angle random walk (" + to_string(arw.angle_random_walk) + ") is out of range");
         }
 
-        if (!(rrw.rate_random_walk > T{0.053} && rrw.rate_random_walk < T{0.071}))
+        if (!(rrw.rate_random_walk > T{0.034} && rrw.rate_random_walk < T{0.041}))
         {
                 error("Rate random walk (" + to_string(rrw.rate_random_walk) + ") is out of range");
         }
