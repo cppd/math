@@ -49,7 +49,7 @@ def show_data(info):
 
     for a in info.annotations:
         figure.add_annotation(
-            text=a["text"],
+            text=a["annotation"],
             x=math.log10(a["x"]),
             y=math.log10(a["y"]),
             showarrow=True,
@@ -62,8 +62,17 @@ def show_data(info):
             go.Scatter(
                 x=[p[0] for p in data],
                 y=[a["y"] * math.pow(p[0] / a["x"], a["log_slope"]) for p in data],
+                name=a["name"],
                 mode="lines",
                 line={"width": 1, "dash": "dash"},
+            )
+        )
+        figure.add_trace(
+            go.Scatter(
+                x=[a["x"]],
+                y=[a["y"]],
+                mode="markers",
+                showlegend=False,
             )
         )
 

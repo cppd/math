@@ -58,24 +58,30 @@ void save_to_file(
 
         file << "[";
 
+        file << "{";
+        file << "'name':'Bias Instability'";
         file << std::setprecision(TEXT_PRECISION);
-        file << "{'text':'<b>Bias Instability</b><br>" << bi << DEGREE << "/h'";
+        file << ", 'annotation':'<b>Bias Instability</b><br>" << bi << DEGREE << "/h'";
         file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << bias_instability.tau;
         file << ", 'y':" << bias_instability.deviation;
         file << ", 'log_slope':" << T{0};
         file << "},";
 
+        file << "{";
+        file << "'name':'Angle Random Walk'";
         file << std::setprecision(TEXT_PRECISION);
-        file << "{'text':'<b>Angle Random Walk</b><br>" << arw << DEGREE << "/" << SQUARE_ROOT << "h'";
+        file << ", 'annotation':'<b>Angle Random Walk</b><br>" << arw << DEGREE << "/" << SQUARE_ROOT << "h'";
         file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << angle_random_walk.tau;
         file << ", 'y':" << angle_random_walk.deviation;
         file << ", 'log_slope':" << T{-0.5};
         file << "},";
 
+        file << "{";
+        file << "'name':'Rate Random Walk'";
         file << std::setprecision(TEXT_PRECISION);
-        file << "{'text':'<b>Rate Random Walk</b><br>" << rrw << DEGREE << "/" << SQUARE_ROOT << "h'";
+        file << ", 'annotation':'<b>Rate Random Walk</b><br>" << rrw << DEGREE << "/" << SQUARE_ROOT << "h'";
         file << std::setprecision(DATA_PRECISION);
         file << ", 'x':" << rate_random_walk.tau;
         file << ", 'y':" << rate_random_walk.deviation;
