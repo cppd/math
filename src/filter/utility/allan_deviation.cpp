@@ -131,7 +131,8 @@ BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_
 
         return {.bias_instability = allan_deviation[i].deviation / BIAS_INSTABILITY_SCALING<T>,
                 .tau = allan_deviation[i].tau,
-                .deviation = allan_deviation[i].deviation};
+                .deviation = allan_deviation[i].deviation,
+                .log_slope = 0};
 }
 
 template <typename T>
@@ -179,7 +180,7 @@ AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan
         const AllanDeviation<T>& p = allan_deviation[min_i - 1];
         const T tau = 1;
         const T deviation = p.deviation / std::sqrt(tau / p.tau);
-        return {.angle_random_walk = deviation, .tau = tau, .deviation = deviation};
+        return {.angle_random_walk = deviation, .tau = tau, .deviation = deviation, .log_slope = -0.5};
 }
 
 template <typename T>
@@ -208,7 +209,7 @@ RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_d
                 {
                         const T tau = 3;
                         const T deviation = std::sqrt(tau / p.tau) * p.deviation;
-                        return {.rate_random_walk = deviation, .tau = tau, .deviation = deviation};
+                        return {.rate_random_walk = deviation, .tau = tau, .deviation = deviation, .log_slope = 0.5};
                 }
         }
 

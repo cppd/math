@@ -41,6 +41,7 @@ struct BiasInstability final
         T bias_instability;
         T tau;
         T deviation;
+        T log_slope;
 };
 
 template <typename T>
@@ -52,6 +53,7 @@ struct AngleRandomWalk final
         T angle_random_walk;
         T tau;
         T deviation;
+        T log_slope;
 };
 
 template <typename T>
@@ -63,6 +65,7 @@ struct RateRandomWalk final
         T rate_random_walk;
         T tau;
         T deviation;
+        T log_slope;
 };
 
 template <typename T>
