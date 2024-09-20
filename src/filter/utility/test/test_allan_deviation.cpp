@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <src/com/constant.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -99,17 +98,17 @@ void save_to_file(
 template <typename T>
 void check(const BiasInstability<T>& bi, const AngleRandomWalk<T>& arw, const RateRandomWalk<T>& rrw)
 {
-        if (!(bi.bias_instability > T{0.073} && bi.bias_instability < T{0.092}))
+        if (!(bi.bias_instability > T{0.032} && bi.bias_instability < T{0.051}))
         {
                 error("Bias instability (" + to_string(bi.bias_instability) + ") is out of range");
         }
 
-        if (!(arw.angle_random_walk > T{0.092} && arw.angle_random_walk < T{0.12}))
+        if (!(arw.angle_random_walk > T{0.084} && arw.angle_random_walk < T{0.13}))
         {
                 error("Angle random walk (" + to_string(arw.angle_random_walk) + ") is out of range");
         }
 
-        if (!(rrw.rate_random_walk > T{0.034} && rrw.rate_random_walk < T{0.041}))
+        if (!(rrw.rate_random_walk > T{0.0075} && rrw.rate_random_walk < T{0.011}))
         {
                 error("Rate random walk (" + to_string(rrw.rate_random_walk) + ") is out of range");
         }
@@ -120,7 +119,6 @@ void test_impl()
 {
         const std::size_t count = 100'000;
         const T frequency = 100;
-        const T bias_interval = 500;
         const std::size_t output_count = 500;
 
         const std::vector<T> data = [&]
@@ -131,7 +129,8 @@ void test_impl()
                 T sum = 0;
                 for (std::size_t i = 0; i < count; ++i)
                 {
-                        const T bias = std::sin(i * (2 * PI<T> / (frequency * bias_interval)));
+                        const T time = i / frequency;
+                        const T bias = T{1} / 100 + time / 1000;
                         const T speed = bias + nd(engine);
                         sum += speed / frequency;
                         res[i] = sum;
