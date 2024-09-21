@@ -25,10 +25,8 @@ namespace ns
 namespace sequence_implementation
 {
 template <
-        template <typename...>
-        typename Type,
-        template <std::size_t, typename...>
-        typename SequenceType,
+        template <typename...> typename Type,
+        template <std::size_t, typename...> typename SequenceType,
         typename... SequenceTypeParameters>
 struct Sequence final
 {
@@ -48,13 +46,10 @@ struct Sequence final
 };
 
 template <
-        template <typename...>
-        typename Type,
-        template <std::size_t, typename...>
-        typename SequenceType,
+        template <typename...> typename Type,
+        template <std::size_t, typename...> typename SequenceType,
         typename... SequenceTypeParameters,
-        template <typename, std::size_t...>
-        typename IntegerSequence,
+        template <typename, std::size_t...> typename IntegerSequence,
         typename IntegerType,
         std::size_t... I>
 auto sequence(IntegerSequence<IntegerType, I...>&&)
@@ -65,12 +60,10 @@ auto sequence(IntegerSequence<IntegerType, I...>&&)
 
 // Type<SequenceType<From, ...>, SequenceType<From + 1, ...>, SequenceType<From + 2, ...>, ...>
 template <
-        template <typename...>
-        typename Type,
+        template <typename...> typename Type,
         int FROM,
         int TO,
-        template <std::size_t, typename...>
-        typename SequenceType,
+        template <std::size_t, typename...> typename SequenceType,
         typename... SequenceTypeParameters>
 using SequenceRange = sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
         template S<FROM, TO - FROM + 1>::T;
@@ -78,10 +71,8 @@ using SequenceRange = sequence_implementation::Sequence<Type, SequenceType, Sequ
 // Type<SequenceType<Index[0], ...>, SequenceType<index[1], ...>, SequenceType<index[2], ...>, ...>
 template <
         typename IntegerSequence,
-        template <typename...>
-        typename Type,
-        template <std::size_t, typename...>
-        typename SequenceType,
+        template <typename...> typename Type,
+        template <std::size_t, typename...> typename SequenceType,
         typename... SequenceTypeParameters>
 using Sequence = std::remove_pointer_t<
         decltype(sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(IntegerSequence()))>;
