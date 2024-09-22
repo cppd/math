@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.30)
 
 ##################################################
 
@@ -35,39 +35,40 @@ set(qt6_disable_deprecated_before 0x060600)
 
 ##################################################
 
-enable_language(C CXX)
+macro(set_compiler)
+        check_compiler_versions(
+                GCC_MINIMAL_VERSION 14
+                CLANG_MINIMAL_VERSION 19)
 
-check_compiler_versions(
-        GCC_MINIMAL_VERSION 14
-        CLANG_MINIMAL_VERSION 19)
+        set(CMAKE_C_STANDARD 23)
+        set(CMAKE_C_STANDARD_REQUIRED ON)
+        set(CMAKE_C_EXTENSIONS OFF)
+        set(CMAKE_CXX_STANDARD 23)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+        set(CMAKE_CXX_EXTENSIONS OFF)
 
-# after enable_language
-set(CMAKE_C_STANDARD 23)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+        # "make VERBOSE=1"
+        set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
-# "make VERBOSE=1"
-# after project or enable_language
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
+        set(CMAKE_C_FLAGS)
+        set(CMAKE_CXX_FLAGS)
 
-set(CMAKE_C_FLAGS)
-set(CMAKE_CXX_FLAGS)
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        if(BUILD_LIB_CPP)
-                set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+        if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+                if(BUILD_LIB_CPP)
+                        set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+                endif()
+        elseif(BUILD_LIB_CPP)
+                message(FATAL_ERROR "BUILD_LIB_CPP and not Clang")
         endif()
-elseif(BUILD_LIB_CPP)
-        message(FATAL_ERROR "BUILD_LIB_CPP and not Clang")
-endif()
 
-check_compiler_int128()
+        check_compiler_int128()
+endmacro()
 
 ##################################################
 
 project(create_str C CXX)
+
+set_compiler()
 
 add_source_files(
         EXECUTABLE
@@ -77,6 +78,8 @@ add_source_files(
 ##################################################
 
 project(math C CXX)
+
+set_compiler()
 
 set(output_headers_directory "${PROJECT_BINARY_DIR}/output_headers")
 file(REMOVE_RECURSE "${output_headers_directory}")
