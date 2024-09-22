@@ -148,7 +148,7 @@ constexpr std::array Z_64 = std::to_array<double>
 });
 // clang-format on
 
-static_assert(std::is_sorted(std::cbegin(WAVES), std::cend(WAVES)));
+static_assert(std::ranges::is_sorted(WAVES));
 static_assert(X_31.size() == WAVES.size());
 static_assert(Y_31.size() == WAVES.size());
 static_assert(Z_31.size() == WAVES.size());

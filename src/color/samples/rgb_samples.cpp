@@ -331,7 +331,7 @@ constexpr std::array ILLUMINATION_D65_BLUE =
 };
 // clang-format on
 
-static_assert(std::is_sorted(std::cbegin(WAVES), std::cend(WAVES)));
+static_assert(std::ranges::is_sorted(WAVES));
 static_assert(WAVES.front() == RGB_SAMPLES_MIN_WAVELENGTH);
 static_assert(WAVES.back() == RGB_SAMPLES_MAX_WAVELENGTH);
 

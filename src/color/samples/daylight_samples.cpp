@@ -198,7 +198,7 @@ constexpr std::array D65 = std::to_array<double>
 });
 // clang-format on
 
-static_assert(std::is_sorted(std::cbegin(WAVES), std::cend(WAVES)));
+static_assert(std::ranges::is_sorted(WAVES));
 static_assert(WAVES.front() == DAYLIGHT_SAMPLES_MIN_WAVELENGTH);
 static_assert(WAVES.back() == DAYLIGHT_SAMPLES_MAX_WAVELENGTH);
 static_assert(WAVES.size() == COMPONENTS.size());
