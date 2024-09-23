@@ -44,8 +44,8 @@ std::string to_string(const std::unordered_map<int, int>& map)
                 data.push_back({key, value});
         }
 
-        std::sort(
-                data.begin(), data.end(),
+        std::ranges::sort(
+                data,
                 [](const auto& v1, const auto& v2)
                 {
                         return v1[0] < v2[0];

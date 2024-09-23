@@ -114,7 +114,7 @@ template <unsigned DIGIT_GROUP_SIZE, typename T>
                 res += '-';
         }
 
-        std::reverse(res.begin(), res.end());
+        std::ranges::reverse(res);
 
         return res;
 }

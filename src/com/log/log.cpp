@@ -168,7 +168,7 @@ void LogEvents::log_event(const std::string_view text, const MessageType type) n
 void LogEvents::insert(const std::function<void(const LogEvent&)>* const observer)
 {
         const std::lock_guard lg(lock_);
-        if (std::find(log_observers_.cbegin(), log_observers_.cend(), observer) == log_observers_.cend())
+        if (std::ranges::find(log_observers_, observer) == log_observers_.cend())
         {
                 log_observers_.push_back(observer);
         }
@@ -177,14 +177,14 @@ void LogEvents::insert(const std::function<void(const LogEvent&)>* const observe
 void LogEvents::erase(const std::function<void(const LogEvent&)>* const observer)
 {
         const std::lock_guard lg(lock_);
-        const auto iter = std::remove(log_observers_.begin(), log_observers_.end(), observer);
-        log_observers_.erase(iter, log_observers_.cend());
+        const auto range = std::ranges::remove(log_observers_, observer);
+        log_observers_.erase(range.begin(), range.end());
 }
 
 void LogEvents::insert(const std::function<void(const MessageEvent&)>* const observer)
 {
         const std::lock_guard lg(lock_);
-        if (std::find(msg_observers_.cbegin(), msg_observers_.cend(), observer) == msg_observers_.cend())
+        if (std::ranges::find(msg_observers_, observer) == msg_observers_.cend())
         {
                 msg_observers_.push_back(observer);
         }
@@ -193,8 +193,8 @@ void LogEvents::insert(const std::function<void(const MessageEvent&)>* const obs
 void LogEvents::erase(const std::function<void(const MessageEvent&)>* const observer)
 {
         const std::lock_guard lg(lock_);
-        const auto iter = std::remove(msg_observers_.begin(), msg_observers_.end(), observer);
-        msg_observers_.erase(iter, msg_observers_.cend());
+        const auto range = std::ranges::remove(msg_observers_, observer);
+        msg_observers_.erase(range.begin(), range.end());
 }
 
 LogEvents& log_events()
