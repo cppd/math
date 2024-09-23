@@ -134,14 +134,14 @@ class Impl final : public DFT
 
                 const Clock::time_point start_time = Clock::now();
 
-                std::copy(data->cbegin(), data->cend(), in_.begin());
+                std::ranges::copy(*data, in_.begin());
 
                 if (inverse)
                 {
                         backward_.execute();
 
-                        std::transform(
-                                out_.cbegin(), out_.cend(), data->begin(),
+                        std::ranges::transform(
+                                out_, data->begin(),
                                 [k = inv_k_](const std::complex<float>& v)
                                 {
                                         return v * k;
@@ -151,7 +151,7 @@ class Impl final : public DFT
                 {
                         forward_.execute();
 
-                        std::copy(out_.cbegin(), out_.cend(), data->begin());
+                        std::ranges::copy(out_, data->begin());
                 }
 
                 LOG("calc FFTW: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
