@@ -53,8 +53,8 @@ void check_min_max(
         ASSERT(!distribution.empty());
         ASSERT(!expected_distribution.empty());
 
-        const auto [min, max] = std::minmax_element(
-                distribution.cbegin(), distribution.cend(),
+        const auto [min, max] = std::ranges::minmax_element(
+                distribution,
                 [](const auto& a, const auto& b)
                 {
                         return a.first < b.first;

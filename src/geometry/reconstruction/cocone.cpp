@@ -60,7 +60,7 @@ constexpr double ALPHA_MAX = 1;
 
 bool all_false(const std::vector<bool>& data)
 {
-        return std::find(data.cbegin(), data.cend(), true) == data.cend();
+        return std::ranges::find(data, true) == data.cend();
 }
 
 template <std::size_t N>
