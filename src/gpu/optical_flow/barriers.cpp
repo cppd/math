@@ -37,8 +37,8 @@ void image_barrier(
 {
         ASSERT(!images.empty());
         ASSERT(command_buffer != VK_NULL_HANDLE);
-        ASSERT(std::all_of(
-                images.cbegin(), images.cend(),
+        ASSERT(std::ranges::all_of(
+                images,
                 [](const VkImage image)
                 {
                         return image != VK_NULL_HANDLE;

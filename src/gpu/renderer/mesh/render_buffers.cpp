@@ -51,8 +51,8 @@ void check_opacity_images([[maybe_unused]] const RenderBuffers3D& render_buffers
                 ASSERT(images[3].image_view().format() == VK_FORMAT_R32G32_SFLOAT);
         }
 
-        ASSERT(std::all_of(
-                images.cbegin(), images.cend(),
+        ASSERT(std::ranges::all_of(
+                images,
                 [&](const vulkan::ImageWithMemory& image)
                 {
                         return render_buffers.sample_count() == image.image_view().sample_count();

@@ -204,8 +204,8 @@ void VolumeSharedMemory::set_opacity(const std::vector<const vulkan::ImageView*>
         static constexpr unsigned DESCRIPTOR_INDEX = 0;
 
         ASSERT(images.size() == 2 || images.size() == 4);
-        ASSERT(std::all_of(
-                images.cbegin(), images.cend(),
+        ASSERT(std::ranges::all_of(
+                images,
                 [](const vulkan::ImageView* const image)
                 {
                         return image->has_usage(VK_IMAGE_USAGE_STORAGE_BIT);

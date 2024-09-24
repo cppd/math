@@ -130,14 +130,14 @@ vulkan::RenderPass create_render_pass_depth(const VkDevice device, const VkForma
 
 void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
-        ASSERT(std::all_of(
-                depth.cbegin(), depth.cend(),
+        ASSERT(std::ranges::all_of(
+                depth,
                 [](const vulkan::DepthImageWithMemory& d)
                 {
                         return d.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT);
                 }));
-        ASSERT(std::all_of(
-                depth.cbegin(), depth.cend(),
+        ASSERT(std::ranges::all_of(
+                depth,
                 [](const vulkan::DepthImageWithMemory& d)
                 {
                         return d.image().sample_count() == SAMPLE_COUNT;
@@ -148,8 +148,8 @@ void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
                 error("No depth attachment");
         }
 
-        if (!std::all_of(
-                    depth.cbegin(), depth.cend(),
+        if (!std::ranges::all_of(
+                    depth,
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
                             return d.image().format() == depth[0].image().format();
@@ -158,8 +158,8 @@ void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::all_of(
-                    depth.cbegin(), depth.cend(),
+        if (!std::ranges::all_of(
+                    depth,
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
                             return d.image().extent().width == depth[0].image().extent().width

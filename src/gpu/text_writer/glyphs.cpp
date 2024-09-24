@@ -89,8 +89,7 @@ Glyphs::Glyphs(
                  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
           size_(size)
 {
-        ASSERT(std::find(family_indices.cbegin(), family_indices.cend(), graphics_queue.family_index())
-               != family_indices.cend());
+        ASSERT(std::ranges::find(family_indices, graphics_queue.family_index()) != family_indices.cend());
 
         image_.write(
                 graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,

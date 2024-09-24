@@ -379,8 +379,8 @@ MaterialMemory::MaterialMemory(
         : descriptors_(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings)
 {
         ASSERT(!materials.empty());
-        ASSERT(std::all_of(
-                materials.cbegin(), materials.cend(),
+        ASSERT(std::ranges::all_of(
+                materials,
                 [](const MaterialInfo& m)
                 {
                         return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture != VK_NULL_HANDLE;

@@ -189,8 +189,8 @@ class Impl final : public MeshObject
                 const model::mesh::SortedFacets facets = model::mesh::sort_facets_by_material(mesh);
 
                 ASSERT(facets.offset.size() == facets.count.size());
-                ASSERT(std::all_of(
-                        material_memory_.cbegin(), material_memory_.cend(),
+                ASSERT(std::ranges::all_of(
+                        material_memory_,
                         [&](const auto& v)
                         {
                                 return facets.offset.size() == v.second.descriptor_set_count();
