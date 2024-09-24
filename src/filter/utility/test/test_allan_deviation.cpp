@@ -40,7 +40,7 @@ constexpr std::string_view DEGREE = "&#x00b0;";
 
 template <typename T>
 void save_to_file(
-        const std::vector<AllanDeviation<T>> deviations,
+        const std::vector<AllanDeviation<T>>& deviations,
         const BiasInstability<T>& bi,
         const AngleRandomWalk<T>& arw,
         const RateRandomWalk<T>& rrw)

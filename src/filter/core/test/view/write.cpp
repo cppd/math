@@ -243,7 +243,7 @@ void write_filter_position(std::ofstream& file, const Filter<T>& filter, const T
 template <typename T>
 void write_filter_position_sigma(
         std::ofstream& file,
-        const std::unordered_map<T, Measurements<T>> time_map,
+        const std::unordered_map<T, Measurements<T>>& time_map,
         const Filter<T>& filter,
         const T interval)
 {
