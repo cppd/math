@@ -142,7 +142,8 @@ ImageSliceDialog::ImageSliceDialog(
         ui_.setupUi(this);
         setWindowTitle("Image Slice");
 
-        const int max_size = *std::max_element(size.cbegin(), size.cend());
+        ASSERT(!size.empty());
+        const int max_size = *std::ranges::max_element(size);
 
         auto* const widget = new QWidget(this);
         auto* const layout = new QGridLayout(widget);

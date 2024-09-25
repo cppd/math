@@ -408,8 +408,8 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                if (std::any_of(
-                            threads_.cbegin(), threads_.cend(),
+                if (std::ranges::any_of(
+                            threads_,
                             [](const auto& t)
                             {
                                     return t.working() || t.joinable();

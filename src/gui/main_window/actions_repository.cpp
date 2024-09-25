@@ -48,12 +48,6 @@ std::string action_name(const QAction& action)
         return s;
 }
 
-std::vector<std::string>& sorted(std::vector<std::string>& v)
-{
-        std::sort(v.begin(), v.end());
-        return v;
-}
-
 void load_point_mesh(
         const unsigned thread_id,
         com::WorkerThreads* const threads,
@@ -129,7 +123,8 @@ void create_point_mesh_menu(
                 menu->addSeparator();
         }
 
-        for (const std::string& object_name : sorted(object_names))
+        std::ranges::sort(object_names);
+        for (const std::string& object_name : object_names)
         {
                 ASSERT(!object_name.empty());
 
@@ -163,7 +158,8 @@ void create_facet_mesh_menu(
                 menu->addSeparator();
         }
 
-        for (const std::string& object_name : sorted(object_names))
+        std::ranges::sort(object_names);
+        for (const std::string& object_name : object_names)
         {
                 ASSERT(!object_name.empty());
 
@@ -197,7 +193,8 @@ void create_volume_menu(
                 menu->addSeparator();
         }
 
-        for (const std::string& object_name : sorted(object_names))
+        std::ranges::sort(object_names);
+        for (const std::string& object_name : object_names)
         {
                 ASSERT(!object_name.empty());
 
@@ -222,8 +219,8 @@ void create_repository_menu(
 {
         std::vector<storage::Repository::ObjectNames> repository_objects = repository->object_names();
 
-        std::sort(
-                repository_objects.begin(), repository_objects.end(),
+        std::ranges::sort(
+                repository_objects,
                 [](const auto& a, const auto& b)
                 {
                         return a.dimension < b.dimension;

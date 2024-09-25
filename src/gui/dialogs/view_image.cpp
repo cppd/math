@@ -108,9 +108,9 @@ bool has_directory_and_filename(const std::string& file_name)
 
 void check_print_characters(const std::string& s)
 {
-        if (!std::all_of(
-                    s.begin(), s.end(),
-                    [](char c)
+        if (!std::ranges::all_of(
+                    s,
+                    [](const char c)
                     {
                             return ascii::is_print(c) || !ascii::is_not_new_line(c);
                     }))

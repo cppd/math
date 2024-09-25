@@ -111,8 +111,8 @@ std::vector<std::string> make_substr(const QString& text)
 
 bool contains(const Item& item, const std::vector<std::regex>& regex)
 {
-        return std::all_of(
-                regex.cbegin(), regex.cend(),
+        return std::ranges::all_of(
+                regex,
                 [&](const std::regex& r)
                 {
                         return std::regex_search(item.lower_text, r);
@@ -121,8 +121,8 @@ bool contains(const Item& item, const std::vector<std::regex>& regex)
 
 bool contains(const Item& item, const std::vector<std::string>& substr)
 {
-        return std::all_of(
-                substr.cbegin(), substr.cend(),
+        return std::ranges::all_of(
+                substr,
                 [&](const std::string& s)
                 {
                         return item.lower_text.find(s) != std::string::npos;
@@ -204,7 +204,7 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         ui_.setupUi(this);
         setWindowTitle(QString::fromUtf8(title.data(), title.size()));
 
-        std::sort(test_names.begin(), test_names.end());
+        std::ranges::sort(test_names);
         items_ = std::make_unique<Items>(test_names.size());
         for (std::string& name : test_names)
         {

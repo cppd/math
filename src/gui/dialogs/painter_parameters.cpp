@@ -37,8 +37,8 @@ namespace
 {
 void check_texts(const char* const name, const std::array<const char*, 2>& texts, const int index)
 {
-        if (std::any_of(
-                    texts.cbegin(), texts.cend(),
+        if (std::ranges::any_of(
+                    texts,
                     [](const char* const s)
                     {
                             return s == nullptr || std::string_view(s).empty();
