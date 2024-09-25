@@ -129,7 +129,7 @@ std::vector<std::string> read_sorted_names(const std::filesystem::path& director
                       + " in " + generic_utf8_filename(directory));
         }
 
-        std::sort(names.begin(), names.end());
+        std::ranges::sort(names);
 
         return names;
 }
@@ -223,7 +223,7 @@ VolumeInfo volume_info(const Path& path)
         {
                 error("Image dimension " + to_string(info.size.size()) + " is less than 3");
         }
-        std::reverse(info.size.begin(), info.size.end());
+        std::ranges::reverse(info.size);
         if (!all_positive(info.size))
         {
                 error("Image dimensions " + to_string(info.size) + " are not positive");

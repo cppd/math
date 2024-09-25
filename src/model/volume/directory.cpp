@@ -119,7 +119,7 @@ std::optional<DirectoryInfo> read_directory_info(const Path& directory)
         return {
                 {.type = content.type,
                  .count = content.entries.size(),
-                 .first = std::move(*std::min_element(content.entries.begin(), content.entries.end()))}
+                 .first = std::move(*std::ranges::min_element(content.entries))}
         };
 }
 
