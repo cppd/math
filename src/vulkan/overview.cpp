@@ -50,7 +50,7 @@ template <typename T>
 std::vector<std::string> sorted(const T& s)
 {
         std::vector<std::string> res(s.cbegin(), s.cend());
-        std::sort(res.begin(), res.end());
+        std::ranges::sort(res);
         return res;
 }
 

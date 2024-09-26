@@ -48,8 +48,8 @@ void check_queue_families(
                 error("No queue families for device creation");
         }
 
-        if (!std::all_of(
-                    queue_families.cbegin(), queue_families.cend(),
+        if (!std::ranges::all_of(
+                    queue_families,
                     [&](const auto& v)
                     {
                             return v.first < physical_device.queue_families().size();
@@ -58,8 +58,8 @@ void check_queue_families(
                 error("Error queue families");
         }
 
-        if (!std::all_of(
-                    queue_families.cbegin(), queue_families.cend(),
+        if (!std::ranges::all_of(
+                    queue_families,
                     [](const auto& v)
                     {
                             return v.second > 0;
@@ -68,8 +68,8 @@ void check_queue_families(
                 error("Error queue families");
         }
 
-        if (!std::all_of(
-                    queue_families.cbegin(), queue_families.cend(),
+        if (!std::ranges::all_of(
+                    queue_families,
                     [&](const auto& v)
                     {
                             return v.second <= physical_device.queue_families()[v.first].queueCount;

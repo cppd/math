@@ -357,8 +357,8 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(c
                 ADD_VALUE_RAY_TRACING_PIPELINE(shaderGroupHandleSize);
         }
 
-        std::sort(
-                strings.begin(), strings.end(),
+        std::ranges::sort(
+                strings,
                 [](const auto& v1, const auto& v2)
                 {
                         return std::get<0>(v1) < std::get<0>(v2);

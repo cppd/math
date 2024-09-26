@@ -128,8 +128,8 @@ std::size_t find_physical_device(
 
 bool extensions_supported(const PhysicalDevice& physical_device, const std::unordered_set<std::string>& extensions)
 {
-        return std::all_of(
-                extensions.cbegin(), extensions.cend(),
+        return std::ranges::all_of(
+                extensions,
                 [&](const std::string& e)
                 {
                         return physical_device.extensions().contains(e);

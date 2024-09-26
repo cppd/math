@@ -64,8 +64,8 @@ handle::PipelineLayout create_pipeline_layout(
         ASSERT(set_numbers.size() == set_layouts.size());
         ASSERT(!set_numbers.empty());
         ASSERT(set_numbers.size() == std::unordered_set(set_numbers.begin(), set_numbers.end()).size());
-        ASSERT(0 == *std::min_element(set_numbers.begin(), set_numbers.end()));
-        ASSERT(set_numbers.size() == 1 + *std::max_element(set_numbers.begin(), set_numbers.end()));
+        ASSERT(0 == *std::ranges::min_element(set_numbers));
+        ASSERT(set_numbers.size() == 1 + *std::ranges::max_element(set_numbers));
 
         std::vector<VkDescriptorSetLayout> layouts(set_numbers.size());
         auto n = set_numbers.begin();

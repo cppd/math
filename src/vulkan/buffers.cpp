@@ -79,8 +79,8 @@ const std::unordered_set<VkFormat>& stencil_format_set()
 
 const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
 {
-        if (!std::all_of(
-                    formats.cbegin(), formats.cend(),
+        if (!std::ranges::all_of(
+                    formats,
                     [depth = &depth_format_set()](const VkFormat format)
                     {
                             return depth->contains(format);
@@ -94,8 +94,8 @@ const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
 
 const std::vector<VkFormat>& color_formats(const std::vector<VkFormat>& formats)
 {
-        if (std::any_of(
-                    formats.cbegin(), formats.cend(),
+        if (std::ranges::any_of(
+                    formats,
                     [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat format)
                     {
                             return depth->contains(format) || stencil->contains(format);
@@ -117,7 +117,7 @@ void check_family_index(
                 error("Command pool family index is not equal to queue family index");
         }
 
-        if (!std::binary_search(family_indices.cbegin(), family_indices.cend(), queue.family_index()))
+        if (!std::ranges::binary_search(family_indices, queue.family_index()))
         {
                 error("Queue family index is not found in the family indices");
         }

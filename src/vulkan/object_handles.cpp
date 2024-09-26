@@ -641,8 +641,8 @@ DescriptorSets::DescriptorSets(
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);
         ASSERT(!descriptor_set_layouts.empty());
-        ASSERT(std::all_of(
-                descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
+        ASSERT(std::ranges::all_of(
+                descriptor_set_layouts,
                 [](const VkDescriptorSetLayout descriptor_set_layout)
                 {
                         return descriptor_set_layout != VK_NULL_HANDLE;
