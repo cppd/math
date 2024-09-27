@@ -158,7 +158,7 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
 
 template <std::size_t N, typename T>
 void compare(
-        const std::vector<std::array<Vector<N, T>, N>> matrices,
+        const std::vector<std::array<Vector<N, T>, N>>& matrices,
         const std::vector<T>& cofactor_expansion,
         const std::vector<T>& row_reduction,
         const std::vector<T>& determinants,

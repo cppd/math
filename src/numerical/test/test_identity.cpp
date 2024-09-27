@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
+namespace
+{
 template <std::size_t N, typename T>
 constexpr bool test()
 {
@@ -56,4 +58,5 @@ static_assert(test<2>());
 static_assert(test<3>());
 static_assert(test<4>());
 static_assert(test<5>());
+}
 }
