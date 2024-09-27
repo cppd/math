@@ -126,7 +126,7 @@ public:
 };
 
 template <typename T>
-void write(const T value)
+void write(const T& value)
 {
         const std::vector<T> data(N, value);
         const long long p = COUNT * (data.size() / computation(data));
