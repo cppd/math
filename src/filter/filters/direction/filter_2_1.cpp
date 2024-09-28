@@ -184,6 +184,7 @@ class Filter final : public Filter21<T>
                         model::speed_h<T>, model::speed_r(speed.variance), numerical::Vector<1, T>(speed.value),
                         model::add_x<T>, model::speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
+
         core::UpdateInfo<2, T> update_velocity(const Measurement<2, T>& velocity, std::optional<T> gate) override
         {
                 ASSERT(filter_);
