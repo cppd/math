@@ -26,9 +26,7 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: false
-AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: true
-AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: true
 BinPackParameters: false
 BitFieldColonSpacing: After
@@ -53,14 +51,17 @@ BraceWrapping:
 BracedInitializerIndentWidth: 8
 BreakAdjacentStringLiterals: true
 BreakAfterAttributes: Never
+BreakAfterReturnType: Automatic
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 BreakBeforeConceptDeclarations: Always
 BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
+BreakFunctionDefinitionParameters: false
 BreakInheritanceList: BeforeColon
 BreakStringLiterals: false
+BreakTemplateDeclarations: Yes
 ColumnLimit: 120
 CompactNamespaces: false
 ConstructorInitializerIndentWidth: 8
@@ -109,10 +110,13 @@ IntegerLiteralSeparator:
         DecimalMinDigits: 0
         Hex: 0
         HexMinDigits: 0
-KeepEmptyLinesAtEOF: false
-KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLines:
+        AtEndOfFile: false
+        AtStartOfBlock: false
+        AtStartOfFile: false
 LambdaBodyIndentation: Signature
 LineEnding: LF
+MainIncludeChar: Quote
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PPIndentWidth: -1
@@ -130,7 +134,7 @@ PenaltyIndentedWhitespace: 8
 PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
 QualifierAlignment: Custom
-QualifierOrder: ['inline', 'static', 'friend', 'constexpr', 'const', 'volatile', 'type', 'restrict']
+QualifierOrder: [inline, static, friend, constexpr, const, volatile, type, restrict]
 ReferenceAlignment: Left
 ReflowComments: true
 RemoveParentheses: Leave
@@ -174,6 +178,7 @@ SpacesInLineCommentPrefix:
         Maximum: 1
 SpacesInParens: Custom
 SpacesInParensOptions:
+        ExceptDoubleParentheses: false
         InConditionalStatements: false
         InCStyleCasts: false
         InEmptyParentheses: false
