@@ -77,7 +77,7 @@ const std::unordered_set<VkFormat>& stencil_format_set()
         return formats;
 }
 
-const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
+void check_depth_formats(const std::vector<VkFormat>& formats)
 {
         if (!std::ranges::all_of(
                     formats,
@@ -88,11 +88,9 @@ const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
         {
                 error("Not a depth format: " + strings::formats_to_sorted_string(formats, ", "));
         }
-
-        return formats;
 }
 
-const std::vector<VkFormat>& color_formats(const std::vector<VkFormat>& formats)
+void check_color_formats(const std::vector<VkFormat>& formats)
 {
         if (std::ranges::any_of(
                     formats,
@@ -103,8 +101,6 @@ const std::vector<VkFormat>& color_formats(const std::vector<VkFormat>& formats)
         {
                 error("Not a color format: " + strings::formats_to_sorted_string(formats, ", "));
         }
-
-        return formats;
 }
 
 void check_family_index(
@@ -254,7 +250,7 @@ ImageWithMemory::ImageWithMemory(
                   buffers::correct_image_extent(type, extent),
                   buffers::find_supported_image_format(
                           physical_device_,
-                          color_formats(formats),
+                          (check_color_formats(formats), formats),
                           type,
                           VK_IMAGE_TILING_OPTIMAL,
                           buffers::format_features_for_image_usage(usage),
@@ -408,7 +404,7 @@ DepthImageWithMemory::DepthImageWithMemory(
                   family_indices,
                   buffers::find_supported_image_format(
                           device.physical_device(),
-                          depth_formats(formats),
+                          (check_depth_formats(formats), formats),
                           VK_IMAGE_TYPE_2D,
                           VK_IMAGE_TILING_OPTIMAL,
                           buffers::format_features_for_image_usage(usage),
