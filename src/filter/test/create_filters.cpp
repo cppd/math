@@ -132,6 +132,8 @@ std::vector<TestFilterPosition<N, T>> create_positions(const PositionConfig<T>& 
 
         const auto thetas = sort(std::array(config.thetas));
 
+        res.reserve(thetas.size());
+
         for (std::size_t i = 0; i < thetas.size(); ++i)
         {
                 res.push_back(create_position<N, T, ORDER>(config, i, thetas[i]));
@@ -181,14 +183,16 @@ std::vector<TestFilter<2, T>> create_accelerations(const AccelerationConfig<T>& 
 {
         std::vector<TestFilter<2, T>> res;
 
+        const auto alphas = sort(std::array(config.ukf_alphas));
+
+        res.reserve(1 + 2 * alphas.size());
+
         res.emplace_back(
                 filters::acceleration::create_acceleration_ekf<T>(
                         config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance, config.gate,
                         config.init, config.position_noise_model, config.angle_noise_model_1,
                         config.angle_r_noise_model_1, config.fading_memory_alpha_1),
                 view::Filter<2, T>("Acceleration EKF", color::RGB8(0, 200, 0)));
-
-        const auto alphas = sort(std::array(config.ukf_alphas));
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
@@ -252,6 +256,8 @@ std::vector<TestFilter<2, T>> create_directions(const DirectionConfig<T>& config
 
         const auto alphas = sort(std::array(config.ukf_alphas));
 
+        res.reserve(3 * alphas.size());
+
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
                 res.push_back(create_direction<T, 10>(config, i, alphas[i]));
@@ -310,6 +316,8 @@ std::vector<TestFilter<2, T>> create_speeds(const SpeedConfig<T>& config)
         std::vector<TestFilter<2, T>> res;
 
         const auto alphas = sort(std::array(config.ukf_alphas));
+
+        res.reserve(2 * alphas.size());
 
         for (std::size_t i = 0; i < alphas.size(); ++i)
         {
