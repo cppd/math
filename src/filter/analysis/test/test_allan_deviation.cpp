@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/filter/utility/allan_deviation.h>
+#include <src/filter/analysis/allan_deviation.h>
+#include <src/filter/analysis/noise_parameters.h>
 #include <src/filter/utility/files.h>
-#include <src/filter/utility/noise_parameters.h>
 #include <src/test/test.h>
 
 #include <cstddef>
@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string_view>
 #include <vector>
 
-namespace ns::filter::utility::test
+namespace ns::filter::analysis::test
 {
 namespace
 {
@@ -49,7 +49,8 @@ void save_to_file(
         constexpr int TEXT_PRECISION = 3;
         constexpr int DATA_PRECISION = Limits<T>::max_digits10();
 
-        std::ofstream file(test_file_path("filter_utility_allan_deviation_" + replace_space(type_name<T>()) + ".txt"));
+        std::ofstream file(utility::test_file_path(
+                "filter_analysis_allan_deviation_" + utility::replace_space(type_name<T>()) + ".txt"));
 
         file << "[";
 

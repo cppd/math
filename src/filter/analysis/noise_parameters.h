@@ -17,21 +17,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cstddef>
+#include "allan_deviation.h"
+
 #include <vector>
 
-namespace ns::filter::utility
+namespace ns::filter::analysis
 {
 template <typename T>
-struct AllanDeviation final
+struct BiasInstability final
 {
+        T bias_instability;
         T tau;
         T deviation;
+        T log_slope;
 };
 
 template <typename T>
-[[nodiscard]] std::vector<AllanDeviation<T>> allan_deviation(
-        const std::vector<T>& data,
-        T frequency,
-        std::size_t output_count);
+struct AngleRandomWalk final
+{
+        T angle_random_walk;
+        T tau;
+        T deviation;
+        T log_slope;
+};
+
+template <typename T>
+struct RateRandomWalk final
+{
+        T rate_random_walk;
+        T tau;
+        T deviation;
+        T log_slope;
+};
+
+template <typename T>
+[[nodiscard]] BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
+
+template <typename T>
+[[nodiscard]] AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
+
+template <typename T>
+[[nodiscard]] RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
 }
