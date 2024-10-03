@@ -60,9 +60,9 @@ void save_to_file(
         file << ", 'annotation':'<b>Bias Instability</b><br>";
         file << bi.bias_instability * 3600 << DEGREE << "/h'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << bi.tau;
-        file << ", 'y':" << bi.deviation;
-        file << ", 'log_slope':" << bi.log_slope;
+        file << ", 'x':" << bi.line.tau;
+        file << ", 'y':" << bi.line.deviation;
+        file << ", 'log_slope':" << bi.line.log_slope;
         file << "},";
 
         file << "{";
@@ -71,9 +71,9 @@ void save_to_file(
         file << ", 'annotation':'<b>Angle Random Walk</b><br>";
         file << arw.angle_random_walk * 60 << DEGREE << "/" << "h<sup>1/2</sup>'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << arw.tau;
-        file << ", 'y':" << arw.deviation;
-        file << ", 'log_slope':" << arw.log_slope;
+        file << ", 'x':" << arw.line.tau;
+        file << ", 'y':" << arw.line.deviation;
+        file << ", 'log_slope':" << arw.line.log_slope;
         file << "},";
 
         file << "{";
@@ -82,9 +82,9 @@ void save_to_file(
         file << ", 'annotation':'<b>Rate Random Walk</b><br>";
         file << rrw.rate_random_walk * 60 << DEGREE << "/" << "h<sup>1/2</sup>'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << rrw.tau;
-        file << ", 'y':" << rrw.deviation;
-        file << ", 'log_slope':" << rrw.log_slope;
+        file << ", 'x':" << rrw.line.tau;
+        file << ", 'y':" << rrw.line.deviation;
+        file << ", 'log_slope':" << rrw.line.log_slope;
         file << "},";
 
         file << "]\n";

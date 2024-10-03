@@ -24,30 +24,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::analysis
 {
 template <typename T>
-struct BiasInstability final
+struct AllanDeviationLine final
 {
-        T bias_instability;
         T tau;
         T deviation;
         T log_slope;
+};
+
+template <typename T>
+struct BiasInstability final
+{
+        T bias_instability;
+        AllanDeviationLine<T> line;
 };
 
 template <typename T>
 struct AngleRandomWalk final
 {
         T angle_random_walk;
-        T tau;
-        T deviation;
-        T log_slope;
+        AllanDeviationLine<T> line;
 };
 
 template <typename T>
 struct RateRandomWalk final
 {
         T rate_random_walk;
-        T tau;
-        T deviation;
-        T log_slope;
+        AllanDeviationLine<T> line;
 };
 
 template <typename T>
