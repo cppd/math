@@ -38,7 +38,7 @@ constexpr T BIAS_INSTABILITY_SCALING = 0.6642824702679600191174022L;
 }
 
 template <typename T>
-BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
+NoiseParameter<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation)
 {
         if (allan_deviation.size() < 2)
         {
@@ -60,13 +60,13 @@ BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_
 
         const AllanDeviation<T> ad = allan_deviation[i];
         return {
-                .bias_instability = ad.deviation / BIAS_INSTABILITY_SCALING<T>,
+                .value = ad.deviation / BIAS_INSTABILITY_SCALING<T>,
                 .line{.tau = ad.tau, .deviation = ad.deviation, .log_slope = 0}
         };
 }
 
 template <typename T>
-AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
+NoiseParameter<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
 {
         if (allan_deviation.empty())
         {
@@ -111,13 +111,13 @@ AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan
         const T tau = 1;
         const T deviation = p.deviation / std::sqrt(tau / p.tau);
         return {
-                .angle_random_walk = deviation,
+                .value = deviation,
                 .line{.tau = tau, .deviation = deviation, .log_slope = -0.5}
         };
 }
 
 template <typename T>
-RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
+NoiseParameter<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation)
 {
         if (allan_deviation.empty())
         {
@@ -143,7 +143,7 @@ RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_d
                         const T tau = 3;
                         const T deviation = std::sqrt(tau / p.tau) * p.deviation;
                         return {
-                                .rate_random_walk = deviation,
+                                .value = deviation,
                                 .line{.tau = tau, .deviation = deviation, .log_slope = 0.5}
                         };
                 }
@@ -152,10 +152,10 @@ RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_d
         error("Failed to determine rate random walk");
 }
 
-#define TEMPLATE(T)                                                                           \
-        template BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>&);  \
-        template AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>&); \
-        template RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>&);
+#define TEMPLATE(T)                                                                          \
+        template NoiseParameter<T> bias_instability(const std::vector<AllanDeviation<T>>&);  \
+        template NoiseParameter<T> angle_random_walk(const std::vector<AllanDeviation<T>>&); \
+        template NoiseParameter<T> rate_random_walk(const std::vector<AllanDeviation<T>>&);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 }

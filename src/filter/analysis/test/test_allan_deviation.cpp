@@ -42,9 +42,9 @@ constexpr std::string_view DEGREE = "&#x00b0;";
 template <typename T>
 void save_to_file(
         const std::vector<AllanDeviation<T>>& deviations,
-        const BiasInstability<T>& bi,
-        const AngleRandomWalk<T>& arw,
-        const RateRandomWalk<T>& rrw)
+        const NoiseParameter<T>& bias_instability,
+        const NoiseParameter<T>& angle_random_walk,
+        const NoiseParameter<T>& rate_random_walk)
 {
         constexpr int TEXT_PRECISION = 3;
         constexpr int DATA_PRECISION = Limits<T>::max_digits10();
@@ -58,33 +58,33 @@ void save_to_file(
         file << "'name':'Bias Instability'";
         file << std::setprecision(TEXT_PRECISION);
         file << ", 'annotation':'<b>Bias Instability</b><br>";
-        file << bi.bias_instability * 3600 << DEGREE << "/h'";
+        file << bias_instability.value * 3600 << DEGREE << "/h'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << bi.line.tau;
-        file << ", 'y':" << bi.line.deviation;
-        file << ", 'log_slope':" << bi.line.log_slope;
+        file << ", 'x':" << bias_instability.line.tau;
+        file << ", 'y':" << bias_instability.line.deviation;
+        file << ", 'log_slope':" << bias_instability.line.log_slope;
         file << "},";
 
         file << "{";
         file << "'name':'Angle Random Walk'";
         file << std::setprecision(TEXT_PRECISION);
         file << ", 'annotation':'<b>Angle Random Walk</b><br>";
-        file << arw.angle_random_walk * 60 << DEGREE << "/" << "h<sup>1/2</sup>'";
+        file << angle_random_walk.value * 60 << DEGREE << "/" << "h<sup>1/2</sup>'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << arw.line.tau;
-        file << ", 'y':" << arw.line.deviation;
-        file << ", 'log_slope':" << arw.line.log_slope;
+        file << ", 'x':" << angle_random_walk.line.tau;
+        file << ", 'y':" << angle_random_walk.line.deviation;
+        file << ", 'log_slope':" << angle_random_walk.line.log_slope;
         file << "},";
 
         file << "{";
         file << "'name':'Rate Random Walk'";
         file << std::setprecision(TEXT_PRECISION);
         file << ", 'annotation':'<b>Rate Random Walk</b><br>";
-        file << rrw.rate_random_walk * 60 << DEGREE << "/" << "h<sup>1/2</sup>'";
+        file << rate_random_walk.value * 60 << DEGREE << "/" << "h<sup>1/2</sup>'";
         file << std::setprecision(DATA_PRECISION);
-        file << ", 'x':" << rrw.line.tau;
-        file << ", 'y':" << rrw.line.deviation;
-        file << ", 'log_slope':" << rrw.line.log_slope;
+        file << ", 'x':" << rate_random_walk.line.tau;
+        file << ", 'y':" << rate_random_walk.line.deviation;
+        file << ", 'log_slope':" << rate_random_walk.line.log_slope;
         file << "},";
 
         file << "]\n";
@@ -98,21 +98,21 @@ void save_to_file(
 }
 
 template <typename T>
-void check(const BiasInstability<T>& bi, const AngleRandomWalk<T>& arw, const RateRandomWalk<T>& rrw)
+void check(const T bias_instability, const T angle_random_walk, const T rate_random_walk)
 {
-        if (!(bi.bias_instability > T{0.032} && bi.bias_instability < T{0.051}))
+        if (!(bias_instability > T{0.032} && bias_instability < T{0.051}))
         {
-                error("Bias instability (" + to_string(bi.bias_instability) + ") is out of range");
+                error("Bias instability (" + to_string(bias_instability) + ") is out of range");
         }
 
-        if (!(arw.angle_random_walk > T{0.084} && arw.angle_random_walk < T{0.13}))
+        if (!(angle_random_walk > T{0.084} && angle_random_walk < T{0.13}))
         {
-                error("Angle random walk (" + to_string(arw.angle_random_walk) + ") is out of range");
+                error("Angle random walk (" + to_string(angle_random_walk) + ") is out of range");
         }
 
-        if (!(rrw.rate_random_walk > T{0.0075} && rrw.rate_random_walk < T{0.011}))
+        if (!(rate_random_walk > T{0.0075} && rate_random_walk < T{0.011}))
         {
-                error("Rate random walk (" + to_string(rrw.rate_random_walk) + ") is out of range");
+                error("Rate random walk (" + to_string(rate_random_walk) + ") is out of range");
         }
 }
 
@@ -142,13 +142,13 @@ void test_impl()
 
         const std::vector<AllanDeviation<T>> deviations = allan_deviation(data, frequency, output_count);
 
-        const BiasInstability<T> bi = bias_instability(deviations);
-        const AngleRandomWalk<T> arw = angle_random_walk(deviations);
-        const RateRandomWalk<T> rrw = rate_random_walk(deviations);
+        const NoiseParameter<T> bi = bias_instability(deviations);
+        const NoiseParameter<T> arw = angle_random_walk(deviations);
+        const NoiseParameter<T> rrw = rate_random_walk(deviations);
 
         save_to_file(deviations, bi, arw, rrw);
 
-        check(bi, arw, rrw);
+        check(bi.value, arw.value, rrw.value);
 }
 
 void test()

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::analysis
 {
 template <typename T>
-struct AllanDeviationLine final
+struct NoiseParameterLine final
 {
         T tau;
         T deviation;
@@ -32,32 +32,18 @@ struct AllanDeviationLine final
 };
 
 template <typename T>
-struct BiasInstability final
+struct NoiseParameter final
 {
-        T bias_instability;
-        AllanDeviationLine<T> line;
+        T value;
+        NoiseParameterLine<T> line;
 };
 
 template <typename T>
-struct AngleRandomWalk final
-{
-        T angle_random_walk;
-        AllanDeviationLine<T> line;
-};
+[[nodiscard]] NoiseParameter<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
 
 template <typename T>
-struct RateRandomWalk final
-{
-        T rate_random_walk;
-        AllanDeviationLine<T> line;
-};
+[[nodiscard]] NoiseParameter<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
 
 template <typename T>
-[[nodiscard]] BiasInstability<T> bias_instability(const std::vector<AllanDeviation<T>>& allan_deviation);
-
-template <typename T>
-[[nodiscard]] AngleRandomWalk<T> angle_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
-
-template <typename T>
-[[nodiscard]] RateRandomWalk<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
+[[nodiscard]] NoiseParameter<T> rate_random_walk(const std::vector<AllanDeviation<T>>& allan_deviation);
 }
