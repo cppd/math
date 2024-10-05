@@ -217,13 +217,14 @@ template <type_name_implementation::BitFloatingPoint T>
 
         if constexpr (SIZE < 100)
         {
-                static constexpr std::array STR = std::to_array<char>({'f', 'p', '0' + SIZE / 10, '0' + SIZE % 10, 0});
+                static constexpr std::array STR =
+                        std::to_array<char>({'f', 'p', '0' + (SIZE / 10), '0' + (SIZE % 10), 0});
                 return STR.data();
         }
         else
         {
-                static constexpr std::array STR =
-                        std::to_array<char>({'f', 'p', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
+                static constexpr std::array STR = std::to_array<char>(
+                        {'f', 'p', '0' + (SIZE / 100), '0' + ((SIZE % 100) / 10), '0' + (SIZE % 10), 0});
                 return STR.data();
         }
 }
@@ -245,13 +246,13 @@ template <typename T>
         else if constexpr (SIZE < 100)
         {
                 static constexpr std::array STR =
-                        std::to_array<char>({'i', 'n', 't', '0' + SIZE / 10, '0' + SIZE % 10, 0});
+                        std::to_array<char>({'i', 'n', 't', '0' + (SIZE / 10), '0' + (SIZE % 10), 0});
                 return STR.data();
         }
         else
         {
                 static constexpr std::array STR = std::to_array<char>(
-                        {'i', 'n', 't', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
+                        {'i', 'n', 't', '0' + (SIZE / 100), '0' + ((SIZE % 100) / 10), '0' + (SIZE % 10), 0});
                 return STR.data();
         }
 }
@@ -273,13 +274,13 @@ template <typename T>
         else if constexpr (SIZE < 100)
         {
                 static constexpr std::array STR =
-                        std::to_array<char>({'u', 'i', 'n', 't', '0' + SIZE / 10, '0' + SIZE % 10, 0});
+                        std::to_array<char>({'u', 'i', 'n', 't', '0' + (SIZE / 10), '0' + (SIZE % 10), 0});
                 return STR.data();
         }
         else
         {
                 static constexpr std::array STR = std::to_array<char>(
-                        {'u', 'i', 'n', 't', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
+                        {'u', 'i', 'n', 't', '0' + (SIZE / 100), '0' + ((SIZE % 100) / 10), '0' + (SIZE % 10), 0});
                 return STR.data();
         }
 }
