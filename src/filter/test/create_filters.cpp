@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/filters/estimation/position_variance.h>
 #include <src/filter/filters/position/position.h>
 #include <src/filter/filters/speed/speed.h>
-#include <src/filter/utility/instantiation.h>
+#include <src/filter/settings/instantiation.h>
 
 #include <array>
 #include <cmath>

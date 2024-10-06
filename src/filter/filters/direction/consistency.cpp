@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "consistency.h"
 
-#include <src/filter/utility/instantiation.h>
+#include <src/filter/settings/instantiation.h>
 
 #include <string>
 
