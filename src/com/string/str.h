@@ -28,4 +28,5 @@ namespace ns
 [[nodiscard]] std::string to_upper_first_letters(std::string_view s);
 [[nodiscard]] std::string add_indent(std::string_view s, unsigned indent_size);
 [[nodiscard]] std::string printable_characters(std::string_view s);
+[[nodiscard]] std::string replace_space(std::string_view s, char value);
 }

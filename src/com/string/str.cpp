@@ -167,4 +167,15 @@ std::string printable_characters(const std::string_view s)
         }
         return res;
 }
+
+std::string replace_space(const std::string_view s, const char value)
+{
+        std::string res;
+        res.reserve(s.size());
+        for (const char c : s)
+        {
+                res += !is_space(c) ? c : value;
+        }
+        return res;
+}
 }
