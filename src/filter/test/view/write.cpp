@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/rgb8.h>
 #include <src/com/print.h>
+#include <src/com/string/str.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/filter/filters/measurement.h>
@@ -340,7 +341,7 @@ void write_to_file(
         const T interval,
         const std::vector<Filter<N, T>>& filters)
 {
-        std::ofstream file(utility::test_file_path("filter_2d_" + utility::replace_space(type_name<T>()) + ".txt"));
+        std::ofstream file(utility::test_file_path("filter_2d_" + replace_space(type_name<T>(), '_') + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
 

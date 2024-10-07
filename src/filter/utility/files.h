@@ -18,12 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <filesystem>
-#include <string>
 #include <string_view>
 
 namespace ns::filter::utility
 {
-[[nodiscard]] std::string replace_space(std::string_view s);
-
 [[nodiscard]] std::filesystem::path test_file_path(std::string_view name);
 }
