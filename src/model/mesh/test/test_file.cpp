@@ -118,14 +118,12 @@ template <std::size_t N>
 void test_obj_file(
         const mesh::Mesh<N>& mesh,
         const std::string& name,
-        const std::filesystem::path& directory,
         const std::string& comment,
         progress::Ratio* const progress)
 {
         const std::filesystem::path file_name = [&]
         {
-                std::filesystem::path path;
-                path = directory / path_from_utf8(name);
+                std::filesystem::path path = settings::test_path(name);
                 path.replace_extension(path_from_utf8(mesh::obj_file_extension(N)));
                 return path;
         }();
@@ -144,7 +142,6 @@ template <std::size_t N>
 void test_stl_file(
         const mesh::Mesh<N>& mesh,
         const std::string& name,
-        const std::filesystem::path& directory,
         const std::string& comment,
         progress::Ratio* const progress,
         const bool ascii_format)
@@ -153,8 +150,7 @@ void test_stl_file(
 
         const std::filesystem::path file_name = [&]
         {
-                std::filesystem::path path;
-                path = directory / path_from_utf8(name + "_" + type_name);
+                std::filesystem::path path = settings::test_path(name + "_" + type_name);
                 path.replace_extension(path_from_utf8(mesh::stl_file_extension(N)));
                 return path;
         }();
@@ -225,12 +221,10 @@ void test_mesh_files(
                 return c;
         }();
 
-        const std::filesystem::path directory = settings::test_directory();
+        test_obj_file(*mesh, name, comment, progress);
 
-        test_obj_file(*mesh, name, directory, comment, progress);
-
-        test_stl_file(*mesh, name, directory, comment, progress, true /*ascii_format*/);
-        test_stl_file(*mesh, name, directory, comment, progress, false /*ascii_format*/);
+        test_stl_file(*mesh, name, comment, progress, true /*ascii_format*/);
+        test_stl_file(*mesh, name, comment, progress, false /*ascii_format*/);
 }
 
 template <std::size_t N>

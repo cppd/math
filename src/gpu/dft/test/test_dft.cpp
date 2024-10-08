@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
-#include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -198,11 +197,6 @@ void compute_fftw(const bool inverse, const int n1, const int n2, std::vector<Co
 }
 #endif
 
-std::filesystem::path make_path(const std::string_view name)
-{
-        return settings::test_directory() / path_from_utf8(name);
-}
-
 struct DftData final
 {
         std::vector<Complex> forward;
@@ -225,14 +219,14 @@ DftData run_vulkan(
 
         compute_vulkan(dft, false, n1, n2, &data);
         log_data(data);
-        save_data(make_path(test_name + "_dft_output_forward_vulkan.txt"), data);
+        save_data(settings::test_path(test_name + "_dft_output_forward_vulkan.txt"), data);
         dft_data.forward = data;
 
         progress->set(++(*computation), computation_count);
 
         compute_vulkan(dft, true, n1, n2, &data);
         log_data(data);
-        save_data(make_path(test_name + "_dft_output_inverse_vulkan.txt"), data);
+        save_data(settings::test_path(test_name + "_dft_output_inverse_vulkan.txt"), data);
         dft_data.inverse = data;
 
         progress->set(++(*computation), computation_count);
@@ -269,7 +263,7 @@ void run_cuda(
         }
 
         log_data(data);
-        save_data(make_path(test_name + "_dft_output_forward_cuda.txt"), data);
+        save_data(settings::test_path(test_name + "_dft_output_forward_cuda.txt"), data);
         compare("Vulkan", "cuFFT", vulkan_data.forward, data);
 
         progress->set(++(*computation), computation_count);
@@ -290,7 +284,7 @@ void run_cuda(
         }
 
         log_data(data);
-        save_data(make_path(test_name + "_dft_output_inverse_cuda.txt"), data);
+        save_data(settings::test_path(test_name + "_dft_output_inverse_cuda.txt"), data);
         compare("Vulkan", "cuFFT", vulkan_data.inverse, data);
 
         progress->set(++(*computation), computation_count);
@@ -326,7 +320,7 @@ void run_fftw(
         }
 
         log_data(data);
-        save_data(make_path(test_name + "_dft_output_forward_fftw.txt"), data);
+        save_data(settings::test_path(test_name + "_dft_output_forward_fftw.txt"), data);
         compare("Vulkan", "FFTW", vulkan_data.forward, data);
 
         progress->set(++(*computation), computation_count);
@@ -347,7 +341,7 @@ void run_fftw(
         }
 
         log_data(data);
-        save_data(make_path(test_name + "_dft_output_inverse_fftw.txt"), data);
+        save_data(settings::test_path(test_name + "_dft_output_inverse_fftw.txt"), data);
         compare("Vulkan", "FFTW", vulkan_data.inverse, data);
 
         progress->set(++(*computation), computation_count);
@@ -416,7 +410,7 @@ void random_data_test(ComputeVector* const dft, const std::array<int, 2>& dimens
 {
         LOG("\n----- Random Data DFT Tests -----");
 
-        const std::filesystem::path input_file_name = make_path("dft_input.txt");
+        const std::filesystem::path input_file_name = settings::test_path("dft_input.txt");
 
         generate_random_data<Complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
 

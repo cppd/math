@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "program_ray_tracing.h"
 
 #include <src/com/error.h>
-#include <src/com/file/path.h>
 #include <src/com/group_count.h>
 #include <src/image/file_save.h>
 #include <src/image/image.h>
@@ -44,7 +43,7 @@ constexpr unsigned GROUP_SIZE = 16;
 
 void save_to_file(const std::string_view name, const image::Image<2>& image)
 {
-        image::save(settings::test_directory() / path_from_utf8(name), image::ImageView<2>(image));
+        image::save(settings::test_path(name), image::ImageView<2>(image));
 }
 
 void run_ray_tracing_commands(

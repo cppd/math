@@ -117,14 +117,9 @@ public:
         Face& operator=(Face&&) = delete;
 };
 
-std::filesystem::path character_file_path(const std::string& file_name)
-{
-        return settings::test_directory() / path_from_utf8(file_name);
-}
-
 void create_empty_file(const std::string& file_name)
 {
-        const std::filesystem::path path = character_file_path(file_name);
+        const std::filesystem::path path = settings::test_path(file_name);
         const std::ofstream file(path);
         if (!file)
         {
@@ -160,7 +155,7 @@ void save_to_file(const char32_t code_point, const std::optional<Char>& data)
 
         oss << ".png";
         image::save(
-                character_file_path(oss.str()),
+                settings::test_path(oss.str()),
                 image::ImageView<2>(
                         {data->width, data->height}, image::ColorFormat::R8_SRGB,
                         std::as_bytes(std::span(data->image, 1ull * data->width * data->height))));

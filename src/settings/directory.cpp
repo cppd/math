@@ -28,24 +28,30 @@ namespace ns::settings
 {
 namespace
 {
-constexpr std::string_view DIRECTORY_NAME = "test";
+constexpr std::string_view TEST_DIRECTORY_NAME = "test";
 
 void create_dir(const std::filesystem::path& directory)
 {
         std::filesystem::create_directory(directory);
         std::filesystem::permissions(directory, std::filesystem::perms::owner_all);
 }
-}
 
 std::filesystem::path test_directory()
 {
-        std::filesystem::path directory =
-                std::filesystem::temp_directory_path() / path_from_utf8(settings::APPLICATION_NAME);
+        std::filesystem::path directory = std::filesystem::temp_directory_path();
+
+        directory /= path_from_utf8(APPLICATION_NAME);
         create_dir(directory);
 
-        directory = directory / path_from_utf8(DIRECTORY_NAME);
+        directory /= path_from_utf8(TEST_DIRECTORY_NAME);
         create_dir(directory);
 
         return directory;
+}
+}
+
+std::filesystem::path test_path(const std::string_view utf8_name)
+{
+        return settings::test_directory() / path_from_utf8(utf8_name);
 }
 }

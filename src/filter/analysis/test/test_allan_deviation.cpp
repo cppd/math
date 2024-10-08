@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/filter/analysis/allan_deviation.h>
 #include <src/filter/analysis/noise_parameters.h>
-#include <src/filter/utility/files.h>
+#include <src/settings/directory.h>
 #include <src/test/test.h>
 
 #include <cstddef>
@@ -50,8 +50,8 @@ void save_to_file(
         constexpr int TEXT_PRECISION = 3;
         constexpr int DATA_PRECISION = Limits<T>::max_digits10();
 
-        std::ofstream file(utility::test_file_path(
-                "filter_analysis_allan_deviation_" + replace_space(type_name<T>(), '_') + ".txt"));
+        std::ofstream file(
+                settings::test_path("filter_analysis_allan_deviation_" + replace_space(type_name<T>(), '_') + ".txt"));
 
         file << "[";
 

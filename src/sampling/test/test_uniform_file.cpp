@@ -16,7 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <src/com/error.h>
-#include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
@@ -33,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cctype>
 #include <cstddef>
-#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -55,16 +53,10 @@ std::string samples_file_name(const std::string_view name)
         return oss.str();
 }
 
-template <std::size_t N, typename T>
-std::filesystem::path samples_file_path(const std::string_view name)
-{
-        return settings::test_directory() / path_from_utf8(samples_file_name<N, T>(name));
-}
-
 template <std::size_t N, typename T, typename Generator>
 void write_samples_to_file(const std::string_view name, const int count, const Generator& g)
 {
-        std::ofstream file(samples_file_path<N, T>(name));
+        std::ofstream file(settings::test_path(samples_file_name<N, T>(name)));
         for (int i = 0; i < count; ++i)
         {
                 file << to_string(g()) << "\n";

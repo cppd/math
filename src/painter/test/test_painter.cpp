@@ -130,7 +130,7 @@ class Image final : public Notifier<N>
 
 public:
         explicit Image(const std::string_view directory_name)
-                : path_(settings::test_directory() / path_from_utf8(directory_name))
+                : path_(settings::test_path(directory_name))
         {
                 if (!std::filesystem::create_directory(path_))
                 {

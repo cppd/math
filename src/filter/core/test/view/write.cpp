@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/filter/core/test/measurements.h>
-#include <src/filter/utility/files.h>
+#include <src/settings/directory.h>
 
 #include <fstream>
 #include <iomanip>
@@ -321,7 +321,7 @@ void write(
         const T interval,
         const std::vector<Filter<T>>& filters)
 {
-        std::ofstream file(utility::test_file_path(
+        std::ofstream file(settings::test_path(
                 "filter_1d_" + replace_space(to_lower(name), '_') + "_" + replace_space(type_name<T>(), '_') + ".txt"));
         file << std::setprecision(Limits<T>::max_digits10());
         file << std::scientific;
