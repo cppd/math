@@ -151,10 +151,12 @@ void create_directory(const std::filesystem::path& directory, Format& format)
 
 std::filesystem::path create_directory(Format& format)
 {
-        std::filesystem::path directory = std::filesystem::temp_directory_path() / to_path(settings::APPLICATION_NAME);
+        std::filesystem::path directory = std::filesystem::temp_directory_path();
+
+        directory /= to_path(settings::APPLICATION_NAME);
         create_directory(directory, format);
 
-        directory = directory / to_path(LOG_DIRECTORY_NAME);
+        directory /= to_path(LOG_DIRECTORY_NAME);
         create_directory(directory, format);
 
         return directory;
@@ -162,22 +164,23 @@ std::filesystem::path create_directory(Format& format)
 
 std::ofstream create_file(const std::filesystem::path& directory, Format& format)
 {
-        const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
-        std::ostringstream name;
-        name << std::fixed;
-        name << duration.count();
+        const auto file_name = []
+        {
+                const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
+                std::ostringstream oss;
+                oss << std::fixed << duration.count();
+                return oss.str();
+        };
 
-        const std::filesystem::path file_path = directory / name.str();
-        std::ofstream file(file_path);
+        const std::filesystem::path path = directory / file_name();
+        std::ofstream file(path);
         if (!file)
         {
-                std::cerr << format.format(
-                        "Failed to create log file \"" + to_filename(file_path) + "\"", "fatal error");
+                std::cerr << format.format("Failed to create log file \"" + to_filename(path) + "\"", "fatal error");
                 std::abort();
         }
 
-        std::filesystem::permissions(
-                file_path, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
+        std::filesystem::permissions(path, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
         file << std::unitbuf;
 
         return file;
