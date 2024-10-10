@@ -162,17 +162,19 @@ std::filesystem::path create_directory(Format& format)
         return directory;
 }
 
+std::string log_file_name()
+{
+        const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
+        std::ostringstream oss;
+        oss << std::fixed;
+        oss << duration.count();
+        return oss.str();
+}
+
 std::ofstream create_file(const std::filesystem::path& directory, Format& format)
 {
-        const auto file_name = []
-        {
-                const std::chrono::duration<double> duration = std::chrono::system_clock::now().time_since_epoch();
-                std::ostringstream oss;
-                oss << std::fixed << duration.count();
-                return oss.str();
-        };
+        const std::filesystem::path path = directory / to_path(log_file_name().c_str());
 
-        const std::filesystem::path path = directory / file_name();
         std::ofstream file(path);
         if (!file)
         {
@@ -182,7 +184,6 @@ std::ofstream create_file(const std::filesystem::path& directory, Format& format
 
         std::filesystem::permissions(path, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write);
         file << std::unitbuf;
-
         return file;
 }
 
