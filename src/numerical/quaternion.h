@@ -70,6 +70,31 @@ public:
         {
                 return Vector<3, T>(data_[1], data_[2], data_[3]);
         }
+
+        void normalize()
+        {
+                data_.normalize();
+        }
+
+        [[nodiscard]] Quaternion<T> normalized() const
+        {
+                return Quaternion<T>(data_.normalized());
+        }
+
+        [[nodiscard]] Quaternion<T> conjugate() const
+        {
+                return Quaternion<T>(data_[0], -data_[1], -data_[2], -data_[3]);
+        }
+
+        [[nodiscard]] Quaternion<T> inverse() const
+        {
+                return conjugate() / dot(data_, data_);
+        }
+
+        [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
+        {
+                return to_string(a.data());
+        }
 };
 
 template <typename T>
@@ -106,24 +131,6 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> conjugate(const Quaternion<T>& a)
-{
-        return Quaternion<T>(a[0], -a[1], -a[2], -a[3]);
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> inverse(const Quaternion<T>& a)
-{
-        return conjugate(a) / dot(a.data(), a.data());
-}
-
-template <typename T>
-[[nodiscard]] std::string to_string(const Quaternion<T>& a)
-{
-        return to_string(a.data());
-}
-
-template <typename T>
 [[nodiscard]] Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
 {
         return Quaternion<T>(std::cos(angle / 2), std::sin(angle / 2) * axis.normalized());
@@ -133,6 +140,6 @@ template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
         const Quaternion q = quaternion_for_rotation(axis, angle);
-        return (q * Quaternion<T>(0, v) * conjugate(q)).imag();
+        return (q * Quaternion<T>(0, v) * q.conjugate()).imag();
 }
 }
