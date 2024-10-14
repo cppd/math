@@ -40,7 +40,7 @@ template <typename T>
 template <typename T>
 class Madgwick final
 {
-        numerical::Vector<4, T> q_{1, 0, 0, 0};
+        numerical::Quaternion<T> q_{1, 0, 0, 0};
 
 public:
         [[nodiscard]] numerical::Quaternion<T> update(
@@ -52,9 +52,9 @@ public:
         {
                 // (11)
                 // (q_ * (0, w)) / 2
-                const numerical::Vector<4, T> d = [&]
+                const numerical::Quaternion<T> d = [&]
                 {
-                        numerical::Vector<4, T> r;
+                        numerical::Quaternion<T> r;
                         r[0] = -q_[1] * w[0] - q_[2] * w[1] - q_[3] * w[2];
                         r[1] = q_[0] * w[0] + q_[2] * w[2] - q_[3] * w[1];
                         r[2] = q_[0] * w[1] - q_[1] * w[2] + q_[3] * w[0];
@@ -68,10 +68,10 @@ public:
                 {
                         // (13)
                         q_ = (q_ + d * dt).normalized();
-                        return numerical::Quaternion(q_);
+                        return q_;
                 }
 
-                const numerical::Vector<4, T> g = [&]
+                const numerical::Quaternion<T> g = [&]
                 {
                         // (25)
                         // f_g
@@ -82,7 +82,7 @@ public:
                         // (20) (26)
                         // transpose(J_g) * f_g
                         const numerical::Vector<3, T> f(2 * f_0, 2 * f_1, 4 * f_2);
-                        numerical::Vector<4, T> r;
+                        numerical::Quaternion<T> r;
                         r[0] = q_[1] * f[1] - q_[2] * f[0];
                         r[1] = q_[3] * f[0] + q_[0] * f[1] - q_[1] * f[2];
                         r[2] = q_[3] * f[1] - q_[0] * f[0] - q_[2] * f[2];
@@ -92,7 +92,7 @@ public:
 
                 // (42) (43) (44)
                 q_ = (q_ + (d - beta * g.normalized()) * dt).normalized();
-                return numerical::Quaternion(q_);
+                return q_;
         }
 };
 }
