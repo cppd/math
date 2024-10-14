@@ -100,13 +100,13 @@ public:
 template <typename T>
 [[nodiscard]] Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return a.data() + b.data();
+        return Quaternion<T>(a.data() + b.data());
 }
 
 template <typename T>
 [[nodiscard]] Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return a.data() - b.data();
+        return Quaternion<T>(a.data() - b.data());
 }
 
 template <typename T>
@@ -121,13 +121,19 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const T b)
 {
-        return a.data() * b;
+        return Quaternion<T>(a.data() * b);
+}
+
+template <typename T>
+[[nodiscard]] Quaternion<T> operator*(const T b, const Quaternion<T>& a)
+{
+        return Quaternion<T>(a.data() * b);
 }
 
 template <typename T>
 [[nodiscard]] Quaternion<T> operator/(const Quaternion<T>& a, const T b)
 {
-        return a.data() / b;
+        return Quaternion<T>(a.data() / b);
 }
 
 template <typename T>
