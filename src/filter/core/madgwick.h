@@ -51,16 +51,7 @@ public:
                 const T min_acceleration)
         {
                 // (11)
-                // (q_ * (0, w)) / 2
-                const numerical::Quaternion<T> d = [&]
-                {
-                        numerical::Quaternion<T> r;
-                        r[0] = -q_[1] * w[0] - q_[2] * w[1] - q_[3] * w[2];
-                        r[1] = q_[0] * w[0] + q_[2] * w[2] - q_[3] * w[1];
-                        r[2] = q_[0] * w[1] - q_[1] * w[2] + q_[3] * w[0];
-                        r[3] = q_[0] * w[2] + q_[1] * w[1] - q_[2] * w[0];
-                        return r / T{2};
-                }();
+                const numerical::Quaternion<T> d = q_ * (w / T{2});
 
                 const T a_norm = a.norm();
 
