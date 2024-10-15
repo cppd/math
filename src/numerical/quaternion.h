@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector.h"
 
+#include <cmath>
 #include <cstddef>
 #include <string>
 
@@ -88,7 +89,7 @@ public:
 
         [[nodiscard]] Quaternion<T> inverse() const
         {
-                return conjugate() / dot(data_, data_);
+                return conjugate() / data_.norm_squared();
         }
 
         [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
@@ -112,10 +113,27 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        const Vector<3, T> a_v = a.imag();
-        const Vector<3, T> b_v = b.imag();
+        // a[0] * b[0] - dot(a.imag(), b.imag())
+        // a[0] * b.imag() + b[0] * a.imag() + cross(a.imag(), b.imag())
+        Quaternion<T> res;
+        res[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
+        res[1] = a[0] * b[1] + b[0] * a[1] + a[2] * b[3] - a[3] * b[2];
+        res[2] = a[0] * b[2] + b[0] * a[2] - a[1] * b[3] + a[3] * b[1];
+        res[3] = a[0] * b[3] + b[0] * a[3] + a[1] * b[2] - a[2] * b[1];
+        return res;
+}
 
-        return Quaternion<T>(a[0] * b[0] - dot(a_v, b_v), a[0] * b_v + b[0] * a_v + cross(a_v, b_v));
+template <typename T>
+[[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const Vector<3, T>& b)
+{
+        // -dot(a.imag(), b)
+        // a[0] * b + cross(a.imag(), b)
+        Quaternion<T> res;
+        res[0] = -a[1] * b[0] - a[2] * b[1] - a[3] * b[2];
+        res[1] = a[0] * b[0] + a[2] * b[2] - a[3] * b[1];
+        res[2] = a[0] * b[1] - a[1] * b[2] + a[3] * b[0];
+        res[3] = a[0] * b[2] + a[1] * b[1] - a[2] * b[0];
+        return res;
 }
 
 template <typename T>
@@ -146,6 +164,6 @@ template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
         const Quaternion q = quaternion_for_rotation(axis, angle);
-        return (q * Quaternion<T>(0, v) * q.conjugate()).imag();
+        return (q * v * q.conjugate()).imag();
 }
 }
