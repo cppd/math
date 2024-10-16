@@ -70,7 +70,7 @@ public:
                 static_assert(sizeof...(args) + 2 == N);
         }
 
-        constexpr explicit Vector(const std::type_identity_t<T>& v)
+        explicit constexpr Vector(const std::type_identity_t<T>& v)
                 : Vector(std::make_integer_sequence<std::size_t, N>(), v)
         {
         }
