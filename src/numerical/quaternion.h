@@ -33,43 +33,48 @@ class Quaternion final
         Vector<4, T> data_;
 
 public:
-        Quaternion()
+        constexpr Quaternion()
         {
         }
 
-        Quaternion(const T w, const T x, const T y, const T z)
+        constexpr Quaternion(const T w, const T x, const T y, const T z)
                 : data_(w, x, y, z)
         {
         }
 
-        Quaternion(const T w, const Vector<3, T>& v)
+        constexpr Quaternion(const T w, const Vector<3, T>& v)
                 : data_(w, v[0], v[1], v[2])
         {
         }
 
-        explicit Quaternion(const Vector<4, T>& v)
+        explicit constexpr Quaternion(const Vector<4, T>& v)
                 : data_(v)
         {
         }
 
-        [[nodiscard]] T operator[](const std::size_t i) const
+        [[nodiscard]] constexpr T operator[](const std::size_t i) const
         {
                 return data_[i];
         }
 
-        [[nodiscard]] T& operator[](const std::size_t i)
+        [[nodiscard]] constexpr T& operator[](const std::size_t i)
         {
                 return data_[i];
         }
 
-        [[nodiscard]] const Vector<4, T>& data() const
+        [[nodiscard]] constexpr const Vector<4, T>& data() const
         {
                 return data_;
         }
 
-        [[nodiscard]] Vector<3, T> imag() const
+        [[nodiscard]] constexpr Vector<3, T> imag() const
         {
                 return Vector<3, T>(data_[1], data_[2], data_[3]);
+        }
+
+        [[nodiscard]] constexpr Quaternion<T> conjugate() const
+        {
+                return Quaternion<T>(data_[0], -data_[1], -data_[2], -data_[3]);
         }
 
         void normalize()
@@ -80,11 +85,6 @@ public:
         [[nodiscard]] Quaternion<T> normalized() const
         {
                 return Quaternion<T>(data_.normalized());
-        }
-
-        [[nodiscard]] Quaternion<T> conjugate() const
-        {
-                return Quaternion<T>(data_[0], -data_[1], -data_[2], -data_[3]);
         }
 
         [[nodiscard]] Quaternion<T> inverse() const
@@ -99,19 +99,43 @@ public:
 };
 
 template <typename T>
-[[nodiscard]] Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
+[[nodiscard]] constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
+{
+        return a.data() == b.data();
+}
+
+template <typename T>
+[[nodiscard]] constexpr Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         return Quaternion<T>(a.data() + b.data());
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
+[[nodiscard]] constexpr Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         return Quaternion<T>(a.data() - b.data());
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
+[[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const T b)
+{
+        return Quaternion<T>(a.data() * b);
+}
+
+template <typename T>
+[[nodiscard]] constexpr Quaternion<T> operator*(const T b, const Quaternion<T>& a)
+{
+        return Quaternion<T>(a.data() * b);
+}
+
+template <typename T>
+[[nodiscard]] constexpr Quaternion<T> operator/(const Quaternion<T>& a, const T b)
+{
+        return Quaternion<T>(a.data() / b);
+}
+
+template <typename T>
+[[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         // a[0] * b[0] - dot(a.imag(), b.imag())
         // a[0] * b.imag() + b[0] * a.imag() + cross(a.imag(), b.imag())
@@ -124,7 +148,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const Vector<3, T>& b)
+[[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Vector<3, T>& b)
 {
         // -dot(a.imag(), b)
         // a[0] * b + cross(a.imag(), b)
@@ -134,24 +158,6 @@ template <typename T>
         res[2] = a[0] * b[1] - a[1] * b[2] + a[3] * b[0];
         res[3] = a[0] * b[2] + a[1] * b[1] - a[2] * b[0];
         return res;
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> operator*(const Quaternion<T>& a, const T b)
-{
-        return Quaternion<T>(a.data() * b);
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> operator*(const T b, const Quaternion<T>& a)
-{
-        return Quaternion<T>(a.data() * b);
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> operator/(const Quaternion<T>& a, const T b)
-{
-        return Quaternion<T>(a.data() / b);
 }
 
 template <typename T>
