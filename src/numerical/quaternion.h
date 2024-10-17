@@ -87,7 +87,7 @@ public:
                 return Quaternion<T>(data_.normalized());
         }
 
-        [[nodiscard]] Quaternion<T> inverse() const
+        [[nodiscard]] Quaternion<T> inversed() const
         {
                 return conjugate() / data_.norm_squared();
         }
