@@ -15,8 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
+#include <src/test/test.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <type_traits>
 
 namespace ns::numerical
 {
@@ -49,5 +57,75 @@ struct Test final
 template struct Test<float>;
 template struct Test<double>;
 template struct Test<long double>;
+
+template <typename T>
+bool equal(const T a, const T b, const T precision)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        if (a == b)
+        {
+                return true;
+        }
+        const T abs = std::abs(a - b);
+        if (abs < precision)
+        {
+                return true;
+        }
+        const T rel = abs / std::max(std::abs(a), std::abs(b));
+        return (rel < precision);
+}
+
+template <typename T>
+void test_equal(const Quaternion<T>& a, const Quaternion<T>& b, const T precision)
+{
+        for (std::size_t i = 0; i < 4; ++i)
+        {
+                if (!equal(a[i], b[i], precision))
+                {
+                        error(to_string(a) + " is not equal to " + to_string(b));
+                }
+        }
+}
+
+template <typename T>
+void test(const T precision)
+{
+        {
+                Quaternion<T> q(2, 3, 4, 5);
+                q.normalize();
+                test_equal(
+                        q,
+                        Quaternion<T>(
+                                0.272165526975908677584L, 0.408248290463863016363L, 0.544331053951817355168L,
+                                0.680413817439771693974L),
+                        precision);
+        }
+
+        test_equal(
+                Quaternion<T>(2, 4, 3, 5).normalized(),
+                Quaternion<T>(
+                        0.272165526975908677584L, 0.544331053951817355168L, 0.408248290463863016363L,
+                        0.680413817439771693974L),
+                precision);
+
+        test_equal(
+                Quaternion<T>(3, -7, 2, -8).inversed(),
+                Quaternion<T>(
+                        0.0238095238095238095235L, 0.0555555555555555555548L, -0.0158730158730158730157L,
+                        0.0634920634920634920626L),
+                precision);
+}
+
+void test_quaternion()
+{
+        LOG("Test quaternion");
+        test<float>(1e-7);
+        test<double>(0);
+        test<long double>(0);
+        LOG("Test quaternion passed");
+}
+
+TEST_SMALL("Quaternion", test_quaternion)
 }
 }
