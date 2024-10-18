@@ -21,7 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <string>
+#include <tuple>
+#include <type_traits>
 
 namespace ns::numerical
 {
@@ -65,6 +68,11 @@ public:
         [[nodiscard]] constexpr const Vector<4, T>& data() const
         {
                 return data_;
+        }
+
+        [[nodiscard]] std::size_t hash() const
+        {
+                return data_.hash();
         }
 
         [[nodiscard]] constexpr Vector<3, T> imag() const
@@ -172,4 +180,21 @@ template <typename T>
         const Quaternion q = quaternion_for_rotation(axis, angle);
         return (q * v * q.conjugate()).imag();
 }
+}
+
+namespace std
+{
+template <typename T>
+struct hash<::ns::numerical::Quaternion<T>> final
+{
+        [[nodiscard]] static size_t operator()(const ::ns::numerical::Quaternion<T>& q)
+        {
+                return q.hash();
+        }
+};
+
+template <typename T>
+struct tuple_size<::ns::numerical::Quaternion<T>> final : integral_constant<size_t, 4>
+{
+};
 }
