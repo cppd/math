@@ -65,7 +65,7 @@ public:
                 return data_[i];
         }
 
-        [[nodiscard]] constexpr const Vector<4, T>& data() const
+        [[nodiscard]] constexpr const Vector<4, T>& coeffs() const
         {
                 return data_;
         }
@@ -75,14 +75,14 @@ public:
                 return data_.hash();
         }
 
-        [[nodiscard]] constexpr Vector<3, T> imag() const
+        [[nodiscard]] constexpr Vector<3, T> vec() const
         {
-                return Vector<3, T>(data_[1], data_[2], data_[3]);
+                return {data_[1], data_[2], data_[3]};
         }
 
         [[nodiscard]] constexpr Quaternion<T> conjugate() const
         {
-                return Quaternion<T>(data_[0], -data_[1], -data_[2], -data_[3]);
+                return {data_[0], -data_[1], -data_[2], -data_[3]};
         }
 
         void normalize()
@@ -102,51 +102,51 @@ public:
 
         [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
         {
-                return to_string(a.data());
+                return to_string(a.coeffs());
         }
 };
 
 template <typename T>
 [[nodiscard]] constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return a.data() == b.data();
+        return a.coeffs() == b.coeffs();
 }
 
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return Quaternion<T>(a.data() + b.data());
+        return Quaternion<T>(a.coeffs() + b.coeffs());
 }
 
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        return Quaternion<T>(a.data() - b.data());
+        return Quaternion<T>(a.coeffs() - b.coeffs());
 }
 
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const T b)
 {
-        return Quaternion<T>(a.data() * b);
+        return Quaternion<T>(a.coeffs() * b);
 }
 
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const T b, const Quaternion<T>& a)
 {
-        return Quaternion<T>(a.data() * b);
+        return Quaternion<T>(a.coeffs() * b);
 }
 
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator/(const Quaternion<T>& a, const T b)
 {
-        return Quaternion<T>(a.data() / b);
+        return Quaternion<T>(a.coeffs() / b);
 }
 
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        // a[0] * b[0] - dot(a.imag(), b.imag())
-        // a[0] * b.imag() + b[0] * a.imag() + cross(a.imag(), b.imag())
+        // a[0] * b[0] - dot(a.vec(), b.vec())
+        // a[0] * b.vec() + b[0] * a.vec() + cross(a.vec(), b.vec())
         Quaternion<T> res;
         res[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
         res[1] = a[0] * b[1] + b[0] * a[1] + a[2] * b[3] - a[3] * b[2];
@@ -158,8 +158,8 @@ template <typename T>
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Vector<3, T>& b)
 {
-        // -dot(a.imag(), b)
-        // a[0] * b + cross(a.imag(), b)
+        // -dot(a.vec(), b)
+        // a[0] * b + cross(a.vec(), b)
         Quaternion<T> res;
         res[0] = -a[1] * b[0] - a[2] * b[1] - a[3] * b[2];
         res[1] = a[0] * b[0] + a[2] * b[2] - a[3] * b[1];
@@ -169,16 +169,16 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
+[[nodiscard]] Quaternion<T> unit_quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
 {
-        return Quaternion<T>(std::cos(angle / 2), std::sin(angle / 2) * axis.normalized());
+        return {std::cos(angle / 2), std::sin(angle / 2) * axis.normalized()};
 }
 
 template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
-        const Quaternion q = quaternion_for_rotation(axis, angle);
-        return (q * v * q.conjugate()).imag();
+        const Quaternion q = unit_quaternion_for_rotation(axis, angle);
+        return (q * v * q.conjugate()).vec();
 }
 }
 

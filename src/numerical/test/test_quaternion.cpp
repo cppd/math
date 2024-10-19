@@ -42,8 +42,8 @@ struct Test final
         static_assert(A[1] == 3);
         static_assert(A[2] == 4);
         static_assert(A[3] == 5);
-        static_assert(A.data() == Vector<4, T>(2, 3, 4, 5));
-        static_assert(A.imag() == Vector<3, T>(3, 4, 5));
+        static_assert(A.coeffs() == Vector<4, T>(2, 3, 4, 5));
+        static_assert(A.vec() == Vector<3, T>(3, 4, 5));
         static_assert(A.conjugate() == Quaternion<T>(2, -3, -4, -5));
         static_assert(A * T{3} == Quaternion<T>(6, 9, 12, 15));
         static_assert(T{3} * A == Quaternion<T>(6, 9, 12, 15));
@@ -114,7 +114,7 @@ void test(const T precision)
                 precision);
 
         test_equal(
-                quaternion_for_rotation({4, -5, 6}, T{2}),
+                unit_quaternion_for_rotation({4, -5, 6}, T{2}),
                 {0.540302305868139717414L, 0.383578074011068530816L, -0.479472592513835663554L,
                  0.57536711101660279621L},
                 precision);
