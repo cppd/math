@@ -17,95 +17,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "quaternion_object.h" // IWYU pragma: export
 #include "vector.h"
 
 #include <cmath>
 #include <cstddef>
 #include <functional>
-#include <string>
 #include <tuple>
 #include <type_traits>
 
-namespace ns::numerical
+namespace std
 {
 template <typename T>
-class Quaternion final
+struct hash<::ns::numerical::Quaternion<T>> final
 {
-        static_assert(std::is_floating_point_v<T>);
-
-        Vector<4, T> data_;
-
-public:
-        constexpr Quaternion()
+        [[nodiscard]] static size_t operator()(const ::ns::numerical::Quaternion<T>& q)
         {
-        }
-
-        constexpr Quaternion(const T w, const T x, const T y, const T z)
-                : data_(w, x, y, z)
-        {
-        }
-
-        constexpr Quaternion(const T w, const Vector<3, T>& v)
-                : data_(w, v[0], v[1], v[2])
-        {
-        }
-
-        explicit constexpr Quaternion(const Vector<4, T>& v)
-                : data_(v)
-        {
-        }
-
-        [[nodiscard]] constexpr T operator[](const std::size_t i) const
-        {
-                return data_[i];
-        }
-
-        [[nodiscard]] constexpr T& operator[](const std::size_t i)
-        {
-                return data_[i];
-        }
-
-        [[nodiscard]] constexpr const Vector<4, T>& coeffs() const
-        {
-                return data_;
-        }
-
-        [[nodiscard]] std::size_t hash() const
-        {
-                return data_.hash();
-        }
-
-        [[nodiscard]] constexpr Vector<3, T> vec() const
-        {
-                return {data_[1], data_[2], data_[3]};
-        }
-
-        [[nodiscard]] constexpr Quaternion<T> conjugate() const
-        {
-                return {data_[0], -data_[1], -data_[2], -data_[3]};
-        }
-
-        void normalize()
-        {
-                data_.normalize();
-        }
-
-        [[nodiscard]] Quaternion<T> normalized() const
-        {
-                return Quaternion<T>(data_.normalized());
-        }
-
-        [[nodiscard]] Quaternion<T> inversed() const
-        {
-                return conjugate() / data_.norm_squared();
-        }
-
-        [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
-        {
-                return to_string(a.coeffs());
+                return q.hash();
         }
 };
 
+template <typename T>
+struct tuple_size<::ns::numerical::Quaternion<T>> final : integral_constant<size_t, 4>
+{
+};
+}
+
+namespace ns::numerical
+{
 template <typename T>
 [[nodiscard]] constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
 {
@@ -180,21 +119,4 @@ template <typename T>
         const Quaternion q = unit_quaternion_for_rotation(axis, angle);
         return (q * v * q.conjugate()).vec();
 }
-}
-
-namespace std
-{
-template <typename T>
-struct hash<::ns::numerical::Quaternion<T>> final
-{
-        [[nodiscard]] static size_t operator()(const ::ns::numerical::Quaternion<T>& q)
-        {
-                return q.hash();
-        }
-};
-
-template <typename T>
-struct tuple_size<::ns::numerical::Quaternion<T>> final : integral_constant<size_t, 4>
-{
-};
 }
