@@ -149,30 +149,9 @@ public:
                 wb_ += w_err * dt * zeta;
 
                 const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
-
                 q_ = (q_ + (d - beta * g) * dt).normalized();
 
-                const numerical::Vector<3, T> h = [&] -> numerical::Vector<3, T>
-                {
-                        numerical::Vector<3, T> v0;
-                        v0[0] = T{0.5} - q_[2] * q_[2] - q_[3] * q_[3];
-                        v0[1] = q_[1] * q_[2] - q_[0] * q_[3];
-                        v0[2] = q_[1] * q_[3] + q_[0] * q_[2];
-
-                        numerical::Vector<3, T> v1;
-                        v1[0] = q_[1] * q_[2] + q_[0] * q_[3];
-                        v1[1] = T{0.5} - q_[1] * q_[1] - q_[3] * q_[3];
-                        v1[2] = q_[2] * q_[3] - q_[0] * q_[1];
-
-                        numerical::Vector<3, T> v2;
-                        v2[0] = q_[1] * q_[3] - q_[0] * q_[2];
-                        v2[1] = q_[2] * q_[3] + q_[0] * q_[1];
-                        v2[2] = T{0.5} - q_[1] * q_[1] - q_[2] * q_[2];
-
-                        const numerical::Vector<3, T> mn2 = T{2} * mn;
-                        return {dot(mn2, v0), dot(mn2, v1), dot(mn2, v2)};
-                }();
-
+                const numerical::Vector<3, T> h = numerical::rotate_vector(q_, mn);
                 b_x_ = std::sqrt(h[0] * h[0] + h[1] * h[1]);
                 b_z_ = h[2];
 
