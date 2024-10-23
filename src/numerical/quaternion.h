@@ -108,6 +108,12 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] Vector<3, T> rotate_vector(const Quaternion<T>& q_unit, const Vector<3, T>& v)
+{
+        return (q_unit * v * q_unit.conjugate()).vec();
+}
+
+template <typename T>
 [[nodiscard]] Quaternion<T> unit_quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
 {
         return {std::cos(angle / 2), std::sin(angle / 2) * axis.normalized()};
@@ -117,6 +123,6 @@ template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
         const Quaternion q = unit_quaternion_for_rotation(axis, angle);
-        return (q * v * q.conjugate()).vec();
+        return rotate_vector(q, v);
 }
 }
