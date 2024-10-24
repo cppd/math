@@ -50,14 +50,14 @@ public:
                 const numerical::Vector<3, T> a,
                 const T beta,
                 const T dt,
-                const T min_acceleration)
+                const T min_accelerometer)
         {
                 // (11)
                 const numerical::Quaternion<T> d = q_ * (w / T{2});
 
                 const T a_norm = a.norm();
 
-                if (a_norm <= min_acceleration)
+                if (!(a_norm >= min_accelerometer))
                 {
                         // (13)
                         q_ = (q_ + d * dt).normalized();
@@ -104,14 +104,26 @@ public:
                 const numerical::Vector<3, T> m,
                 const T beta,
                 const T zeta,
-                const T dt)
+                const T dt,
+                const T min_accelerometer)
         {
-                const numerical::Vector<3, T> mn = m.normalized();
+                const T m_norm = m.norm();
+
+                const T a_norm = a.norm();
+
+                if (!(a_norm >= min_accelerometer))
+                {
+                        // (11) (49)
+                        const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
+                        // (13)
+                        q_ = (q_ + d * dt).normalized();
+                        return q_;
+                }
+
+                const numerical::Vector<3, T> mn = m / m_norm;
 
                 const numerical::Quaternion<T> g = [&]
                 {
-                        const T a_norm = a.norm();
-
                         const T f_0 = 2 * q_[1] * q_[3] - 2 * q_[2] * q_[0] - a[0] / a_norm;
                         const T f_1 = 2 * q_[1] * q_[0] + 2 * q_[2] * q_[3] - a[1] / a_norm;
                         const T f_2 = 1 - 2 * q_[1] * q_[1] - 2 * q_[2] * q_[2] - a[2] / a_norm;
@@ -139,6 +151,8 @@ public:
 
                 const numerical::Vector<3, T> w_err = [&]
                 {
+                        // (47)
+                        // (q_.conjugate() * g).vec()
                         numerical::Vector<3, T> r;
                         r[0] = q_[0] * g[1] - q_[1] * g[0] - q_[2] * g[3] + q_[3] * g[2];
                         r[1] = q_[0] * g[2] + q_[1] * g[3] - q_[2] * g[0] - q_[3] * g[1];
@@ -146,11 +160,13 @@ public:
                         return T{2} * r;
                 }();
 
-                wb_ += w_err * dt * zeta;
+                // (48)
+                wb_ += w_err * (dt * zeta);
 
                 const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
                 q_ = (q_ + (d - beta * g) * dt).normalized();
 
+                // (45) (46)
                 const numerical::Vector<3, T> h = numerical::rotate_vector(q_, mn);
                 b_x_ = std::sqrt(h[0] * h[0] + h[1] * h[1]);
                 b_z_ = h[2];
