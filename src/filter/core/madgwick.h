@@ -31,6 +31,51 @@ and inertial/magnetic sensor arrays.
 
 namespace ns::filter::core
 {
+namespace madgwick_implementation
+{
+template <typename T>
+[[nodiscard]] numerical::Quaternion<T> update(
+        const numerical::Quaternion<T> q,
+        const numerical::Vector<3, T> w,
+        const numerical::Vector<3, T> a,
+        const T beta,
+        const T dt,
+        const T min_accelerometer)
+{
+        // (11)
+        const numerical::Quaternion<T> d = q * (w / T{2});
+
+        const T a_norm = a.norm();
+        if (!(a_norm >= min_accelerometer))
+        {
+                // (13)
+                return (q + d * dt).normalized();
+        }
+
+        const numerical::Quaternion<T> g = [&]
+        {
+                // (25)
+                // f_g
+                const T f_0 = 2 * q[1] * q[3] - 2 * q[2] * q[0] - a[0] / a_norm;
+                const T f_1 = 2 * q[1] * q[0] + 2 * q[2] * q[3] - a[1] / a_norm;
+                const T f_2 = 1 - 2 * q[1] * q[1] - 2 * q[2] * q[2] - a[2] / a_norm;
+
+                // (20) (26)
+                // transpose(J_g) * f_g
+                const numerical::Vector<3, T> f(2 * f_0, 2 * f_1, 4 * f_2);
+                numerical::Quaternion<T> r;
+                r[0] = q[1] * f[1] - q[2] * f[0];
+                r[1] = q[3] * f[0] + q[0] * f[1] - q[1] * f[2];
+                r[2] = q[3] * f[1] - q[0] * f[0] - q[2] * f[2];
+                r[3] = q[1] * f[0] + q[2] * f[1];
+                return r;
+        }();
+
+        // (42) (43) (44)
+        return (q + (d - beta * g.normalized()) * dt).normalized();
+}
+}
+
 // Measurement error (rad/s) to beta
 template <typename T>
 [[nodiscard]] T madgwick_beta(const T measurement_error)
@@ -52,39 +97,8 @@ public:
                 const T dt,
                 const T min_accelerometer)
         {
-                // (11)
-                const numerical::Quaternion<T> d = q_ * (w / T{2});
-
-                const T a_norm = a.norm();
-
-                if (!(a_norm >= min_accelerometer))
-                {
-                        // (13)
-                        q_ = (q_ + d * dt).normalized();
-                        return q_;
-                }
-
-                const numerical::Quaternion<T> g = [&]
-                {
-                        // (25)
-                        // f_g
-                        const T f_0 = 2 * q_[1] * q_[3] - 2 * q_[2] * q_[0] - a[0] / a_norm;
-                        const T f_1 = 2 * q_[1] * q_[0] + 2 * q_[2] * q_[3] - a[1] / a_norm;
-                        const T f_2 = 1 - 2 * q_[1] * q_[1] - 2 * q_[2] * q_[2] - a[2] / a_norm;
-
-                        // (20) (26)
-                        // transpose(J_g) * f_g
-                        const numerical::Vector<3, T> f(2 * f_0, 2 * f_1, 4 * f_2);
-                        numerical::Quaternion<T> r;
-                        r[0] = q_[1] * f[1] - q_[2] * f[0];
-                        r[1] = q_[3] * f[0] + q_[0] * f[1] - q_[1] * f[2];
-                        r[2] = q_[3] * f[1] - q_[0] * f[0] - q_[2] * f[2];
-                        r[3] = q_[1] * f[0] + q_[2] * f[1];
-                        return r;
-                }();
-
-                // (42) (43) (44)
-                q_ = (q_ + (d - beta * g.normalized()) * dt).normalized();
+                namespace impl = madgwick_implementation;
+                q_ = impl::update(q_, w, a, beta, dt, min_accelerometer);
                 return q_;
         }
 };
@@ -105,12 +119,18 @@ public:
                 const T beta,
                 const T zeta,
                 const T dt,
-                const T min_accelerometer)
+                const T min_accelerometer,
+                const T min_magnetometer)
         {
                 const T m_norm = m.norm();
+                if (!(m_norm >= min_magnetometer))
+                {
+                        namespace impl = madgwick_implementation;
+                        q_ = impl::update(q_, w - wb_, a, beta, dt, min_accelerometer);
+                        return q_;
+                }
 
                 const T a_norm = a.norm();
-
                 if (!(a_norm >= min_accelerometer))
                 {
                         // (11) (49)
