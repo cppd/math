@@ -28,6 +28,11 @@ struct Test final
                 return madgwick_beta<T>(0);
         }
 
+        T zeta()
+        {
+                return madgwick_zeta<T>(0);
+        }
+
         numerical::Quaternion<T> f1()
         {
                 Madgwick<T> m;
