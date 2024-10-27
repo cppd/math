@@ -185,16 +185,8 @@ public:
                         return r.normalized();
                 }();
 
-                const numerical::Vector<3, T> w_err = [&]
-                {
-                        // (47)
-                        // (q_.conjugate() * gn).vec()
-                        numerical::Vector<3, T> r;
-                        r[0] = q_[0] * gn[1] - q_[1] * gn[0] - q_[2] * gn[3] + q_[3] * gn[2];
-                        r[1] = q_[0] * gn[2] + q_[1] * gn[3] - q_[2] * gn[0] - q_[3] * gn[1];
-                        r[2] = q_[0] * gn[3] - q_[1] * gn[2] + q_[2] * gn[1] - q_[3] * gn[0];
-                        return T{2} * r;
-                }();
+                // (47)
+                const numerical::Vector<3, T> w_err = T{2} * numerical::multiply_vec(q_.conjugate(), gn);
 
                 // (48)
                 wb_ += w_err * (dt * zeta);
