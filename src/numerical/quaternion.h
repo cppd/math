@@ -108,6 +108,17 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] constexpr Vector<3, T> multiply_vec(const Quaternion<T>& a, const Quaternion<T>& b)
+{
+        // a[0] * b.vec() + b[0] * a.vec() + cross(a.vec(), b.vec())
+        Vector<3, T> res;
+        res[0] = a[0] * b[1] + b[0] * a[1] + a[2] * b[3] - a[3] * b[2];
+        res[1] = a[0] * b[2] + b[0] * a[2] - a[1] * b[3] + a[3] * b[1];
+        res[2] = a[0] * b[3] + b[0] * a[3] + a[1] * b[2] - a[2] * b[1];
+        return res;
+}
+
+template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Quaternion<T>& q_unit, const Vector<3, T>& v)
 {
         return (q_unit * v * q_unit.conjugate()).vec();
