@@ -110,6 +110,7 @@ template <typename T>
 template <typename T>
 [[nodiscard]] constexpr Vector<3, T> multiply_vec(const Quaternion<T>& a, const Quaternion<T>& b)
 {
+        // (a * b).vec()
         // a[0] * b.vec() + b[0] * a.vec() + cross(a.vec(), b.vec())
         Vector<3, T> res;
         res[0] = a[0] * b[1] + b[0] * a[1] + a[2] * b[3] - a[3] * b[2];
