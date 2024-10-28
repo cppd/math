@@ -28,6 +28,7 @@ and inertial/magnetic sensor arrays.
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <type_traits>
 
 namespace ns::filter::core
 {
@@ -52,7 +53,7 @@ template <typename T>
                 return (q + d * dt).normalized();
         }
 
-        const numerical::Quaternion<T> g = [&]
+        const numerical::Quaternion<T> gn = [&]
         {
                 // (25)
                 // f_g
@@ -68,11 +69,11 @@ template <typename T>
                 r[1] = q[3] * f[0] + q[0] * f[1] - q[1] * f[2];
                 r[2] = q[3] * f[1] - q[0] * f[0] - q[2] * f[2];
                 r[3] = q[1] * f[0] + q[2] * f[1];
-                return r;
+                return r.normalized();
         }();
 
         // (42) (43) (44)
-        return (q + (d - beta * g.normalized()) * dt).normalized();
+        return (q + (d - beta * gn) * dt).normalized();
 }
 }
 
@@ -80,6 +81,7 @@ template <typename T>
 template <typename T>
 [[nodiscard]] T madgwick_beta(const T error)
 {
+        static_assert(std::is_floating_point_v<T>);
         // (50)
         // sqrt(3.0 / 4)
         return T{0.86602540378443864676L} * error;
@@ -89,6 +91,7 @@ template <typename T>
 template <typename T>
 [[nodiscard]] T madgwick_zeta(const T rate)
 {
+        static_assert(std::is_floating_point_v<T>);
         // (51)
         // sqrt(3.0 / 4)
         return T{0.86602540378443864676L} * rate;
