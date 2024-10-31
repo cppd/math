@@ -46,12 +46,11 @@ template <typename T>
         // (20) (26)
         // transpose(J_g) * f_g
         const numerical::Vector<3, T> f(2 * f_0, 2 * f_1, 4 * f_2);
-        numerical::Quaternion<T> r;
-        r[0] = q[1] * f[1] - q[2] * f[0];
-        r[1] = q[3] * f[0] + q[0] * f[1] - q[1] * f[2];
-        r[2] = q[3] * f[1] - q[0] * f[0] - q[2] * f[2];
-        r[3] = q[1] * f[0] + q[2] * f[1];
-        return r.normalized();
+        const T w = q[1] * f[1] - q[2] * f[0];
+        const T x = q[3] * f[0] + q[0] * f[1] - q[1] * f[2];
+        const T y = q[3] * f[1] - q[0] * f[0] - q[2] * f[2];
+        const T z = q[1] * f[0] + q[2] * f[1];
+        return numerical::Quaternion<T>(w, x, y, z).normalized();
 }
 
 template <typename T>
@@ -82,14 +81,14 @@ template <typename T>
         const numerical::Quaternion<T> bxq = b_x * q;
         const numerical::Quaternion<T> bzq = b_z * q;
 
-        numerical::Quaternion<T> r;
-        r[0] = q[1] * f[1] - q[2] * f[0] - bzq[2] * f[3] - (bxq[3] - bzq[1]) * f[4] + bxq[2] * f[5];
-        r[1] = q[3] * f[0] + q[0] * f[1] - q[1] * f[2] + bzq[3] * f[3] + (bxq[2] + bzq[0]) * f[4]
-               + (bxq[3] - 2 * bzq[1]) * f[5];
-        r[2] = q[3] * f[1] - -q[0] * f[0] - q[2] * f[2] - (2 * bxq[2] + bzq[0]) * f[3] + (bxq[1] + bzq[3]) * f[4]
-               + (bxq[0] - 2 * bzq[2]) * f[5];
-        r[3] = q[1] * f[0] + q[2] * f[1] - (2 * bxq[3] - bzq[1]) * f[3] - (bxq[0] - bzq[2]) * f[4] + bxq[1] * f[5];
-        return r.normalized();
+        const T w = q[1] * f[1] - q[2] * f[0] - bzq[2] * f[3] - (bxq[3] - bzq[1]) * f[4] + bxq[2] * f[5];
+        const T x = q[3] * f[0] + q[0] * f[1] - q[1] * f[2] + bzq[3] * f[3] + (bxq[2] + bzq[0]) * f[4]
+                    + (bxq[3] - 2 * bzq[1]) * f[5];
+        const T y = q[3] * f[1] - -q[0] * f[0] - q[2] * f[2] - (2 * bxq[2] + bzq[0]) * f[3] + (bxq[1] + bzq[3]) * f[4]
+                    + (bxq[0] - 2 * bzq[2]) * f[5];
+        const T z = q[1] * f[0] + q[2] * f[1] - (2 * bxq[3] - bzq[1]) * f[3] - (bxq[0] - bzq[2]) * f[4] + bxq[1] * f[5];
+
+        return numerical::Quaternion<T>(w, x, y, z).normalized();
 }
 
 template <typename T>
