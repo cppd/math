@@ -17,13 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
+#include <cstddef>
+
 namespace ns::filter::core
 {
+// cross(a, b) = cross_matrix_1(a) * b
 template <typename T>
-numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
+numerical::Matrix<3, 3, T> cross_matrix_1(const numerical::Vector<3, T>& v)
 {
         return {
                 {    0, -v[2],  v[1]},
@@ -46,5 +50,38 @@ numerical::Matrix<3, 3, T> cross_matrix_2(const numerical::Vector<3, T>& v)
                 {       v01, -v00 - v22,        v12},
                 {       v02,        v12, -v00 - v11}
         };
+}
+
+template <std::size_t N, typename T>
+numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
+{
+        if constexpr (N == 1)
+        {
+                return cross_matrix_1(v);
+        }
+        else if constexpr (N == 2)
+        {
+                return cross_matrix_2(v);
+        }
+        else if constexpr (N == 3)
+        {
+                return cross_matrix_1(-dot(v, v) * v);
+        }
+        else if constexpr (N == 4)
+        {
+                return -dot(v, v) * cross_matrix_2(v);
+        }
+        else if constexpr (N == 5)
+        {
+                return cross_matrix_1(square(dot(v, v)) * v);
+        }
+        else if constexpr (N == 6)
+        {
+                return cross_matrix_2(dot(v, v) * v);
+        }
+        else
+        {
+                static_assert(false);
+        }
 }
 }
