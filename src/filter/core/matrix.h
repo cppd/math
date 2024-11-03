@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::core
 {
+namespace matrix_implementation
+{
 // cross(a, b) = cross_matrix_1(a) * b
 template <typename T>
 numerical::Matrix<3, 3, T> cross_matrix_1(const numerical::Vector<3, T>& v)
@@ -51,33 +53,36 @@ numerical::Matrix<3, 3, T> cross_matrix_2(const numerical::Vector<3, T>& v)
                 {       v02,        v12, -v00 - v11}
         };
 }
+}
 
 template <std::size_t N, typename T>
 numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
 {
+        namespace impl = matrix_implementation;
+
         if constexpr (N == 1)
         {
-                return cross_matrix_1(v);
+                return impl::cross_matrix_1(v);
         }
         else if constexpr (N == 2)
         {
-                return cross_matrix_2(v);
+                return impl::cross_matrix_2(v);
         }
         else if constexpr (N == 3)
         {
-                return cross_matrix_1(-dot(v, v) * v);
+                return impl::cross_matrix_1(-dot(v, v) * v);
         }
         else if constexpr (N == 4)
         {
-                return -dot(v, v) * cross_matrix_2(v);
+                return -dot(v, v) * impl::cross_matrix_2(v);
         }
         else if constexpr (N == 5)
         {
-                return cross_matrix_1(square(dot(v, v)) * v);
+                return impl::cross_matrix_1(square(dot(v, v)) * v);
         }
         else if constexpr (N == 6)
         {
-                return cross_matrix_2(dot(v, v) * v);
+                return impl::cross_matrix_2(dot(v, v) * v);
         }
         else
         {
