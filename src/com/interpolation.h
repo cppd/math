@@ -61,8 +61,6 @@ template <typename T, typename F>
 template <std::size_t N, typename T, typename F>
 [[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 {
-        static_assert(N > 0);
-
         if constexpr (N == 1)
         {
                 return interpolation(data[0], data[1], p[0]);
@@ -110,6 +108,10 @@ template <std::size_t N, typename T, typename F>
                 }
 
                 return interpolation(tmp_data, tmp_p);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 }

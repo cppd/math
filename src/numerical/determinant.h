@@ -38,7 +38,6 @@ constexpr T determinant_cofactor_expansion(
 {
         static_assert(N_V >= SIZE);
         static_assert(N_H >= SIZE);
-        static_assert(SIZE > 0);
 
         if constexpr (SIZE == 1)
         {
@@ -67,7 +66,7 @@ constexpr T determinant_cofactor_expansion(
 
                 return d0 - d1 + d2;
         }
-        else
+        else if constexpr (SIZE >= 4)
         {
                 T det = 0;
 
@@ -90,6 +89,10 @@ constexpr T determinant_cofactor_expansion(
                 }
 
                 return det;
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 }

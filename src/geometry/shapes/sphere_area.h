@@ -69,7 +69,6 @@ inline constexpr T SPHERE_AREA = []
 template <unsigned N, typename T>
 T sphere_relative_area(const std::type_identity_t<T> a, const std::type_identity_t<T> b)
 {
-        static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
         // Assuming[Element[n,Integers]&&n>=0,Integrate[Sin[x]^n,x]]
@@ -124,7 +123,7 @@ T sphere_relative_area(const std::type_identity_t<T> a, const std::type_identity
                         + 3 * std::sin(8 * b))
                        / 3072;
         }
-        else
+        else if constexpr (N >= 11)
         {
                 return ns::numerical::integrate<T>(
                         [](const T x)
@@ -132,6 +131,10 @@ T sphere_relative_area(const std::type_identity_t<T> a, const std::type_identity
                                 return std::pow(std::sin(x), static_cast<T>(N - 2));
                         },
                         a, b, /*count*/ 100);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 }
