@@ -123,15 +123,12 @@ std::vector<numerical::Vector<N, float>> clone_object(
 template <std::size_t N>
 constexpr std::tuple<unsigned, unsigned> facet_count(const unsigned point_count)
 {
-        static_assert(2 <= N && N <= 4);
-
         if constexpr (N == 2)
         {
                 ASSERT(point_count >= 3);
                 return {point_count, point_count};
         }
-
-        if constexpr (N == 3)
+        else if constexpr (N == 3)
         {
                 ASSERT(point_count >= 4);
                 // Mark de Berg, Otfried Cheong, Marc van Kreveld, Mark Overmars
@@ -140,8 +137,7 @@ constexpr std::tuple<unsigned, unsigned> facet_count(const unsigned point_count)
                 const unsigned count = 2 * point_count - 4;
                 return {count, count};
         }
-
-        if constexpr (N == 4)
+        else if constexpr (N == 4)
         {
                 ASSERT(point_count >= 5);
                 // Handbook of Discrete and Computational Geometry edited
@@ -152,6 +148,10 @@ constexpr std::tuple<unsigned, unsigned> facet_count(const unsigned point_count)
                 const unsigned min = std::lround(6.55 * point_count);
                 const unsigned max = std::lround(6.85 * point_count);
                 return {min, max};
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 

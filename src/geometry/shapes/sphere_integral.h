@@ -154,16 +154,19 @@ Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],{x,0,Pi/2}]]
 template <unsigned N, typename T>
 inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE = []
 {
-        static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
         if constexpr (N > 2)
         {
                 return SPHERE_AREA<N - 1, long double> / (N - 1);
         }
-        else
+        else if constexpr (N == 2)
         {
                 return 2.0L;
+        }
+        else
+        {
+                static_assert(false);
         }
 }();
 

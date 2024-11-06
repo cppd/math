@@ -44,7 +44,7 @@ template <std::size_t M, std::size_t N, typename T>
 [[nodiscard]] constexpr T volume_impl(const numerical::Vector<N, T>& d)
 {
         static_assert(M <= N);
-        static_assert(M >= 1);
+
         if constexpr (M == 1)
         {
                 return d[0];
@@ -57,9 +57,13 @@ template <std::size_t M, std::size_t N, typename T>
         {
                 return d[0] * d[1] * d[2];
         }
-        else
+        else if constexpr (M >= 4)
         {
                 return d[M - 1] * volume_impl<M - 1>(d);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
@@ -67,7 +71,7 @@ template <std::size_t M, std::size_t N, typename T>
 [[nodiscard]] constexpr T surface_impl(const numerical::Vector<N, T>& d)
 {
         static_assert(M <= N);
-        static_assert(M >= 2);
+
         if constexpr (M == 2)
         {
                 return d[0] + d[1];
@@ -76,9 +80,13 @@ template <std::size_t M, std::size_t N, typename T>
         {
                 return d[0] * d[1] + d[2] * (d[0] + d[1]);
         }
-        else
+        else if constexpr (M >= 4)
         {
                 return volume_impl<M - 1>(d) + d[M - 1] * surface_impl<M - 1>(d);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
