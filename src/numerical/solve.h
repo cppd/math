@@ -43,16 +43,13 @@ namespace solve_implementation
 template <std::size_t N, typename T>
 constexpr Vector<N, T> solve_cofactor_expansion(const std::array<Vector<N, T>, N>& a, const Vector<N, T>& b)
 {
-        static_assert(N >= 1 && N <= 3);
-
         // Cramer’s rule
 
         if constexpr (N == 1)
         {
                 return Vector<1, T>(b[0] / a[0][0]);
         }
-
-        if constexpr (N == 2)
+        else if constexpr (N == 2)
         {
                 const T d = a[0][0] * a[1][1] - a[0][1] * a[1][0];
                 Vector<2, T> res;
@@ -60,8 +57,7 @@ constexpr Vector<N, T> solve_cofactor_expansion(const std::array<Vector<N, T>, N
                 res[1] = (b[1] * a[0][0] - b[0] * a[1][0]) / d;
                 return res;
         }
-
-        if constexpr (N == 3)
+        else if constexpr (N == 3)
         {
                 const T c00 = a[1][1] * a[2][2] - a[1][2] * a[2][1];
                 const T c10 = a[0][2] * a[2][1] - a[0][1] * a[2][2];
@@ -85,21 +81,22 @@ constexpr Vector<N, T> solve_cofactor_expansion(const std::array<Vector<N, T>, N
 
                 return res;
         }
+        else
+        {
+                static_assert(false);
+        }
 }
 
 template <std::size_t N, typename T>
 constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::array<Vector<N, T>, N>& a)
 {
-        static_assert(N >= 1 && N <= 3);
-
         // Adjoint
 
         if constexpr (N == 1)
         {
                 return {Vector<1, T>(T{1} / a[0][0])};
         }
-
-        if constexpr (N == 2)
+        else if constexpr (N == 2)
         {
                 const T d = a[0][0] * a[1][1] - a[0][1] * a[1][0];
                 std::array<Vector<2, T>, 2> res;
@@ -109,8 +106,7 @@ constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::arra
                 res[1][1] = a[0][0] / d;
                 return res;
         }
-
-        if constexpr (N == 3)
+        else if constexpr (N == 3)
         {
                 const T c00 = a[1][1] * a[2][2] - a[1][2] * a[2][1];
                 const T c10 = a[0][2] * a[2][1] - a[0][1] * a[2][2];
@@ -133,6 +129,10 @@ constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::arra
                 res[2][2] = (a[0][0] * a[1][1] - a[0][1] * a[1][0]) / d;
 
                 return res;
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 }
