@@ -52,35 +52,37 @@ constexpr Color fresnel_cosine_weighted_average(const Color& f0)
 {
         using T = Color::DataType;
 
-        static_assert(N >= 3 && N <= 9);
-
         if constexpr (N == 3)
         {
                 return f0 * (T{20} / 21) + Color(T{1} / 21);
         }
-        if constexpr (N == 4)
+        else if constexpr (N == 4)
         {
                 return f0 * (495 * PI<T> / 256 - T{36} / 7) + Color(T{43} / 7 - 495 * PI<T> / 256);
         }
-        if constexpr (N == 5)
+        else if constexpr (N == 5)
         {
                 return f0 * (T{115} / 126) + Color(T{11} / 126);
         }
-        if constexpr (N == 6)
+        else if constexpr (N == 6)
         {
                 return f0 * (715 * PI<T> / 512 - T{220} / 63) + Color(T{283} / 63 - 715 * PI<T> / 512);
         }
-        if constexpr (N == 7)
+        else if constexpr (N == 7)
         {
                 return f0 * (T{29} / 33) + Color(T{4} / 33);
         }
-        if constexpr (N == 8)
+        else if constexpr (N == 8)
         {
                 return f0 * (2275 * PI<T> / 2048 - T{260} / 99) + Color(T{359} / 99 - 2275 * PI<T> / 2048);
         }
-        if constexpr (N == 9)
+        else if constexpr (N == 9)
         {
                 return f0 * (T{1093} / 1287) + Color(T{194} / 1287);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 }

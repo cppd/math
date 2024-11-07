@@ -53,8 +53,7 @@ T facet_normat_weight_at_vertex(
         {
                 return 1;
         }
-
-        if constexpr (N == 4 || N == 3)
+        else if constexpr (N == 4 || N == 3)
         {
                 ASSERT(facet_vertex_index >= 0 && facet_vertex_index < static_cast<int>(N));
 
@@ -66,6 +65,10 @@ T facet_normat_weight_at_vertex(
                 }
 
                 return geometry::shapes::sphere_simplex_area(vectors);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
