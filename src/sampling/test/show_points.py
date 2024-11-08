@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Topological Manifold
+# Copyright (C) 2017-2024 Topological Manifold
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -121,8 +121,8 @@ def show_points(sampler_info, points, title):
     else:
         assert False
 
-    file = tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX)
-    figure.write_html(file.name, auto_open=True)
+    with tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX) as f:
+        figure.write_html(f.name, auto_open=True)
 
 
 # Convert string "*(x, y, ...)*" to tuple(x, y, ...)
