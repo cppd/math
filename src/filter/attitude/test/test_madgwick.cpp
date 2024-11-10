@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <src/com/log.h>
-#include <src/filter/core/madgwick.h>
+#include <src/filter/attitude/madgwick.h>
 #include <src/numerical/quaternion.h>
 #include <src/test/test.h>
 
@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 
-namespace ns::filter::core::test
+namespace ns::filter::attitude::test
 {
 namespace
 {
