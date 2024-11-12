@@ -77,6 +77,11 @@ public:
                 return {data_[0], data_[1], data_[2]};
         }
 
+        [[nodiscard]] constexpr T real() const
+        {
+                return data_[3];
+        }
+
         [[nodiscard]] constexpr Quaternion<T> conjugate() const
         {
                 return {-data_[0], -data_[1], -data_[2], data_[3]};
@@ -163,6 +168,24 @@ template <typename T>
         res[2] = a[3] * b[2] - a[0] * b[1] + a[1] * b[0];
         res[3] = -a[0] * b[0] - a[1] * b[1] - a[2] * b[2];
         return res;
+}
+
+template <typename T>
+[[nodiscard]] constexpr numerical::Vector<3, T> multiply_vec(const Quaternion<T>& a, const Quaternion<T>& b)
+{
+        // (a * b).vec()
+        // a[3] * b.vec() + b[3] * a.vec() - cross(a.vec(), b.vec())
+        numerical::Vector<3, T> res;
+        res[0] = a[3] * b[0] + b[3] * a[0] - a[1] * b[2] + a[2] * b[1];
+        res[1] = a[3] * b[1] + b[3] * a[1] + a[0] * b[2] - a[2] * b[0];
+        res[2] = a[3] * b[2] + b[3] * a[2] - a[0] * b[1] + a[1] * b[0];
+        return res;
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> rotate_vector(const Quaternion<T>& q_unit, const numerical::Vector<3, T>& v)
+{
+        return multiply_vec(q_unit * v, q_unit.conjugate());
 }
 
 template <typename T>
