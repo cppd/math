@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quaternion.h"
 
 #include <src/numerical/matrix.h>
+#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
 #include <cmath>
@@ -44,9 +45,14 @@ numerical::Matrix<3, 3, T> phi_matrix(const numerical::Vector<3, T>& w, const T 
 }
 
 template <typename T>
-numerical::Matrix<3, 3, T> noise_covariance_matrix(const T variance, const T dt)
+Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
 {
-        return numerical::Matrix<3, 3, T>(variance * dt);
+        const auto n2 = v.norm_squared();
+        if (n2 <= 1)
+        {
+                return Quaternion<T>(v, std::sqrt(1 - n2));
+        }
+        return Quaternion<T>(v, 1) / std::sqrt(1 + n2);
 }
 }
 
@@ -61,19 +67,56 @@ class Fusion final
         {
                 namespace impl = fusion_implementation;
 
-                x_ = first_order_quaternion_integrator(x_, w_last_, w, dt);
+                x_ = first_order_quaternion_integrator(x_, w_last_, w, dt).normalized();
                 w_last_ = w;
 
                 const auto phi = impl::phi_matrix(w, dt);
-                const auto q = impl::noise_covariance_matrix(variance, dt);
+                const auto q = numerical::Matrix<3, 3, T>(variance * dt);
 
                 p_ = phi * p_ * phi.transposed() + q;
+        }
+
+        void update(const numerical::Vector<3, T>& z, const numerical::Vector<3, T>& global, const T variance)
+        {
+                namespace impl = fusion_implementation;
+
+                const auto hx = rotate_vector(x_, global);
+                const auto h = cross_matrix<1>(hx);
+
+                const auto ht = h.transposed();
+                const auto r = numerical::Matrix<3, 3, T>(variance);
+                const auto s = h * p_ * ht + r;
+                const auto k = p_ * ht * s.inversed();
+                const auto dx = k * (z - hx);
+
+                const auto q = impl::make_unit_quaternion(dx / T{2});
+                x_ = (q * x_).normalized();
+
+                const auto i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
+                p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
 public:
         void update_gyro(const numerical::Vector<3, T>& w, const T variance, const T dt)
         {
                 predict(w, variance, dt);
+        }
+
+        void update_acc(const numerical::Vector<3, T>& a)
+        {
+                const T n = a.norm();
+                if (!(n > 3))
+                {
+                        return;
+                }
+
+                const T sigma = T{0.1} * std::exp(std::abs(n - T{9.81}));
+                update(a / n, {0, 0, 1}, sigma * sigma);
+        }
+
+        [[nodiscard]] numerical::Quaternion<T> attitude() const
+        {
+                return {x_.real(), x_.vec()};
         }
 };
 }
