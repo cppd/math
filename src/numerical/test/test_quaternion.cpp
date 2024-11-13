@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/random/pcg.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -25,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <random>
 #include <type_traits>
 
 namespace ns::numerical
@@ -139,6 +141,19 @@ void test(const T precision)
                 const Vector<3, T> r1 = rotate_vector(q, v);
                 const Vector<3, T> r2 = m * v;
                 test_equal(r1, r2, precision);
+        }
+
+        {
+                PCG pcg;
+                std::uniform_real_distribution<T> urd(-100, 100);
+                for (int i = 0; i < 100; ++i)
+                {
+                        const Quaternion<T> q1 =
+                                Quaternion<T>(std::abs(urd(pcg)), urd(pcg), urd(pcg), urd(pcg)).normalized();
+                        const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
+                        const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
+                        test_equal(q1, q2, precision);
+                }
         }
 }
 
