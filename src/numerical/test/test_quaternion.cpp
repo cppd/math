@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -123,6 +124,22 @@ void test(const T precision)
         test_equal(
                 rotate_vector({-5, 6, 4}, T{2}, {3, -5, 2}),
                 {5.46996008744151012305L, 0.27754662586912375613L, -2.82886982950179797927L}, precision);
+
+        {
+                const Quaternion<T> q1 = Quaternion<T>(2, -3, 4, -5).normalized();
+                const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
+                const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
+                test_equal(q1, q2, precision);
+        }
+
+        {
+                const Quaternion<T> q = Quaternion<T>(2, 3, -4, 5).normalized();
+                const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q);
+                const Vector<3, T> v{-3, 4, -5};
+                const Vector<3, T> r1 = rotate_vector(q, v);
+                const Vector<3, T> r2 = m * v;
+                test_equal(r1, r2, precision);
+        }
 }
 
 void test_quaternion()
@@ -130,7 +147,7 @@ void test_quaternion()
         LOG("Test quaternion");
         test<float>(1e-6);
         test<double>(1e-15);
-        test<long double>(0);
+        test<long double>(1e-18);
         LOG("Test quaternion passed");
 }
 

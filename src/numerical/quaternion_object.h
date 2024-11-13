@@ -77,9 +77,34 @@ public:
                 return {data_[1], data_[2], data_[3]};
         }
 
+        [[nodiscard]] constexpr T w() const
+        {
+                return data_[0];
+        }
+
+        [[nodiscard]] constexpr T x() const
+        {
+                return data_[1];
+        }
+
+        [[nodiscard]] constexpr T y() const
+        {
+                return data_[2];
+        }
+
+        [[nodiscard]] constexpr T z() const
+        {
+                return data_[3];
+        }
+
         [[nodiscard]] constexpr Quaternion<T> conjugate() const
         {
                 return {data_[0], -data_[1], -data_[2], -data_[3]};
+        }
+
+        [[nodiscard]] T norm() const
+        {
+                return data_.norm();
         }
 
         void normalize()
