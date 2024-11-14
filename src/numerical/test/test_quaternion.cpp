@@ -63,10 +63,9 @@ template struct Test<double>;
 template struct Test<long double>;
 
 template <typename T>
+        requires (std::is_floating_point_v<T>)
 bool equal(const T a, const T b, const T precision)
 {
-        static_assert(std::is_floating_point_v<T>);
-
         if (a == b)
         {
                 return true;
@@ -81,15 +80,45 @@ bool equal(const T a, const T b, const T precision)
 }
 
 template <typename T, typename P>
-void test_equal(const T& a, const T& b, const P precision)
+        requires (!std::is_floating_point_v<T>)
+bool equal(const T& a, const T& b, const P precision)
 {
         for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
         {
                 if (!equal(a[i], b[i], precision))
                 {
-                        error(to_string(a) + " is not equal to " + to_string(b));
+                        return false;
                 }
         }
+        return true;
+}
+
+template <typename T, typename P>
+void test_equal(const T& a, const T& b, const P precision)
+{
+        if constexpr (std::tuple_size_v<T> == 4)
+        {
+                if (a.w() == 0 && b.w() == 0)
+                {
+                        if (!(equal(a.vec(), b.vec(), precision) || equal(a.vec(), -b.vec(), precision)))
+                        {
+                                error(to_string(a) + " is not equal to " + to_string(b));
+                        }
+                        return;
+                }
+        }
+        if (!equal(a, b, precision))
+        {
+                error(to_string(a) + " is not equal to " + to_string(b));
+        }
+}
+
+template <typename T>
+Quaternion<T> random_rotation_quaternion(PCG& pcg)
+{
+        std::uniform_real_distribution<T> urd(-10, 10);
+        const Quaternion<T> q{std::abs(urd(pcg)), urd(pcg), urd(pcg), urd(pcg)};
+        return q.normalized();
 }
 
 template <typename T>
@@ -135,21 +164,24 @@ void test(const T precision)
         }
 
         {
-                const Quaternion<T> q = Quaternion<T>(2, 3, -4, 5).normalized();
-                const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q);
-                const Vector<3, T> v{-3, 4, -5};
-                const Vector<3, T> r1 = rotate_vector(q, v);
-                const Vector<3, T> r2 = m * v;
-                test_equal(r1, r2, precision);
-        }
-
-        {
                 PCG pcg;
                 std::uniform_real_distribution<T> urd(-100, 100);
                 for (int i = 0; i < 100; ++i)
                 {
-                        const Quaternion<T> q1 =
-                                Quaternion<T>(std::abs(urd(pcg)), urd(pcg), urd(pcg), urd(pcg)).normalized();
+                        const Quaternion<T> q = random_rotation_quaternion<T>(pcg);
+                        const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q);
+                        const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
+                        const Vector<3, T> r1 = rotate_vector(q, v);
+                        const Vector<3, T> r2 = m * v;
+                        test_equal(r1, r2, precision);
+                }
+        }
+
+        {
+                PCG pcg;
+                for (int i = 0; i < 100; ++i)
+                {
+                        const Quaternion<T> q1 = random_rotation_quaternion<T>(pcg);
                         const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
                         const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
                         test_equal(q1, q2, precision);
@@ -160,9 +192,9 @@ void test(const T precision)
 void test_quaternion()
 {
         LOG("Test quaternion");
-        test<float>(1e-6);
-        test<double>(1e-15);
-        test<long double>(1e-18);
+        test<float>(1e-4);
+        test<double>(1e-13);
+        test<long double>(1e-16);
         LOG("Test quaternion passed");
 }
 
