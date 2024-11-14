@@ -37,31 +37,55 @@ numerical::Matrix<3, 3, T> phi_matrix(const numerical::Vector<3, T>& w, const T 
         const T n2 = w.norm_squared();
         const T n = std::sqrt(n2);
 
-        const auto i = numerical::IDENTITY_MATRIX<3, T>;
-        const auto k0 = (std::sin(n * dt) / n) * cross_matrix<1>(w);
-        const auto k1 = (1 - std::cos(n * dt) / n2) * cross_matrix<2>(w);
+        const numerical::Matrix<3, 3, T> k0 = (std::sin(n * dt) / n) * cross_matrix<1>(w);
+        const numerical::Matrix<3, 3, T> k1 = (1 - std::cos(n * dt) / n2) * cross_matrix<2>(w);
 
-        return i - k0 + k1;
+        return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
 }
 
 template <typename T>
 Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
 {
-        const auto n2 = v.norm_squared();
+        const T n2 = v.norm_squared();
         if (n2 <= 1)
         {
                 return Quaternion<T>(v, std::sqrt(1 - n2));
         }
         return Quaternion<T>(v, 1) / std::sqrt(1 + n2);
 }
+
+template <typename T>
+numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
+{
+        const T x = std::abs(v[0]);
+        const T y = std::abs(v[1]);
+        const T z = std::abs(v[2]);
+        numerical::Vector<3, T> res;
+        if (x <= y && x <= z)
+        {
+                res = {0, v[2], -v[1]};
+        }
+        else if (y <= z)
+        {
+                res = {v[2], 0, -v[0]};
+        }
+        else
+        {
+                res = {v[1], -v[0], 0};
+        }
+        return res.normalized();
+}
 }
 
 template <typename T>
 class Fusion final
 {
+        using Vector = numerical::Vector<3, T>;
+        using Matrix = numerical::Matrix<3, 3, T>;
+
         Quaternion<T> x_;
-        numerical::Matrix<3, 3, T> p_;
-        numerical::Vector<3, T> w_last_;
+        Matrix p_;
+        Vector w_last_;
 
         void predict(const numerical::Vector<3, T>& w, const T variance, const T dt)
         {
@@ -70,8 +94,8 @@ class Fusion final
                 x_ = first_order_quaternion_integrator(x_, w_last_, w, dt).normalized();
                 w_last_ = w;
 
-                const auto phi = impl::phi_matrix(w, dt);
-                const auto q = numerical::Matrix<3, 3, T>(variance * dt);
+                const Matrix phi = impl::phi_matrix(w, dt);
+                const Matrix q(variance * dt);
 
                 p_ = phi * p_ * phi.transposed() + q;
         }
@@ -80,19 +104,19 @@ class Fusion final
         {
                 namespace impl = fusion_implementation;
 
-                const auto hx = rotate_vector(x_, global);
-                const auto h = cross_matrix<1>(hx);
+                const Vector hx = rotate_vector(x_, global);
+                const Matrix h = cross_matrix<1>(hx);
 
-                const auto ht = h.transposed();
-                const auto r = numerical::Matrix<3, 3, T>(variance);
-                const auto s = h * p_ * ht + r;
-                const auto k = p_ * ht * s.inversed();
-                const auto dx = k * (z - hx);
+                const Matrix ht = h.transposed();
+                const Matrix r(variance);
+                const Matrix s = h * p_ * ht + r;
+                const Matrix k = p_ * ht * s.inversed();
+                const Vector dx = k * (z - hx);
 
-                const auto q = impl::make_unit_quaternion(dx / T{2});
+                const Quaternion<T> q = impl::make_unit_quaternion(dx / T{2});
                 x_ = (q * x_).normalized();
 
-                const auto i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
+                const Matrix i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
