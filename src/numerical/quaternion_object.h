@@ -117,6 +117,11 @@ public:
                 return Quaternion<T>(data_.normalized());
         }
 
+        [[nodiscard]] bool is_unit() const
+        {
+                return data_.is_unit();
+        }
+
         [[nodiscard]] Quaternion<T> inversed() const
         {
                 return conjugate() / data_.norm_squared();

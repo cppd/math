@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quaternion_object.h" // IWYU pragma: export
 #include "vector.h"
 
+#include <src/com/error.h>
+
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -123,6 +125,8 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Quaternion<T>& q_unit, const Vector<3, T>& v)
 {
+        ASSERT(q_unit.is_unit());
+
         return (q_unit * v * q_unit.conjugate()).vec();
 }
 
@@ -141,6 +145,8 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Matrix<3, 3, T> unit_quaternion_to_rotation_matrix(const Quaternion<T>& q)
 {
+        ASSERT(q.is_unit());
+
         const T w = q.w();
         const T x = q.x();
         const T y = q.y();
@@ -158,13 +164,13 @@ template <typename T>
 
         Matrix<3, 3, T> res;
         res[0, 0] = 1 - yy - zz;
-        res[0, 1] = xy + zw;
-        res[0, 2] = xz - yw;
-        res[1, 0] = xy - zw;
+        res[0, 1] = xy - zw;
+        res[0, 2] = xz + yw;
+        res[1, 0] = xy + zw;
         res[1, 1] = 1 - xx - zz;
-        res[1, 2] = yz + xw;
-        res[2, 0] = xz + yw;
-        res[2, 1] = yz - xw;
+        res[1, 2] = yz - xw;
+        res[2, 0] = xz - yw;
+        res[2, 1] = yz + xw;
         res[2, 2] = 1 - xx - yy;
         return res;
 }
@@ -172,6 +178,10 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Quaternion<T> rotation_matrix_to_unit_quaternion(const Matrix<3, 3, T>& m)
 {
+        ASSERT(m.row(0).is_unit());
+        ASSERT(m.row(1).is_unit());
+        ASSERT(m.row(2).is_unit());
+
         const T m00 = m[0, 0];
         const T m01 = m[0, 1];
         const T m02 = m[0, 2];
@@ -189,12 +199,12 @@ template <typename T>
                 if (m00 > m11)
                 {
                         const T t = 1 + m00 - m11 - m22;
-                        q = {m12 - m21, t, m01 + m10, m20 + m02};
+                        q = {m21 - m12, t, m01 + m10, m20 + m02};
                 }
                 else
                 {
                         const T t = 1 - m00 + m11 - m22;
-                        q = {m20 - m02, m01 + m10, t, m12 + m21};
+                        q = {m02 - m20, m01 + m10, t, m12 + m21};
                 }
         }
         else
@@ -202,12 +212,12 @@ template <typename T>
                 if (m00 < -m11)
                 {
                         const T t = 1 - m00 - m11 + m22;
-                        q = {m01 - m10, m20 + m02, m12 + m21, t};
+                        q = {m10 - m01, m20 + m02, m12 + m21, t};
                 }
                 else
                 {
                         const T t = 1 + m00 + m11 + m22;
-                        q = {t, m12 - m21, m20 - m02, m01 - m10};
+                        q = {t, m21 - m12, m02 - m20, m10 - m01};
                 }
         }
 
