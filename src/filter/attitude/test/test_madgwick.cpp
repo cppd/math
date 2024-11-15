@@ -29,10 +29,9 @@ namespace ns::filter::attitude::test
 namespace
 {
 template <typename T>
+        requires (std::is_floating_point_v<T>)
 bool equal(const T a, const T b, const T precision)
 {
-        static_assert(std::is_floating_point_v<T>);
-
         if (a == b)
         {
                 return true;
@@ -47,14 +46,39 @@ bool equal(const T a, const T b, const T precision)
 }
 
 template <typename T, typename P>
-void test_equal(const T& a, const T& b, const P precision)
+        requires (!std::is_floating_point_v<T>)
+bool equal(const T& a, const T& b, const P precision)
 {
         for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
         {
                 if (!equal(a[i], b[i], precision))
                 {
-                        error(to_string(a) + " is not equal to " + to_string(b));
+                        return false;
                 }
+        }
+        return true;
+}
+
+template <typename T, typename P>
+bool equal(const numerical::Quaternion<T>& a, const numerical::Quaternion<T>& b, const P precision)
+{
+        if (!equal(a.w(), b.w(), precision))
+        {
+                return false;
+        }
+        if (!equal(a.vec(), b.vec(), precision))
+        {
+                return false;
+        }
+        return true;
+}
+
+template <typename T, typename P>
+void test_equal(const T& a, const T& b, const P precision)
+{
+        if (!equal(a, b, precision))
+        {
+                error(to_string(a) + " is not equal to " + to_string(b));
         }
 }
 

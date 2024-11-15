@@ -87,13 +87,13 @@ template <typename T>
 template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        // a[0] * b[0] - dot(a.vec(), b.vec())
-        // a[0] * b.vec() + b[0] * a.vec() + cross(a.vec(), b.vec())
+        // a.w() * b.w() - dot(a.vec(), b.vec())
+        // a.w() * b.vec() + b.w() * a.vec() + cross(a.vec(), b.vec())
         Quaternion<T> res;
-        res[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
-        res[1] = a[0] * b[1] + b[0] * a[1] + a[2] * b[3] - a[3] * b[2];
-        res[2] = a[0] * b[2] + b[0] * a[2] - a[1] * b[3] + a[3] * b[1];
-        res[3] = a[0] * b[3] + b[0] * a[3] + a[1] * b[2] - a[2] * b[1];
+        res.w() = a.w() * b.w() - a.x() * b.x() - a.y() * b.y() - a.z() * b.z();
+        res.x() = a.w() * b.x() + b.w() * a.x() + a.y() * b.z() - a.z() * b.y();
+        res.y() = a.w() * b.y() + b.w() * a.y() - a.x() * b.z() + a.z() * b.x();
+        res.z() = a.w() * b.z() + b.w() * a.z() + a.x() * b.y() - a.y() * b.x();
         return res;
 }
 
@@ -101,12 +101,12 @@ template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Vector<3, T>& b)
 {
         // -dot(a.vec(), b)
-        // a[0] * b + cross(a.vec(), b)
+        // a.w() * b + cross(a.vec(), b)
         Quaternion<T> res;
-        res[0] = -a[1] * b[0] - a[2] * b[1] - a[3] * b[2];
-        res[1] = a[0] * b[0] + a[2] * b[2] - a[3] * b[1];
-        res[2] = a[0] * b[1] - a[1] * b[2] + a[3] * b[0];
-        res[3] = a[0] * b[2] + a[1] * b[1] - a[2] * b[0];
+        res.w() = -a.x() * b[0] - a.y() * b[1] - a.z() * b[2];
+        res.x() = a.w() * b[0] + a.y() * b[2] - a.z() * b[1];
+        res.y() = a.w() * b[1] - a.x() * b[2] + a.z() * b[0];
+        res.z() = a.w() * b[2] + a.x() * b[1] - a.y() * b[0];
         return res;
 }
 
@@ -114,11 +114,11 @@ template <typename T>
 [[nodiscard]] constexpr Vector<3, T> multiply_vec(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         // (a * b).vec()
-        // a[0] * b.vec() + b[0] * a.vec() + cross(a.vec(), b.vec())
+        // a.w() * b.vec() + b.w() * a.vec() + cross(a.vec(), b.vec())
         Vector<3, T> res;
-        res[0] = a[0] * b[1] + b[0] * a[1] + a[2] * b[3] - a[3] * b[2];
-        res[1] = a[0] * b[2] + b[0] * a[2] - a[1] * b[3] + a[3] * b[1];
-        res[2] = a[0] * b[3] + b[0] * a[3] + a[1] * b[2] - a[2] * b[1];
+        res[0] = a.w() * b.x() + b.w() * a.x() + a.y() * b.z() - a.z() * b.y();
+        res[1] = a.w() * b.y() + b.w() * a.y() - a.x() * b.z() + a.z() * b.x();
+        res[2] = a.w() * b.z() + b.w() * a.z() + a.x() * b.y() - a.y() * b.x();
         return res;
 }
 
@@ -127,7 +127,7 @@ template <typename T>
 {
         ASSERT(q_unit.is_unit());
 
-        return (q_unit * v * q_unit.conjugate()).vec();
+        return multiply_vec(q_unit * v, q_unit.conjugate());
 }
 
 template <typename T>

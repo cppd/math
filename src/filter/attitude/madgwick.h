@@ -39,17 +39,17 @@ template <typename T>
 {
         // (25)
         // f_g
-        const T f_0 = 2 * q[1] * q[3] - 2 * q[2] * q[0] - an[0];
-        const T f_1 = 2 * q[1] * q[0] + 2 * q[2] * q[3] - an[1];
-        const T f_2 = 1 - 2 * q[1] * q[1] - 2 * q[2] * q[2] - an[2];
+        const T f_0 = 2 * q.x() * q.z() - 2 * q.y() * q.w() - an[0];
+        const T f_1 = 2 * q.x() * q.w() + 2 * q.y() * q.z() - an[1];
+        const T f_2 = 1 - 2 * q.x() * q.x() - 2 * q.y() * q.y() - an[2];
 
         // (20) (26)
         // transpose(J_g) * f_g
         const numerical::Vector<3, T> f(2 * f_0, 2 * f_1, 4 * f_2);
-        const T w = q[1] * f[1] - q[2] * f[0];
-        const T x = q[3] * f[0] + q[0] * f[1] - q[1] * f[2];
-        const T y = q[3] * f[1] - q[0] * f[0] - q[2] * f[2];
-        const T z = q[1] * f[0] + q[2] * f[1];
+        const T w = q.x() * f[1] - q.y() * f[0];
+        const T x = q.z() * f[0] + q.w() * f[1] - q.x() * f[2];
+        const T y = q.z() * f[1] - q.w() * f[0] - q.y() * f[2];
+        const T z = q.x() * f[0] + q.y() * f[1];
         return numerical::Quaternion<T>(w, x, y, z).normalized();
 }
 
@@ -63,15 +63,17 @@ template <typename T>
 {
         // (25)
         // f_g
-        const T f_0 = 2 * q[1] * q[3] - 2 * q[2] * q[0] - an[0];
-        const T f_1 = 2 * q[1] * q[0] + 2 * q[2] * q[3] - an[1];
-        const T f_2 = 1 - 2 * q[1] * q[1] - 2 * q[2] * q[2] - an[2];
+        const T f_0 = 2 * q.x() * q.z() - 2 * q.y() * q.w() - an[0];
+        const T f_1 = 2 * q.x() * q.w() + 2 * q.y() * q.z() - an[1];
+        const T f_2 = 1 - 2 * q.x() * q.x() - 2 * q.y() * q.y() - an[2];
 
         // (29)
         // f_b
-        const T f_3 = 2 * b_x * (T{0.5} - q[2] * q[2] - q[3] * q[3]) + 2 * b_z * (q[1] * q[3] - q[0] * q[2]) - mn[0];
-        const T f_4 = 2 * b_x * (q[1] * q[2] - q[0] * q[3]) + 2 * b_z * (q[0] * q[1] + q[2] * q[3]) - mn[1];
-        const T f_5 = 2 * b_x * (q[0] * q[2] + q[1] * q[3]) + 2 * b_z * (T{0.5} - q[1] * q[1] - q[2] * q[2]) - mn[2];
+        const T f_3 =
+                2 * b_x * (T{0.5} - q.y() * q.y() - q.z() * q.z()) + 2 * b_z * (q.x() * q.z() - q.w() * q.y()) - mn[0];
+        const T f_4 = 2 * b_x * (q.x() * q.y() - q.w() * q.z()) + 2 * b_z * (q.w() * q.x() + q.y() * q.z()) - mn[1];
+        const T f_5 =
+                2 * b_x * (q.w() * q.y() + q.x() * q.z()) + 2 * b_z * (T{0.5} - q.x() * q.x() - q.y() * q.y()) - mn[2];
 
         // (20) (26) (30) (34) (44)
         // normalize(transpose(J_g / J_b) * (f_g / f_b))
@@ -81,12 +83,13 @@ template <typename T>
         const numerical::Quaternion<T> bxq = b_x * q;
         const numerical::Quaternion<T> bzq = b_z * q;
 
-        const T w = q[1] * f[1] - q[2] * f[0] - bzq[2] * f[3] - (bxq[3] - bzq[1]) * f[4] + bxq[2] * f[5];
-        const T x = q[3] * f[0] + q[0] * f[1] - q[1] * f[2] + bzq[3] * f[3] + (bxq[2] + bzq[0]) * f[4]
-                    + (bxq[3] - 2 * bzq[1]) * f[5];
-        const T y = q[3] * f[1] - -q[0] * f[0] - q[2] * f[2] - (2 * bxq[2] + bzq[0]) * f[3] + (bxq[1] + bzq[3]) * f[4]
-                    + (bxq[0] - 2 * bzq[2]) * f[5];
-        const T z = q[1] * f[0] + q[2] * f[1] - (2 * bxq[3] - bzq[1]) * f[3] - (bxq[0] - bzq[2]) * f[4] + bxq[1] * f[5];
+        const T w = q.x() * f[1] - q.y() * f[0] - bzq.y() * f[3] - (bxq.z() - bzq.x()) * f[4] + bxq.y() * f[5];
+        const T x = q.z() * f[0] + q.w() * f[1] - q.x() * f[2] + bzq.z() * f[3] + (bxq.y() + bzq.w()) * f[4]
+                    + (bxq.z() - 2 * bzq.x()) * f[5];
+        const T y = q.z() * f[1] - -q.w() * f[0] - q.y() * f[2] - (2 * bxq.y() + bzq.w()) * f[3]
+                    + (bxq.x() + bzq.z()) * f[4] + (bxq.w() - 2 * bzq.y()) * f[5];
+        const T z = q.x() * f[0] + q.y() * f[1] - (2 * bxq.z() - bzq.x()) * f[3] - (bxq.w() - bzq.y()) * f[4]
+                    + bxq.x() * f[5];
 
         return numerical::Quaternion<T>(w, x, y, z).normalized();
 }

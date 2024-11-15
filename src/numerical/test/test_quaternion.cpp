@@ -41,10 +41,10 @@ struct Test final
 
         static_assert(A == Quaternion<T>(2, {3, 4, 5}));
         static_assert(A == Quaternion<T>(Vector<4, T>(2, 3, 4, 5)));
-        static_assert(A[0] == 2);
-        static_assert(A[1] == 3);
-        static_assert(A[2] == 4);
-        static_assert(A[3] == 5);
+        static_assert(A.w() == 2);
+        static_assert(A.x() == 3);
+        static_assert(A.y() == 4);
+        static_assert(A.z() == 5);
         static_assert(A.coeffs() == Vector<4, T>(2, 3, 4, 5));
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
         static_assert(A.conjugate() == Quaternion<T>(2, -3, -4, -5));
@@ -89,6 +89,20 @@ bool equal(const T& a, const T& b, const P precision)
                 {
                         return false;
                 }
+        }
+        return true;
+}
+
+template <typename T, typename P>
+bool equal(const Quaternion<T>& a, const Quaternion<T>& b, const P precision)
+{
+        if (!equal(a.w(), b.w(), precision))
+        {
+                return false;
+        }
+        if (!equal(a.vec(), b.vec(), precision))
+        {
+                return false;
         }
         return true;
 }

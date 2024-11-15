@@ -52,16 +52,6 @@ public:
         {
         }
 
-        [[nodiscard]] constexpr T operator[](const std::size_t i) const
-        {
-                return data_[i];
-        }
-
-        [[nodiscard]] constexpr T& operator[](const std::size_t i)
-        {
-                return data_[i];
-        }
-
         [[nodiscard]] constexpr const Vector<4, T>& coeffs() const
         {
                 return data_;
@@ -82,7 +72,17 @@ public:
                 return data_[0];
         }
 
+        [[nodiscard]] constexpr T& w()
+        {
+                return data_[0];
+        }
+
         [[nodiscard]] constexpr T x() const
+        {
+                return data_[1];
+        }
+
+        [[nodiscard]] constexpr T& x()
         {
                 return data_[1];
         }
@@ -92,7 +92,17 @@ public:
                 return data_[2];
         }
 
+        [[nodiscard]] constexpr T& y()
+        {
+                return data_[2];
+        }
+
         [[nodiscard]] constexpr T z() const
+        {
+                return data_[3];
+        }
+
+        [[nodiscard]] constexpr T& z()
         {
                 return data_[3];
         }
