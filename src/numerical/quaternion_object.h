@@ -104,7 +104,7 @@ public:
 
         [[nodiscard]] constexpr Quaternion<T> conjugate() const
         {
-                return {data_[0], -data_[1], -data_[2], -data_[3]};
+                return {w(), -x(), -y(), -z()};
         }
 
         [[nodiscard]] T norm() const
