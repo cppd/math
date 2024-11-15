@@ -49,9 +49,9 @@ Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
         const T n2 = v.norm_squared();
         if (n2 <= 1)
         {
-                return Quaternion<T>(v, std::sqrt(1 - n2));
+                return Quaternion<T>(std::sqrt(1 - n2), v);
         }
-        return Quaternion<T>(v, 1) / std::sqrt(1 + n2);
+        return Quaternion<T>(1, v) / std::sqrt(1 + n2);
 }
 
 template <typename T>
@@ -140,7 +140,7 @@ public:
 
         [[nodiscard]] numerical::Quaternion<T> attitude() const
         {
-                return {x_.real(), x_.vec()};
+                return {x_.w(), x_.vec()};
         }
 };
 }

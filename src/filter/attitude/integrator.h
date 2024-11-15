@@ -33,7 +33,7 @@ template <typename T>
 {
         const T wn = w.norm();
         const T k = wn * dt / 2;
-        const Quaternion<T> theta{(std::sin(k) / wn) * w, std::cos(k)};
+        const Quaternion<T> theta{std::cos(k), (std::sin(k) / wn) * w};
 
         return theta * q;
 }
@@ -48,8 +48,8 @@ template <typename T>
         const numerical::Vector<3, T> wa = (w0 + w1) / T{2};
         const Quaternion<T> q1 = zeroth_order_quaternion_integrator(q, wa, dt);
 
-        const Quaternion<T> qw0 = Quaternion<T>(w0, 0);
-        const Quaternion<T> qw1 = Quaternion<T>(w1, 0);
+        const Quaternion<T> qw0 = Quaternion<T>(0, w0);
+        const Quaternion<T> qw1 = Quaternion<T>(0, w1);
         const Quaternion<T> q2 = (qw1 * qw0 - qw0 * qw1) * (dt * dt / 48);
 
         return (q1 + q2) * q;
