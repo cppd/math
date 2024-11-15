@@ -49,42 +49,6 @@ struct tuple_size<::ns::numerical::Quaternion<T>> final : integral_constant<size
 namespace ns::numerical
 {
 template <typename T>
-[[nodiscard]] constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
-{
-        return a.coeffs() == b.coeffs();
-}
-
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
-{
-        return Quaternion<T>(a.coeffs() + b.coeffs());
-}
-
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
-{
-        return Quaternion<T>(a.coeffs() - b.coeffs());
-}
-
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const T b)
-{
-        return Quaternion<T>(a.coeffs() * b);
-}
-
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator*(const T b, const Quaternion<T>& a)
-{
-        return Quaternion<T>(a.coeffs() * b);
-}
-
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator/(const Quaternion<T>& a, const T b)
-{
-        return Quaternion<T>(a.coeffs() / b);
-}
-
-template <typename T>
 [[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         // a.w() * b.w() - dot(a.vec(), b.vec())

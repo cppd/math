@@ -32,6 +32,11 @@ class Quaternion final
 
         Vector<4, T> data_;
 
+        explicit constexpr Quaternion(const Vector<4, T>& v)
+                : data_(v)
+        {
+        }
+
 public:
         constexpr Quaternion()
         {
@@ -45,16 +50,6 @@ public:
         constexpr Quaternion(const T w, const Vector<3, T>& v)
                 : data_(w, v[0], v[1], v[2])
         {
-        }
-
-        explicit constexpr Quaternion(const Vector<4, T>& v)
-                : data_(v)
-        {
-        }
-
-        [[nodiscard]] constexpr const Vector<4, T>& coeffs() const
-        {
-                return data_;
         }
 
         [[nodiscard]] std::size_t hash() const
@@ -139,7 +134,43 @@ public:
 
         [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
         {
-                return to_string(a.coeffs());
+                return to_string(a.data_);
+        }
+
+        [[nodiscard]] friend constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
+        {
+                return a.data_ == b.data_;
+        }
+
+        [[nodiscard]] friend constexpr Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
+        {
+                return Quaternion<T>(a.data_ + b.data_);
+        }
+
+        [[nodiscard]] friend constexpr Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
+        {
+                return Quaternion<T>(a.data_ - b.data_);
+        }
+
+        template <typename S>
+                requires (std::is_same_v<T, S>)
+        [[nodiscard]] friend constexpr Quaternion<T> operator*(const Quaternion<T>& a, const S b)
+        {
+                return Quaternion<T>(a.data_ * b);
+        }
+
+        template <typename S>
+                requires (std::is_same_v<T, S>)
+        [[nodiscard]] friend constexpr Quaternion<T> operator*(const S b, const Quaternion<T>& a)
+        {
+                return Quaternion<T>(a.data_ * b);
+        }
+
+        template <typename S>
+                requires (std::is_same_v<T, S>)
+        [[nodiscard]] friend constexpr Quaternion<T> operator/(const Quaternion<T>& a, const S b)
+        {
+                return Quaternion<T>(a.data_ / b);
         }
 };
 }

@@ -40,12 +40,10 @@ struct Test final
         static constexpr Quaternion<T> B{11, 12, 13, 14};
 
         static_assert(A == Quaternion<T>(2, {3, 4, 5}));
-        static_assert(A == Quaternion<T>(Vector<4, T>(2, 3, 4, 5)));
         static_assert(A.w() == 2);
         static_assert(A.x() == 3);
         static_assert(A.y() == 4);
         static_assert(A.z() == 5);
-        static_assert(A.coeffs() == Vector<4, T>(2, 3, 4, 5));
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
         static_assert(A.conjugate() == Quaternion<T>(2, -3, -4, -5));
         static_assert(A * T{3} == Quaternion<T>(6, 9, 12, 15));
