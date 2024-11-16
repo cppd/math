@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <optional>
 
 namespace ns::filter::attitude
 {
@@ -75,6 +76,17 @@ numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
         }
         return res.normalized();
 }
+
+template <typename T>
+Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
+{
+        const numerical::Vector<3, T> x = orthogonal(acc);
+        const numerical::Vector<3, T> y = cross(acc, x);
+        const numerical::Matrix<3, 3, T> m({x, y, acc});
+        const numerical::Matrix<3, 3, T> rotation_matrix = m.transposed();
+        const numerical::Quaternion<T> q = rotation_matrix_to_unit_quaternion(rotation_matrix);
+        return {q.w(), q.vec()};
+}
 }
 
 template <typename T>
@@ -83,8 +95,12 @@ class Fusion final
         using Vector = numerical::Vector<3, T>;
         using Matrix = numerical::Matrix<3, 3, T>;
 
+        static constexpr unsigned ACC_COUNT{10};
+        numerical::Vector<3, T> acc_data_{0};
+        unsigned acc_count_{0};
+
         Quaternion<T> x_;
-        Matrix p_;
+        Matrix p_{0};
         Vector w_last_;
 
         void predict(const numerical::Vector<3, T>& w, const T variance, const T dt)
@@ -120,6 +136,23 @@ class Fusion final
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
+        [[nodiscard]] bool has_attitude() const
+        {
+                return acc_count_ >= ACC_COUNT;
+        }
+
+        void update_init(const Vector& a_norm)
+        {
+                namespace impl = fusion_implementation;
+
+                acc_data_ += a_norm;
+                ++acc_count_;
+                if (acc_count_ >= ACC_COUNT)
+                {
+                        x_ = impl::initial_quaternion(acc_data_ / T(acc_count_));
+                }
+        }
+
 public:
         void update_gyro(const numerical::Vector<3, T>& w, const T variance, const T dt)
         {
@@ -134,13 +167,26 @@ public:
                         return;
                 }
 
-                const T sigma = T{0.1} * std::exp(std::abs(n - T{9.81}));
-                update(a / n, {0, 0, 1}, sigma * sigma);
+                const Vector an = a / n;
+                if (!has_attitude())
+                {
+                        update_init(an);
+                        return;
+                }
+
+                const T sigma = std::exp(std::abs(n - T{9.81})) / n;
+                update(an, {0, 0, 1}, sigma * sigma);
         }
 
-        [[nodiscard]] numerical::Quaternion<T> attitude() const
+        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
-                return {x_.w(), x_.vec()};
+                if (has_attitude())
+                {
+                        return {
+                                {x_.w(), x_.vec()}
+                        };
+                }
+                return std::nullopt;
         }
 };
 }
