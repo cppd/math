@@ -35,6 +35,17 @@ namespace ns::filter::attitude
 namespace madgwick_implementation
 {
 template <typename T>
+[[nodiscard]] numerical::Quaternion<T> normalize(const numerical::Quaternion<T>& q)
+{
+        const T norm = q.norm();
+        if (norm > 0)
+        {
+                return q / norm;
+        }
+        return q;
+}
+
+template <typename T>
 [[nodiscard]] numerical::Quaternion<T> compute_gn(const numerical::Quaternion<T> q, const numerical::Vector<3, T> an)
 {
         // (25)
@@ -50,7 +61,8 @@ template <typename T>
         const T x = q.z() * f[0] + q.w() * f[1] - q.x() * f[2];
         const T y = q.z() * f[1] - q.w() * f[0] - q.y() * f[2];
         const T z = q.x() * f[0] + q.y() * f[1];
-        return numerical::Quaternion<T>(w, x, y, z).normalized();
+
+        return normalize(numerical::Quaternion<T>(w, x, y, z));
 }
 
 template <typename T>
@@ -91,7 +103,7 @@ template <typename T>
         const T z = q.x() * f[0] + q.y() * f[1] - (2 * bxq.z() - bzq.x()) * f[3] - (bxq.w() - bzq.y()) * f[4]
                     + bxq.x() * f[5];
 
-        return numerical::Quaternion<T>(w, x, y, z).normalized();
+        return normalize(numerical::Quaternion<T>(w, x, y, z));
 }
 
 template <typename T>

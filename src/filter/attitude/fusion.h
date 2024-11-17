@@ -117,7 +117,8 @@ class Fusion final
                 ++acc_count_;
                 if (acc_count_ >= ACC_COUNT)
                 {
-                        x_ = initial_quaternion(acc_data_ / T(acc_count_));
+                        const numerical::Quaternion<T> q = initial_quaternion(acc_data_ / T(acc_count_));
+                        x_ = {q.w(), q.vec()};
                 }
         }
 
