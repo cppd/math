@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "integrator.h"
 #include "matrix.h"
 #include "quaternion.h"
+#include "rotation.h"
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -53,39 +55,6 @@ Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
                 return Quaternion<T>(std::sqrt(1 - n2), v);
         }
         return Quaternion<T>(1, v) / std::sqrt(1 + n2);
-}
-
-template <typename T>
-numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
-{
-        const T x = std::abs(v[0]);
-        const T y = std::abs(v[1]);
-        const T z = std::abs(v[2]);
-        numerical::Vector<3, T> res;
-        if (x <= y && x <= z)
-        {
-                res = {0, v[2], -v[1]};
-        }
-        else if (y <= z)
-        {
-                res = {v[2], 0, -v[0]};
-        }
-        else
-        {
-                res = {v[1], -v[0], 0};
-        }
-        return res.normalized();
-}
-
-template <typename T>
-Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
-{
-        const numerical::Vector<3, T> x = orthogonal(acc);
-        const numerical::Vector<3, T> y = cross(acc, x);
-        const numerical::Matrix<3, 3, T> m({x, y, acc});
-        const numerical::Matrix<3, 3, T> rotation_matrix = m.transposed();
-        const numerical::Quaternion<T> q = rotation_matrix_to_unit_quaternion(rotation_matrix);
-        return {q.w(), q.vec()};
 }
 }
 
@@ -143,13 +112,12 @@ class Fusion final
 
         void update_init(const Vector& a_norm)
         {
-                namespace impl = fusion_implementation;
-
+                ASSERT(acc_count_ < ACC_COUNT);
                 acc_data_ += a_norm;
                 ++acc_count_;
                 if (acc_count_ >= ACC_COUNT)
                 {
-                        x_ = impl::initial_quaternion(acc_data_ / T(acc_count_));
+                        x_ = initial_quaternion(acc_data_ / T(acc_count_));
                 }
         }
 
