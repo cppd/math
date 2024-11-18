@@ -35,6 +35,18 @@ namespace ns::filter::attitude
 namespace madgwick_implementation
 {
 template <typename T>
+inline constexpr T MIN_ACC = 9.3; // m/s/s
+
+template <typename T>
+inline constexpr T MAX_ACC = 10.3; // m/s/s
+
+template <typename T>
+inline constexpr T MIN_MAG = 20; // uT
+
+template <typename T>
+inline constexpr T MAX_MAG = 70; // uT
+
+template <typename T>
 [[nodiscard]] numerical::Quaternion<T> normalize(const numerical::Quaternion<T>& q)
 {
         const T norm = q.norm();
@@ -112,14 +124,13 @@ template <typename T>
         const numerical::Vector<3, T> w,
         const numerical::Vector<3, T> a,
         const T beta,
-        const T dt,
-        const T min_accelerometer)
+        const T dt)
 {
         // (11)
         const numerical::Quaternion<T> d = q * (w / T{2});
 
         const T a_norm = a.norm();
-        if (!(a_norm >= min_accelerometer))
+        if (!(a_norm >= MIN_ACC<T> && a_norm <= MAX_ACC<T>))
         {
                 // (13)
                 return (q + d * dt).normalized();
@@ -164,11 +175,10 @@ public:
                 const numerical::Vector<3, T> w,
                 const numerical::Vector<3, T> a,
                 const T beta,
-                const T dt,
-                const T min_accelerometer)
+                const T dt)
         {
                 namespace impl = madgwick_implementation;
-                q_ = impl::update(q_, w, a, beta, dt, min_accelerometer);
+                q_ = impl::update(q_, w, a, beta, dt);
                 return q_;
         }
 };
@@ -188,21 +198,19 @@ public:
                 const numerical::Vector<3, T> m,
                 const T beta,
                 const T zeta,
-                const T dt,
-                const T min_accelerometer,
-                const T min_magnetometer)
+                const T dt)
         {
                 namespace impl = madgwick_implementation;
 
                 const T m_norm = m.norm();
-                if (!(m_norm >= min_magnetometer))
+                if (!(m_norm >= impl::MIN_MAG<T> && m_norm <= impl::MAX_MAG<T>))
                 {
-                        q_ = impl::update(q_, w - wb_, a, beta, dt, min_accelerometer);
+                        q_ = impl::update(q_, w - wb_, a, beta, dt);
                         return q_;
                 }
 
                 const T a_norm = a.norm();
-                if (!(a_norm >= min_accelerometer))
+                if (!(a_norm >= impl::MIN_ACC<T> && a_norm <= impl::MAX_ACC<T>))
                 {
                         // (11) (49)
                         const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
