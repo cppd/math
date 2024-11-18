@@ -35,6 +35,12 @@ namespace ns::filter::attitude
 namespace fusion_implementation
 {
 template <typename T>
+inline constexpr T MIN_ACC = 9.3; // m/s/s
+
+template <typename T>
+inline constexpr T MAX_ACC = 10.3; // m/s/s
+
+template <typename T>
 numerical::Matrix<3, 3, T> phi_matrix(const numerical::Vector<3, T>& w, const T dt)
 {
         const T n2 = w.norm_squared();
@@ -130,8 +136,10 @@ public:
 
         void update_acc(const numerical::Vector<3, T>& a)
         {
+                namespace impl = fusion_implementation;
+
                 const T n = a.norm();
-                if (!(n > 3))
+                if (!(n >= impl::MIN_ACC<T> && n <= impl::MAX_ACC<T>))
                 {
                         return;
                 }
@@ -143,7 +151,7 @@ public:
                         return;
                 }
 
-                const T sigma = std::exp(std::abs(n - T{9.81})) / n;
+                const T sigma = 0.01;
                 update(an, {0, 0, 1}, sigma * sigma);
         }
 
