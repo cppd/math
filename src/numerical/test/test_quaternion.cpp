@@ -53,6 +53,7 @@ struct Test final
         static_assert(A - B == Quaternion<T>(-9, -9, -9, -9));
         static_assert(A * B == Quaternion<T>(-136, 48, 88, 74));
         static_assert(A * Vector<3, T>(11, 12, 13) == Quaternion<T>(-146, 14, 40, 18));
+        static_assert(Vector<3, T>(11, 12, 13) * A == Quaternion<T>(-146, 30, 8, 34));
         static_assert(multiply_vec(A, B) == Vector<3, T>(48, 88, 74));
 };
 

@@ -75,6 +75,19 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] constexpr Quaternion<T> operator*(const Vector<3, T>& a, const Quaternion<T>& b)
+{
+        // -dot(a, b.vec())
+        // b.w() * a + cross(a, b.vec())
+        Quaternion<T> res;
+        res.w() = -a[0] * b.x() - a[1] * b.y() - a[2] * b.z();
+        res.x() = b.w() * a[0] + a[1] * b.z() - a[2] * b.y();
+        res.y() = b.w() * a[1] - a[0] * b.z() + a[2] * b.x();
+        res.z() = b.w() * a[2] + a[0] * b.y() - a[1] * b.x();
+        return res;
+}
+
+template <typename T>
 [[nodiscard]] constexpr Vector<3, T> multiply_vec(const Quaternion<T>& a, const Quaternion<T>& b)
 {
         // (a * b).vec()
@@ -106,6 +119,7 @@ template <typename T>
         const Quaternion q = unit_quaternion_for_rotation(axis, angle);
         return rotate_vector(q, v);
 }
+
 template <typename T>
 [[nodiscard]] Matrix<3, 3, T> unit_quaternion_to_rotation_matrix(const Quaternion<T>& q)
 {
@@ -193,5 +207,4 @@ template <typename T>
 
         return q / norm;
 }
-
 }
