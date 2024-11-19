@@ -78,6 +78,11 @@ class Fusion final
         Matrix p_{0};
         Vector w_last_;
 
+        Vector global_to_local(const Vector& global)
+        {
+                return rotate_vector(x_.q().conjugate(), global);
+        }
+
         void predict(const numerical::Vector<3, T>& w, const T variance, const T dt)
         {
                 namespace impl = fusion_implementation;
@@ -95,7 +100,7 @@ class Fusion final
         {
                 namespace impl = fusion_implementation;
 
-                const Vector hx = rotate_vector(x_, global);
+                const Vector hx = global_to_local(global);
                 const Matrix h = cross_matrix<1>(hx);
 
                 const Matrix ht = h.transposed();
@@ -123,8 +128,7 @@ class Fusion final
                 ++acc_count_;
                 if (acc_count_ >= ACC_COUNT)
                 {
-                        const numerical::Quaternion<T> q = initial_quaternion(acc_data_ / T(acc_count_));
-                        x_ = {q.w(), q.vec()};
+                        x_ = Quaternion(initial_quaternion(acc_data_ / T(acc_count_)));
                 }
         }
 
@@ -159,9 +163,7 @@ public:
         {
                 if (has_attitude())
                 {
-                        return {
-                                {x_.w(), x_.vec()}
-                        };
+                        return x_.q();
                 }
                 return std::nullopt;
         }
