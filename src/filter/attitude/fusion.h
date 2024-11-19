@@ -23,11 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rotation.h"
 
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <optional>
 
 namespace ns::filter::attitude
@@ -96,17 +99,41 @@ class Fusion final
                 p_ = phi * p_ * phi.transposed() + q;
         }
 
-        void update(const numerical::Vector<3, T>& z, const numerical::Vector<3, T>& global, const T variance)
+        struct Update final
+        {
+                numerical::Vector<3, T> z;
+                numerical::Vector<3, T> global;
+                T variance;
+        };
+
+        template <std::size_t N>
+        void update(const std::array<Update, N>& data)
         {
                 namespace impl = fusion_implementation;
 
-                const Vector hx = global_to_local(global);
-                const Matrix h = cross_matrix<1>(hx);
+                numerical::Vector<3 * N, T> z;
+                numerical::Vector<3 * N, T> hx;
+                numerical::Matrix<3 * N, 3, T> h;
+                numerical::Matrix<3 * N, 3 * N, T> r(0);
 
-                const Matrix ht = h.transposed();
-                const Matrix r(variance);
-                const Matrix s = h * p_ * ht + r;
-                const Matrix k = p_ * ht * s.inversed();
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        const Vector hx_i = global_to_local(data[i].global);
+                        const Matrix h_i = cross_matrix<1>(hx_i);
+                        const Vector z_i = data[i].z;
+                        const T variance_i = data[i].variance;
+                        for (std::size_t b = 3 * i, j = 0; j < 3; ++b, ++j)
+                        {
+                                z[b] = z_i[j];
+                                hx[b] = hx_i[j];
+                                h.row(b) = h_i.row(j);
+                                r[b, b] = variance_i;
+                        }
+                }
+
+                const numerical::Matrix<3, 3 * N, T> ht = h.transposed();
+                const numerical::Matrix<3 * N, 3 * N, T> s = h * p_ * ht + r;
+                const numerical::Matrix<3, 3 * N, T> k = p_ * ht * s.inversed();
                 const Vector dx = k * (z - hx);
 
                 const Quaternion<T> q = impl::make_unit_quaternion(dx / T{2});
@@ -142,21 +169,30 @@ public:
         {
                 namespace impl = fusion_implementation;
 
-                const T n = a.norm();
-                if (!(n >= impl::MIN_ACC<T> && n <= impl::MAX_ACC<T>))
+                const T a_norm = a.norm();
+                if (!(a_norm >= impl::MIN_ACC<T> && a_norm <= impl::MAX_ACC<T>))
                 {
                         return;
                 }
 
-                const Vector an = a / n;
                 if (!has_attitude())
                 {
-                        update_init(an);
+                        update_init(a / a_norm);
                         return;
                 }
 
-                const T sigma = 0.01;
-                update(an, {0, 0, 1}, sigma * sigma);
+                update(std::array{
+                        Update{
+                               .z = a / a_norm,
+                               .global = {0, 0, 1},
+                               .variance = square(0.01),
+                               },
+                        Update{
+                               .z = global_to_local({0, 1, 0}),
+                               .global = {0, 1, 0},
+                               .variance = square(0.01),
+                               }
+                });
         }
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
