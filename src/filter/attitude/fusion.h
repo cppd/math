@@ -49,8 +49,15 @@ numerical::Matrix<3, 3, T> phi_matrix(const numerical::Vector<3, T>& w, const T 
         const T n2 = w.norm_squared();
         const T n = std::sqrt(n2);
 
+        if (n < T{1e-5})
+        {
+                const numerical::Matrix<3, 3, T> k0 = dt * cross_matrix<1>(w);
+                const numerical::Matrix<3, 3, T> k1 = (dt * dt / 2) * cross_matrix<2>(w);
+                return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
+        }
+
         const numerical::Matrix<3, 3, T> k0 = (std::sin(n * dt) / n) * cross_matrix<1>(w);
-        const numerical::Matrix<3, 3, T> k1 = (1 - std::cos(n * dt) / n2) * cross_matrix<2>(w);
+        const numerical::Matrix<3, 3, T> k1 = ((1 - std::cos(n * dt)) / n2) * cross_matrix<2>(w);
 
         return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
 }
@@ -162,7 +169,10 @@ class Fusion final
 public:
         void update_gyro(const numerical::Vector<3, T>& w, const T variance, const T dt)
         {
-                predict(w, variance, dt);
+                if (has_attitude())
+                {
+                        predict(w, variance, dt);
+                }
         }
 
         void update_acc(const numerical::Vector<3, T>& a)

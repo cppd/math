@@ -32,6 +32,13 @@ template <typename T>
         const T dt)
 {
         const T wn = w.norm();
+
+        if (wn < T{1e-5})
+        {
+                const Quaternion<T> theta{1, (dt / 2) * w};
+                return theta * q;
+        }
+
         const T k = wn * dt / 2;
         const Quaternion<T> theta{std::cos(k), (std::sin(k) / wn) * w};
 
