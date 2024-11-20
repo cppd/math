@@ -54,6 +54,6 @@ numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& accel
         const numerical::Vector<3, T> x = orthogonal(z);
         const numerical::Vector<3, T> y = cross(z, x);
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        return rotation_matrix_to_unit_quaternion(rotation_matrix);
+        return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
 }
 }
