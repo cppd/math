@@ -15,26 +15,121 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/exponent.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/filter/attitude/fusion.h>
+#include <src/numerical/quaternion.h>
+#include <src/test/test.h>
 
-namespace ns::filter::attitude
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+
+namespace ns::filter::attitude::test
 {
 namespace
 {
 template <typename T>
-struct Test final
+        requires (std::is_floating_point_v<T>)
+bool equal(const T a, const T b, const T precision)
 {
-        void test()
+        if (a == b)
         {
-                Fusion<T> f;
-                f.update_gyro({0, 0, 0}, 0, 0);
-                f.update_acc({0, 0, 0});
-                static_cast<void>(f.attitude());
+                return true;
         }
-};
+        const T abs = std::abs(a - b);
+        if (abs < precision)
+        {
+                return true;
+        }
+        const T rel = abs / std::max(std::abs(a), std::abs(b));
+        return (rel < precision);
+}
 
-template struct Test<float>;
-template struct Test<double>;
-template struct Test<long double>;
+template <typename T, typename P>
+        requires (!std::is_floating_point_v<T>)
+bool equal(const T& a, const T& b, const P precision)
+{
+        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
+        {
+                if (!equal(a[i], b[i], precision))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+template <typename T, typename P>
+bool equal(const numerical::Quaternion<T>& a, const numerical::Quaternion<T>& b, const P precision)
+{
+        if (!equal(a.w(), b.w(), precision))
+        {
+                return false;
+        }
+        if (!equal(a.vec(), b.vec(), precision))
+        {
+                return false;
+        }
+        return true;
+}
+
+template <typename T, typename P>
+void test_equal(const T& a, const T& b, const P precision)
+{
+        if (!equal(a, b, precision))
+        {
+                error(to_string(a) + " is not equal to " + to_string(b));
+        }
+}
+
+template <typename T>
+void test_impl(const T precision)
+{
+        Fusion<T> f;
+
+        constexpr T VARIANCE = square(1e-4L);
+        constexpr T DT = 0.01L;
+
+        for (int i = 0; i < 100; ++i)
+        {
+                f.update_acc({3, 5, 8});
+                f.update_gyro({0.0L, 0.0L, 0.0L}, {0.0L, 0.0L, 0.0L}, VARIANCE, DT);
+        }
+
+        const auto a = f.attitude();
+
+        if (!a)
+        {
+                error("No attitude");
+        }
+
+        if (!a->is_unit())
+        {
+                error("Attitude is not unit");
+        }
+
+        test_equal(
+                *a,
+                {0.701558260053650965338L, 0.0884081882547869216951L, -0.296855140478688453714L,
+                 -0.641776460748895139733L},
+                precision);
+
+        test_equal(
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                {0.303045763365663224751L, 0.505076272276105374566L, 0.808122035641768599425L}, precision);
+}
+
+void test()
+{
+        LOG("Test fusion");
+        test_impl<float>(1e-6);
+        test_impl<double>(1e-15);
+        test_impl<long double>(1e-20);
+        LOG("Test fusion passed");
+}
+
+TEST_SMALL("Fusion", test)
 }
 }

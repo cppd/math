@@ -86,21 +86,19 @@ class Fusion final
 
         Quaternion<T> x_;
         Matrix p_{0};
-        Vector w_last_;
 
         Vector global_to_local(const Vector& global)
         {
                 return rotate_vector(x_.q().conjugate(), global);
         }
 
-        void predict(const numerical::Vector<3, T>& w, const T variance, const T dt)
+        void predict(const numerical::Vector<3, T>& w0, const numerical::Vector<3, T>& w1, const T variance, const T dt)
         {
                 namespace impl = fusion_implementation;
 
-                x_ = first_order_quaternion_integrator(x_, w_last_, w, dt).normalized();
-                w_last_ = w;
+                x_ = first_order_quaternion_integrator(x_, w0, w1, dt).normalized();
 
-                const Matrix phi = impl::phi_matrix(w, dt);
+                const Matrix phi = impl::phi_matrix(w1, dt);
                 const Matrix q(variance * dt);
 
                 p_ = phi * p_ * phi.transposed() + q;
@@ -167,11 +165,15 @@ class Fusion final
         }
 
 public:
-        void update_gyro(const numerical::Vector<3, T>& w, const T variance, const T dt)
+        void update_gyro(
+                const numerical::Vector<3, T>& w0,
+                const numerical::Vector<3, T>& w1,
+                const T variance,
+                const T dt)
         {
                 if (has_attitude())
                 {
-                        predict(w, variance, dt);
+                        predict(w0, w1, variance, dt);
                 }
         }
 
