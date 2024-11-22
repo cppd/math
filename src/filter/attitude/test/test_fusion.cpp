@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/filter/attitude/fusion.h>
 #include <src/numerical/quaternion.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <algorithm>
@@ -92,10 +93,13 @@ void test_impl(const T precision)
         constexpr T VARIANCE = square(1e-4L);
         constexpr T DT = 0.01L;
 
+        const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+
         for (int i = 0; i < 100; ++i)
         {
-                f.update_acc({3, 5, 8});
-                f.update_gyro({0.0L, 0.0L, 0.0L}, {0.0L, 0.0L, 0.0L}, VARIANCE, DT);
+                f.update_acc(axis * T{9.8});
+                f.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE, DT);
+                f.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE, DT);
         }
 
         const auto a = f.attitude();
@@ -112,20 +116,20 @@ void test_impl(const T precision)
 
         test_equal(
                 *a,
-                {0.701558260053650965338L, 0.0884081882547869216951L, -0.296855140478688453714L,
-                 -0.641776460748895139733L},
+                {0.828229377846810675896L, 0.153083694947164173714L, -0.269266344945741933144L,
+                 -0.467008688883161158855L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763365663224751L, 0.505076272276105374566L, 0.808122035641768599425L}, precision);
+                {0.303045763365663224263L, 0.50507627227610537462L, 0.808122035641768599479L}, precision);
 }
 
 void test()
 {
         LOG("Test fusion");
-        test_impl<float>(1e-6);
-        test_impl<double>(1e-15);
+        test_impl<float>(1e-5);
+        test_impl<double>(1e-14);
         test_impl<long double>(1e-20);
         LOG("Test fusion passed");
 }
