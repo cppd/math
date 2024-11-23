@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::filter::attitude
+namespace ns::filter::attitude::ekf
 {
 template <typename T>
 numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)

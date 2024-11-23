@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 
-namespace ns::filter::attitude
+namespace ns::filter::attitude::ekf
 {
 namespace matrix_implementation
 {

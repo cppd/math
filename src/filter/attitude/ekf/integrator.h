@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::filter::attitude
+namespace ns::filter::attitude::ekf
 {
 namespace integrator_implementation
 {

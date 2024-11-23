@@ -30,7 +30,7 @@ and inertial/magnetic sensor arrays.
 #include <cmath>
 #include <type_traits>
 
-namespace ns::filter::attitude
+namespace ns::filter::attitude::madgwick
 {
 namespace madgwick_implementation
 {

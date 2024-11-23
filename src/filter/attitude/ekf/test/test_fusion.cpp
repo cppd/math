@@ -15,16 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/filter/attitude/madgwick.h>
+#include <src/com/print.h>
+#include <src/filter/attitude/ekf/fusion.h>
 #include <src/numerical/quaternion.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 
-namespace ns::filter::attitude::test
+namespace ns::filter::attitude::ekf::test
 {
 namespace
 {
@@ -83,74 +86,54 @@ void test_equal(const T& a, const T& b, const P precision)
 }
 
 template <typename T>
-void test_m(const T precision)
-{
-        numerical::Quaternion<T> q;
-
-        const auto cmp = [&](const T w, const T x, const T y, const T z)
-        {
-                test_equal(q, {w, x, y, z}, precision);
-        };
-
-        const T beta = madgwick_beta<T>(1);
-        Madgwick<T> m;
-
-        for (int i = 0; i < 10; ++i)
-        {
-                q = m.update({0.01L, 0.02L, 0.03L}, {3, 5, 8}, beta, 0.1L);
-        }
-        cmp(0.949205178592176475989L, 0.272454412336692847847L, -0.156441973403004307483L, 0.0174364873135447197984L);
-
-        q = m.update({0.01L, 0.02L, 0.03L}, {0, 0, 0}, beta, 0.1L);
-        cmp(0.949197577534133588343L, 0.272676438295221403328L, -0.155892458787696229369L, 0.0192109368613610888279L);
-}
-
-template <typename T>
-void test_mm(const T precision)
-{
-        numerical::Quaternion<T> q;
-
-        const auto cmp = [&](const T w, const T x, const T y, const T z)
-        {
-                test_equal(q, {w, x, y, z}, precision);
-        };
-
-        const T beta = madgwick_beta<T>(1);
-        const T zeta = madgwick_zeta<T>(0.1);
-        MadgwickMarg<T> m;
-
-        for (int i = 0; i < 10; ++i)
-        {
-                q = m.update({0.01L, 0.02L, 0.03L}, {3, 5, 8}, {15, -20, 25}, beta, zeta, 0.1L);
-        }
-        cmp(0.636766707106268591585L, 0.193224325555701386569L, 0.638162672093604048059L, 0.387222061201237693467L);
-
-        q = m.update({0.01L, 0.02L, 0.03L}, {0, 0, 0}, {15, -20, 25}, beta, zeta, 0.1L);
-        cmp(0.629098656826129842108L, 0.195344857404973504277L, 0.642967426834155368468L, 0.39072772450295224474L);
-
-        q = m.update({0.01L, 0.02L, 0.03L}, {3, 5, 8}, {0, 0, 0}, beta, zeta, 0.1L);
-        cmp(0.633398015523262782164L, 0.209550663614859412445L, 0.611087945333374136082L, 0.425989432237467293069L);
-
-        q = m.update({0.01L, 0.02L, 0.03L}, {0, 0, 0}, {0, 0, 0}, beta, zeta, 0.1L);
-        cmp(0.625683359054655725666L, 0.211207042892938397867L, 0.615871054823818319898L, 0.429668201132805046807L);
-}
-
-template <typename T>
 void test_impl(const T precision)
 {
-        test_m<T>(precision);
-        test_mm<T>(precision);
+        Fusion<T> f;
+
+        constexpr T VARIANCE = square(1e-4L);
+        constexpr T DT = 0.01L;
+
+        const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+
+        for (int i = 0; i < 100; ++i)
+        {
+                f.update_acc(axis * T{9.8});
+                f.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE, DT);
+                f.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE, DT);
+        }
+
+        const auto a = f.attitude();
+
+        if (!a)
+        {
+                error("No attitude");
+        }
+
+        if (!a->is_unit())
+        {
+                error("Attitude is not unit");
+        }
+
+        test_equal(
+                *a,
+                {0.828229377846810675896L, 0.153083694947164173714L, -0.269266344945741933144L,
+                 -0.467008688883161158855L},
+                precision);
+
+        test_equal(
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                {0.303045763365663224263L, 0.50507627227610537462L, 0.808122035641768599479L}, precision);
 }
 
 void test()
 {
-        LOG("Test Madgwick filter");
+        LOG("Test fusion");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
-        test_impl<long double>(0);
-        LOG("Test Madgwick filter passed");
+        test_impl<long double>(1e-20);
+        LOG("Test fusion passed");
 }
 
-TEST_SMALL("Madgwick", test)
+TEST_SMALL("Fusion", test)
 }
 }
