@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constant.h"
 #include "quaternion.h"
 
 #include <src/numerical/vector.h>
@@ -32,7 +33,7 @@ template <typename T>
 {
         const T wn = w.norm();
 
-        if (wn < T{1e-5})
+        if (wn < W_THRESHOLD<T>)
         {
                 const Quaternion<T> theta{1, (dt / 2) * w};
                 return theta;

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/filter/attitude/ekf/fusion.h>
+#include <src/filter/attitude/ekf/ekf.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -88,7 +88,7 @@ void test_equal(const T& a, const T& b, const P precision)
 template <typename T>
 void test_impl(const T precision)
 {
-        Fusion<T> f;
+        Ekf<T> f;
 
         constexpr T VARIANCE = square(1e-4L);
         constexpr T DT = 0.01L;
@@ -127,13 +127,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test fusion");
+        LOG("Test attitude EKF");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
         test_impl<long double>(1e-20);
-        LOG("Test fusion passed");
+        LOG("Test attitude EKF passed");
 }
 
-TEST_SMALL("Fusion", test)
+TEST_SMALL("Attitude EKF", test)
 }
 }

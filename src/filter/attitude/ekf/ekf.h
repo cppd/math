@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constant.h"
 #include "integrator.h"
 #include "matrix.h"
 #include "quaternion.h"
@@ -38,18 +39,12 @@ namespace ns::filter::attitude::ekf
 namespace fusion_implementation
 {
 template <typename T>
-inline constexpr T MIN_ACC = 9.3; // m/s/s
-
-template <typename T>
-inline constexpr T MAX_ACC = 10.3; // m/s/s
-
-template <typename T>
 numerical::Matrix<3, 3, T> phi_matrix(const numerical::Vector<3, T>& w, const T dt)
 {
         const T n2 = w.norm_squared();
         const T n = std::sqrt(n2);
 
-        if (n < T{1e-5})
+        if (n < W_THRESHOLD<T>)
         {
                 const numerical::Matrix<3, 3, T> k0 = dt * cross_matrix<1>(w);
                 const numerical::Matrix<3, 3, T> k1 = (dt * dt / 2) * cross_matrix<2>(w);
@@ -75,7 +70,7 @@ Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
 }
 
 template <typename T>
-class Fusion final
+class Ekf final
 {
         using Vector = numerical::Vector<3, T>;
         using Matrix = numerical::Matrix<3, 3, T>;
@@ -179,10 +174,8 @@ public:
 
         void update_acc(const numerical::Vector<3, T>& a)
         {
-                namespace impl = fusion_implementation;
-
                 const T a_norm = a.norm();
-                if (!(a_norm >= impl::MIN_ACC<T> && a_norm <= impl::MAX_ACC<T>))
+                if (!(a_norm >= MIN_ACCELERATION<T> && a_norm <= MAX_ACCELERATION<T>))
                 {
                         return;
                 }

@@ -86,13 +86,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test filter matrix");
+        LOG("Test attitude EKF matrix");
         test_impl<float>(0);
         test_impl<double>(0);
         test_impl<long double>(0);
-        LOG("Test filter matrix passed");
+        LOG("Test attitude EKF matrix passed");
 }
 
-TEST_SMALL("Filter Matrix", test)
+TEST_SMALL("Attitude EKF Matrix", test)
 }
 }

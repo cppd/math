@@ -144,13 +144,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test Madgwick filter");
+        LOG("Test attitude Madgwick");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
         test_impl<long double>(0);
-        LOG("Test Madgwick filter passed");
+        LOG("Test attitude Madgwick passed");
 }
 
-TEST_SMALL("Madgwick", test)
+TEST_SMALL("Attitude Madgwick", test)
 }
 }
