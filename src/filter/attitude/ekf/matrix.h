@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "constant.h"
+
 #include <src/com/exponent.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -88,5 +90,24 @@ numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
         {
                 static_assert(false);
         }
+}
+
+template <typename T>
+numerical::Matrix<3, 3, T> state_transition_theta_matrix(const numerical::Vector<3, T>& w, const T dt)
+{
+        const T n2 = w.norm_squared();
+        const T n = std::sqrt(n2);
+
+        if (n < W_THRESHOLD<T>)
+        {
+                const numerical::Matrix<3, 3, T> k0 = dt * cross_matrix<1>(w);
+                const numerical::Matrix<3, 3, T> k1 = (dt * dt / 2) * cross_matrix<2>(w);
+                return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
+        }
+
+        const numerical::Matrix<3, 3, T> k0 = (std::sin(n * dt) / n) * cross_matrix<1>(w);
+        const numerical::Matrix<3, 3, T> k1 = ((1 - std::cos(n * dt)) / n2) * cross_matrix<2>(w);
+
+        return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
 }
 }

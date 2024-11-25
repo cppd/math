@@ -36,27 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude::ekf
 {
-namespace fusion_implementation
+namespace ekf_implementation
 {
-template <typename T>
-numerical::Matrix<3, 3, T> phi_matrix(const numerical::Vector<3, T>& w, const T dt)
-{
-        const T n2 = w.norm_squared();
-        const T n = std::sqrt(n2);
-
-        if (n < W_THRESHOLD<T>)
-        {
-                const numerical::Matrix<3, 3, T> k0 = dt * cross_matrix<1>(w);
-                const numerical::Matrix<3, 3, T> k1 = (dt * dt / 2) * cross_matrix<2>(w);
-                return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
-        }
-
-        const numerical::Matrix<3, 3, T> k0 = (std::sin(n * dt) / n) * cross_matrix<1>(w);
-        const numerical::Matrix<3, 3, T> k1 = ((1 - std::cos(n * dt)) / n2) * cross_matrix<2>(w);
-
-        return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
-}
-
 template <typename T>
 Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
 {
@@ -89,11 +70,9 @@ class Ekf final
 
         void predict(const numerical::Vector<3, T>& w0, const numerical::Vector<3, T>& w1, const T variance, const T dt)
         {
-                namespace impl = fusion_implementation;
-
                 x_ = first_order_quaternion_integrator(x_, w0, w1, dt).normalized();
 
-                const Matrix phi = impl::phi_matrix(w1, dt);
+                const Matrix phi = state_transition_theta_matrix(w1, dt);
                 const Matrix q(variance * dt);
 
                 p_ = phi * p_ * phi.transposed() + q;
@@ -109,7 +88,7 @@ class Ekf final
         template <std::size_t N>
         void update(const std::array<Update, N>& data)
         {
-                namespace impl = fusion_implementation;
+                namespace impl = ekf_implementation;
 
                 numerical::Vector<3 * N, T> z;
                 numerical::Vector<3 * N, T> hx;
