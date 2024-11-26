@@ -201,6 +201,28 @@ template <std::size_t START, std::size_t STEP, std::size_t N, typename T>
         return res;
 }
 
+template <
+        std::size_t START_R,
+        std::size_t START_C,
+        std::size_t R,
+        std::size_t C,
+        std::size_t BR,
+        std::size_t BC,
+        typename T>
+void set_block(Matrix<R, C, T>& m, const Matrix<BR, BC, T>& block)
+{
+        static_assert(START_R + BR <= R);
+        static_assert(START_C + BC <= C);
+
+        for (std::size_t r = START_R, br = 0; br < BR; ++r, ++br)
+        {
+                for (std::size_t c = START_C, bc = 0; bc < BC; ++c, ++bc)
+                {
+                        m[r, c] = block[br, bc];
+                }
+        }
+}
+
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 [[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator+(
         const Matrix<ROWS, COLUMNS, T>& m1,
