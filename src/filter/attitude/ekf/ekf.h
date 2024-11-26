@@ -72,7 +72,7 @@ class Ekf final
         {
                 x_ = first_order_quaternion_integrator(x_, w0, w1, dt).normalized();
 
-                const Matrix phi = state_transition_theta_matrix(w1, dt);
+                const Matrix phi = state_transition_matrix_3(w1, dt);
                 const Matrix q(variance * dt);
 
                 p_ = phi * p_ * phi.transposed() + q;

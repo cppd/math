@@ -55,10 +55,20 @@ numerical::Matrix<3, 3, T> cross_matrix_2(const numerical::Vector<3, T>& v)
                 {       v02,        v12, -v00 - v11}
         };
 }
+
+template <std::size_t N, typename T>
+numerical::Matrix<N, N, T> add_diagonal(const T v, numerical::Matrix<N, N, T> m)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                m[i, i] = v;
+        }
+        return m;
+}
 }
 
 template <std::size_t N, typename T>
-numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
+[[nodiscard]] numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
 {
         namespace impl = matrix_implementation;
 
@@ -93,21 +103,63 @@ numerical::Matrix<3, 3, T> cross_matrix(const numerical::Vector<3, T>& v)
 }
 
 template <typename T>
-numerical::Matrix<3, 3, T> state_transition_theta_matrix(const numerical::Vector<3, T>& w, const T dt)
+[[nodiscard]] numerical::Matrix<3, 3, T> state_transition_matrix_3(const numerical::Vector<3, T>& w, const T dt)
 {
+        namespace impl = matrix_implementation;
+        using Matrix = numerical::Matrix<3, 3, T>;
+
         const T n2 = w.norm_squared();
         const T n = std::sqrt(n2);
+        const Matrix cross_1 = cross_matrix<1>(w);
+        const Matrix cross_2 = cross_matrix<2>(w);
 
         if (n < W_THRESHOLD<T>)
         {
-                const numerical::Matrix<3, 3, T> k0 = dt * cross_matrix<1>(w);
-                const numerical::Matrix<3, 3, T> k1 = (dt * dt / 2) * cross_matrix<2>(w);
-                return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
+                const T c0 = dt * dt / 2;
+                return impl::add_diagonal(T{1}, -dt * cross_1 + c0 * cross_2);
         }
 
-        const numerical::Matrix<3, 3, T> k0 = (std::sin(n * dt) / n) * cross_matrix<1>(w);
-        const numerical::Matrix<3, 3, T> k1 = ((1 - std::cos(n * dt)) / n2) * cross_matrix<2>(w);
-
-        return numerical::IDENTITY_MATRIX<3, T> - k0 + k1;
+        const T sin = std::sin(n * dt);
+        const T cos = std::cos(n * dt);
+        const T c0 = sin / n;
+        const T c1 = (1 - cos) / n2;
+        return impl::add_diagonal(T{1}, -c0 * cross_1 + c1 * cross_2);
 }
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<6, 6, T> state_transition_matrix_6(const numerical::Vector<3, T>& w, const T dt)
+{
+        namespace impl = matrix_implementation;
+        using Matrix = numerical::Matrix<3, 3, T>;
+
+        const T n2 = w.norm_squared();
+        const T n = std::sqrt(n2);
+        const Matrix cross_1 = cross_matrix<1>(w);
+        const Matrix cross_2 = cross_matrix<2>(w);
+
+        numerical::Matrix<6, 6, T> res = numerical::IDENTITY_MATRIX<6, T>;
+
+        if (n < W_THRESHOLD<T>)
+        {
+                const T c0 = dt * dt / 2;
+                const T c1 = dt * dt * dt / 6;
+                const Matrix theta = impl::add_diagonal(T{1}, -dt * cross_1 + c0 * cross_2);
+                const Matrix psi = impl::add_diagonal(-dt, c0 * cross_1 - c1 * cross_2);
+                numerical::set_block<0, 0>(res, theta);
+                numerical::set_block<0, 3>(res, psi);
+                return res;
+        }
+
+        const T sin = std::sin(n * dt);
+        const T cos = std::cos(n * dt);
+        const T c0 = sin / n;
+        const T c1 = (1 - cos) / n2;
+        const T c2 = (n * dt - sin) / (n2 * n);
+        const Matrix theta = impl::add_diagonal(T{1}, -c0 * cross_1 + c1 * cross_2);
+        const Matrix psi = impl::add_diagonal(-dt, c1 * cross_1 - c2 * cross_2);
+        numerical::set_block<0, 0>(res, theta);
+        numerical::set_block<0, 3>(res, psi);
+        return res;
+}
+
 }
