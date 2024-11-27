@@ -115,12 +115,15 @@ template <typename T>
 
         if (n < W_THRESHOLD<T>)
         {
-                const T c0 = dt * dt / 2;
-                return impl::add_diagonal(T{1}, -dt * cross_1 + c0 * cross_2);
+                const T dt2 = dt * dt;
+                const T c0 = dt;
+                const T c1 = dt2 / 2;
+                return impl::add_diagonal(T{1}, -c0 * cross_1 + c1 * cross_2);
         }
 
-        const T sin = std::sin(n * dt);
-        const T cos = std::cos(n * dt);
+        const T ndt = n * dt;
+        const T sin = std::sin(ndt);
+        const T cos = std::cos(ndt);
         const T c0 = sin / n;
         const T c1 = (1 - cos) / n2;
         return impl::add_diagonal(T{1}, -c0 * cross_1 + c1 * cross_2);
@@ -141,20 +144,25 @@ template <typename T>
 
         if (n < W_THRESHOLD<T>)
         {
-                const T c0 = dt * dt / 2;
-                const T c1 = dt * dt * dt / 6;
-                const Matrix theta = impl::add_diagonal(T{1}, -dt * cross_1 + c0 * cross_2);
-                const Matrix psi = impl::add_diagonal(-dt, c0 * cross_1 - c1 * cross_2);
+                const T dt2 = dt * dt;
+                const T dt3 = dt2 * dt;
+                const T c0 = dt;
+                const T c1 = dt2 / 2;
+                const T c2 = dt3 / 6;
+                const Matrix theta = impl::add_diagonal(T{1}, -c0 * cross_1 + c1 * cross_2);
+                const Matrix psi = impl::add_diagonal(-dt, c1 * cross_1 - c2 * cross_2);
                 numerical::set_block<0, 0>(res, theta);
                 numerical::set_block<0, 3>(res, psi);
                 return res;
         }
 
-        const T sin = std::sin(n * dt);
-        const T cos = std::cos(n * dt);
+        const T ndt = n * dt;
+        const T n3 = n2 * n;
+        const T sin = std::sin(ndt);
+        const T cos = std::cos(ndt);
         const T c0 = sin / n;
         const T c1 = (1 - cos) / n2;
-        const T c2 = (n * dt - sin) / (n2 * n);
+        const T c2 = (ndt - sin) / n3;
         const Matrix theta = impl::add_diagonal(T{1}, -c0 * cross_1 + c1 * cross_2);
         const Matrix psi = impl::add_diagonal(-dt, c1 * cross_1 - c2 * cross_2);
         numerical::set_block<0, 0>(res, theta);
@@ -162,4 +170,70 @@ template <typename T>
         return res;
 }
 
+template <typename T>
+[[nodiscard]] numerical::Matrix<3, 3, T> noise_covariance_matrix_3(const T vr, const T dt)
+{
+        return numerical::make_diagonal_matrix<3, T>(vr * dt);
+}
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<6, 6, T> noise_covariance_matrix_6(
+        const numerical::Vector<3, T>& w,
+        const T vr,
+        const T vw,
+        const T dt)
+{
+        namespace impl = matrix_implementation;
+        using Matrix = numerical::Matrix<3, 3, T>;
+
+        const T n2 = w.norm_squared();
+        const T n = std::sqrt(n2);
+        const Matrix cross_1 = cross_matrix<1>(w);
+        const Matrix cross_2 = cross_matrix<2>(w);
+
+        Matrix q11;
+        Matrix q12;
+
+        if (n < W_THRESHOLD<T>)
+        {
+                const T dt2 = dt * dt;
+                const T dt3 = dt2 * dt;
+                const T dt4 = dt3 * dt;
+                const T dt5 = dt4 * dt;
+                const T c0 = dt3 / 3;
+                const T c1 = dt5 / (5 * 4 * 3);
+                const T c2 = dt2 / 2;
+                const T c3 = dt3 / (3 * 2);
+                const T c4 = dt4 / (4 * 3 * 2);
+                q11 = impl::add_diagonal(vr * dt, vw * impl::add_diagonal(c0, c1 * cross_2));
+                q12 = -vw * impl::add_diagonal(c2, -c3 * cross_1 + c4 * cross_2);
+        }
+        else
+        {
+                const T n3 = n2 * n;
+                const T n4 = n3 * n;
+                const T n5 = n4 * n;
+                const T ndt = n * dt;
+                const T ndt2 = ndt * ndt;
+                const T ndt3 = ndt2 * ndt;
+                const T sin = std::sin(ndt);
+                const T cos = std::cos(ndt);
+                const T dt2 = dt * dt;
+                const T dt3 = dt2 * dt;
+                const T c0 = dt3 / 3;
+                const T c1 = (ndt3 / 3 + 2 * sin - 2 * ndt) / n5;
+                const T c2 = dt2 / 2;
+                const T c3 = (ndt - sin) / n3;
+                const T c4 = (ndt2 / 2 + cos - 1) / n4;
+                q11 = impl::add_diagonal(vr * dt, vw * impl::add_diagonal(c0, c1 * cross_2));
+                q12 = -vw * impl::add_diagonal(c2, -c3 * cross_1 + c4 * cross_2);
+        }
+
+        numerical::Matrix<6, 6, T> res;
+        numerical::set_block<0, 0>(res, q11);
+        numerical::set_block<0, 3>(res, q12);
+        numerical::set_block<3, 0>(res, q12.transposed());
+        numerical::set_block<3, 3>(res, numerical::make_diagonal_matrix<3, T>(vw * dt));
+        return res;
+}
 }
