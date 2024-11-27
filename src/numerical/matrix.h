@@ -84,6 +84,18 @@ template <std::size_t N, typename T>
         }(std::make_integer_sequence<std::size_t, N>());
 }
 
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr Matrix<N, N, T> make_diagonal_matrix(const T& v)
+{
+        namespace impl = matrix_object_implementation;
+        return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
+        {
+                static_assert(sizeof...(I) == N);
+                static_assert(((I >= 0 && I < N) && ...));
+                return Matrix<N, N, T>({impl::make_vector<N, T, I>(v)...});
+        }(std::make_integer_sequence<std::size_t, N>());
+}
+
 template <typename... Matrices>
         requires (sizeof...(Matrices) > 1)
 [[nodiscard]] constexpr Matrix<
