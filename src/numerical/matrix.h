@@ -388,7 +388,7 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
 }
 
 template <std::size_t N, typename T>
-inline constexpr Matrix<N, N, T> IDENTITY_MATRIX = make_diagonal_matrix(Vector<N, T>(1));
+inline constexpr Matrix<N, N, T> IDENTITY_MATRIX = make_diagonal_matrix<N, T>(1);
 
 using Matrix3d = Matrix<3, 3, double>;
 using Matrix3f = Matrix<3, 3, float>;

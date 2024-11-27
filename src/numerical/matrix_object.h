@@ -34,6 +34,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
+struct ZeroMatrix final
+{
+};
+
+inline constexpr ZeroMatrix ZERO_MATRIX;
+
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 class Matrix final
 {
@@ -54,13 +60,13 @@ public:
         // {
         // }
 
-        explicit constexpr Matrix(const std::type_identity_t<T> value)
+        explicit constexpr Matrix(ZeroMatrix)
         {
                 for (std::size_t r = 0; r < ROWS; ++r)
                 {
                         for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
-                                rows_[r][c] = value;
+                                rows_[r][c] = 0;
                         }
                 }
         }

@@ -61,7 +61,7 @@ class Ekf final
         unsigned acc_count_{0};
 
         Quaternion<T> x_;
-        Matrix p_{0};
+        Matrix p_{numerical::ZERO_MATRIX};
 
         Vector global_to_local(const Vector& global)
         {
@@ -93,7 +93,7 @@ class Ekf final
                 numerical::Vector<3 * N, T> z;
                 numerical::Vector<3 * N, T> hx;
                 numerical::Matrix<3 * N, 3, T> h;
-                numerical::Matrix<3 * N, 3 * N, T> r(0);
+                numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
 
                 for (std::size_t i = 0; i < N; ++i)
                 {

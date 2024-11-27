@@ -51,7 +51,7 @@ numerical::Matrix<5, 5, T> p(const numerical::Matrix<4, 4, T>& position_velocity
 {
         ASSERT(is_finite(position_velocity_p));
 
-        numerical::Matrix<5, 5, T> res(0);
+        numerical::Matrix<5, 5, T> res(numerical::ZERO_MATRIX);
 
         for (std::size_t r = 0; r < 4; ++r)
         {

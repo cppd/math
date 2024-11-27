@@ -65,7 +65,7 @@ template <std::size_t N, typename T, std::size_t POINT_COUNT, typename Mean, typ
 {
         const numerical::Vector<N, T> x = mean(points, wm);
 
-        numerical::Matrix<N, N, T> covariance(0);
+        numerical::Matrix<N, N, T> covariance(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
                 const numerical::Vector<N, T> v = residual(points[i], x);
@@ -97,7 +97,7 @@ template <std::size_t N, std::size_t M, typename T, std::size_t POINT_COUNT, typ
         const ResidualX residual_x,
         const ResidualZ residual_z)
 {
-        numerical::Matrix<N, M, T> res(0);
+        numerical::Matrix<N, M, T> res(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
                 const numerical::Vector<N, T> s = residual_x(sigmas_f[i], x);

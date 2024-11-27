@@ -134,7 +134,7 @@ numerical::Matrix<N + 1, N + 1, T> position_speed_r(
         const numerical::Vector<N, T>& position_variance,
         const numerical::Vector<1, T>& speed_variance)
 {
-        numerical::Matrix<N + 1, N + 1, T> res(0);
+        numerical::Matrix<N + 1, N + 1, T> res(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, i] = position_variance[i];

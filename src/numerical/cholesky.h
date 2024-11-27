@@ -55,7 +55,7 @@ public:
 template <std::size_t N, typename T>
 [[nodiscard]] Matrix<N, N, T> cholesky_decomposition_lower_triangular(const Matrix<N, N, T>& a)
 {
-        Matrix<N, N, T> l(0);
+        Matrix<N, N, T> l{ZERO_MATRIX};
 
         for (std::size_t k = 0; k < N; ++k)
         {

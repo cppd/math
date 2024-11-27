@@ -119,7 +119,7 @@ template <std::size_t N, typename T>
 [[nodiscard]] Matrix<N, N, T> positive_diagonal_matrix(PCG& pcg)
 {
         std::uniform_real_distribution<T> urd(1, 10);
-        Matrix<N, N, T> res(0);
+        Matrix<N, N, T> res(ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, i] = urd(pcg);

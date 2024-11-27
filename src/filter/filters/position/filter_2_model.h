@@ -52,7 +52,7 @@ numerical::Matrix<3 * N, 3 * N, T> p(const numerical::Vector<N, T>& position_var
 {
         ASSERT(is_finite(position_variance));
 
-        numerical::Matrix<3 * N, 3 * N, T> res(0);
+        numerical::Matrix<3 * N, 3 * N, T> res(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t b = 3 * i;
@@ -129,7 +129,7 @@ numerical::Matrix<N, 3 * N, T> position_hj(const numerical::Vector<3 * N, T>& /*
         // px = px
         // py = py
         // Jacobian
-        numerical::Matrix<N, 3 * N, T> res(0);
+        numerical::Matrix<N, 3 * N, T> res(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, 3 * i] = 1;

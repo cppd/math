@@ -60,7 +60,7 @@ numerical::Matrix<9, 9, T> p(const numerical::Matrix<4, 4, T>& position_velocity
         const numerical::Matrix<4, 4, T>& p = position_velocity_p;
         static constexpr std::size_t N = 2;
 
-        numerical::Matrix<9, 9, T> res(0);
+        numerical::Matrix<9, 9, T> res(numerical::ZERO_MATRIX);
 
         for (std::size_t r = 0; r < N; ++r)
         {
