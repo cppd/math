@@ -57,7 +57,7 @@ class Ekf final
         using Matrix = numerical::Matrix<3, 3, T>;
 
         static constexpr unsigned ACC_COUNT{10};
-        numerical::Vector<3, T> acc_data_{0};
+        Vector acc_data_{0};
         unsigned acc_count_{0};
 
         Quaternion<T> x_;
@@ -68,7 +68,7 @@ class Ekf final
                 return rotate_vector(x_.q().conjugate(), global);
         }
 
-        void predict(const numerical::Vector<3, T>& w0, const numerical::Vector<3, T>& w1, const T variance, const T dt)
+        void predict(const Vector& w0, const Vector& w1, const T variance, const T dt)
         {
                 x_ = first_order_quaternion_integrator(x_, w0, w1, dt).normalized();
 
@@ -80,8 +80,8 @@ class Ekf final
 
         struct Update final
         {
-                numerical::Vector<3, T> z;
-                numerical::Vector<3, T> global;
+                Vector z;
+                Vector global;
                 T variance;
         };
 
@@ -188,4 +188,164 @@ public:
                 return std::nullopt;
         }
 };
+
+template <typename T>
+class EkfB final
+{
+        using Vector3 = numerical::Vector<3, T>;
+        using Vector6 = numerical::Vector<6, T>;
+        using Matrix3 = numerical::Matrix<3, 3, T>;
+        using Matrix6 = numerical::Matrix<6, 6, T>;
+
+        static constexpr unsigned ACC_COUNT{10};
+        Vector3 acc_data_{0};
+        unsigned acc_count_{0};
+
+        Quaternion<T> x_;
+        Vector3 b_{0};
+        Matrix6 p_{numerical::ZERO_MATRIX};
+
+        Vector3 global_to_local(const Vector3& global)
+        {
+                return rotate_vector(x_.q().conjugate(), global);
+        }
+
+        void predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
+        {
+                const Vector3 wb0 = w0 - b_;
+                const Vector3 wb1 = w1 - b_;
+
+                x_ = first_order_quaternion_integrator(x_, wb0, wb1, dt).normalized();
+
+                const Matrix6 phi = state_transition_matrix_6(wb1, dt);
+                const Matrix6 q = noise_covariance_matrix_6(wb1, variance_r, variance_w, dt);
+
+                p_ = phi * p_ * phi.transposed() + q;
+        }
+
+        struct Update final
+        {
+                Vector3 z;
+                Vector3 global;
+                T variance;
+        };
+
+        template <std::size_t N>
+        void update(const std::array<Update, N>& data)
+        {
+                namespace impl = ekf_implementation;
+
+                numerical::Vector<3 * N, T> z;
+                numerical::Vector<3 * N, T> hx;
+                numerical::Matrix<3 * N, 6, T> h(numerical::ZERO_MATRIX);
+                numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
+
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        const Vector3 hx_i = global_to_local(data[i].global);
+                        const Matrix3 h_i = cross_matrix<1>(hx_i);
+                        const Vector3 z_i = data[i].z;
+                        const T variance_i = data[i].variance;
+                        for (std::size_t b = 3 * i, j = 0; j < 3; ++b, ++j)
+                        {
+                                z[b] = z_i[j];
+                                hx[b] = hx_i[j];
+                                for (std::size_t k = 0; k < 3; ++k)
+                                {
+                                        h.row(b)[k] = h_i.row(j)[k];
+                                }
+                                r[b, b] = variance_i;
+                        }
+                }
+
+                const numerical::Matrix<6, 3 * N, T> ht = h.transposed();
+                const numerical::Matrix<3 * N, 3 * N, T> s = h * p_ * ht + r;
+                const numerical::Matrix<6, 3 * N, T> k = p_ * ht * s.inversed();
+
+                const Vector6 dx = k * (z - hx);
+                const Vector3 dxq = dx.template segment<0, 3>();
+                const Vector3 dxb = dx.template segment<3, 3>();
+
+                const Quaternion<T> q = impl::make_unit_quaternion(dxq / T{2});
+                x_ = (q * x_).normalized();
+
+                b_ += dxb;
+
+                const Matrix6 i_kh = numerical::IDENTITY_MATRIX<6, T> - k * h;
+                p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
+        }
+
+        [[nodiscard]] bool has_attitude() const
+        {
+                return acc_count_ >= ACC_COUNT;
+        }
+
+        void update_init(const Vector3& a_norm)
+        {
+                ASSERT(acc_count_ < ACC_COUNT);
+                acc_data_ += a_norm;
+                ++acc_count_;
+                if (acc_count_ >= ACC_COUNT)
+                {
+                        x_ = Quaternion(initial_quaternion(acc_data_ / T(acc_count_)));
+                }
+        }
+
+public:
+        void update_gyro(
+                const numerical::Vector<3, T>& w0,
+                const numerical::Vector<3, T>& w1,
+                const T variance_r,
+                const T variance_w,
+                const T dt)
+        {
+                if (has_attitude())
+                {
+                        predict(w0, w1, variance_r, variance_w, dt);
+                }
+        }
+
+        void update_acc(const numerical::Vector<3, T>& a)
+        {
+                const T a_norm = a.norm();
+                if (!(a_norm >= MIN_ACCELERATION<T> && a_norm <= MAX_ACCELERATION<T>))
+                {
+                        return;
+                }
+
+                if (!has_attitude())
+                {
+                        update_init(a / a_norm);
+                        return;
+                }
+
+                update(std::array{
+                        Update{
+                               .z = a / a_norm,
+                               .global = {0, 0, 1},
+                               .variance = square(0.01),
+                               },
+                        Update{
+                               .z = global_to_local({0, 1, 0}),
+                               .global = {0, 1, 0},
+                               .variance = square(0.01),
+                               }
+                });
+        }
+
+        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        {
+                if (has_attitude())
+                {
+                        return x_.q();
+                }
+                return std::nullopt;
+        }
+
+        [[nodiscard]] numerical::Vector<3, T> bias() const
+        {
+                return b_;
+        }
+};
+
 }
