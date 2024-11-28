@@ -88,6 +88,14 @@ void test_equal(const T& a, const T& b, const P precision)
 template <typename T>
 void test_impl(const T precision)
 {
+        {
+                EkfB<T> f;
+                f.update_acc({0, 0, 0});
+                f.update_gyro({0, 0, 0}, {0, 0, 0}, 0, 0, 0);
+                static_cast<void>(f.attitude());
+                static_cast<void>(f.bias());
+        }
+
         Ekf<T> f;
 
         constexpr T VARIANCE = square(1e-4L);
