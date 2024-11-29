@@ -197,9 +197,12 @@ class EkfB final
         using Matrix3 = numerical::Matrix<3, 3, T>;
         using Matrix6 = numerical::Matrix<6, 6, T>;
 
-        static constexpr unsigned ACC_COUNT{10};
+        static constexpr unsigned INIT_COUNT{10};
         Vector3 acc_data_{0};
         unsigned acc_count_{0};
+        Vector3 mag_data_{0};
+        unsigned mag_count_{0};
+        bool has_attitude_{false};
 
         Quaternion<T> x_;
         Vector3 b_{0};
@@ -275,20 +278,31 @@ class EkfB final
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
-        [[nodiscard]] bool has_attitude() const
+        void init()
         {
-                return acc_count_ >= ACC_COUNT;
+                ASSERT(!has_attitude_);
+                if (acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT)
+                {
+                        return;
+                }
+                const Vector3 a = acc_data_ / T(acc_count_);
+                const Vector3 m = mag_data_ / T(mag_count_);
+                x_ = Quaternion(initial_quaternion(a, m));
+                has_attitude_ = true;
         }
 
-        void update_init(const Vector3& a_norm)
+        void update_init_acc(const Vector3& a_norm)
         {
-                ASSERT(acc_count_ < ACC_COUNT);
                 acc_data_ += a_norm;
                 ++acc_count_;
-                if (acc_count_ >= ACC_COUNT)
-                {
-                        x_ = Quaternion(initial_quaternion(acc_data_ / T(acc_count_)));
-                }
+                init();
+        }
+
+        void update_init_mag(const Vector3& m_norm)
+        {
+                mag_data_ += m_norm;
+                ++mag_count_;
+                init();
         }
 
 public:
@@ -299,7 +313,7 @@ public:
                 const T variance_w,
                 const T dt)
         {
-                if (has_attitude())
+                if (has_attitude_)
                 {
                         predict(w0, w1, variance_r, variance_w, dt);
                 }
@@ -313,9 +327,9 @@ public:
                         return;
                 }
 
-                if (!has_attitude())
+                if (!has_attitude_)
                 {
-                        update_init(a / a_norm);
+                        update_init_acc(a / a_norm);
                         return;
                 }
 
@@ -333,9 +347,24 @@ public:
                 });
         }
 
+        void update_mag(const numerical::Vector<3, T>& m)
+        {
+                const T m_norm = m.norm();
+                if (!(m_norm >= MIN_MAGNETIC_FIELD<T> && m_norm <= MAX_MAGNETIC_FIELD<T>))
+                {
+                        return;
+                }
+
+                if (!has_attitude_)
+                {
+                        update_init_mag(m / m_norm);
+                        return;
+                }
+        }
+
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
-                if (has_attitude())
+                if (has_attitude_)
                 {
                         return x_.q();
                 }

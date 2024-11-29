@@ -48,10 +48,20 @@ numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
 }
 
 template <typename T>
-numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acceleration)
+numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
 {
-        const numerical::Vector<3, T> z = acceleration.normalized();
+        const numerical::Vector<3, T> z = acc.normalized();
         const numerical::Vector<3, T> x = orthogonal(z);
+        const numerical::Vector<3, T> y = cross(z, x);
+        const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
+        return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+}
+
+template <typename T>
+numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numerical::Vector<3, T>& mag)
+{
+        const numerical::Vector<3, T> z = acc.normalized();
+        const numerical::Vector<3, T> x = cross(mag, z).normalized();
         const numerical::Vector<3, T> y = cross(z, x);
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
         return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);

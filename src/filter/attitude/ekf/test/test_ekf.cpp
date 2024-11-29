@@ -91,6 +91,7 @@ void test_impl(const T precision)
         {
                 EkfB<T> f;
                 f.update_acc({0, 0, 0});
+                f.update_mag({0, 0, 0});
                 f.update_gyro({0, 0, 0}, {0, 0, 0}, 0, 0, 0);
                 static_cast<void>(f.attitude());
                 static_cast<void>(f.bias());

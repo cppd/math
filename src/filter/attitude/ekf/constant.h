@@ -27,4 +27,11 @@ inline constexpr T MIN_ACCELERATION = 9.3; // m/s/s
 
 template <typename T>
 inline constexpr T MAX_ACCELERATION = 10.3; // m/s/s
+
+template <typename T>
+inline constexpr T MIN_MAGNETIC_FIELD = 20; // uT
+
+template <typename T>
+inline constexpr T MAX_MAGNETIC_FIELD = 70; // uT
+
 }
