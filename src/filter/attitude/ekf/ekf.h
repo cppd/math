@@ -80,8 +80,8 @@ class Ekf final
 
         struct Update final
         {
-                Vector z;
-                Vector global;
+                Vector measurement;
+                Vector prediction;
                 T variance;
         };
 
@@ -97,9 +97,9 @@ class Ekf final
 
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        const Vector hx_i = global_to_local(data[i].global);
+                        const Vector hx_i = data[i].prediction;
                         const Matrix h_i = cross_matrix<1>(hx_i);
-                        const Vector z_i = data[i].z;
+                        const Vector z_i = data[i].measurement;
                         const T variance_i = data[i].variance;
                         for (std::size_t b = 3 * i, j = 0; j < 3; ++b, ++j)
                         {
@@ -167,13 +167,13 @@ public:
 
                 update(std::array{
                         Update{
-                               .z = a / a_norm,
-                               .global = {0, 0, 1},
+                               .measurement = a / a_norm,
+                               .prediction = global_to_local({0, 0, 1}),
                                .variance = square(0.01),
                                },
                         Update{
-                               .z = global_to_local({0, 1, 0}),
-                               .global = {0, 1, 0},
+                               .measurement = global_to_local({0, 1, 0}),
+                               .prediction = global_to_local({0, 1, 0}),
                                .variance = square(0.01),
                                }
                 });
@@ -228,8 +228,8 @@ class EkfB final
 
         struct Update final
         {
-                Vector3 z;
-                Vector3 global;
+                Vector3 measurement;
+                Vector3 prediction;
                 T variance;
         };
 
@@ -245,9 +245,9 @@ class EkfB final
 
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        const Vector3 hx_i = global_to_local(data[i].global);
+                        const Vector3 hx_i = data[i].prediction;
                         const Matrix3 h_i = cross_matrix<1>(hx_i);
-                        const Vector3 z_i = data[i].z;
+                        const Vector3 z_i = data[i].measurement;
                         const T variance_i = data[i].variance;
                         for (std::size_t b = 3 * i, j = 0; j < 3; ++b, ++j)
                         {
@@ -335,13 +335,13 @@ public:
 
                 update(std::array{
                         Update{
-                               .z = a / a_norm,
-                               .global = {0, 0, 1},
+                               .measurement = a / a_norm,
+                               .prediction = global_to_local({0, 0, 1}),
                                .variance = square(0.01),
                                },
                         Update{
-                               .z = global_to_local({0, 1, 0}),
-                               .global = {0, 1, 0},
+                               .measurement = global_to_local({0, 1, 0}),
+                               .prediction = global_to_local({0, 1, 0}),
                                .variance = square(0.01),
                                }
                 });
@@ -360,6 +360,24 @@ public:
                         update_init_mag(m / m_norm);
                         return;
                 }
+
+                const Vector3 z = global_to_local({0, 0, 1});
+                const Vector3 x = cross(m / m_norm, z);
+
+                if (!(x.norm_squared() > square(T{0.01})))
+                {
+                        return;
+                }
+
+                const Vector3 y = cross(z, x);
+
+                update(std::array{
+                        Update{
+                               .measurement = y.normalized(),
+                               .prediction = global_to_local({0, 1, 0}),
+                               .variance = square(0.01),
+                               }
+                });
         }
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
@@ -376,5 +394,4 @@ public:
                 return b_;
         }
 };
-
 }
