@@ -60,17 +60,17 @@ class Ekf final
         Vector acc_data_{0};
         unsigned acc_count_{0};
 
-        Quaternion<T> x_;
+        Quaternion<T> q_;
         Matrix p_{numerical::ZERO_MATRIX};
 
         Vector global_to_local(const Vector& global)
         {
-                return rotate_vector(x_.q().conjugate(), global);
+                return rotate_vector(q_.q().conjugate(), global);
         }
 
         void predict(const Vector& w0, const Vector& w1, const T variance, const T dt)
         {
-                x_ = first_order_quaternion_integrator(x_, w0, w1, dt).normalized();
+                q_ = first_order_quaternion_integrator(q_, w0, w1, dt).normalized();
 
                 const Matrix phi = state_transition_matrix_3(w1, dt);
                 const Matrix q = noise_covariance_matrix_3(variance, dt);
@@ -116,7 +116,7 @@ class Ekf final
                 const Vector dx = k * (z - hx);
 
                 const Quaternion<T> q = impl::make_unit_quaternion(dx / T{2});
-                x_ = (q * x_).normalized();
+                q_ = (q * q_).normalized();
 
                 const Matrix i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
@@ -134,7 +134,7 @@ class Ekf final
                 ++acc_count_;
                 if (acc_count_ >= ACC_COUNT)
                 {
-                        x_ = Quaternion(initial_quaternion(acc_data_ / T(acc_count_)));
+                        q_ = Quaternion(initial_quaternion(acc_data_ / T(acc_count_)));
                 }
         }
 
@@ -183,7 +183,7 @@ public:
         {
                 if (has_attitude())
                 {
-                        return x_.q();
+                        return q_.q();
                 }
                 return std::nullopt;
         }
@@ -204,13 +204,13 @@ class EkfB final
         unsigned mag_count_{0};
         bool has_attitude_{false};
 
-        Quaternion<T> x_;
+        Quaternion<T> q_;
         Vector3 b_{0};
         Matrix6 p_{numerical::ZERO_MATRIX};
 
         Vector3 global_to_local(const Vector3& global)
         {
-                return rotate_vector(x_.q().conjugate(), global);
+                return rotate_vector(q_.q().conjugate(), global);
         }
 
         void predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
@@ -218,7 +218,7 @@ class EkfB final
                 const Vector3 wb0 = w0 - b_;
                 const Vector3 wb1 = w1 - b_;
 
-                x_ = first_order_quaternion_integrator(x_, wb0, wb1, dt).normalized();
+                q_ = first_order_quaternion_integrator(q_, wb0, wb1, dt).normalized();
 
                 const Matrix6 phi = state_transition_matrix_6(wb1, dt);
                 const Matrix6 q = noise_covariance_matrix_6(wb1, variance_r, variance_w, dt);
@@ -270,7 +270,7 @@ class EkfB final
                 const Vector3 dxb = dx.template segment<3, 3>();
 
                 const Quaternion<T> q = impl::make_unit_quaternion(dxq / T{2});
-                x_ = (q * x_).normalized();
+                q_ = (q * q_).normalized();
 
                 b_ += dxb;
 
@@ -287,7 +287,7 @@ class EkfB final
                 }
                 const Vector3 a = acc_data_ / T(acc_count_);
                 const Vector3 m = mag_data_ / T(mag_count_);
-                x_ = Quaternion(initial_quaternion(a, m));
+                q_ = Quaternion(initial_quaternion(a, m));
                 has_attitude_ = true;
         }
 
@@ -384,7 +384,7 @@ public:
         {
                 if (has_attitude_)
                 {
-                        return x_.q();
+                        return q_.q();
                 }
                 return std::nullopt;
         }

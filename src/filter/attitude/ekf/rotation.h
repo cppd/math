@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude::ekf
 {
+namespace rotaton_implementation
+{
 template <typename T>
 numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
 {
@@ -44,15 +46,18 @@ numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
         {
                 res = {v[1], -v[0], 0};
         }
-        return res.normalized();
+        return res;
+}
 }
 
 template <typename T>
 numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
 {
+        namespace impl = rotaton_implementation;
+
         const numerical::Vector<3, T> z = acc.normalized();
-        const numerical::Vector<3, T> x = orthogonal(z);
-        const numerical::Vector<3, T> y = cross(z, x);
+        const numerical::Vector<3, T> x = impl::orthogonal(z).normalized();
+        const numerical::Vector<3, T> y = cross(z, x).normalized();
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
         return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
 }
@@ -62,7 +67,7 @@ numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, 
 {
         const numerical::Vector<3, T> z = acc.normalized();
         const numerical::Vector<3, T> x = cross(mag, z).normalized();
-        const numerical::Vector<3, T> y = cross(z, x);
+        const numerical::Vector<3, T> y = cross(z, x).normalized();
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
         return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
 }
