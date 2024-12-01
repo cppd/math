@@ -86,17 +86,8 @@ void test_equal(const T& a, const T& b, const P precision)
 }
 
 template <typename T>
-void test_impl(const T precision)
+void test_impl_a(const T precision)
 {
-        {
-                EkfB<T> f;
-                f.update_acc({0, 0, 0});
-                f.update_mag({0, 0, 0});
-                f.update_gyro({0, 0, 0}, {0, 0, 0}, 0, 0, 0);
-                static_cast<void>(f.attitude());
-                static_cast<void>(f.bias());
-        }
-
         Ekf<T> f;
 
         constexpr T VARIANCE = square(1e-4L);
@@ -132,6 +123,26 @@ void test_impl(const T precision)
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
                 {0.303045763365663224263L, 0.50507627227610537462L, 0.808122035641768599479L}, precision);
+}
+
+template <typename T>
+void test_impl_b(const T /*precision*/)
+{
+        EkfB<T> f;
+
+        f.update_acc({0, 0, 0});
+        f.update_mag({0, 0, 0});
+        f.update_gyro({0, 0, 0}, {0, 0, 0}, 0, 0, 0);
+
+        static_cast<void>(f.attitude());
+        static_cast<void>(f.bias());
+}
+
+template <typename T>
+void test_impl(const T precision)
+{
+        test_impl_a(precision);
+        test_impl_b(precision);
 }
 
 void test()
