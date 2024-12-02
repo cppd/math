@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "integrator.h"
 #include "matrix.h"
 #include "quaternion.h"
-#include "rotation.h"
+#include "utility.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
@@ -36,20 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude::ekf
 {
-namespace ekf_implementation
-{
-template <typename T>
-Quaternion<T> make_unit_quaternion(const numerical::Vector<3, T>& v)
-{
-        const T n2 = v.norm_squared();
-        if (n2 <= 1)
-        {
-                return Quaternion<T>(std::sqrt(1 - n2), v);
-        }
-        return Quaternion<T>(1, v) / std::sqrt(1 + n2);
-}
-}
-
 template <typename T>
 class Ekf final
 {
@@ -62,11 +48,6 @@ class Ekf final
 
         Quaternion<T> q_;
         Matrix p_{numerical::ZERO_MATRIX};
-
-        Vector global_to_local(const Vector& global)
-        {
-                return rotate_vector(q_.q().conjugate(), global);
-        }
 
         void predict(const Vector& w0, const Vector& w1, const T variance, const T dt)
         {
@@ -88,8 +69,6 @@ class Ekf final
         template <std::size_t N>
         void update(const std::array<Update, N>& data)
         {
-                namespace impl = ekf_implementation;
-
                 numerical::Vector<3 * N, T> z;
                 numerical::Vector<3 * N, T> hx;
                 numerical::Matrix<3 * N, 3, T> h;
@@ -115,7 +94,7 @@ class Ekf final
                 const numerical::Matrix<3, 3 * N, T> k = p_ * ht * s.inversed();
                 const Vector dx = k * (z - hx);
 
-                const Quaternion<T> q = impl::make_unit_quaternion(dx / T{2});
+                const Quaternion<T> q = delta_quaternion(dx / T{2});
                 q_ = (q * q_).normalized();
 
                 const Matrix i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
@@ -134,7 +113,7 @@ class Ekf final
                 ++acc_count_;
                 if (acc_count_ >= ACC_COUNT)
                 {
-                        q_ = Quaternion(initial_quaternion(acc_data_ / T(acc_count_)));
+                        q_ = initial_quaternion(acc_data_ / T(acc_count_));
                 }
         }
 
@@ -168,12 +147,12 @@ public:
                 update(std::array{
                         Update{
                                .measurement = a / a_norm,
-                               .prediction = global_to_local({0, 0, 1}),
+                               .prediction = global_to_local(q_, {0, 0, 1}),
                                .variance = square(0.01),
                                },
                         Update{
-                               .measurement = global_to_local({0, 1, 0}),
-                               .prediction = global_to_local({0, 1, 0}),
+                               .measurement = global_to_local(q_, {0, 1, 0}),
+                               .prediction = global_to_local(q_, {0, 1, 0}),
                                .variance = square(0.01),
                                }
                 });
@@ -208,11 +187,6 @@ class EkfB final
         Vector3 b_{0};
         Matrix6 p_{numerical::ZERO_MATRIX};
 
-        Vector3 global_to_local(const Vector3& global)
-        {
-                return rotate_vector(q_.q().conjugate(), global);
-        }
-
         void predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
         {
                 const Vector3 wb0 = w0 - b_;
@@ -236,8 +210,6 @@ class EkfB final
         template <std::size_t N>
         void update(const std::array<Update, N>& data)
         {
-                namespace impl = ekf_implementation;
-
                 numerical::Vector<3 * N, T> z;
                 numerical::Vector<3 * N, T> hx;
                 numerical::Matrix<3 * N, 6, T> h(numerical::ZERO_MATRIX);
@@ -269,7 +241,7 @@ class EkfB final
                 const Vector3 dxq = dx.template segment<0, 3>();
                 const Vector3 dxb = dx.template segment<3, 3>();
 
-                const Quaternion<T> q = impl::make_unit_quaternion(dxq / T{2});
+                const Quaternion<T> q = delta_quaternion(dxq / T{2});
                 q_ = (q * q_).normalized();
 
                 b_ += dxb;
@@ -287,7 +259,7 @@ class EkfB final
                 }
                 const Vector3 a = acc_data_ / T(acc_count_);
                 const Vector3 m = mag_data_ / T(mag_count_);
-                q_ = Quaternion(initial_quaternion(a, m));
+                q_ = initial_quaternion(a, m);
                 has_attitude_ = true;
         }
 
@@ -336,12 +308,12 @@ public:
                 update(std::array{
                         Update{
                                .measurement = a / a_norm,
-                               .prediction = global_to_local({0, 0, 1}),
+                               .prediction = global_to_local(q_, {0, 0, 1}),
                                .variance = square(0.01),
                                },
                         Update{
-                               .measurement = global_to_local({0, 1, 0}),
-                               .prediction = global_to_local({0, 1, 0}),
+                               .measurement = global_to_local(q_, {0, 1, 0}),
+                               .prediction = global_to_local(q_, {0, 1, 0}),
                                .variance = square(0.01),
                                }
                 });
@@ -361,7 +333,7 @@ public:
                         return;
                 }
 
-                const Vector3 z = global_to_local({0, 0, 1});
+                const Vector3 z = global_to_local(q_, {0, 0, 1});
                 const Vector3 x = cross(m / m_norm, z);
 
                 if (!(x.norm_squared() > square(T{0.01})))
@@ -374,7 +346,7 @@ public:
                 update(std::array{
                         Update{
                                .measurement = y.normalized(),
-                               .prediction = global_to_local({0, 1, 0}),
+                               .prediction = global_to_local(q_, {0, 1, 0}),
                                .variance = square(0.01),
                                }
                 });

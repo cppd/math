@@ -23,10 +23,10 @@ template <typename T>
 inline constexpr T W_THRESHOLD{1e-5}; // rad/s
 
 template <typename T>
-inline constexpr T MIN_ACCELERATION = 9.3; // m/s/s
+inline constexpr T MIN_ACCELERATION = 9.0; // m/s/s
 
 template <typename T>
-inline constexpr T MAX_ACCELERATION = 10.3; // m/s/s
+inline constexpr T MAX_ACCELERATION = 10.6; // m/s/s
 
 template <typename T>
 inline constexpr T MIN_MAGNETIC_FIELD = 20; // uT

@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "quaternion.h"
+
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -51,7 +53,7 @@ numerical::Vector<3, T> orthogonal(const numerical::Vector<3, T>& v)
 }
 
 template <typename T>
-numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
+[[nodiscard]] Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
 {
         namespace impl = rotaton_implementation;
 
@@ -59,16 +61,37 @@ numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
         const numerical::Vector<3, T> x = impl::orthogonal(z).normalized();
         const numerical::Vector<3, T> y = cross(z, x).normalized();
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+        const numerical::Quaternion<T> q = numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+        return Quaternion<T>(q);
 }
 
 template <typename T>
-numerical::Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numerical::Vector<3, T>& mag)
+[[nodiscard]] Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numerical::Vector<3, T>& mag)
 {
         const numerical::Vector<3, T> z = acc.normalized();
         const numerical::Vector<3, T> x = cross(mag, z).normalized();
         const numerical::Vector<3, T> y = cross(z, x).normalized();
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        return numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+        const numerical::Quaternion<T> q = numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+        return Quaternion<T>(q);
+}
+
+template <typename T>
+[[nodiscard]] Quaternion<T> delta_quaternion(const numerical::Vector<3, T>& v)
+{
+        const T n2 = v.norm_squared();
+        if (n2 <= 1)
+        {
+                return Quaternion<T>(std::sqrt(1 - n2), v);
+        }
+        return Quaternion<T>(1, v) / std::sqrt(1 + n2);
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> global_to_local(
+        const Quaternion<T>& q_unit,
+        const numerical::Vector<3, T>& global)
+{
+        return numerical::rotate_vector(q_unit.q().conjugate(), global);
 }
 }
