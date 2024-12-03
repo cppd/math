@@ -24,6 +24,8 @@ and inertial/magnetic sensor arrays.
 
 #pragma once
 
+#include "gradient.h"
+
 #include <src/filter/attitude/limit.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -35,78 +37,6 @@ namespace ns::filter::attitude::madgwick
 {
 namespace madgwick_implementation
 {
-template <typename T>
-[[nodiscard]] numerical::Quaternion<T> normalize(const numerical::Quaternion<T>& q)
-{
-        const T norm = q.norm();
-        if (norm > 0)
-        {
-                return q / norm;
-        }
-        return q;
-}
-
-template <typename T>
-[[nodiscard]] numerical::Quaternion<T> compute_gn(const numerical::Quaternion<T> q, const numerical::Vector<3, T> an)
-{
-        // (25)
-        // f_g
-        const T f_0 = 2 * q.x() * q.z() - 2 * q.y() * q.w() - an[0];
-        const T f_1 = 2 * q.x() * q.w() + 2 * q.y() * q.z() - an[1];
-        const T f_2 = 1 - 2 * q.x() * q.x() - 2 * q.y() * q.y() - an[2];
-
-        // (20) (26)
-        // transpose(J_g) * f_g
-        const numerical::Vector<3, T> f(2 * f_0, 2 * f_1, 4 * f_2);
-        const T w = q.x() * f[1] - q.y() * f[0];
-        const T x = q.z() * f[0] + q.w() * f[1] - q.x() * f[2];
-        const T y = q.z() * f[1] - q.w() * f[0] - q.y() * f[2];
-        const T z = q.x() * f[0] + q.y() * f[1];
-
-        return normalize(numerical::Quaternion<T>(w, x, y, z));
-}
-
-template <typename T>
-[[nodiscard]] numerical::Quaternion<T> compute_gn(
-        const numerical::Quaternion<T> q,
-        const numerical::Vector<3, T> an,
-        const numerical::Vector<3, T> mn,
-        const T b_x,
-        const T b_z)
-{
-        // (25)
-        // f_g
-        const T f_0 = 2 * q.x() * q.z() - 2 * q.y() * q.w() - an[0];
-        const T f_1 = 2 * q.x() * q.w() + 2 * q.y() * q.z() - an[1];
-        const T f_2 = 1 - 2 * q.x() * q.x() - 2 * q.y() * q.y() - an[2];
-
-        // (29)
-        // f_b
-        const T f_3 =
-                2 * b_x * (T{0.5} - q.y() * q.y() - q.z() * q.z()) + 2 * b_z * (q.x() * q.z() - q.w() * q.y()) - mn[0];
-        const T f_4 = 2 * b_x * (q.x() * q.y() - q.w() * q.z()) + 2 * b_z * (q.w() * q.x() + q.y() * q.z()) - mn[1];
-        const T f_5 =
-                2 * b_x * (q.w() * q.y() + q.x() * q.z()) + 2 * b_z * (T{0.5} - q.x() * q.x() - q.y() * q.y()) - mn[2];
-
-        // (20) (26) (30) (34) (44)
-        // normalize(transpose(J_g / J_b) * (f_g / f_b))
-
-        const numerical::Vector<6, T> f(2 * f_0, 2 * f_1, 4 * f_2, 2 * f_3, 2 * f_4, 2 * f_5);
-
-        const numerical::Quaternion<T> bxq = b_x * q;
-        const numerical::Quaternion<T> bzq = b_z * q;
-
-        const T w = q.x() * f[1] - q.y() * f[0] - bzq.y() * f[3] - (bxq.z() - bzq.x()) * f[4] + bxq.y() * f[5];
-        const T x = q.z() * f[0] + q.w() * f[1] - q.x() * f[2] + bzq.z() * f[3] + (bxq.y() + bzq.w()) * f[4]
-                    + (bxq.z() - 2 * bzq.x()) * f[5];
-        const T y = q.z() * f[1] - -q.w() * f[0] - q.y() * f[2] - (2 * bxq.y() + bzq.w()) * f[3]
-                    + (bxq.x() + bzq.z()) * f[4] + (bxq.w() - 2 * bzq.y()) * f[5];
-        const T z = q.x() * f[0] + q.y() * f[1] - (2 * bxq.z() - bzq.x()) * f[3] - (bxq.w() - bzq.y()) * f[4]
-                    + bxq.x() * f[5];
-
-        return normalize(numerical::Quaternion<T>(w, x, y, z));
-}
-
 template <typename T>
 [[nodiscard]] numerical::Quaternion<T> update(
         const numerical::Quaternion<T> q,
@@ -211,7 +141,7 @@ public:
                 const numerical::Vector<3, T> an = a / a_norm;
                 const numerical::Vector<3, T> mn = m / m_norm;
 
-                const numerical::Quaternion<T> gn = impl::compute_gn(q_, an, mn, b_x_, b_z_);
+                const numerical::Quaternion<T> gn = compute_gn(q_, an, mn, b_x_, b_z_);
 
                 // (47)
                 const numerical::Vector<3, T> w_err = T{2} * numerical::multiply_vec(q_.conjugate(), gn);
