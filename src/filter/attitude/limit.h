@@ -17,17 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::filter::attitude::madgwick
+namespace ns::filter::attitude
 {
 template <typename T>
-inline constexpr T MIN_ACCELERATION = 9.0; // m/s/s
+inline constexpr T ACCELERATION_MIN = 9.0; // m/s/s
 
 template <typename T>
-inline constexpr T MAX_ACCELERATION = 10.6; // m/s/s
+inline constexpr T ACCELERATION_MAX = 10.6; // m/s/s
 
 template <typename T>
-inline constexpr T MIN_MAGNETIC_FIELD = 20; // uT
+inline constexpr T MAGNETIC_FIELD_MIN = 10; // uT
 
 template <typename T>
-inline constexpr T MAX_MAGNETIC_FIELD = 70; // uT
+inline constexpr T MAGNETIC_FIELD_MAX = 90; // uT
 }

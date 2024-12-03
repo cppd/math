@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "constant.h"
 #include "integrator.h"
 #include "matrix.h"
 #include "quaternion.h"
@@ -25,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -133,7 +133,7 @@ public:
         void update_acc(const numerical::Vector<3, T>& a)
         {
                 const T a_norm = a.norm();
-                if (!(a_norm >= MIN_ACCELERATION<T> && a_norm <= MAX_ACCELERATION<T>))
+                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
                 {
                         return;
                 }
@@ -294,7 +294,7 @@ public:
         void update_acc(const numerical::Vector<3, T>& a)
         {
                 const T a_norm = a.norm();
-                if (!(a_norm >= MIN_ACCELERATION<T> && a_norm <= MAX_ACCELERATION<T>))
+                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
                 {
                         return;
                 }
@@ -322,7 +322,7 @@ public:
         void update_mag(const numerical::Vector<3, T>& m)
         {
                 const T m_norm = m.norm();
-                if (!(m_norm >= MIN_MAGNETIC_FIELD<T> && m_norm <= MAX_MAGNETIC_FIELD<T>))
+                if (!(m_norm >= MAGNETIC_FIELD_MIN<T> && m_norm <= MAGNETIC_FIELD_MAX<T>))
                 {
                         return;
                 }

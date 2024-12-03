@@ -24,8 +24,7 @@ and inertial/magnetic sensor arrays.
 
 #pragma once
 
-#include "contant.h"
-
+#include <src/filter/attitude/limit.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
@@ -120,7 +119,7 @@ template <typename T>
         const numerical::Quaternion<T> d = q * (w / T{2});
 
         const T a_norm = a.norm();
-        if (!(a_norm >= MIN_ACCELERATION<T> && a_norm <= MAX_ACCELERATION<T>))
+        if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
         {
                 // (13)
                 return (q + d * dt).normalized();
@@ -193,14 +192,14 @@ public:
                 namespace impl = madgwick_implementation;
 
                 const T m_norm = m.norm();
-                if (!(m_norm >= MIN_MAGNETIC_FIELD<T> && m_norm <= MAX_MAGNETIC_FIELD<T>))
+                if (!(m_norm >= MAGNETIC_FIELD_MIN<T> && m_norm <= MAGNETIC_FIELD_MAX<T>))
                 {
                         q_ = impl::update(q_, w - wb_, a, beta, dt);
                         return q_;
                 }
 
                 const T a_norm = a.norm();
-                if (!(a_norm >= MIN_ACCELERATION<T> && a_norm <= MAX_ACCELERATION<T>))
+                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
                 {
                         // (11) (49)
                         const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
