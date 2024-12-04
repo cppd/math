@@ -89,7 +89,7 @@ template <typename T>
 }
 
 template <typename T>
-class Madgwick final
+class MadgwickImu final
 {
         numerical::Quaternion<T> q_{1, 0, 0, 0};
 
@@ -156,10 +156,9 @@ public:
                         return q_;
                 }
 
-                const numerical::Vector<3, T> an = a / a_norm;
                 const numerical::Vector<3, T> mn = m / m_norm;
 
-                const numerical::Quaternion<T> gn = compute_gn(q_, an, mn, b_x_, b_z_);
+                const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm, mn, b_x_, b_z_);
 
                 // (47)
                 const numerical::Vector<3, T> w_err = T{2} * numerical::multiply_vec(q_.conjugate(), gn);
@@ -179,5 +178,4 @@ public:
                 return q_;
         }
 };
-
 }

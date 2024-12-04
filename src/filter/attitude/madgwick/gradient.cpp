@@ -125,5 +125,4 @@ numerical::Quaternion<T> compute_gn(
 TEMPLATE(float)
 TEMPLATE(double)
 TEMPLATE(long double)
-
 }

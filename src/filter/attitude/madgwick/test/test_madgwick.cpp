@@ -93,7 +93,7 @@ void test_m(const T precision)
         };
 
         const T beta = madgwick_beta<T>(1);
-        Madgwick<T> m;
+        MadgwickImu<T> m;
 
         for (int i = 0; i < 10; ++i)
         {
