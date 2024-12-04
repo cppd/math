@@ -38,24 +38,28 @@ namespace ns::filter::attitude::madgwick
 namespace madgwick_implementation
 {
 template <typename T>
-[[nodiscard]] numerical::Quaternion<T> update(
+[[nodiscard]] numerical::Quaternion<T> update_gyro(
         const numerical::Quaternion<T> q,
         const numerical::Vector<3, T> w,
-        const numerical::Vector<3, T> a,
-        const T beta,
         const T dt)
 {
         // (11)
         const numerical::Quaternion<T> d = q * (w / T{2});
 
-        const T a_norm = a.norm();
-        if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
-        {
-                // (13)
-                return (q + d * dt).normalized();
-        }
+        // (13)
+        return (q + d * dt).normalized();
+}
 
-        const numerical::Vector<3, T> an = a / a_norm;
+template <typename T>
+[[nodiscard]] numerical::Quaternion<T> update_imu(
+        const numerical::Quaternion<T> q,
+        const numerical::Vector<3, T> w,
+        const numerical::Vector<3, T> an,
+        const T beta,
+        const T dt)
+{
+        // (11)
+        const numerical::Quaternion<T> d = q * (w / T{2});
 
         const numerical::Quaternion<T> gn = compute_gn(q, an);
 
@@ -97,7 +101,16 @@ public:
                 const T dt)
         {
                 namespace impl = madgwick_implementation;
-                q_ = impl::update(q_, w, a, beta, dt);
+
+                const T a_norm = a.norm();
+                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                {
+                        q_ = impl::update_gyro(q_, w, dt);
+                }
+                else
+                {
+                        q_ = impl::update_imu(q_, w, a / a_norm, beta, dt);
+                }
                 return q_;
         }
 };
@@ -122,19 +135,24 @@ public:
                 namespace impl = madgwick_implementation;
 
                 const T m_norm = m.norm();
+                const T a_norm = a.norm();
+
                 if (!(m_norm >= MAGNETIC_FIELD_MIN<T> && m_norm <= MAGNETIC_FIELD_MAX<T>))
                 {
-                        q_ = impl::update(q_, w - wb_, a, beta, dt);
+                        if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                        {
+                                q_ = impl::update_gyro(q_, w - wb_, dt);
+                        }
+                        else
+                        {
+                                q_ = impl::update_imu(q_, w - wb_, a / a_norm, beta, dt);
+                        }
                         return q_;
                 }
 
-                const T a_norm = a.norm();
                 if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
                 {
-                        // (11) (49)
-                        const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
-                        // (13)
-                        q_ = (q_ + d * dt).normalized();
+                        q_ = impl::update_gyro(q_, w - wb_, dt);
                         return q_;
                 }
 
