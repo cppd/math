@@ -20,14 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::attitude
 {
 template <typename T>
-inline constexpr T ACCELERATION_MIN = 9.0; // m/s/s
+[[nodiscard]] bool acc_suitable(const T acc)
+{
+        constexpr T ACCELERATION_MIN = 9.0; // m/s/s
+        constexpr T ACCELERATION_MAX = 10.6; // m/s/s
+
+        return acc >= ACCELERATION_MIN && acc <= ACCELERATION_MAX;
+}
 
 template <typename T>
-inline constexpr T ACCELERATION_MAX = 10.6; // m/s/s
+[[nodiscard]] bool mag_suitable(const T mag)
+{
+        constexpr T MAGNETIC_FIELD_MIN = 10; // uT
+        constexpr T MAGNETIC_FIELD_MAX = 90; // uT
 
-template <typename T>
-inline constexpr T MAGNETIC_FIELD_MIN = 10; // uT
-
-template <typename T>
-inline constexpr T MAGNETIC_FIELD_MAX = 90; // uT
+        return mag >= MAGNETIC_FIELD_MIN && mag <= MAGNETIC_FIELD_MAX;
+}
 }

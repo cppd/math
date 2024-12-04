@@ -133,7 +133,7 @@ public:
         void update_acc(const numerical::Vector<3, T>& a)
         {
                 const T a_norm = a.norm();
-                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                if (!acc_suitable(a_norm))
                 {
                         return;
                 }
@@ -294,7 +294,7 @@ public:
         void update_acc(const numerical::Vector<3, T>& a)
         {
                 const T a_norm = a.norm();
-                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                if (!acc_suitable(a_norm))
                 {
                         return;
                 }
@@ -322,7 +322,7 @@ public:
         void update_mag(const numerical::Vector<3, T>& m)
         {
                 const T m_norm = m.norm();
-                if (!(m_norm >= MAGNETIC_FIELD_MIN<T> && m_norm <= MAGNETIC_FIELD_MAX<T>))
+                if (!mag_suitable(m_norm))
                 {
                         return;
                 }

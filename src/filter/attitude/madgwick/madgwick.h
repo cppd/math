@@ -103,7 +103,7 @@ public:
                 namespace impl = madgwick_implementation;
 
                 const T a_norm = a.norm();
-                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                if (!acc_suitable(a_norm))
                 {
                         q_ = impl::update_gyro(q_, w, dt);
                 }
@@ -137,9 +137,9 @@ public:
                 const T m_norm = m.norm();
                 const T a_norm = a.norm();
 
-                if (!(m_norm >= MAGNETIC_FIELD_MIN<T> && m_norm <= MAGNETIC_FIELD_MAX<T>))
+                if (!mag_suitable(m_norm))
                 {
-                        if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                        if (!acc_suitable(a_norm))
                         {
                                 q_ = impl::update_gyro(q_, w - wb_, dt);
                         }
@@ -150,7 +150,7 @@ public:
                         return q_;
                 }
 
-                if (!(a_norm >= ACCELERATION_MIN<T> && a_norm <= ACCELERATION_MAX<T>))
+                if (!acc_suitable(a_norm))
                 {
                         q_ = impl::update_gyro(q_, w - wb_, dt);
                         return q_;
