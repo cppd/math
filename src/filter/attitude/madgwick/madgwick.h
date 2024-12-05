@@ -31,30 +31,9 @@ and inertial/magnetic sensor arrays.
 #include <src/numerical/vector.h>
 
 #include <cmath>
-#include <type_traits>
 
 namespace ns::filter::attitude::madgwick
 {
-// Measurement error (rad/s) to beta
-template <typename T>
-[[nodiscard]] T madgwick_beta(const T error)
-{
-        static_assert(std::is_floating_point_v<T>);
-        // (50)
-        // sqrt(3.0 / 4)
-        return T{0.86602540378443864676L} * error;
-}
-
-// Rate of bias drift (rad/s/s) to zeta
-template <typename T>
-[[nodiscard]] T madgwick_zeta(const T rate)
-{
-        static_assert(std::is_floating_point_v<T>);
-        // (51)
-        // sqrt(3.0 / 4)
-        return T{0.86602540378443864676L} * rate;
-}
-
 template <typename T>
 class MadgwickImu final
 {
@@ -113,12 +92,14 @@ public:
                         return q_;
                 }
 
+                const numerical::Vector<3, T> an = a / a_norm;
+
                 const T m_norm = m.norm();
                 if (!mag_suitable(m_norm))
                 {
                         // (11)
                         const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
-                        const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm);
+                        const numerical::Quaternion<T> gn = compute_gn(q_, an);
                         // (42) (43) (44)
                         q_ = (q_ + (d - beta * gn) * dt).normalized();
                         return q_;
@@ -126,7 +107,7 @@ public:
 
                 const numerical::Vector<3, T> mn = m / m_norm;
 
-                const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm, mn, b_x_, b_z_);
+                const numerical::Quaternion<T> gn = compute_gn(q_, an, mn, b_x_, b_z_);
 
                 // (47)
                 const numerical::Vector<3, T> w_err = T{2} * numerical::multiply_vec(q_.conjugate(), gn);
