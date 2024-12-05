@@ -35,39 +35,6 @@ and inertial/magnetic sensor arrays.
 
 namespace ns::filter::attitude::madgwick
 {
-namespace madgwick_implementation
-{
-template <typename T>
-[[nodiscard]] numerical::Quaternion<T> update_gyro(
-        const numerical::Quaternion<T> q,
-        const numerical::Vector<3, T> w,
-        const T dt)
-{
-        // (11)
-        const numerical::Quaternion<T> d = q * (w / T{2});
-
-        // (13)
-        return (q + d * dt).normalized();
-}
-
-template <typename T>
-[[nodiscard]] numerical::Quaternion<T> update_imu(
-        const numerical::Quaternion<T> q,
-        const numerical::Vector<3, T> w,
-        const numerical::Vector<3, T> an,
-        const T beta,
-        const T dt)
-{
-        // (11)
-        const numerical::Quaternion<T> d = q * (w / T{2});
-
-        const numerical::Quaternion<T> gn = compute_gn(q, an);
-
-        // (42) (43) (44)
-        return (q + (d - beta * gn) * dt).normalized();
-}
-}
-
 // Measurement error (rad/s) to beta
 template <typename T>
 [[nodiscard]] T madgwick_beta(const T error)
@@ -100,16 +67,20 @@ public:
                 const T beta,
                 const T dt)
         {
-                namespace impl = madgwick_implementation;
+                // (11)
+                const numerical::Quaternion<T> d = q_ * (w / T{2});
 
                 const T a_norm = a.norm();
                 if (!acc_suitable(a_norm))
                 {
-                        q_ = impl::update_gyro(q_, w, dt);
+                        // (13)
+                        q_ = (q_ + d * dt).normalized();
                 }
                 else
                 {
-                        q_ = impl::update_imu(q_, w, a / a_norm, beta, dt);
+                        const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm);
+                        // (42) (43) (44)
+                        q_ = (q_ + (d - beta * gn) * dt).normalized();
                 }
                 return q_;
         }
@@ -132,27 +103,24 @@ public:
                 const T zeta,
                 const T dt)
         {
-                namespace impl = madgwick_implementation;
-
-                const T m_norm = m.norm();
                 const T a_norm = a.norm();
-
-                if (!mag_suitable(m_norm))
+                if (!acc_suitable(a_norm))
                 {
-                        if (!acc_suitable(a_norm))
-                        {
-                                q_ = impl::update_gyro(q_, w - wb_, dt);
-                        }
-                        else
-                        {
-                                q_ = impl::update_imu(q_, w - wb_, a / a_norm, beta, dt);
-                        }
+                        // (11)
+                        const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
+                        // (13)
+                        q_ = (q_ + d * dt).normalized();
                         return q_;
                 }
 
-                if (!acc_suitable(a_norm))
+                const T m_norm = m.norm();
+                if (!mag_suitable(m_norm))
                 {
-                        q_ = impl::update_gyro(q_, w - wb_, dt);
+                        // (11)
+                        const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
+                        const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm);
+                        // (42) (43) (44)
+                        q_ = (q_ + (d - beta * gn) * dt).normalized();
                         return q_;
                 }
 
