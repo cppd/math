@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/filter/attitude/ekf/ekf.h>
+#include <src/filter/attitude/ekf/ekf_imu.h>
+#include <src/filter/attitude/ekf/ekf_marg.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -88,7 +89,7 @@ void test_equal(const T& a, const T& b, const P precision)
 template <typename T>
 void test_impl_a(const T precision)
 {
-        Ekf<T> f;
+        EkfImu<T> f;
 
         constexpr T VARIANCE = square(1e-4L);
         constexpr T DT = 0.01L;
@@ -128,7 +129,7 @@ void test_impl_a(const T precision)
 template <typename T>
 void test_impl_b(const T /*precision*/)
 {
-        EkfB<T> f;
+        EkfMarg<T> f;
 
         f.update_acc({0, 0, 0});
         f.update_mag({0, 0, 0});
