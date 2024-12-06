@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/attitude/madgwick/gain.h>
-#include <src/filter/attitude/madgwick/madgwick.h>
+#include <src/filter/attitude/madgwick/madgwick_imu.h>
+#include <src/filter/attitude/madgwick/madgwick_marg.h>
 #include <src/numerical/quaternion.h>
 #include <src/test/test.h>
 
