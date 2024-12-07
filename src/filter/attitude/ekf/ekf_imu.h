@@ -46,12 +46,14 @@ class EkfImu final
         Vector acc_data_{0};
         unsigned acc_count_{0};
 
-        Quaternion<T> q_;
+        std::optional<Quaternion<T>> q_;
         Matrix p_{numerical::ZERO_MATRIX};
 
         void predict(const Vector& w0, const Vector& w1, const T variance, const T dt)
         {
-                q_ = first_order_quaternion_integrator(q_, w0, w1, dt).normalized();
+                ASSERT(q_);
+
+                q_ = first_order_quaternion_integrator(*q_, w0, w1, dt).normalized();
 
                 const Matrix phi = state_transition_matrix_3(w1, dt);
                 const Matrix q = noise_covariance_matrix_3(variance, dt);
@@ -69,6 +71,8 @@ class EkfImu final
         template <std::size_t N>
         void update(const std::array<Update, N>& data)
         {
+                ASSERT(q_);
+
                 numerical::Vector<3 * N, T> z;
                 numerical::Vector<3 * N, T> hx;
                 numerical::Matrix<3 * N, 3, T> h;
@@ -94,37 +98,58 @@ class EkfImu final
                 const numerical::Matrix<3, 3 * N, T> k = p_ * ht * s.inversed();
                 const Vector dx = k * (z - hx);
 
-                const Quaternion<T> q = delta_quaternion(dx / T{2});
-                q_ = (q * q_).normalized();
+                const Quaternion<T> dq = delta_quaternion(dx / T{2});
+                q_ = (dq * *q_).normalized();
 
                 const Matrix i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
                 p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
         }
 
-        [[nodiscard]] bool has_attitude() const
+        void update_init(const Vector& a)
         {
-                return acc_count_ >= ACC_COUNT;
+                ASSERT(!q_);
+
+                acc_data_ += a;
+                ++acc_count_;
+
+                if (acc_count_ < ACC_COUNT)
+                {
+                        return;
+                }
+
+                const Vector a_avg = acc_data_ / T(acc_count_);
+                const T a_avg_norm = a_avg.norm();
+
+                if (!acc_suitable(a_avg_norm))
+                {
+                        reset_init();
+                        return;
+                }
+
+                q_ = initial_quaternion(a_avg / a_avg_norm);
         }
 
-        void update_init(const Vector& a_norm)
+        void reset_init()
         {
-                ASSERT(acc_count_ < ACC_COUNT);
-                acc_data_ += a_norm;
-                ++acc_count_;
-                if (acc_count_ >= ACC_COUNT)
-                {
-                        q_ = initial_quaternion(acc_data_ / T(acc_count_));
-                }
+                ASSERT(!q_);
+
+                acc_data_ = Vector(0);
+                acc_count_ = 0;
         }
 
 public:
+        EkfImu()
+        {
+                reset_init();
+        }
+
         void update_gyro(
                 const numerical::Vector<3, T>& w0,
                 const numerical::Vector<3, T>& w1,
                 const T variance,
                 const T dt)
         {
-                if (has_attitude())
+                if (q_)
                 {
                         predict(w0, w1, variance, dt);
                 }
@@ -132,27 +157,27 @@ public:
 
         void update_acc(const numerical::Vector<3, T>& a)
         {
+                if (!q_)
+                {
+                        update_init(a);
+                        return;
+                }
+
                 const T a_norm = a.norm();
                 if (!acc_suitable(a_norm))
                 {
                         return;
                 }
 
-                if (!has_attitude())
-                {
-                        update_init(a / a_norm);
-                        return;
-                }
-
                 update(std::array{
                         Update{
                                .measurement = a / a_norm,
-                               .prediction = global_to_local(q_, {0, 0, 1}),
+                               .prediction = global_to_local(*q_, {0, 0, 1}),
                                .variance = square(0.01),
                                },
                         Update{
-                               .measurement = global_to_local(q_, {0, 1, 0}),
-                               .prediction = global_to_local(q_, {0, 1, 0}),
+                               .measurement = global_to_local(*q_, {0, 1, 0}),
+                               .prediction = global_to_local(*q_, {0, 1, 0}),
                                .variance = square(0.01),
                                }
                 });
@@ -160,9 +185,9 @@ public:
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
-                if (has_attitude())
+                if (q_)
                 {
-                        return q_.q();
+                        return q_->q();
                 }
                 return std::nullopt;
         }

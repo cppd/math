@@ -87,7 +87,7 @@ void test_equal(const T& a, const T& b, const P precision)
 }
 
 template <typename T>
-void test_impl_a(const T precision)
+void test_impl_imu(const T precision)
 {
         EkfImu<T> f;
 
@@ -117,17 +117,17 @@ void test_impl_a(const T precision)
 
         test_equal(
                 *a,
-                {0.828229377846810675896L, 0.153083694947164173714L, -0.269266344945741933144L,
-                 -0.467008688883161158855L},
+                {0.82822937784681067595L, 0.153083694947164173687L, -0.269266344945741933117L,
+                 -0.467008688883161158801L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763365663224263L, 0.50507627227610537462L, 0.808122035641768599479L}, precision);
+                {0.303045763365663224317L, 0.505076272276105374566L, 0.808122035641768599534L}, precision);
 }
 
 template <typename T>
-void test_impl_b(const T /*precision*/)
+void test_impl_marg(const T /*precision*/)
 {
         EkfMarg<T> f;
 
@@ -142,8 +142,8 @@ void test_impl_b(const T /*precision*/)
 template <typename T>
 void test_impl(const T precision)
 {
-        test_impl_a(precision);
-        test_impl_b(precision);
+        test_impl_imu(precision);
+        test_impl_marg(precision);
 }
 
 void test()
