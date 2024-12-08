@@ -30,7 +30,7 @@ namespace ns::filter::attitude::madgwick
 {
 // Measurement error (rad/s) to beta
 template <typename T>
-[[nodiscard]] T madgwick_beta(const T error)
+[[nodiscard]] constexpr T madgwick_beta(const T error)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -41,7 +41,7 @@ template <typename T>
 
 // Rate of bias drift (rad/s/s) to zeta
 template <typename T>
-[[nodiscard]] T madgwick_zeta(const T rate)
+[[nodiscard]] constexpr T madgwick_zeta(const T rate)
 {
         static_assert(std::is_floating_point_v<T>);
 

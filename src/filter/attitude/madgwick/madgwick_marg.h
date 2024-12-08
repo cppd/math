@@ -43,10 +43,10 @@ class MadgwickMarg final
         numerical::Vector<3, T> wb_{0, 0, 0};
 
 public:
-        [[nodiscard]] numerical::Quaternion<T> update(
-                const numerical::Vector<3, T> w,
-                const numerical::Vector<3, T> a,
-                const numerical::Vector<3, T> m,
+        bool update(
+                const numerical::Vector<3, T>& w,
+                const numerical::Vector<3, T>& a,
+                const numerical::Vector<3, T>& m,
                 const T beta,
                 const T zeta,
                 const T dt)
@@ -58,7 +58,7 @@ public:
                         const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
                         // (13)
                         q_ = (q_ + d * dt).normalized();
-                        return q_;
+                        return false;
                 }
 
                 const numerical::Vector<3, T> an = a / a_norm;
@@ -71,7 +71,7 @@ public:
                         const numerical::Quaternion<T> gn = compute_gn(q_, an);
                         // (42) (43) (44)
                         q_ = (q_ + (d - beta * gn) * dt).normalized();
-                        return q_;
+                        return false;
                 }
 
                 const numerical::Vector<3, T> mn = m / m_norm;
@@ -93,7 +93,17 @@ public:
                 b_x_ = std::sqrt(h[0] * h[0] + h[1] * h[1]);
                 b_z_ = h[2];
 
+                return true;
+        }
+
+        [[nodiscard]] const numerical::Quaternion<T>& attitude() const
+        {
                 return q_;
+        }
+
+        [[nodiscard]] const numerical::Vector<3, T>& bias() const
+        {
+                return wb_;
         }
 };
 }

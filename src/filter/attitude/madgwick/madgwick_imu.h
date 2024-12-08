@@ -40,27 +40,28 @@ class MadgwickImu final
         numerical::Quaternion<T> q_{1, 0, 0, 0};
 
 public:
-        [[nodiscard]] numerical::Quaternion<T> update(
-                const numerical::Vector<3, T> w,
-                const numerical::Vector<3, T> a,
-                const T beta,
-                const T dt)
+        bool update(const numerical::Vector<3, T>& w, const numerical::Vector<3, T>& a, const T beta, const T dt)
         {
                 // (11)
                 const numerical::Quaternion<T> d = q_ * (w / T{2});
 
                 const T a_norm = a.norm();
+
                 if (!acc_suitable(a_norm))
                 {
                         // (13)
                         q_ = (q_ + d * dt).normalized();
+                        return false;
                 }
-                else
-                {
-                        const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm);
-                        // (42) (43) (44)
-                        q_ = (q_ + (d - beta * gn) * dt).normalized();
-                }
+
+                const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm);
+                // (42) (43) (44)
+                q_ = (q_ + (d - beta * gn) * dt).normalized();
+                return true;
+        }
+
+        [[nodiscard]] const numerical::Quaternion<T>& attitude() const
+        {
                 return q_;
         }
 };
