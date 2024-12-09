@@ -127,16 +127,48 @@ void test_impl_imu(const T precision)
 }
 
 template <typename T>
-void test_impl_marg(const T /*precision*/)
+void test_impl_marg(const T precision)
 {
         EkfMarg<T> f;
 
-        f.update_acc({0, 0, 0});
-        f.update_mag({0, 0, 0});
-        f.update_gyro({0, 0, 0}, {0, 0, 0}, 0, 0, 0);
+        constexpr T VARIANCE_R = square(1e-3L);
+        constexpr T VARIANCE_W = square(5e-3L);
+        constexpr T DT = 0.01L;
 
-        static_cast<void>(f.attitude());
-        static_cast<void>(f.bias());
+        const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+
+        for (int i = 0; i < 1000; ++i)
+        {
+                f.update_acc(axis * T{9.8});
+                f.update_mag({15, -20, 25});
+                f.update_gyro(axis * T{0.010}, axis * T{0.015}, VARIANCE_R, VARIANCE_W, DT);
+                f.update_gyro(axis * T{0.015}, axis * T{0.010}, VARIANCE_R, VARIANCE_W, DT);
+        }
+
+        const auto a = f.attitude();
+
+        if (!a)
+        {
+                error("No attitude");
+        }
+
+        if (!a->is_unit())
+        {
+                error("Attitude is not unit");
+        }
+
+        test_equal(
+                *a,
+                {0.124510580868338503701L, 0.19276821849243910823L, 0.242444624849398093324L, 0.942633615501120782792L},
+                precision);
+
+        test_equal(
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                {0.303045763365665830576L, 0.505076272276098761692L, 0.808122035641771755158L}, precision);
+
+        test_equal(
+                f.bias(), {0.0037880682131818025904L, 0.00631344702195024136448L, 0.0101015152351109069228L},
+                precision);
 }
 
 template <typename T>
