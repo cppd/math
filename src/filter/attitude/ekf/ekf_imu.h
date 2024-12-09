@@ -155,32 +155,38 @@ public:
                 }
         }
 
-        void update_acc(const numerical::Vector<3, T>& a)
+        bool update_acc(const numerical::Vector<3, T>& a)
         {
                 if (!q_)
                 {
                         update_init(a);
-                        return;
+                        return q_.has_value();
                 }
 
                 const T a_norm = a.norm();
                 if (!acc_suitable(a_norm))
                 {
-                        return;
+                        return false;
                 }
+
+                const Vector zm = a / a_norm;
+                const Vector z = global_to_local(*q_, {0, 0, 1});
+                const Vector y = global_to_local(*q_, {0, 1, 0});
 
                 update(std::array{
                         Update{
-                               .measurement = a / a_norm,
-                               .prediction = global_to_local(*q_, {0, 0, 1}),
+                               .measurement = zm,
+                               .prediction = z,
                                .variance = square(0.01),
                                },
                         Update{
-                               .measurement = global_to_local(*q_, {0, 1, 0}),
-                               .prediction = global_to_local(*q_, {0, 1, 0}),
+                               .measurement = y,
+                               .prediction = y,
                                .variance = square(0.01),
                                }
                 });
+
+                return true;
         }
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
