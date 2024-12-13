@@ -175,16 +175,6 @@ bool EkfImu<T>::update_acc(const Vector3& a)
         return true;
 }
 
-template <typename T>
-std::optional<numerical::Quaternion<T>> EkfImu<T>::attitude() const
-{
-        if (q_)
-        {
-                return q_->q();
-        }
-        return std::nullopt;
-}
-
 template class EkfImu<float>;
 template class EkfImu<double>;
 template class EkfImu<long double>;

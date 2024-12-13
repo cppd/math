@@ -63,6 +63,13 @@ public:
 
         bool update_acc(const Vector3& a);
 
-        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const;
+        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        {
+                if (q_)
+                {
+                        return q_->q();
+                }
+                return std::nullopt;
+        }
 };
 }

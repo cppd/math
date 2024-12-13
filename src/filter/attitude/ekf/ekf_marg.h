@@ -72,8 +72,18 @@ public:
 
         bool update_mag(const Vector3& m);
 
-        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const;
+        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        {
+                if (q_)
+                {
+                        return q_->q();
+                }
+                return std::nullopt;
+        }
 
-        [[nodiscard]] Vector3 bias() const;
+        [[nodiscard]] const Vector3& bias() const
+        {
+                return b_;
+        }
 };
 }

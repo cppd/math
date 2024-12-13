@@ -255,22 +255,6 @@ bool EkfMarg<T>::update_mag(const Vector3& m)
         return true;
 }
 
-template <typename T>
-std::optional<numerical::Quaternion<T>> EkfMarg<T>::attitude() const
-{
-        if (q_)
-        {
-                return q_->q();
-        }
-        return std::nullopt;
-}
-
-template <typename T>
-numerical::Vector<3, T> EkfMarg<T>::bias() const
-{
-        return b_;
-}
-
 template class EkfMarg<float>;
 template class EkfMarg<double>;
 template class EkfMarg<long double>;
