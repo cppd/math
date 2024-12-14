@@ -89,18 +89,22 @@ void test_equal(const T& a, const T& b, const P precision)
 template <typename T>
 void test_impl_imu(const T precision)
 {
-        EkfImu<T> f;
-
-        constexpr T VARIANCE = square(1e-4L);
         constexpr T DT = 0.01L;
+
+        constexpr T VARIANCE_GYRO = square(1e-4);
+
+        constexpr T VARIANCE_ACC = square(0.01);
+        constexpr T VARIANCE_ACC_DIRECTION = square(0.01);
+
+        EkfImu<T> f;
 
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
 
         for (int i = 0; i < 100; ++i)
         {
-                f.update_acc(axis * T{9.8});
-                f.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE, DT);
-                f.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE, DT);
+                f.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
+                f.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE_GYRO, DT);
+                f.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE_GYRO, DT);
         }
 
         const auto a = f.attitude();
@@ -129,20 +133,27 @@ void test_impl_imu(const T precision)
 template <typename T>
 void test_impl_marg(const T precision)
 {
-        EkfMarg<T> f;
-
-        constexpr T VARIANCE_R = square(1e-3L);
-        constexpr T VARIANCE_W = square(5e-3L);
         constexpr T DT = 0.01L;
+
+        constexpr T VARIANCE_GYRO_R = square(1e-3);
+        constexpr T VARIANCE_GYRO_W = square(5e-3);
+
+        constexpr T VARIANCE_ACC = square(0.01);
+        constexpr T VARIANCE_ACC_DIRECTION = square(0.01);
+
+        constexpr T VARIANCE_MAG = square(0.01);
+        constexpr T VARIANCE_MAG_DIRECTION = square(0.01);
+
+        EkfMarg<T> f;
 
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
 
         for (int i = 0; i < 1000; ++i)
         {
-                f.update_acc(axis * T{9.8});
-                f.update_mag({15, -20, 25});
-                f.update_gyro(axis * T{0.010}, axis * T{0.015}, VARIANCE_R, VARIANCE_W, DT);
-                f.update_gyro(axis * T{0.015}, axis * T{0.010}, VARIANCE_R, VARIANCE_W, DT);
+                f.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
+                f.update_mag({15, -20, 25}, VARIANCE_MAG, VARIANCE_MAG_DIRECTION);
+                f.update_gyro(axis * T{0.010}, axis * T{0.015}, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+                f.update_gyro(axis * T{0.015}, axis * T{0.010}, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
         const auto a = f.attitude();
@@ -159,15 +170,15 @@ void test_impl_marg(const T precision)
 
         test_equal(
                 *a,
-                {0.124510580868338503701L, 0.19276821849243910823L, 0.242444624849398093324L, 0.942633615501120782792L},
+                {0.124510580868338503715L, 0.19276821849243910823L, 0.242444624849398093338L, 0.942633615501120782792L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763365665830576L, 0.505076272276098761692L, 0.808122035641771755158L}, precision);
+                {0.303045763365665830549L, 0.505076272276098761746L, 0.808122035641771755158L}, precision);
 
         test_equal(
-                f.bias(), {0.0037880682131818025904L, 0.00631344702195024136448L, 0.0101015152351109069228L},
+                f.bias(), {0.00378806821318180254445L, 0.00631344702195024131705L, 0.0101015152351109069482L},
                 precision);
 }
 

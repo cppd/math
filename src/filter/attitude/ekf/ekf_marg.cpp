@@ -178,7 +178,7 @@ void EkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varia
 }
 
 template <typename T>
-bool EkfMarg<T>::update_acc(const Vector3& a)
+bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
         if (!q_)
         {
@@ -200,12 +200,12 @@ bool EkfMarg<T>::update_acc(const Vector3& a)
                 Update{
                        .measurement = zm,
                        .prediction = z,
-                       .variance = square(0.01),
+                       .variance = variance,
                        },
                 Update{
                        .measurement = y,
                        .prediction = y,
-                       .variance = square(0.01),
+                       .variance = variance_direction,
                        }
         });
 
@@ -213,7 +213,7 @@ bool EkfMarg<T>::update_acc(const Vector3& a)
 }
 
 template <typename T>
-bool EkfMarg<T>::update_mag(const Vector3& m)
+bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance_direction)
 {
         if (!q_)
         {
@@ -243,12 +243,12 @@ bool EkfMarg<T>::update_mag(const Vector3& m)
                 Update{
                        .measurement = ym,
                        .prediction = y,
-                       .variance = square(T{0.01}) / xn2,
+                       .variance = variance / xn2,
                        },
                 Update{
                        .measurement = z,
                        .prediction = z,
-                       .variance = square(0.01),
+                       .variance = variance_direction,
                        }
         });
 

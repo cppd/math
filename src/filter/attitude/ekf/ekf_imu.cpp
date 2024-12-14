@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 
 #include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
@@ -141,7 +140,7 @@ void EkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varian
 }
 
 template <typename T>
-bool EkfImu<T>::update_acc(const Vector3& a)
+bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
         if (!q_)
         {
@@ -163,12 +162,12 @@ bool EkfImu<T>::update_acc(const Vector3& a)
                 Update{
                        .measurement = zm,
                        .prediction = z,
-                       .variance = square(0.01),
+                       .variance = variance,
                        },
                 Update{
                        .measurement = y,
                        .prediction = y,
-                       .variance = square(0.01),
+                       .variance = variance_direction,
                        }
         });
 
