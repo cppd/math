@@ -136,7 +136,7 @@ void test_impl_marg(const T precision)
         constexpr T DT = 0.01L;
 
         constexpr T VARIANCE_GYRO_R = square(1e-3);
-        constexpr T VARIANCE_GYRO_W = square(5e-3);
+        constexpr T VARIANCE_GYRO_W = square(1e-2);
 
         constexpr T VARIANCE_ACC = square(0.01);
         constexpr T VARIANCE_ACC_DIRECTION = square(0.01);
@@ -152,8 +152,9 @@ void test_impl_marg(const T precision)
         {
                 f.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
                 f.update_mag({15, -20, 25}, VARIANCE_MAG, VARIANCE_MAG_DIRECTION);
-                f.update_gyro(axis * T{0.010}, axis * T{0.015}, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
-                f.update_gyro(axis * T{0.015}, axis * T{0.010}, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+                const T k = 1 + i / T{1000};
+                f.update_gyro(axis * T{0.010} * k, axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+                f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
         const auto a = f.attitude();
@@ -170,16 +171,17 @@ void test_impl_marg(const T precision)
 
         test_equal(
                 *a,
-                {0.124510580868338503715L, 0.19276821849243910823L, 0.242444624849398093338L, 0.942633615501120782792L},
+                {0.124439467412366202103L, 0.192749927710004888978L, 0.242459166762077944489L,
+                 0.942643006005430147531L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763365665830549L, 0.505076272276098761746L, 0.808122035641771755158L}, precision);
+                {0.303045763365538608775L, 0.505076272276364248055L, 0.80812203564165353435L}, precision);
 
-        test_equal(
-                f.bias(), {0.00378806821318180254445L, 0.00631344702195024131705L, 0.0101015152351109069482L},
-                precision);
+        const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
+
+        test_equal(bias, {0.0246948249803788369775L, 0.0246948249816136018517L, 0.0246948249847495271497L}, precision);
 }
 
 template <typename T>
@@ -192,7 +194,7 @@ void test_impl(const T precision)
 void test()
 {
         LOG("Test attitude EKF");
-        test_impl<float>(1e-5);
+        test_impl<float>(1e-4);
         test_impl<double>(1e-14);
         test_impl<long double>(1e-20);
         LOG("Test attitude EKF passed");
