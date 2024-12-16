@@ -131,7 +131,7 @@ void test_impl_imu(const T precision)
 }
 
 template <typename T>
-void test_impl_marg(const T precision)
+void test_impl_marg_1(const T precision)
 {
         constexpr T DT = 0.01L;
 
@@ -185,10 +185,61 @@ void test_impl_marg(const T precision)
 }
 
 template <typename T>
+void test_impl_marg_2(const T precision)
+{
+        constexpr T DT = 0.01L;
+
+        constexpr T VARIANCE_GYRO_R = square(1e-3);
+        constexpr T VARIANCE_GYRO_W = square(1e-2);
+
+        constexpr T VARIANCE_ACC = square(0.01);
+        constexpr T VARIANCE_MAG = square(0.01);
+
+        EkfMarg<T> f;
+
+        const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+
+        for (int i = 0; i < 1000; ++i)
+        {
+                f.update_acc_mag(axis * T{9.8}, {15, -20, 25}, VARIANCE_ACC, VARIANCE_MAG);
+                const T k = 1 + i / T{1000};
+                f.update_gyro(axis * T{0.010} * k, axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+                f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+        }
+
+        const auto a = f.attitude();
+
+        if (!a)
+        {
+                error("No attitude");
+        }
+
+        if (!a->is_unit())
+        {
+                error("Attitude is not unit");
+        }
+
+        test_equal(
+                *a,
+                {0.124463110932099975351L, 0.192756009058290964886L, 0.242454332093871449116L,
+                 0.942639884493510344515L},
+                precision);
+
+        test_equal(
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                {0.303045763365539398725L, 0.505076272276338233871L, 0.80812203564166949695L}, precision);
+
+        const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
+
+        test_equal(bias, {0.0246334649658449764119L, 0.024633464967634628477L, 0.0246334649722587660282L}, precision);
+}
+
+template <typename T>
 void test_impl(const T precision)
 {
         test_impl_imu(precision);
-        test_impl_marg(precision);
+        test_impl_marg_1(precision);
+        test_impl_marg_2(precision);
 }
 
 void test()

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ekf_marg.h"
 
+#include "constant.h"
 #include "integrator.h"
 #include "matrix.h"
 #include "quaternion.h"
@@ -152,6 +153,17 @@ void EkfMarg<T>::update_init_mag(const Vector3& m)
 }
 
 template <typename T>
+void EkfMarg<T>::update_init_acc_mag(const Vector3& a, const Vector3& m)
+{
+        acc_data_ += a;
+        ++acc_count_;
+        mag_data_ += m;
+        ++mag_count_;
+
+        init();
+}
+
+template <typename T>
 void EkfMarg<T>::reset_init()
 {
         ASSERT(!q_);
@@ -192,9 +204,10 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
                 return false;
         }
 
-        const Vector3 zm = a / a_norm;
-        const Vector3 z = global_to_local(*q_, {0, 0, 1});
         const Vector3 y = global_to_local(*q_, {0, 1, 0});
+        const Vector3 z = global_to_local(*q_, {0, 0, 1});
+
+        const Vector3 zm = a / a_norm;
 
         update(std::array{
                 Update{
@@ -227,28 +240,77 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                 return false;
         }
 
+        const Vector3 y = global_to_local(*q_, {0, 1, 0});
         const Vector3 z = global_to_local(*q_, {0, 0, 1});
 
-        const Vector3 xm = cross(m / m_norm, z);
-        const T xn2 = xm.norm_squared();
-        if (!(xn2 > square(T{0.1})))
+        const Vector3 x_mag = cross(m / m_norm, z);
+        const T sin2 = x_mag.norm_squared();
+        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
         {
                 return false;
         }
-
-        const Vector3 ym = cross(z, xm).normalized();
-        const Vector3 y = global_to_local(*q_, {0, 1, 0});
+        const Vector3 ym = cross(z, x_mag).normalized();
 
         update(std::array{
                 Update{
                        .measurement = ym,
                        .prediction = y,
-                       .variance = variance / xn2,
+                       .variance = variance / sin2,
                        },
                 Update{
                        .measurement = z,
                        .prediction = z,
                        .variance = variance_direction,
+                       }
+        });
+
+        return true;
+}
+
+template <typename T>
+bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
+{
+        if (!q_)
+        {
+                update_init_acc_mag(a, m);
+                return q_.has_value();
+        }
+
+        const T a_norm = a.norm();
+        if (!acc_suitable(a_norm))
+        {
+                return false;
+        }
+
+        const T m_norm = m.norm();
+        if (!mag_suitable(m_norm))
+        {
+                return false;
+        }
+
+        const Vector3 y = global_to_local(*q_, {0, 1, 0});
+        const Vector3 z = global_to_local(*q_, {0, 0, 1});
+
+        const Vector3 zm = a / a_norm;
+
+        const Vector3 x_mag = cross(m / m_norm, z);
+        const T sin2 = x_mag.norm_squared();
+        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
+        {
+                return false;
+        }
+        const Vector3 ym = cross(z, x_mag).normalized();
+
+        update(std::array{
+                Update{
+                       .measurement = ym,
+                       .prediction = y,
+                       .variance = m_variance / sin2,
+                       },
+                Update{
+                       .measurement = zm,
+                       .prediction = z,
+                       .variance = a_variance,
                        }
         });
 

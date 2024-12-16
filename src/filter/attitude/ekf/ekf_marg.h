@@ -61,6 +61,7 @@ class EkfMarg final
         void init();
         void update_init_acc(const Vector3& a);
         void update_init_mag(const Vector3& m);
+        void update_init_acc_mag(const Vector3& a, const Vector3& m);
         void reset_init();
 
 public:
@@ -71,6 +72,8 @@ public:
         bool update_acc(const Vector3& a, T variance, T variance_direction);
 
         bool update_mag(const Vector3& m, T variance, T variance_direction);
+
+        bool update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
