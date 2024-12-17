@@ -91,7 +91,7 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-void EkfImu<T>::update_init(const Vector3& a)
+void EkfImu<T>::init_acc(const Vector3& a)
 {
         ASSERT(!q_);
 
@@ -144,7 +144,7 @@ bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
 {
         if (!q_)
         {
-                update_init(a);
+                init_acc(a);
                 return q_.has_value();
         }
 

@@ -135,7 +135,7 @@ void EkfMarg<T>::init()
 }
 
 template <typename T>
-void EkfMarg<T>::update_init_acc(const Vector3& a)
+void EkfMarg<T>::init_acc(const Vector3& a)
 {
         acc_data_ += a;
         ++acc_count_;
@@ -144,7 +144,7 @@ void EkfMarg<T>::update_init_acc(const Vector3& a)
 }
 
 template <typename T>
-void EkfMarg<T>::update_init_mag(const Vector3& m)
+void EkfMarg<T>::init_mag(const Vector3& m)
 {
         mag_data_ += m;
         ++mag_count_;
@@ -153,7 +153,7 @@ void EkfMarg<T>::update_init_mag(const Vector3& m)
 }
 
 template <typename T>
-void EkfMarg<T>::update_init_acc_mag(const Vector3& a, const Vector3& m)
+void EkfMarg<T>::init_acc_mag(const Vector3& a, const Vector3& m)
 {
         acc_data_ += a;
         ++acc_count_;
@@ -194,7 +194,7 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
 {
         if (!q_)
         {
-                update_init_acc(a);
+                init_acc(a);
                 return q_.has_value();
         }
 
@@ -230,7 +230,7 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
 {
         if (!q_)
         {
-                update_init_mag(m);
+                init_mag(m);
                 return q_.has_value();
         }
 
@@ -272,7 +272,7 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
 {
         if (!q_)
         {
-                update_init_acc_mag(a, m);
+                init_acc_mag(a, m);
                 return q_.has_value();
         }
 

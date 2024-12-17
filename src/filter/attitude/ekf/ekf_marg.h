@@ -59,9 +59,9 @@ class EkfMarg final
         void update(const std::array<Update, N>& data);
 
         void init();
-        void update_init_acc(const Vector3& a);
-        void update_init_mag(const Vector3& m);
-        void update_init_acc_mag(const Vector3& a, const Vector3& m);
+        void init_acc(const Vector3& a);
+        void init_mag(const Vector3& m);
+        void init_acc_mag(const Vector3& a, const Vector3& m);
         void reset_init();
 
 public:

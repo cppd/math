@@ -53,7 +53,7 @@ class EkfImu final
         template <std::size_t N>
         void update(const std::array<Update, N>& data);
 
-        void update_init(const Vector3& a);
+        void init_acc(const Vector3& a);
         void reset_init();
 
 public:
