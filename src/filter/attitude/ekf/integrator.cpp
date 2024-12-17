@@ -78,5 +78,4 @@ Quaternion<T> first_order_quaternion_integrator(
 TEMPLATE(float)
 TEMPLATE(double)
 TEMPLATE(long double)
-
 }

@@ -204,5 +204,4 @@ numerical::Matrix<6, 6, T> noise_covariance_matrix_6(
 TEMPLATE(float)
 TEMPLATE(double)
 TEMPLATE(long double)
-
 }
