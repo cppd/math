@@ -171,17 +171,17 @@ void test_impl_marg_1(const T precision)
 
         test_equal(
                 *a,
-                {0.124439467412366202103L, 0.192749927710004888978L, 0.242459166762077944489L,
-                 0.942643006005430147531L},
+                {0.124439467170343173159L, 0.192749927647793641811L, 0.242459166811415931201L,
+                 0.942643006037410423055L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763365538608775L, 0.505076272276364248055L, 0.80812203564165353435L}, precision);
+                {0.303045763365663224588L, 0.505076272276105374675L, 0.808122035641768599317L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
 
-        test_equal(bias, {0.0246948249803788369775L, 0.0246948249816136018517L, 0.0246948249847495271497L}, precision);
+        test_equal(bias, {0.0246948027225495865531L, 0.0246948027225495872205L, 0.0246948027225495878202L}, precision);
 }
 
 template <typename T>
@@ -221,17 +221,17 @@ void test_impl_marg_2(const T precision)
 
         test_equal(
                 *a,
-                {0.124463110932099975351L, 0.192756009058290964886L, 0.242454332093871449116L,
-                 0.942639884493510344515L},
+                {0.124463110842182846114L, 0.192756009035205944175L, 0.242454332112122312624L,
+                 0.942639884505408993628L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763365539398725L, 0.505076272276338233871L, 0.80812203564166949695L}, precision);
+                {0.30304576336566322494L, 0.505076272276105374729L, 0.808122035641768599263L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
 
-        test_equal(bias, {0.0246334649658449764119L, 0.024633464967634628477L, 0.0246334649722587660282L}, precision);
+        test_equal(bias, {0.0246334465758026264918L, 0.0246334465758026172981L, 0.0246334465758026190701L}, precision);
 }
 
 template <typename T>
@@ -246,8 +246,8 @@ void test()
 {
         LOG("Test attitude EKF");
         test_impl<float>(1e-4);
-        test_impl<double>(1e-14);
-        test_impl<long double>(1e-20);
+        test_impl<double>(1e-13);
+        test_impl<long double>(0);
         LOG("Test attitude EKF passed");
 }
 

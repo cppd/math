@@ -33,7 +33,7 @@ numerical::Matrix<N, N, T> add_diagonal(const T v, numerical::Matrix<N, N, T> m)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
-                m[i, i] = v;
+                m[i, i] += v;
         }
         return m;
 }
