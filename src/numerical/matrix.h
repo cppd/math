@@ -216,6 +216,30 @@ template <std::size_t START, std::size_t STEP, std::size_t N, typename T>
 template <
         std::size_t START_R,
         std::size_t START_C,
+        std::size_t BR,
+        std::size_t BC,
+        std::size_t R,
+        std::size_t C,
+        typename T>
+[[nodiscard]] Matrix<BR, BC, T> block(const Matrix<R, C, T>& m)
+{
+        static_assert(START_R + BR <= R);
+        static_assert(START_C + BC <= C);
+
+        Matrix<BR, BC, T> res;
+        for (std::size_t r = START_R, br = 0; br < BR; ++r, ++br)
+        {
+                for (std::size_t c = START_C, bc = 0; bc < BC; ++c, ++bc)
+                {
+                        res[br, bc] = m[r, c];
+                }
+        }
+        return res;
+}
+
+template <
+        std::size_t START_R,
+        std::size_t START_C,
         std::size_t R,
         std::size_t C,
         std::size_t BR,
