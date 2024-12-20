@@ -76,14 +76,28 @@ void test_equal(const numerical::Matrix<R, C, T>& a, const numerical::Matrix<R, 
 }
 
 template <typename T>
-void test_cross(const T precision)
+void test_cross_matrix(const T precision)
 {
-        const numerical::Vector<3, T> v1{1, 2, 3};
-        const numerical::Vector<3, T> v2{3, -2, 1};
+        using Vector3 = numerical::Vector<3, T>;
+        using Matrix3 = numerical::Matrix<3, 3, T>;
+
+        {
+                const Vector3 v(1, 2, 3);
+                const Matrix3 m = cross_matrix<1>(v);
+                const Matrix3 c = {
+                        { 0, -3,  2},
+                        { 3,  0, -1},
+                        {-2,  1,  0}
+                };
+                test_equal(m, c, precision);
+        }
+
+        const Vector3 v1(1, 2, 3);
+        const Vector3 v2(3, -2, 1);
 
         test_equal(cross(v1, v2), cross_matrix<1>(v1) * v2, precision);
 
-        const numerical::Matrix<3, 3, T> m = cross_matrix<1>(v1);
+        const Matrix3 m = cross_matrix<1>(v1);
         test_equal(m * m, cross_matrix<2>(v1), precision);
         test_equal(m * m * m, cross_matrix<3>(v1), precision);
         test_equal(m * m * m * m, cross_matrix<4>(v1), precision);
@@ -92,12 +106,13 @@ void test_cross(const T precision)
 }
 
 template <typename T>
-void test_state(const T precision)
+void test_state_transition_matrix(const T precision)
 {
+        using Vector3 = numerical::Vector<3, T>;
         using Matrix3 = numerical::Matrix<3, 3, T>;
         using Matrix6 = numerical::Matrix<6, 6, T>;
 
-        constexpr numerical::Vector<3, T> W(W_THRESHOLD<T>, W_THRESHOLD<T> / T{2}, W_THRESHOLD<T> * T{2});
+        constexpr Vector3 W(W_THRESHOLD<T>, W_THRESHOLD<T> / T{2}, W_THRESHOLD<T> * T{2});
 
         {
                 const Matrix3 m = state_transition_matrix_3(T{1000} * W, T{0.01});
@@ -174,10 +189,77 @@ void test_state(const T precision)
 }
 
 template <typename T>
+void test_noise_covariance_matrix(const T precision)
+{
+        using Vector3 = numerical::Vector<3, T>;
+        using Matrix3 = numerical::Matrix<3, 3, T>;
+        using Matrix6 = numerical::Matrix<6, 6, T>;
+
+        constexpr Vector3 W(W_THRESHOLD<T>, W_THRESHOLD<T> / T{2}, W_THRESHOLD<T> * T{2});
+
+        {
+                const Matrix3 m = noise_covariance_matrix_3(T{0.01}, T{0.01});
+                const Matrix3 c = {
+                        {0.000100000000000000004164L,                           0,                           0},
+                        {                          0, 0.000100000000000000004164L,                           0},
+                        {                          0,                           0, 0.000100000000000000004164L}
+                };
+                test_equal(m, c, precision);
+        }
+        {
+                const Matrix6 m = noise_covariance_matrix_6(T{10000} * W, T{0.01}, T{0.001}, T{0.01});
+                const Matrix3 c00 = {
+                        {0.000100000333333262504191L, 8.33333041391428018334e-18L, 3.33333216556571207334e-17L},
+                        {8.33333041391428018334e-18L, 0.000100000333333250004195L, 1.66666608278285603667e-17L},
+                        {3.33333216556571207334e-17L, 1.66666608278285603667e-17L, 0.000100000333333312504169L}
+                };
+                const Matrix3 c01 = {
+                        {-4.99999822916705543092e-08L, -3.33354079162119080499e-11L,  8.32499781432857037213e-12L},
+                        {    3.33312412504592461e-11L, -4.99999791666712398148e-08L, -1.66708289574204504858e-11L},
+                        {-8.34166447733921816457e-12L,  1.66624956259151265892e-11L, -4.99999947916678122965e-08L}
+                };
+                const Matrix3 c10 = c01.transposed();
+                const Matrix3 c11 = {
+                        {1.0000000000000000416e-05L,                          0,                          0},
+                        {                         0, 1.0000000000000000416e-05L,                          0},
+                        {                         0,                          0, 1.0000000000000000416e-05L}
+                };
+                test_equal(numerical::block<0, 0, 3, 3>(m), c00, precision);
+                test_equal(numerical::block<0, 3, 3, 3>(m), c01, precision);
+                test_equal(numerical::block<3, 0, 3, 3>(m), c10, precision);
+                test_equal(numerical::block<3, 3, 3, 3>(m), c11, precision);
+        }
+        {
+                const Matrix6 m = noise_covariance_matrix_6(W / T{10}, T{0.01}, T{0.001}, T{0.01});
+                const Matrix3 c00 = {
+                        {  0.0001000003333333333375L, 8.33333333333333573797e-28L, 3.33333333333333429519e-27L},
+                        {8.33333333333333573797e-28L,   0.0001000003333333333375L, 1.66666666666666714759e-27L},
+                        {3.33333333333333429519e-27L, 1.66666666666666714759e-27L,   0.0001000003333333333375L}
+                };
+                const Matrix3 c01 = {
+                        {-5.00000000000000013531e-08L, -3.33333333541666721733e-16L,  8.33333325000000137635e-17L},
+                        { 3.33333333125000055045e-16L, -5.00000000000000010397e-08L, -1.66666667083333360858e-16L},
+                        { -8.3333334166666680425e-17L,  1.66666666250000027531e-16L, -5.00000000000000026036e-08L}
+                };
+                const Matrix3 c10 = c01.transposed();
+                const Matrix3 c11 = {
+                        {1.0000000000000000416e-05L,                          0,                          0},
+                        {                         0, 1.0000000000000000416e-05L,                          0},
+                        {                         0,                          0, 1.0000000000000000416e-05L}
+                };
+                test_equal(numerical::block<0, 0, 3, 3>(m), c00, precision);
+                test_equal(numerical::block<0, 3, 3, 3>(m), c01, precision);
+                test_equal(numerical::block<3, 0, 3, 3>(m), c10, precision);
+                test_equal(numerical::block<3, 3, 3, 3>(m), c11, precision);
+        }
+}
+
+template <typename T>
 void test_impl(const T precision)
 {
-        test_cross<T>(precision);
-        test_state<T>(precision);
+        test_cross_matrix<T>(precision);
+        test_state_transition_matrix<T>(precision);
+        test_noise_covariance_matrix<T>(precision);
 }
 
 void test()
