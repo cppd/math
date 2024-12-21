@@ -32,8 +32,10 @@ namespace ns::filter::attitude::madgwick
 namespace
 {
 template <typename T>
-[[nodiscard]] numerical::Quaternion<T> normalize(const numerical::Quaternion<T>& q)
+[[nodiscard]] numerical::Quaternion<T> normalize(const T w, const T x, const T y, const T z)
 {
+        // normalizing without changing the sign of w
+        const numerical::Quaternion<T> q(w, x, y, z);
         const T norm = q.norm();
         if (norm > 0)
         {
@@ -67,7 +69,7 @@ numerical::Quaternion<T> compute_gn(const numerical::Quaternion<T>& q, const num
         const T ry = z * f[1] - w * f[0] - y * f[2];
         const T rz = x * f[0] + y * f[1];
 
-        return normalize(numerical::Quaternion<T>(rw, rx, ry, rz));
+        return normalize(rw, rx, ry, rz);
 }
 
 template <typename T>
@@ -113,7 +115,7 @@ numerical::Quaternion<T> compute_gn(
         const T y1 = -(2 * bxq.y() + bzq.w()) * f[3] + (bxq.x() + bzq.z()) * f[4] + (bxq.w() - 2 * bzq.y()) * f[5];
         const T z1 = -(2 * bxq.z() - bzq.x()) * f[3] - (bxq.w() - bzq.y()) * f[4] + bxq.x() * f[5];
 
-        return normalize(numerical::Quaternion<T>(w0 + w1, x0 + x1, y0 + y1, z0 + z1));
+        return normalize(w0 + w1, x0 + x1, y0 + y1, z0 + z1);
 }
 
 #define TEMPLATE(T)                                                                                                    \
