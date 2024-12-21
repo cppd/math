@@ -102,11 +102,6 @@ public:
                 return Quaternion(q_.conjugate());
         }
 
-        void normalize()
-        {
-                q_.normalize();
-        }
-
         [[nodiscard]] Quaternion<T> normalized() const
         {
                 return Quaternion(q_.normalized());

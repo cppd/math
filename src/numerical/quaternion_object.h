@@ -112,14 +112,11 @@ public:
                 return data_.norm();
         }
 
-        void normalize()
-        {
-                data_.normalize();
-        }
-
         [[nodiscard]] Quaternion<T> normalized() const
         {
-                return Quaternion<T>(data_.normalized());
+                const T norm = data_.norm();
+                const T n = (w() >= 0) ? norm : -norm;
+                return Quaternion<T>(data_ / n);
         }
 
         [[nodiscard]] bool is_unit() const

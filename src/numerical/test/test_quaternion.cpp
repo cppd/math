@@ -137,20 +137,16 @@ Quaternion<T> random_rotation_quaternion(PCG& pcg)
 template <typename T>
 void test(const T precision)
 {
-        {
-                Quaternion<T> q(2, 3, 4, 5);
-                q.normalize();
-                test_equal(
-                        q,
-                        {0.272165526975908677584L, 0.408248290463863016363L, 0.544331053951817355168L,
-                         0.680413817439771693974L},
-                        precision);
-        }
-
         test_equal(
                 Quaternion<T>(2, 4, 3, 5).normalized(),
                 {0.272165526975908677584L, 0.544331053951817355168L, 0.408248290463863016363L,
                  0.680413817439771693974L},
+                precision);
+
+        test_equal(
+                Quaternion<T>(-2, 4, 3, 5).normalized(),
+                {0.272165526975908677584L, -0.544331053951817355168L, -0.408248290463863016363L,
+                 -0.680413817439771693974L},
                 precision);
 
         test_equal(
