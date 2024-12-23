@@ -50,7 +50,7 @@ bool equal(const T a, const T b, const T precision)
 }
 
 template <std::size_t N, typename T>
-bool test_equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
+bool equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -71,7 +71,7 @@ numerical::Vector<4, T> to_vector(const Quaternion<T>& q)
 template <typename T>
 void test_equal(const Quaternion<T>& a, const Quaternion<T>& b, const T precision)
 {
-        if (!test_equal(to_vector(a), to_vector(b), precision))
+        if (!equal(to_vector(a), to_vector(b), precision))
         {
                 error(to_string(a) + " is not equal to " + to_string(b));
         }
