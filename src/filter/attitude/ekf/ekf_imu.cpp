@@ -69,12 +69,13 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
                 const Matrix3 h_i = cross_matrix<1>(hx_i);
                 const Vector3 z_i = data[i].measurement;
                 const T variance_i = data[i].variance;
-                for (std::size_t b = 3 * i, j = 0; j < 3; ++b, ++j)
+                const std::size_t offset = 3 * i;
+                numerical::set_block(hx, offset, hx_i);
+                numerical::set_block(h, offset, 0, h_i);
+                numerical::set_block(z, offset, z_i);
+                for (std::size_t j = offset; j < offset + 3; ++j)
                 {
-                        z[b] = z_i[j];
-                        hx[b] = hx_i[j];
-                        h.row(b) = h_i.row(j);
-                        r[b, b] = variance_i;
+                        r[j, j] = variance_i;
                 }
         }
 
