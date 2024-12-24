@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix_object.h" // IWYU pragma: export
 #include "vector.h"
 
+#include <src/com/error.h>
+
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
@@ -253,6 +255,21 @@ void set_block(Matrix<R, C, T>& m, const Matrix<BR, BC, T>& block)
         for (std::size_t r = START_R, br = 0; br < BR; ++r, ++br)
         {
                 for (std::size_t c = START_C, bc = 0; bc < BC; ++c, ++bc)
+                {
+                        m[r, c] = block[br, bc];
+                }
+        }
+}
+
+template <std::size_t R, std::size_t C, std::size_t BR, std::size_t BC, typename T>
+void set_block(Matrix<R, C, T>& m, const std::size_t start_r, const std::size_t start_c, const Matrix<BR, BC, T>& block)
+{
+        ASSERT(start_r + BR <= R);
+        ASSERT(start_c + BC <= C);
+
+        for (std::size_t r = start_r, br = 0; br < BR; ++r, ++br)
+        {
+                for (std::size_t c = start_c, bc = 0; bc < BC; ++c, ++bc)
                 {
                         m[r, c] = block[br, bc];
                 }
