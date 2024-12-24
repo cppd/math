@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector_object.h" // IWYU pragma: export
 
+#include <src/com/error.h>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -161,6 +163,17 @@ template <std::size_t N, typename T>
                 res += a[i] * b[i];
         }
         return res;
+}
+
+template <std::size_t N, std::size_t BN, typename T>
+void set_block(Vector<N, T>& v, const std::size_t start, const Vector<BN, T>& block)
+{
+        ASSERT(start + BN <= N);
+
+        for (std::size_t i = start, bi = 0; bi < BN; ++i, ++bi)
+        {
+                v[i] = block[bi];
+        }
 }
 
 template <typename Dst, std::size_t N, typename Src>
