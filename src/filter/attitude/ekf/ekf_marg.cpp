@@ -87,15 +87,15 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         const numerical::Matrix<6, 3 * N, T> ht = h.transposed();
         const numerical::Matrix<3 * N, 3 * N, T> s = h * p_ * ht + r;
         const numerical::Matrix<6, 3 * N, T> k = p_ * ht * s.inversed();
-
         const Vector6 dx = k * (z - hx);
-        const Vector3 dxq = dx.template segment<0, 3>();
-        const Vector3 dxb = dx.template segment<3, 3>();
 
-        const Quaternion<T> dq = delta_quaternion(dxq / T{2});
+        const Vector3 dx_q = numerical::block<0, 3>(dx);
+        const Vector3 dx_b = numerical::block<3, 3>(dx);
+
+        const Quaternion<T> dq = delta_quaternion(dx_q / T{2});
         q_ = (dq * *q_).normalized();
 
-        b_ += dxb;
+        b_ += dx_b;
 
         const Matrix6 i_kh = numerical::IDENTITY_MATRIX<6, T> - k * h;
         p_ = i_kh * p_ * i_kh.transposed() + k * r * k.transposed();
