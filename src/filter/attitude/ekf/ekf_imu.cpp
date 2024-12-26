@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ekf_imu.h"
 
+#include "cross_matrix.h"
 #include "integrator.h"
 #include "matrix.h"
 #include "quaternion.h"

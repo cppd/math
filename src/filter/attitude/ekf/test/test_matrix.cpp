@@ -48,18 +48,6 @@ bool equal(const T a, const T b, const T precision)
         return (rel < precision);
 }
 
-template <std::size_t N, typename T>
-void test_equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!equal(a[i], b[i], precision))
-                {
-                        error(to_string(a) + " is not equal to " + to_string(b));
-                }
-        }
-}
-
 template <std::size_t R, std::size_t C, typename T>
 void test_equal(const numerical::Matrix<R, C, T>& a, const numerical::Matrix<R, C, T>& b, const T precision)
 {
@@ -73,36 +61,6 @@ void test_equal(const numerical::Matrix<R, C, T>& a, const numerical::Matrix<R, 
                         }
                 }
         }
-}
-
-template <typename T>
-void test_cross_matrix(const T precision)
-{
-        using Vector3 = numerical::Vector<3, T>;
-        using Matrix3 = numerical::Matrix<3, 3, T>;
-
-        {
-                const Vector3 v(1, 2, 3);
-                const Matrix3 m = cross_matrix<1>(v);
-                const Matrix3 c = {
-                        { 0, -3,  2},
-                        { 3,  0, -1},
-                        {-2,  1,  0}
-                };
-                test_equal(m, c, precision);
-        }
-
-        const Vector3 v1(1, 2, 3);
-        const Vector3 v2(3, -2, 1);
-
-        test_equal(cross(v1, v2), cross_matrix<1>(v1) * v2, precision);
-
-        const Matrix3 m = cross_matrix<1>(v1);
-        test_equal(m * m, cross_matrix<2>(v1), precision);
-        test_equal(m * m * m, cross_matrix<3>(v1), precision);
-        test_equal(m * m * m * m, cross_matrix<4>(v1), precision);
-        test_equal(m * m * m * m * m, cross_matrix<5>(v1), precision);
-        test_equal(m * m * m * m * m * m, cross_matrix<6>(v1), precision);
 }
 
 template <typename T>
@@ -257,7 +215,6 @@ void test_noise_covariance_matrix(const T precision)
 template <typename T>
 void test_impl(const T precision)
 {
-        test_cross_matrix<T>(precision);
         test_state_transition_matrix<T>(precision);
         test_noise_covariance_matrix<T>(precision);
 }
