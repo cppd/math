@@ -15,65 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "cmp.h"
+
 #include <src/com/log.h>
 #include <src/filter/attitude/ekf/cross_matrix.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-
 namespace ns::filter::attitude::ekf::test
 {
 namespace
 {
-template <typename T>
-bool equal(const T a, const T b, const T precision)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        if (a == b)
-        {
-                return true;
-        }
-        const T abs = std::abs(a - b);
-        if (abs < precision)
-        {
-                return true;
-        }
-        const T rel = abs / std::max(std::abs(a), std::abs(b));
-        return (rel < precision);
-}
-
-template <std::size_t N, typename T>
-void test_equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!equal(a[i], b[i], precision))
-                {
-                        error(to_string(a) + " is not equal to " + to_string(b));
-                }
-        }
-}
-
-template <std::size_t R, std::size_t C, typename T>
-void test_equal(const numerical::Matrix<R, C, T>& a, const numerical::Matrix<R, C, T>& b, const T precision)
-{
-        for (std::size_t i = 0; i < R; ++i)
-        {
-                for (std::size_t j = 0; j < C; ++j)
-                {
-                        if (!equal(a[i, j], b[i, j], precision))
-                        {
-                                error(to_string(a) + " is not equal to " + to_string(b));
-                        }
-                }
-        }
-}
-
 template <typename T>
 void test_impl(const T precision)
 {

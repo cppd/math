@@ -15,76 +15,18 @@ You should have received q copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "cmp.h"
+
 #include <src/com/log.h>
 #include <src/filter/attitude/ekf/quaternion.h>
 #include <src/filter/attitude/ekf/utility.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <type_traits>
-
 namespace ns::filter::attitude::ekf::test
 {
 namespace
 {
-template <typename T>
-bool equal(const T a, const T b, const T precision)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        if (a == b)
-        {
-                return true;
-        }
-        const T abs = std::abs(a - b);
-        if (abs < precision)
-        {
-                return true;
-        }
-        const T rel = abs / std::max(std::abs(a), std::abs(b));
-        return (rel < precision);
-}
-
-template <std::size_t N, typename T>
-bool equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!equal(a[i], b[i], precision))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-template <typename T>
-numerical::Vector<4, T> to_vector(const Quaternion<T>& q)
-{
-        return {q.w(), q.x(), q.y(), q.z()};
-}
-
-template <std::size_t N, typename T>
-void test_equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
-{
-        if (!equal(a, b, precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
-template <typename T>
-void test_equal(const Quaternion<T>& a, const Quaternion<T>& b, const T precision)
-{
-        if (!equal(to_vector(a), to_vector(b), precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
 template <typename T>
 void test_impl(const T precision)
 {

@@ -15,77 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "cmp.h"
+
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/print.h>
 #include <src/filter/attitude/ekf/ekf_imu.h>
 #include <src/filter/attitude/ekf/ekf_marg.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-
 namespace ns::filter::attitude::ekf::test
 {
 namespace
 {
-template <typename T>
-        requires (std::is_floating_point_v<T>)
-bool equal(const T a, const T b, const T precision)
-{
-        if (a == b)
-        {
-                return true;
-        }
-        const T abs = std::abs(a - b);
-        if (abs < precision)
-        {
-                return true;
-        }
-        const T rel = abs / std::max(std::abs(a), std::abs(b));
-        return (rel < precision);
-}
-
-template <typename T, typename P>
-        requires (!std::is_floating_point_v<T>)
-bool equal(const T& a, const T& b, const P precision)
-{
-        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
-        {
-                if (!equal(a[i], b[i], precision))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-template <typename T, typename P>
-bool equal(const numerical::Quaternion<T>& a, const numerical::Quaternion<T>& b, const P precision)
-{
-        if (!equal(a.w(), b.w(), precision))
-        {
-                return false;
-        }
-        if (!equal(a.vec(), b.vec(), precision))
-        {
-                return false;
-        }
-        return true;
-}
-
-template <typename T, typename P>
-void test_equal(const T& a, const T& b, const P precision)
-{
-        if (!equal(a, b, precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
 template <typename T>
 void test_impl_imu(const T precision)
 {
