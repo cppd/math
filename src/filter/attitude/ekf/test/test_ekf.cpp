@@ -30,6 +30,19 @@ namespace ns::filter::attitude::ekf::test
 {
 namespace
 {
+void check_attitude(const auto& attitude)
+{
+        if (!attitude)
+        {
+                error("No attitude");
+        }
+
+        if (!attitude->is_unit())
+        {
+                error("Attitude " + to_string(*attitude) + " is not unit");
+        }
+}
+
 template <typename T>
 void test_impl_imu(const T precision)
 {
@@ -53,15 +66,8 @@ void test_impl_imu(const T precision)
 
         const auto a = f.attitude();
 
-        if (!a)
-        {
-                error("No attitude");
-        }
-
-        if (!a->is_unit())
-        {
-                error("Attitude is not unit");
-        }
+        check_attitude(a);
+        ASSERT(a);
 
         test_equal(
                 *a,
@@ -103,15 +109,8 @@ void test_impl_marg_1(const T precision)
 
         const auto a = f.attitude();
 
-        if (!a)
-        {
-                error("No attitude");
-        }
-
-        if (!a->is_unit())
-        {
-                error("Attitude is not unit");
-        }
+        check_attitude(a);
+        ASSERT(a);
 
         test_equal(
                 *a,
@@ -153,15 +152,8 @@ void test_impl_marg_2(const T precision)
 
         const auto a = f.attitude();
 
-        if (!a)
-        {
-                error("No attitude");
-        }
-
-        if (!a->is_unit())
-        {
-                error("Attitude is not unit");
-        }
+        check_attitude(a);
+        ASSERT(a);
 
         test_equal(
                 *a,
