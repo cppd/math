@@ -47,7 +47,7 @@ public:
         {
         }
 
-        const numerical::Quaternion<T>& q() const
+        [[nodiscard]] const numerical::Quaternion<T>& q() const
         {
                 return q_;
         }
@@ -62,54 +62,9 @@ public:
                 return q_.w();
         }
 
-        [[nodiscard]] constexpr T& w()
-        {
-                return q_.w();
-        }
-
-        [[nodiscard]] constexpr T x() const
-        {
-                return q_.x();
-        }
-
-        [[nodiscard]] constexpr T& x()
-        {
-                return q_.x();
-        }
-
-        [[nodiscard]] constexpr T y() const
-        {
-                return q_.y();
-        }
-
-        [[nodiscard]] constexpr T& y()
-        {
-                return q_.y();
-        }
-
-        [[nodiscard]] constexpr T z() const
-        {
-                return q_.z();
-        }
-
-        [[nodiscard]] constexpr T& z()
-        {
-                return q_.z();
-        }
-
-        [[nodiscard]] constexpr Quaternion<T> conjugate() const
-        {
-                return Quaternion(q_.conjugate());
-        }
-
         [[nodiscard]] Quaternion<T> normalized() const
         {
                 return Quaternion(q_.normalized());
-        }
-
-        [[nodiscard]] Quaternion<T> inversed() const
-        {
-                return Quaternion(q_.inversed());
         }
 
         [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
