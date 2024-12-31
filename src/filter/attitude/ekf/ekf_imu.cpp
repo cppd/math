@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ekf_imu.h"
 
+#include "constant.h"
 #include "cross_matrix.h"
 #include "integrator.h"
 #include "matrix.h"
@@ -35,11 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude::ekf
 {
-namespace
-{
-constexpr unsigned ACC_COUNT{10};
-}
-
 template <typename T>
 void EkfImu<T>::predict(const Vector3& w0, const Vector3& w1, const T variance, const T dt)
 {
@@ -100,7 +96,7 @@ void EkfImu<T>::init_acc(const Vector3& a)
         acc_data_ += a;
         ++acc_count_;
 
-        if (acc_count_ < ACC_COUNT)
+        if (acc_count_ < INIT_COUNT)
         {
                 return;
         }

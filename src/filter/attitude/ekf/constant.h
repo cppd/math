@@ -24,4 +24,6 @@ inline constexpr T W_THRESHOLD{1e-5}; // rad/s
 
 template <typename T>
 inline constexpr T MIN_SIN_Z_MAG{0.1};
+
+inline constexpr unsigned INIT_COUNT{10};
 }
