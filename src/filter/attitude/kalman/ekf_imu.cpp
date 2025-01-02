@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constant.h"
 #include "cross_matrix.h"
 #include "ekf_matrix.h"
+#include "ekf_utility.h"
 #include "integrator.h"
 #include "quaternion.h"
 #include "utility.h"
@@ -81,7 +82,7 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
         const numerical::Matrix<3, 3 * N, T> k = p_ * ht * s.inversed();
         const Vector3 dx = k * (z - hx);
 
-        const Quaternion<T> dq = delta_quaternion(dx / T{2});
+        const Quaternion<T> dq = ekf_delta_quaternion(dx / T{2});
         q_ = (dq * *q_).normalized();
 
         const Matrix3 i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;

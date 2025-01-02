@@ -19,22 +19,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quaternion.h"
 
-#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
+
+#include <cmath>
 
 namespace ns::filter::attitude::kalman
 {
 template <typename T>
-[[nodiscard]] Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc);
-
-template <typename T>
-[[nodiscard]] Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numerical::Vector<3, T>& mag);
-
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> global_to_local(
-        const Quaternion<T>& q_unit,
-        const numerical::Vector<3, T>& global)
+[[nodiscard]] Quaternion<T> ekf_delta_quaternion(const numerical::Vector<3, T>& v)
 {
-        return numerical::rotate_vector(q_unit.q().conjugate(), global);
+        const T n2 = v.norm_squared();
+        if (n2 <= 1)
+        {
+                return Quaternion<T>(std::sqrt(1 - n2), v);
+        }
+        return Quaternion<T>(1, v) / std::sqrt(1 + n2);
 }
 }

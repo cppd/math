@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constant.h"
 #include "cross_matrix.h"
 #include "ekf_matrix.h"
+#include "ekf_utility.h"
 #include "integrator.h"
 #include "quaternion.h"
 #include "utility.h"
@@ -88,7 +89,7 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         const Vector3 dx_q = numerical::block<0, 3>(dx);
         const Vector3 dx_b = numerical::block<3, 3>(dx);
 
-        const Quaternion<T> dq = delta_quaternion(dx_q / T{2});
+        const Quaternion<T> dq = ekf_delta_quaternion(dx_q / T{2});
         q_ = (dq * *q_).normalized();
 
         b_ += dx_b;

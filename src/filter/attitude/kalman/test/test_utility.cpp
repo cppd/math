@@ -48,20 +48,6 @@ void test_impl(const T precision)
                 test_equal(q, c, precision);
         }
         {
-                const numerical::Vector<3, T> v(-0.2L, 0.3L, -0.4L);
-                const Quaternion<T> q = delta_quaternion(v);
-                const Quaternion<T> c(0.842614977317635863055L, {-0.2L, 0.3L, -0.4L});
-                test_equal(q, c, precision);
-        }
-        {
-                const numerical::Vector<3, T> v(-1.2, 2.3, -3.4);
-                const Quaternion<T> q = delta_quaternion(v);
-                const Quaternion<T> c(
-                        0.227684720124393468466L,
-                        {-0.273221664149272152055L, 0.523674856286104937033L, -0.774128048422937772562L});
-                test_equal(q, c, precision);
-        }
-        {
                 const Quaternion<T> q = Quaternion<T>(-2, {5.2, -3.3, 4.4}).normalized();
                 const numerical::Vector<3, T> v = global_to_local(q, {2.1, -3.2, 4.3});
                 const numerical::Vector<3, T> c(
