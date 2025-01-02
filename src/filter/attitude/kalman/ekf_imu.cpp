@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constant.h"
 #include "cross_matrix.h"
+#include "ekf_matrix.h"
 #include "integrator.h"
-#include "matrix.h"
 #include "quaternion.h"
 #include "utility.h"
 
@@ -43,8 +43,8 @@ void EkfImu<T>::predict(const Vector3& w0, const Vector3& w1, const T variance, 
 
         q_ = first_order_quaternion_integrator(*q_, w0, w1, dt).normalized();
 
-        const Matrix3 phi = state_transition_matrix_3(w1, dt);
-        const Matrix3 q = noise_covariance_matrix_3(variance, dt);
+        const Matrix3 phi = ekf_state_transition_matrix_3(w1, dt);
+        const Matrix3 q = ekf_noise_covariance_matrix_3(variance, dt);
 
         p_ = phi * p_ * phi.transposed() + q;
 }

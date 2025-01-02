@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/constant.h>
-#include <src/filter/attitude/kalman/matrix.h>
+#include <src/filter/attitude/kalman/ekf_matrix.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -38,7 +38,7 @@ void test_state_transition_matrix(const T precision)
         constexpr Vector3 W(W_THRESHOLD<T>, W_THRESHOLD<T> / T{2}, W_THRESHOLD<T> * T{2});
 
         {
-                const Matrix3 m = state_transition_matrix_3(T{1000} * W, T{0.01});
+                const Matrix3 m = ekf_state_transition_matrix_3(T{1000} * W, T{0.01});
                 const Matrix3 c = {
                         {    0.999999978750000092988L,  0.000200002498249989085633L, -4.99899995625437641756e-05L},
                         {-0.000199997498250010964594L,     0.999999975000000109382L,  0.000100004999124978133608L},
@@ -47,7 +47,7 @@ void test_state_transition_matrix(const T precision)
                 test_equal(m, c, precision);
         }
         {
-                const Matrix3 m = state_transition_matrix_3(W / T{10}, T{0.1});
+                const Matrix3 m = ekf_state_transition_matrix_3(W / T{10}, T{0.1});
                 const Matrix3 c = {
                         {    0.999999999999978750017L,  2.00000002500000027457e-07L, -4.99999900000000068669e-08L},
                         {-1.99999997500000027466e-07L,     0.999999999999974999978L,  1.00000005000000013729e-07L},
@@ -56,7 +56,7 @@ void test_state_transition_matrix(const T precision)
                 test_equal(m, c, precision);
         }
         {
-                const Matrix6 m = state_transition_matrix_6(T{1000} * W, T{0.01});
+                const Matrix6 m = ekf_state_transition_matrix_6(T{1000} * W, T{0.01});
                 const Matrix3 c00 = {
                         {    0.999999978750000092988L,  0.000200002498249989085633L, -4.99899995625437641756e-05L},
                         {-0.000199997498250010964594L,     0.999999975000000109382L,  0.000100004999124978133608L},
@@ -83,7 +83,7 @@ void test_state_transition_matrix(const T precision)
                 test_equal(numerical::block<3, 3, 3, 3>(m), c11, precision);
         }
         {
-                const Matrix6 m = state_transition_matrix_6(W / T{10}, T{0.1});
+                const Matrix6 m = ekf_state_transition_matrix_6(W / T{10}, T{0.1});
                 const Matrix3 c00 = {
                         {    0.999999999999978750017L,  2.00000002500000027457e-07L, -4.99999900000000068669e-08L},
                         {-1.99999997500000027466e-07L,     0.999999999999974999978L,  1.00000005000000013729e-07L},
@@ -121,7 +121,7 @@ void test_noise_covariance_matrix(const T precision)
         constexpr Vector3 W(W_THRESHOLD<T>, W_THRESHOLD<T> / T{2}, W_THRESHOLD<T> * T{2});
 
         {
-                const Matrix3 m = noise_covariance_matrix_3(T{0.01}, T{0.01});
+                const Matrix3 m = ekf_noise_covariance_matrix_3(T{0.01}, T{0.01});
                 const Matrix3 c = {
                         {0.000100000000000000004164L,                           0,                           0},
                         {                          0, 0.000100000000000000004164L,                           0},
@@ -130,7 +130,7 @@ void test_noise_covariance_matrix(const T precision)
                 test_equal(m, c, precision);
         }
         {
-                const Matrix6 m = noise_covariance_matrix_6(T{10000} * W, T{0.01}, T{0.001}, T{0.01});
+                const Matrix6 m = ekf_noise_covariance_matrix_6(T{10000} * W, T{0.01}, T{0.001}, T{0.01});
                 const Matrix3 c00 = {
                         {0.000100000333333262504191L, 8.33333041391428018334e-18L, 3.33333216556571207334e-17L},
                         {8.33333041391428018334e-18L, 0.000100000333333250004195L, 1.66666608278285603667e-17L},
@@ -153,7 +153,7 @@ void test_noise_covariance_matrix(const T precision)
                 test_equal(numerical::block<3, 3, 3, 3>(m), c11, precision);
         }
         {
-                const Matrix6 m = noise_covariance_matrix_6(W / T{10}, T{0.01}, T{0.001}, T{0.01});
+                const Matrix6 m = ekf_noise_covariance_matrix_6(W / T{10}, T{0.01}, T{0.001}, T{0.01});
                 const Matrix3 c00 = {
                         {  0.0001000003333333333375L, 8.33333333333333573797e-28L, 3.33333333333333429519e-27L},
                         {8.33333333333333573797e-28L,   0.0001000003333333333375L, 1.66666666666666714759e-27L},
