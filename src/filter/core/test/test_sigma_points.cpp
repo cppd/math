@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <functional>
 
 namespace ns::filter::core::test
 {
@@ -91,7 +90,7 @@ void test_impl(const T precision)
                         {   1, 0.1L},
                         {0.1L,    1}
                 };
-                const std::array<numerical::Vector<2, T>, 5> s = sigma_points.points(x, p, std::plus(), std::minus());
+                const std::array<numerical::Vector<2, T>, 5> s = sigma_points.points(x, p);
                 cmp(s[0], {-1, 2});
                 cmp(s[1], {-0.826794919243112270664L, 2.01732050807568877304L});
                 cmp(s[2], {-1, 2.17233687939614085981L});
@@ -105,7 +104,7 @@ void test_impl(const T precision)
                         {    1, -0.2L},
                         {-0.2L,     1}
                 };
-                const std::array<numerical::Vector<2, T>, 5> s = sigma_points.points(x, p, std::plus(), std::minus());
+                const std::array<numerical::Vector<2, T>, 5> s = sigma_points.points(x, p);
                 cmp(s[0], {1.1L, -2.2L});
                 cmp(s[1], {1.27320508075688772936L, -2.23464101615137754591L});
                 cmp(s[2], {1.1L, -2.03029437251522859413L});

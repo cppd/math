@@ -60,28 +60,32 @@ class SigmaPoints final
         static Weights create_weights(const long double alpha, const long double beta, const long double kappa)
         {
                 const long double l = lambda(alpha, kappa);
-                const long double n_plus_l = n_plus_lambda(alpha, kappa);
+                const long double nl = n_plus_lambda(alpha, kappa);
                 Weights res;
-                res.mean[0] = l / n_plus_l;
-                res.covariance[0] = l / n_plus_l + 1 - square(alpha) + beta;
+                res.mean[0] = l / nl;
+                res.covariance[0] = l / nl + 1 - square(alpha) + beta;
                 for (std::size_t i = 1; i <= 2 * N; ++i)
                 {
-                        res.mean[i] = 1 / (2 * n_plus_l);
+                        res.mean[i] = 1 / (2 * nl);
                         res.covariance[i] = res.mean[i];
                 }
                 return res;
         }
 
-        T n_plus_lambda_;
-        Weights weights_;
+        const T n_plus_lambda_;
+        const Weights weights_;
 
 public:
-        SigmaPoints(
-                const std::type_identity_t<T> alpha,
-                const std::type_identity_t<T> beta,
-                const std::type_identity_t<T> kappa)
-                : n_plus_lambda_(n_plus_lambda(alpha, kappa)),
-                  weights_(create_weights(alpha, beta, kappa))
+        struct Parameters final
+        {
+                T alpha;
+                T beta;
+                T kappa;
+        };
+
+        explicit SigmaPoints(const Parameters& parameters)
+                : n_plus_lambda_(n_plus_lambda(parameters.alpha, parameters.kappa)),
+                  weights_(create_weights(parameters.alpha, parameters.beta, parameters.kappa))
         {
         }
 
@@ -95,14 +99,9 @@ public:
                 return weights_.covariance;
         }
 
-        template <typename Add, typename Subtract>
         [[nodiscard]] std::array<numerical::Vector<N, T>, 2 * N + 1> points(
                 const numerical::Vector<N, T>& x,
-                const numerical::Matrix<N, N, T>& p,
-                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
-                const Add add,
-                // numerical::Vector<N, T> f(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
-                const Subtract subtract) const
+                const numerical::Matrix<N, N, T>& p) const
         {
                 const numerical::Matrix<N, N, T> l =
                         numerical::cholesky_decomposition_lower_triangular(n_plus_lambda_ * p);
@@ -112,8 +111,8 @@ public:
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const numerical::Vector<N, T> c = l.column(i);
-                        res[i + 1] = add(x, c);
-                        res[i + N + 1] = subtract(x, c);
+                        res[i + 1] = x + c;
+                        res[i + N + 1] = x - c;
                 }
                 return res;
         }
@@ -125,6 +124,10 @@ template <std::size_t N, typename T>
         static constexpr T BETA = 2; // 2 for Gaussian
         static constexpr T KAPPA = 3 - T{N};
 
-        return {alpha, BETA, KAPPA};
+        return SigmaPoints<N, T>({
+                .alpha = alpha,
+                .beta = BETA,
+                .kappa = KAPPA,
+        });
 }
 }
