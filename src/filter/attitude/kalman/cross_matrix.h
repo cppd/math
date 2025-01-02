@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 
-namespace ns::filter::attitude::ekf
+namespace ns::filter::attitude::kalman
 {
 namespace cross_matrix_implementation
 {

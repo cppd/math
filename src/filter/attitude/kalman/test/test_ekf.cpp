@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/filter/attitude/ekf/ekf_imu.h>
-#include <src/filter/attitude/ekf/ekf_marg.h>
+#include <src/filter/attitude/kalman/ekf_imu.h>
+#include <src/filter/attitude/kalman/ekf_marg.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-namespace ns::filter::attitude::ekf::test
+namespace ns::filter::attitude::kalman::test
 {
 namespace
 {

@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cmp.h"
 
 #include <src/com/log.h>
-#include <src/filter/attitude/ekf/cross_matrix.h>
+#include <src/filter/attitude/kalman/cross_matrix.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-namespace ns::filter::attitude::ekf::test
+namespace ns::filter::attitude::kalman::test
 {
 namespace
 {
@@ -59,13 +59,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test attitude EKF cross matrix");
+        LOG("Test attitude Kalman cross matrix");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
         test_impl<long double>(0);
-        LOG("Test attitude EKF cross matrix passed");
+        LOG("Test attitude Kalman cross matrix passed");
 }
 
-TEST_SMALL("Attitude EKF Cross Matrix", test)
+TEST_SMALL("Attitude Kalman Cross Matrix", test)
 }
 }

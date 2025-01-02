@@ -17,20 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/matrix.h>
+#include "quaternion.h"
+
 #include <src/numerical/vector.h>
 
-namespace ns::filter::attitude::ekf
+#include <cmath>
+
+namespace ns::filter::attitude::kalman
 {
 template <typename T>
-[[nodiscard]] numerical::Matrix<3, 3, T> state_transition_matrix_3(const numerical::Vector<3, T>& w, T dt);
+[[nodiscard]] Quaternion<T> zeroth_order_quaternion_integrator(
+        const Quaternion<T>& q,
+        const numerical::Vector<3, T>& w,
+        T dt);
 
 template <typename T>
-[[nodiscard]] numerical::Matrix<6, 6, T> state_transition_matrix_6(const numerical::Vector<3, T>& w, T dt);
-
-template <typename T>
-[[nodiscard]] numerical::Matrix<3, 3, T> noise_covariance_matrix_3(T vr, T dt);
-
-template <typename T>
-[[nodiscard]] numerical::Matrix<6, 6, T> noise_covariance_matrix_6(const numerical::Vector<3, T>& w, T vr, T vw, T dt);
+[[nodiscard]] Quaternion<T> first_order_quaternion_integrator(
+        const Quaternion<T>& q,
+        const numerical::Vector<3, T>& w0,
+        const numerical::Vector<3, T>& w1,
+        T dt);
 }

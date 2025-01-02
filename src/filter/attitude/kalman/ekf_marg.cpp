@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <optional>
 
-namespace ns::filter::attitude::ekf
+namespace ns::filter::attitude::kalman
 {
 template <typename T>
 void EkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)

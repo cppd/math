@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cmp.h"
 
 #include <src/com/log.h>
-#include <src/filter/attitude/ekf/quaternion.h>
-#include <src/filter/attitude/ekf/utility.h>
+#include <src/filter/attitude/kalman/quaternion.h>
+#include <src/filter/attitude/kalman/utility.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-namespace ns::filter::attitude::ekf::test
+namespace ns::filter::attitude::kalman::test
 {
 namespace
 {
@@ -72,13 +72,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test attitude EKF utility");
+        LOG("Test attitude Kalman utility");
         test_impl<float>(1e-6);
         test_impl<double>(1e-15);
         test_impl<long double>(0);
-        LOG("Test attitude EKF utility passed");
+        LOG("Test attitude Kalman utility passed");
 }
 
-TEST_SMALL("Attitude EKF Utility", test)
+TEST_SMALL("Attitude Kalman Utility", test)
 }
 }

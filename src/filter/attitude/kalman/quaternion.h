@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <type_traits>
 
-namespace ns::filter::attitude::ekf
+namespace ns::filter::attitude::kalman
 {
 template <typename T>
 class Quaternion final

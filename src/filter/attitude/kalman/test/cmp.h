@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/filter/attitude/ekf/quaternion.h>
+#include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 
-namespace ns::filter::attitude::ekf::test
+namespace ns::filter::attitude::kalman::test
 {
 namespace cmp_implementation
 {

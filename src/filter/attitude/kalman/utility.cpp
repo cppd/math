@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::filter::attitude::ekf
+namespace ns::filter::attitude::kalman
 {
 namespace
 {

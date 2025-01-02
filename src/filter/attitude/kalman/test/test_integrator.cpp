@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cmp.h"
 
 #include <src/com/log.h>
-#include <src/filter/attitude/ekf/constant.h>
-#include <src/filter/attitude/ekf/integrator.h>
-#include <src/filter/attitude/ekf/quaternion.h>
+#include <src/filter/attitude/kalman/constant.h>
+#include <src/filter/attitude/kalman/integrator.h>
+#include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-namespace ns::filter::attitude::ekf::test
+namespace ns::filter::attitude::kalman::test
 {
 namespace
 {
@@ -69,13 +69,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test attitude EKF integrator");
+        LOG("Test attitude Kalman integrator");
         test_impl<float>(1e-7);
         test_impl<double>(1e-15);
         test_impl<long double>(0);
-        LOG("Test attitude EKF integrator passed");
+        LOG("Test attitude Kalman integrator passed");
 }
 
-TEST_SMALL("Attitude EKF Integrator", test)
+TEST_SMALL("Attitude Kalman Integrator", test)
 }
 }

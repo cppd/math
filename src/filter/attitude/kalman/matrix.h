@@ -17,13 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::filter::attitude::ekf
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
+
+namespace ns::filter::attitude::kalman
 {
 template <typename T>
-inline constexpr T W_THRESHOLD{1e-5}; // rad/s
+[[nodiscard]] numerical::Matrix<3, 3, T> state_transition_matrix_3(const numerical::Vector<3, T>& w, T dt);
 
 template <typename T>
-inline constexpr T MIN_SIN_Z_MAG{0.1};
+[[nodiscard]] numerical::Matrix<6, 6, T> state_transition_matrix_6(const numerical::Vector<3, T>& w, T dt);
 
-inline constexpr unsigned INIT_COUNT{10};
+template <typename T>
+[[nodiscard]] numerical::Matrix<3, 3, T> noise_covariance_matrix_3(T vr, T dt);
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<6, 6, T> noise_covariance_matrix_6(const numerical::Vector<3, T>& w, T vr, T vw, T dt);
 }

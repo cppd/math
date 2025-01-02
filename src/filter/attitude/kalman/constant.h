@@ -17,24 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "quaternion.h"
-
-#include <src/numerical/vector.h>
-
-#include <cmath>
-
-namespace ns::filter::attitude::ekf
+namespace ns::filter::attitude::kalman
 {
 template <typename T>
-[[nodiscard]] Quaternion<T> zeroth_order_quaternion_integrator(
-        const Quaternion<T>& q,
-        const numerical::Vector<3, T>& w,
-        T dt);
+inline constexpr T W_THRESHOLD{1e-5}; // rad/s
 
 template <typename T>
-[[nodiscard]] Quaternion<T> first_order_quaternion_integrator(
-        const Quaternion<T>& q,
-        const numerical::Vector<3, T>& w0,
-        const numerical::Vector<3, T>& w1,
-        T dt);
+inline constexpr T MIN_SIN_Z_MAG{0.1};
+
+inline constexpr unsigned INIT_COUNT{10};
 }

@@ -27,21 +27,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <optional>
 
-namespace ns::filter::attitude::ekf
+namespace ns::filter::attitude::kalman
 {
 template <typename T>
-class EkfImu final
+class EkfMarg final
 {
         using Vector3 = numerical::Vector<3, T>;
+        using Vector6 = numerical::Vector<6, T>;
         using Matrix3 = numerical::Matrix<3, 3, T>;
+        using Matrix6 = numerical::Matrix<6, 6, T>;
 
         Vector3 acc_data_{0};
         unsigned acc_count_{0};
+        Vector3 mag_data_{0};
+        unsigned mag_count_{0};
 
         std::optional<Quaternion<T>> q_;
-        Matrix3 p_{numerical::ZERO_MATRIX};
+        Vector3 b_{0};
+        Matrix6 p_{numerical::ZERO_MATRIX};
 
-        void predict(const Vector3& w0, const Vector3& w1, T variance, T dt);
+        void predict(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
         struct Update final
         {
@@ -53,15 +58,22 @@ class EkfImu final
         template <std::size_t N>
         void update(const std::array<Update, N>& data);
 
+        void init();
         void init_acc(const Vector3& a);
+        void init_mag(const Vector3& m);
+        void init_acc_mag(const Vector3& a, const Vector3& m);
         void reset_init();
 
 public:
-        EkfImu();
+        EkfMarg();
 
-        void update_gyro(const Vector3& w0, const Vector3& w1, T variance, T dt);
+        void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
         bool update_acc(const Vector3& a, T variance, T variance_direction);
+
+        bool update_mag(const Vector3& m, T variance, T variance_direction);
+
+        bool update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
@@ -70,6 +82,11 @@ public:
                         return q_->q();
                 }
                 return std::nullopt;
+        }
+
+        [[nodiscard]] const Vector3& bias() const
+        {
+                return b_;
         }
 };
 }
