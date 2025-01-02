@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/constant.h>
-#include <src/filter/attitude/kalman/ekf_matrix.h>
+#include <src/filter/attitude/kalman/matrix.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -121,7 +121,7 @@ void test_noise_covariance_matrix(const T precision)
         constexpr Vector3 W(W_THRESHOLD<T>, W_THRESHOLD<T> / T{2}, W_THRESHOLD<T> * T{2});
 
         {
-                const Matrix3 m = ekf_noise_covariance_matrix_3(T{0.01}, T{0.01});
+                const Matrix3 m = noise_covariance_matrix_3(T{0.01}, T{0.01});
                 const Matrix3 c = {
                         {0.000100000000000000004164L,                           0,                           0},
                         {                          0, 0.000100000000000000004164L,                           0},
@@ -130,7 +130,7 @@ void test_noise_covariance_matrix(const T precision)
                 test_equal(m, c, precision);
         }
         {
-                const Matrix6 m = ekf_noise_covariance_matrix_6(T{10000} * W, T{0.01}, T{0.001}, T{0.01});
+                const Matrix6 m = noise_covariance_matrix_6(T{10000} * W, T{0.01}, T{0.001}, T{0.01});
                 const Matrix3 c00 = {
                         {0.000100000333333262504191L, 8.33333041391428018334e-18L, 3.33333216556571207334e-17L},
                         {8.33333041391428018334e-18L, 0.000100000333333250004195L, 1.66666608278285603667e-17L},
@@ -153,7 +153,7 @@ void test_noise_covariance_matrix(const T precision)
                 test_equal(numerical::block<3, 3, 3, 3>(m), c11, precision);
         }
         {
-                const Matrix6 m = ekf_noise_covariance_matrix_6(W / T{10}, T{0.01}, T{0.001}, T{0.01});
+                const Matrix6 m = noise_covariance_matrix_6(W / T{10}, T{0.01}, T{0.001}, T{0.01});
                 const Matrix3 c00 = {
                         {  0.0001000003333333333375L, 8.33333333333333573797e-28L, 3.33333333333333429519e-27L},
                         {8.33333333333333573797e-28L,   0.0001000003333333333375L, 1.66666666666666714759e-27L},
@@ -186,13 +186,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test attitude EKF matrix");
+        LOG("Test attitude Kalman matrix");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
         test_impl<long double>(0);
-        LOG("Test attitude EKF matrix passed");
+        LOG("Test attitude Kalman matrix passed");
 }
 
-TEST_SMALL("Attitude EKF Matrix", test)
+TEST_SMALL("Attitude Kalman Matrix", test)
 }
 }

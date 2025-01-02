@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constant.h"
 #include "cross_matrix.h"
-#include "ekf_matrix.h"
 #include "ekf_utility.h"
 #include "integrator.h"
+#include "matrix.h"
 #include "quaternion.h"
 #include "utility.h"
 
@@ -49,7 +49,7 @@ void EkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_
         q_ = first_order_quaternion_integrator(*q_, wb0, wb1, dt).normalized();
 
         const Matrix6 phi = ekf_state_transition_matrix_6(wb1, dt);
-        const Matrix6 q = ekf_noise_covariance_matrix_6(wb1, variance_r, variance_w, dt);
+        const Matrix6 q = noise_covariance_matrix_6(wb1, variance_r, variance_w, dt);
 
         p_ = phi * p_ * phi.transposed() + q;
 }

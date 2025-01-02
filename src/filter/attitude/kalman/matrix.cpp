@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ekf_matrix.h"
+#include "matrix.h"
 
 #include "constant.h"
 #include "cross_matrix.h"
@@ -125,13 +125,13 @@ numerical::Matrix<6, 6, T> ekf_state_transition_matrix_6(const numerical::Vector
 }
 
 template <typename T>
-numerical::Matrix<3, 3, T> ekf_noise_covariance_matrix_3(const T vr, const T dt)
+numerical::Matrix<3, 3, T> noise_covariance_matrix_3(const T vr, const T dt)
 {
         return numerical::make_diagonal_matrix<3, T>(vr * dt);
 }
 
 template <typename T>
-numerical::Matrix<6, 6, T> ekf_noise_covariance_matrix_6(
+numerical::Matrix<6, 6, T> noise_covariance_matrix_6(
         const numerical::Vector<3, T>& w,
         const T vr,
         const T vw,
@@ -199,8 +199,8 @@ numerical::Matrix<6, 6, T> ekf_noise_covariance_matrix_6(
 #define TEMPLATE(T)                                                                                           \
         template numerical::Matrix<3, 3, T> ekf_state_transition_matrix_3(const numerical::Vector<3, T>&, T); \
         template numerical::Matrix<6, 6, T> ekf_state_transition_matrix_6(const numerical::Vector<3, T>&, T); \
-        template numerical::Matrix<3, 3, T> ekf_noise_covariance_matrix_3(T, T);                              \
-        template numerical::Matrix<6, 6, T> ekf_noise_covariance_matrix_6(const numerical::Vector<3, T>&, T, T, T);
+        template numerical::Matrix<3, 3, T> noise_covariance_matrix_3(T, T);                                  \
+        template numerical::Matrix<6, 6, T> noise_covariance_matrix_6(const numerical::Vector<3, T>&, T, T, T);
 
 TEMPLATE(float)
 TEMPLATE(double)
