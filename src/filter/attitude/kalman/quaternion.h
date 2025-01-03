@@ -67,6 +67,16 @@ public:
                 return Quaternion(q_.normalized());
         }
 
+        [[nodiscard]] Quaternion<T> conjugate() const
+        {
+                return Quaternion(q_.conjugate());
+        }
+
+        [[nodiscard]] constexpr bool is_unit() const
+        {
+                return q_.is_unit();
+        }
+
         [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
         {
                 return to_string(a.q_);
