@@ -184,6 +184,17 @@ void set_block(Vector<N, T>& v, const std::size_t start, const Vector<BN, T>& bl
         }
 }
 
+template <std::size_t START, std::size_t N, std::size_t BN, typename T>
+void set_block(Vector<N, T>& v, const Vector<BN, T>& block)
+{
+        ASSERT(START + BN <= N);
+
+        for (std::size_t i = START, bi = 0; bi < BN; ++i, ++bi)
+        {
+                v[i] = block[bi];
+        }
+}
+
 template <typename Dst, std::size_t N, typename Src>
         requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] constexpr Vector<N, Dst> to_vector(const Vector<N, Src>& v)
