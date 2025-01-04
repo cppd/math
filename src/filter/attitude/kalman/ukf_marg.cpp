@@ -48,47 +48,87 @@ constexpr T BETA = 0;
 
 template <typename T>
 constexpr T KAPPA = 1;
+
+template <typename T>
+numerical::Vector<3, T> to_error(const numerical::Vector<6, T>& v)
+{
+        return {v[0], v[1], v[2]};
+}
+
+template <typename T>
+numerical::Vector<3, T> to_bias(const numerical::Vector<6, T>& v)
+{
+        return {v[3], v[4], v[5]};
+}
+
+template <typename T>
+numerical::Vector<6, T> to_state(const numerical::Vector<3, T>& error, const numerical::Vector<3, T>& bias)
+{
+        return {error[0], error[1], error[2], bias[0], bias[1], bias[2]};
+}
+
+template <std::size_t COUNT, typename T>
+std::array<Quaternion<T>, COUNT> propagate_quaternions(
+        const Quaternion<T>& q,
+        const std::array<numerical::Vector<6, T>, COUNT>& sigma_points,
+        const numerical::Vector<3, T>& w,
+        const T dt)
+{
+        std::array<Quaternion<T>, COUNT> res;
+        for (std::size_t i = 0; i < COUNT; ++i)
+        {
+                const numerical::Vector<3, T> error = to_error(sigma_points[i]);
+                const numerical::Vector<3, T> bias = to_bias(sigma_points[i]);
+
+                const Quaternion<T> error_quaternion = error_to_quaternion(error, A<T>, F<T>);
+                ASSERT(error_quaternion.is_unit());
+
+                const Quaternion<T> point_quaternion = error_quaternion * q;
+                ASSERT(point_quaternion.is_unit());
+
+                res[i] = zeroth_order_quaternion_integrator(point_quaternion, w - bias, dt);
+                ASSERT(res[i].is_unit());
+        }
+        return res;
+}
+
+template <std::size_t COUNT, typename T>
+std::array<numerical::Vector<6, T>, COUNT> propagate_points(
+        const std::array<numerical::Vector<6, T>, COUNT>& sigma_points,
+        const std::array<Quaternion<T>, COUNT>& propagated_quaternions)
+{
+        ASSERT(to_error(sigma_points[0]).is_zero());
+
+        const Quaternion<T> zero_inversed = propagated_quaternions[0].conjugate();
+
+        std::array<numerical::Vector<6, T>, COUNT> res;
+        res[0] = sigma_points[0];
+        for (std::size_t i = 1; i < COUNT; ++i)
+        {
+                const Quaternion<T> error_quaternion = propagated_quaternions[i] * zero_inversed;
+                ASSERT(error_quaternion.is_unit());
+
+                const numerical::Vector<3, T> error = quaternion_to_error(error_quaternion, A<T>, F<T>);
+                const numerical::Vector<3, T> bias = to_bias(sigma_points[i]);
+                res[i] = to_state(error, bias);
+        }
+        return res;
+}
 }
 
 template <typename T>
 void UkfMarg<T>::predict(const Vector3& w, T variance_r, T variance_w, const T dt)
 {
         ASSERT(q_);
-        ASSERT((numerical::block<0, 3>(x_) == Vector3(0)));
+        ASSERT(to_error(x_).is_zero());
 
-        propagated_points_ = sigma_points_.points(x_, p_);
+        const std::array<Vector6, POINT_COUNT> sigma_points = sigma_points_.points(x_, p_);
+        ASSERT(sigma_points[0] == x_);
 
-        ASSERT((numerical::block<0, 3>(propagated_points_[0]) == Vector3(0)));
-        ASSERT((numerical::block<3, 3>(propagated_points_[0]) == numerical::block<3, 3>(x_)));
+        propagated_quaternions_ = propagate_quaternions(*q_, sigma_points, w, dt);
+        propagated_points_ = propagate_points(sigma_points, propagated_quaternions_);
 
-        for (std::size_t i = 0; i < POINT_COUNT; ++i)
-        {
-                const Vector3 pv = numerical::block<0, 3>(propagated_points_[i]);
-                const Vector3 pw = numerical::block<3, 3>(propagated_points_[i]);
-
-                const Quaternion<T> error_quaternion = error_to_quaternion(pv, A<T>, F<T>);
-                ASSERT(error_quaternion.is_unit());
-
-                const Quaternion<T> point_quaternion = error_quaternion * (*q_);
-                ASSERT(point_quaternion.is_unit());
-
-                propagated_point_quaternions_[i] = zeroth_order_quaternion_integrator(point_quaternion, w - pw, dt);
-                ASSERT(propagated_point_quaternions_[i].is_unit());
-        }
-
-        const Quaternion<T> zero_inversed = propagated_point_quaternions_[0].conjugate();
-
-        for (std::size_t i = 1; i < POINT_COUNT; ++i)
-        {
-                const Quaternion<T> propagated_error_quaternion = propagated_point_quaternions_[i] * zero_inversed;
-                ASSERT(propagated_error_quaternion.is_unit());
-
-                const Vector3 propagated_point = quaternion_to_error(propagated_error_quaternion, A<T>, F<T>);
-                numerical::set_block<0>(propagated_points_[i], propagated_point);
-        }
-
-        const Vector3 b = numerical::block<3, 3>(propagated_points_[0]);
-        const Matrix6 q = noise_covariance_matrix_6(w - b, variance_r, variance_w, dt);
+        const Matrix6 q = noise_covariance_matrix_6(w - to_bias(propagated_points_[0]), variance_r, variance_w, dt);
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
 }
@@ -120,8 +160,7 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
                 {
                         const std::size_t offset = 3 * j;
                         numerical::set_block(
-                                sigmas_h[i], offset,
-                                global_to_local(propagated_point_quaternions_[i], data[j].reference));
+                                sigmas_h[i], offset, global_to_local(propagated_quaternions_[i], data[j].reference));
                 }
         }
 
@@ -137,10 +176,10 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         x_ = x_ + k * residual;
         p_ = p_ - p_xz * k.transposed();
 
-        const Quaternion dq = error_to_quaternion(numerical::block<0, 3>(x_), A<T>, F<T>);
+        const Quaternion dq = error_to_quaternion(to_error(x_), A<T>, F<T>);
         ASSERT(dq.is_unit());
 
-        *q_ = dq * propagated_point_quaternions_[0];
+        *q_ = dq * propagated_quaternions_[0];
 
         numerical::set_block<0>(x_, Vector3(0));
 }

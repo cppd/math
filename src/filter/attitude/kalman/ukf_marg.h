@@ -52,7 +52,7 @@ class UkfMarg final
 
         std::optional<Quaternion<T>> q_;
         std::array<Vector6, POINT_COUNT> propagated_points_;
-        std::array<Quaternion<T>, POINT_COUNT> propagated_point_quaternions_;
+        std::array<Quaternion<T>, POINT_COUNT> propagated_quaternions_;
         Vector6 x_{0};
         Matrix6 p_{numerical::ZERO_MATRIX};
 
