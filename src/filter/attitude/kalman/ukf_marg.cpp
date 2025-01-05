@@ -114,13 +114,23 @@ std::array<numerical::Vector<6, T>, COUNT> propagate_points(
         }
         return res;
 }
+
+template <typename T>
+Quaternion<T> make_quaternion(const numerical::Vector<6, T>& x, const Quaternion<T>& propagated_quaternion)
+{
+        const Quaternion dq = error_to_quaternion(to_error(x), A<T>, F<T>);
+        ASSERT(dq.is_unit());
+
+        return dq * propagated_quaternion;
+}
 }
 
 template <typename T>
 void UkfMarg<T>::predict(const Vector3& w, T variance_r, T variance_w, const T dt)
 {
         ASSERT(q_);
-        ASSERT(to_error(x_).is_zero());
+
+        numerical::set_block<0>(x_, Vector3(0));
 
         const std::array<Vector6, POINT_COUNT> sigma_points = sigma_points_.points(x_, p_);
         ASSERT(sigma_points[0] == x_);
@@ -137,8 +147,6 @@ template <typename T>
 template <std::size_t N>
 void UkfMarg<T>::update(const std::array<Update, N>& data)
 {
-        ASSERT(q_);
-
         numerical::Vector<3 * N, T> z;
         numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
@@ -176,12 +184,7 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         x_ = x_ + k * residual;
         p_ = p_ - p_xz * k.transposed();
 
-        const Quaternion dq = error_to_quaternion(to_error(x_), A<T>, F<T>);
-        ASSERT(dq.is_unit());
-
-        *q_ = dq * propagated_quaternions_[0];
-
-        numerical::set_block<0>(x_, Vector3(0));
+        q_ = make_quaternion(x_, propagated_quaternions_[0]);
 }
 
 template <typename T>
@@ -209,4 +212,5 @@ UkfMarg<T>::UkfMarg()
 template class UkfMarg<float>;
 template class UkfMarg<double>;
 template class UkfMarg<long double>;
+template void UkfMarg<double>::update(const std::array<Update, 2>&);
 }
