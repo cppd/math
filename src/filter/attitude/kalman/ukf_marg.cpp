@@ -17,12 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ukf_marg.h"
 
+#include "constant.h"
 #include "integrator.h"
 #include "matrix.h"
 #include "ukf_utility.h"
 #include "utility.h"
 
 #include <src/com/error.h>
+#include <src/filter/attitude/limit.h>
 #include <src/filter/core/ukf_transform.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -141,12 +143,20 @@ void UkfMarg<T>::predict(const Vector3& w, T variance_r, T variance_w, const T d
         const Matrix6 q = noise_covariance_matrix_6(w - to_bias(propagated_points_[0]), variance_r, variance_w, dt);
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
+
+        predicted_ = true;
 }
 
 template <typename T>
 template <std::size_t N>
 void UkfMarg<T>::update(const std::array<Update, N>& data)
 {
+        if (!predicted_)
+        {
+                return;
+        }
+        predicted_ = false;
+
         numerical::Vector<3 * N, T> z;
         numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
@@ -188,6 +198,48 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
+void UkfMarg<T>::init()
+{
+        ASSERT(!q_);
+
+        if (acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT)
+        {
+                return;
+        }
+
+        const Vector3 a_avg = acc_data_ / T(acc_count_);
+        const T a_avg_norm = a_avg.norm();
+
+        if (!acc_suitable(a_avg_norm))
+        {
+                reset_init();
+                return;
+        }
+
+        const Vector3 m_avg = mag_data_ / T(mag_count_);
+        const T m_avg_norm = m_avg.norm();
+
+        if (!mag_suitable(m_avg_norm))
+        {
+                reset_init();
+                return;
+        }
+
+        q_ = initial_quaternion(a_avg / a_avg_norm, m_avg / m_avg_norm);
+}
+
+template <typename T>
+void UkfMarg<T>::init_acc_mag(const Vector3& a, const Vector3& m)
+{
+        acc_data_ += a;
+        ++acc_count_;
+        mag_data_ += m;
+        ++mag_count_;
+
+        init();
+}
+
+template <typename T>
 void UkfMarg<T>::reset_init()
 {
         ASSERT(!q_);
@@ -199,18 +251,78 @@ void UkfMarg<T>::reset_init()
 }
 
 template <typename T>
-UkfMarg<T>::UkfMarg()
+UkfMarg<T>::UkfMarg(const T variance_r, const T variance_w)
         : sigma_points_({
                   .alpha = ALPHA<T>,
                   .beta = BETA<T>,
                   .kappa = KAPPA<T>,
-          })
+          }),
+          x_(0),
+          p_(numerical::make_diagonal_matrix<6, T>(
+                  {variance_r, variance_r, variance_r, variance_w, variance_w, variance_w}))
 {
         reset_init();
+}
+
+template <typename T>
+void UkfMarg<T>::update_gyro(const Vector3& w, const T variance_r, const T variance_w, const T dt)
+{
+        if (q_)
+        {
+                predict(w, variance_r, variance_w, dt);
+        }
+}
+
+template <typename T>
+bool UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
+{
+        if (!q_)
+        {
+                init_acc_mag(a, m);
+                return q_.has_value();
+        }
+
+        const T a_norm = a.norm();
+        if (!acc_suitable(a_norm))
+        {
+                return false;
+        }
+
+        const T m_norm = m.norm();
+        if (!mag_suitable(m_norm))
+        {
+                return false;
+        }
+
+        const Vector3 z = global_to_local(*q_, {0, 0, 1});
+
+        const Vector3 zm = a / a_norm;
+
+        const Vector3 x_mag = cross(m / m_norm, z);
+        const T sin2 = x_mag.norm_squared();
+        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
+        {
+                return false;
+        }
+        const Vector3 ym = cross(z, x_mag).normalized();
+
+        update(std::array{
+                Update{
+                       .measurement = ym,
+                       .reference = {0, 1, 0},
+                       .variance = m_variance / sin2,
+                       },
+                Update{
+                       .measurement = zm,
+                       .reference = {0, 0, 1},
+                       .variance = a_variance,
+                       }
+        });
+
+        return true;
 }
 
 template class UkfMarg<float>;
 template class UkfMarg<double>;
 template class UkfMarg<long double>;
-template void UkfMarg<double>::update(const std::array<Update, 2>&);
 }

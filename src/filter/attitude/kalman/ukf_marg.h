@@ -46,15 +46,17 @@ class UkfMarg final
         const core::SigmaPoints<6, T> sigma_points_;
 
         Vector3 acc_data_{0};
-        unsigned acc_count_{0};
         Vector3 mag_data_{0};
+        unsigned acc_count_{0};
         unsigned mag_count_{0};
 
         std::optional<Quaternion<T>> q_;
         std::array<Vector6, POINT_COUNT> propagated_points_;
         std::array<Quaternion<T>, POINT_COUNT> propagated_quaternions_;
-        Vector6 x_{0};
-        Matrix6 p_{numerical::ZERO_MATRIX};
+        Vector6 x_;
+        Matrix6 p_;
+
+        bool predicted_{false};
 
         void predict(const Vector3& w, T variance_r, T variance_w, T dt);
 
@@ -68,16 +70,14 @@ class UkfMarg final
         template <std::size_t N>
         void update(const std::array<Update, N>& data);
 
+        void init();
+        void init_acc_mag(const Vector3& a, const Vector3& m);
         void reset_init();
 
 public:
-        UkfMarg();
+        UkfMarg(T variance_r, T variance_w);
 
-        void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
-
-        bool update_acc(const Vector3& a, T variance, T variance_direction);
-
-        bool update_mag(const Vector3& m, T variance, T variance_direction);
+        void update_gyro(const Vector3& w, T variance_r, T variance_w, T dt);
 
         bool update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 
