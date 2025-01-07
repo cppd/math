@@ -123,7 +123,7 @@ Quaternion<T> make_quaternion(const numerical::Vector<6, T>& x, const Quaternion
         const Quaternion dq = error_to_quaternion(to_error(x), A<T>, F<T>);
         ASSERT(dq.is_unit());
 
-        return dq * propagated_quaternion;
+        return (dq * propagated_quaternion).normalized();
 }
 }
 
