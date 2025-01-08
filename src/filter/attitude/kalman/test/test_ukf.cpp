@@ -64,8 +64,8 @@ void test_impl_marg(const T precision)
         {
                 f.update_acc_mag(axis * T{9.8}, {15, -20, 25}, VARIANCE_ACC, VARIANCE_MAG);
                 const T k = 1 + i / T{1000};
-                f.update_gyro(axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
-                f.update_gyro(axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+                f.update_gyro(axis * T{0.010} * k, axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
+                f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
         const auto a = f.attitude();
@@ -75,17 +75,17 @@ void test_impl_marg(const T precision)
 
         test_equal(
                 *a,
-                {0.124457621704519509024L, 0.192754597183169701152L, 0.242455454552903680647L,
-                 0.942640609257819721387L},
+                {0.124466448620959271974L, 0.192756867536898622716L, 0.242453649581473038152L,
+                 0.942639443790505141647L},
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
-                {0.303045763366092199288L, 0.505076272271321444803L, 0.808122035644597690011L}, precision);
+                {0.303045763366371434283L, 0.505076272272152458067L, 0.808122035643973593479L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
 
-        test_equal(bias, {0.029135118747973509361L, 0.0291351160932708404047L, 0.0291351168182407971895L}, precision);
+        test_equal(bias, {0.0242792783333279290384L, 0.0242792761205706998989L, 0.0242792767262187216555L}, precision);
 }
 
 template <typename T>
@@ -97,7 +97,7 @@ void test_impl(const T precision)
 void test()
 {
         LOG("Test attitude UKF");
-        test_impl<float>(1e-4);
+        test_impl<float>(1e-5);
         test_impl<double>(1e-13);
         test_impl<long double>(0);
         LOG("Test attitude UKF passed");

@@ -58,7 +58,7 @@ class UkfMarg final
 
         bool predicted_{false};
 
-        void predict(const Vector3& w, T variance_r, T variance_w, T dt);
+        void predict(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
         struct Update final
         {
@@ -77,7 +77,7 @@ class UkfMarg final
 public:
         UkfMarg(T variance_r, T variance_w);
 
-        void update_gyro(const Vector3& w, T variance_r, T variance_w, T dt);
+        void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
         bool update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 

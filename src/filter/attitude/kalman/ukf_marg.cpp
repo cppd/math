@@ -73,7 +73,8 @@ template <std::size_t COUNT, typename T>
 std::array<Quaternion<T>, COUNT> propagate_quaternions(
         const Quaternion<T>& q,
         const std::array<numerical::Vector<6, T>, COUNT>& sigma_points,
-        const numerical::Vector<3, T>& w,
+        const numerical::Vector<3, T>& w0,
+        const numerical::Vector<3, T>& w1,
         const T dt)
 {
         std::array<Quaternion<T>, COUNT> res;
@@ -88,8 +89,7 @@ std::array<Quaternion<T>, COUNT> propagate_quaternions(
                 const Quaternion<T> point_quaternion = error_quaternion * q;
                 ASSERT(point_quaternion.is_unit());
 
-                res[i] = zeroth_order_quaternion_integrator(point_quaternion, w - bias, dt);
-                ASSERT(res[i].is_unit());
+                res[i] = first_order_quaternion_integrator(point_quaternion, w0 - bias, w1 - bias, dt).normalized();
         }
         return res;
 }
@@ -128,7 +128,7 @@ Quaternion<T> make_quaternion(const numerical::Vector<6, T>& x, const Quaternion
 }
 
 template <typename T>
-void UkfMarg<T>::predict(const Vector3& w, T variance_r, T variance_w, const T dt)
+void UkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, const T dt)
 {
         ASSERT(q_);
 
@@ -137,10 +137,10 @@ void UkfMarg<T>::predict(const Vector3& w, T variance_r, T variance_w, const T d
         const std::array<Vector6, POINT_COUNT> sigma_points = sigma_points_.points(x_, p_);
         ASSERT(sigma_points[0] == x_);
 
-        propagated_quaternions_ = propagate_quaternions(*q_, sigma_points, w, dt);
+        propagated_quaternions_ = propagate_quaternions(*q_, sigma_points, w0, w1, dt);
         propagated_points_ = propagate_points(sigma_points, propagated_quaternions_);
 
-        const Matrix6 q = noise_covariance_matrix_6(w - to_bias(propagated_points_[0]), variance_r, variance_w, dt);
+        const Matrix6 q = noise_covariance_matrix_6(w1 - to_bias(x_), variance_r, variance_w, dt);
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
 
@@ -265,11 +265,11 @@ UkfMarg<T>::UkfMarg(const T variance_r, const T variance_w)
 }
 
 template <typename T>
-void UkfMarg<T>::update_gyro(const Vector3& w, const T variance_r, const T variance_w, const T dt)
+void UkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
         if (q_)
         {
-                predict(w, variance_r, variance_w, dt);
+                predict(w0, w1, variance_r, variance_w, dt);
         }
 }
 
