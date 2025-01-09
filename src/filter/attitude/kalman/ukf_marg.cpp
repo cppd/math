@@ -128,7 +128,7 @@ Quaternion<T> make_quaternion(const numerical::Vector<6, T>& x, const Quaternion
 }
 
 template <typename T>
-void UkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, const T dt)
+void UkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
         ASSERT(q_);
 
