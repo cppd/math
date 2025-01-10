@@ -44,7 +44,7 @@ void check_attitude(const auto& attitude)
 }
 
 template <typename T>
-void test_impl_imu(const T precision)
+void test_imu(const T precision)
 {
         constexpr T DT = 0.01L;
 
@@ -81,7 +81,7 @@ void test_impl_imu(const T precision)
 }
 
 template <typename T>
-void test_impl_marg_1(const T precision)
+void test_marg_1(const T precision)
 {
         constexpr T DT = 0.01L;
 
@@ -128,7 +128,7 @@ void test_impl_marg_1(const T precision)
 }
 
 template <typename T>
-void test_impl_marg_2(const T precision)
+void test_marg_2(const T precision)
 {
         constexpr T DT = 0.01L;
 
@@ -173,9 +173,9 @@ void test_impl_marg_2(const T precision)
 template <typename T>
 void test_impl(const T precision)
 {
-        test_impl_imu(precision);
-        test_impl_marg_1(precision);
-        test_impl_marg_2(precision);
+        test_imu(precision);
+        test_marg_1(precision);
+        test_marg_2(precision);
 }
 
 void test()
