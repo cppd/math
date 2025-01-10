@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
+#include <src/filter/attitude/kalman/ukf_imu.h>
 #include <src/filter/attitude/kalman/ukf_marg.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -40,6 +41,45 @@ void check_attitude(const auto& attitude)
         {
                 error("Attitude " + to_string(*attitude) + " is not unit");
         }
+}
+
+template <typename T>
+void test_impl_imu(const T precision)
+{
+        constexpr T INIT_VARIANCE = square(0.1);
+
+        constexpr T DT = 0.01L;
+
+        constexpr T VARIANCE_GYRO = square(1e-4);
+
+        constexpr T VARIANCE_ACC = square(0.01);
+        constexpr T VARIANCE_ACC_DIRECTION = square(0.01);
+
+        UkfImu<T> f(INIT_VARIANCE);
+
+        const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+
+        for (int i = 0; i < 100; ++i)
+        {
+                f.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
+                f.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE_GYRO, DT);
+                f.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE_GYRO, DT);
+        }
+
+        const auto a = f.attitude();
+
+        check_attitude(a);
+        ASSERT(a);
+
+        test_equal(
+                *a,
+                {0.828306413530610018603L, 0.153131069637101045736L, -0.269244591602379115494L,
+                 -0.46686905092190835866L},
+                precision);
+
+        test_equal(
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                {0.303049729769100844267L, 0.505082828076945627071L, 0.808116450809330783434L}, precision);
 }
 
 template <typename T>
@@ -91,6 +131,7 @@ void test_impl_marg(const T precision)
 template <typename T>
 void test_impl(const T precision)
 {
+        test_impl_imu(precision);
         test_impl_marg(precision);
 }
 
