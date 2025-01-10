@@ -121,6 +121,8 @@ void UkfImu<T>::predict(const Vector3& w0, const Vector3& w1, const T variance, 
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
 
+        q_ = make_quaternion(x_, propagated_quaternions_[0]);
+
         predicted_ = true;
 }
 
