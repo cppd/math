@@ -144,6 +144,8 @@ void UkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
 
+        q_ = make_quaternion(x_, propagated_quaternions_[0]);
+
         predicted_ = true;
 }
 
@@ -251,7 +253,7 @@ void UkfMarg<T>::reset_init()
 }
 
 template <typename T>
-UkfMarg<T>::UkfMarg(const T variance_r, const T variance_w)
+UkfMarg<T>::UkfMarg(const T variance_error, const T variance_bias)
         : sigma_points_({
                   .alpha = ALPHA<T>,
                   .beta = BETA<T>,
@@ -259,7 +261,7 @@ UkfMarg<T>::UkfMarg(const T variance_r, const T variance_w)
           }),
           x_(0),
           p_(numerical::make_diagonal_matrix<6, T>(
-                  {variance_r, variance_r, variance_r, variance_w, variance_w, variance_w}))
+                  {variance_error, variance_error, variance_error, variance_bias, variance_bias, variance_bias}))
 {
         reset_init();
 }

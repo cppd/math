@@ -75,7 +75,7 @@ class UkfMarg final
         void reset_init();
 
 public:
-        UkfMarg(T variance_r, T variance_w);
+        UkfMarg(T variance_error, T variance_bias);
 
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
