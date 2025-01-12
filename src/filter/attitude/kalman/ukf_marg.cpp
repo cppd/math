@@ -37,12 +37,6 @@ namespace ns::filter::attitude::kalman
 namespace
 {
 template <typename T>
-constexpr T A = 0.1;
-
-template <typename T>
-constexpr T F = 2 * (A<T> + 1);
-
-template <typename T>
 constexpr T ALPHA = 1;
 
 template <typename T>
@@ -83,7 +77,7 @@ std::array<Quaternion<T>, COUNT> propagate_quaternions(
                 const numerical::Vector<3, T> error = to_error(sigma_points[i]);
                 const numerical::Vector<3, T> bias = to_bias(sigma_points[i]);
 
-                const Quaternion<T> error_quaternion = error_to_quaternion(error, A<T>, F<T>);
+                const Quaternion<T> error_quaternion = error_to_quaternion(error);
                 ASSERT(error_quaternion.is_unit());
 
                 const Quaternion<T> point_quaternion = error_quaternion * q;
@@ -110,7 +104,7 @@ std::array<numerical::Vector<6, T>, COUNT> propagate_points(
                 const Quaternion<T> error_quaternion = propagated_quaternions[i] * zero_inversed;
                 ASSERT(error_quaternion.is_unit());
 
-                const numerical::Vector<3, T> error = quaternion_to_error(error_quaternion, A<T>, F<T>);
+                const numerical::Vector<3, T> error = quaternion_to_error(error_quaternion);
                 const numerical::Vector<3, T> bias = to_bias(sigma_points[i]);
                 res[i] = to_state(error, bias);
         }
@@ -120,7 +114,7 @@ std::array<numerical::Vector<6, T>, COUNT> propagate_points(
 template <typename T>
 Quaternion<T> make_quaternion(const numerical::Vector<6, T>& x, const Quaternion<T>& propagated_quaternion)
 {
-        const Quaternion dq = error_to_quaternion(to_error(x), A<T>, F<T>);
+        const Quaternion dq = error_to_quaternion(to_error(x));
         ASSERT(dq.is_unit());
 
         return (dq * propagated_quaternion).normalized();

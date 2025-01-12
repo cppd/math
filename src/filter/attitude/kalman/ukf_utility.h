@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quaternion.h"
 
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/vector.h>
 
@@ -26,21 +27,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude::kalman
 {
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q, const T a, const T f)
+namespace ukf_utility_implementation
 {
-        const T c = f / (a + q.w());
+template <typename T>
+inline constexpr T A = 0.1;
+
+template <typename T>
+inline constexpr T F = 2 * (A<T> + 1);
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q)
+{
+        namespace impl = ukf_utility_implementation;
+
+        constexpr T A = impl::A<T>;
+        constexpr T F = impl::F<T>;
+
+        const T c = F / (A + q.w());
         return c * q.vec();
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> error_to_quaternion(const numerical::Vector<3, T>& p, const T a, const T f)
+[[nodiscard]] Quaternion<T> error_to_quaternion(const numerical::Vector<3, T>& p)
 {
-        const T a2 = square(a);
-        const T f2 = square(f);
+        namespace impl = ukf_utility_implementation;
+
+        constexpr T A = impl::A<T>;
+        constexpr T F = impl::F<T>;
+
+        constexpr T A2 = square(A);
+        constexpr T F2 = square(F);
         const T n2 = p.norm_squared();
-        const T w = (f * std::sqrt(f2 + (1 - a2) * n2) - a * n2) / (f2 + n2);
-        const T c = (a + w) / f;
+
+        const T w = (F * std::sqrt(F2 + (1 - A2) * n2) - A * n2) / (F2 + n2);
+        ASSERT(w >= 0);
+
+        const T c = (A + w) / F;
         return {w, c * p};
 }
 }
