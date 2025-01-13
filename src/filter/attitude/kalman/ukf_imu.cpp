@@ -36,15 +36,6 @@ namespace ns::filter::attitude::kalman
 {
 namespace
 {
-template <typename T>
-constexpr T ALPHA = 1;
-
-template <typename T>
-constexpr T BETA = 0;
-
-template <typename T>
-constexpr T KAPPA = 1;
-
 template <std::size_t COUNT, typename T>
 std::array<Quaternion<T>, COUNT> propagate_quaternions(
         const Quaternion<T>& q,
@@ -206,11 +197,7 @@ void UkfImu<T>::reset_init()
 
 template <typename T>
 UkfImu<T>::UkfImu(const T variance)
-        : sigma_points_({
-                  .alpha = ALPHA<T>,
-                  .beta = BETA<T>,
-                  .kappa = KAPPA<T>,
-          }),
+        : sigma_points_(create_sigma_points<3, T>()),
           x_(0),
           p_(numerical::make_diagonal_matrix<3, T>({variance, variance, variance}))
 {

@@ -37,15 +37,6 @@ namespace ns::filter::attitude::kalman
 namespace
 {
 template <typename T>
-constexpr T ALPHA = 1;
-
-template <typename T>
-constexpr T BETA = 0;
-
-template <typename T>
-constexpr T KAPPA = 1;
-
-template <typename T>
 numerical::Vector<3, T> to_error(const numerical::Vector<6, T>& v)
 {
         return {v[0], v[1], v[2]};
@@ -248,11 +239,7 @@ void UkfMarg<T>::reset_init()
 
 template <typename T>
 UkfMarg<T>::UkfMarg(const T variance_error, const T variance_bias)
-        : sigma_points_({
-                  .alpha = ALPHA<T>,
-                  .beta = BETA<T>,
-                  .kappa = KAPPA<T>,
-          }),
+        : sigma_points_(create_sigma_points<6, T>()),
           x_(0),
           p_(numerical::make_diagonal_matrix<6, T>(
                   {variance_error, variance_error, variance_error, variance_bias, variance_bias, variance_bias}))

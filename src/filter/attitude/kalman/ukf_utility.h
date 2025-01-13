@@ -21,9 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/filter/core/sigma_points.h>
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <cstddef>
 
 namespace ns::filter::attitude::kalman
 {
@@ -65,5 +67,15 @@ template <typename T>
 
         const T c = (A + w) / F;
         return {w, c * p};
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] core::SigmaPoints<N, T> create_sigma_points()
+{
+        return core::SigmaPoints<N, T>({
+                .alpha = 1,
+                .beta = 0,
+                .kappa = 1,
+        });
 }
 }
