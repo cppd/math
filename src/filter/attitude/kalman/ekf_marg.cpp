@@ -67,7 +67,7 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
 
         for (std::size_t i = 0; i < N; ++i)
         {
-                const Vector3 hx_i = data[i].prediction;
+                const Vector3 hx_i = global_to_local(*q_, data[i].reference);
                 const Matrix3 h_i = cross_matrix<1>(hx_i);
                 const Vector3 z_i = data[i].measurement;
                 const T variance_i = data[i].variance;
@@ -199,20 +199,15 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
                 return false;
         }
 
-        const Vector3 y = global_to_local(*q_, {0, 1, 0});
-        const Vector3 z = global_to_local(*q_, {0, 0, 1});
-
-        const Vector3 zm = a / a_norm;
-
         update(std::array{
                 Update{
-                       .measurement = zm,
-                       .prediction = z,
+                       .measurement = a / a_norm,
+                       .reference = {0, 0, 1},
                        .variance = variance,
                        },
                 Update{
-                       .measurement = y,
-                       .prediction = y,
+                       .measurement = global_to_local(*q_, {0, 1, 0}),
+                       .reference = {0, 1, 0},
                        .variance = variance_direction,
                        }
         });
@@ -235,9 +230,7 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                 return false;
         }
 
-        const Vector3 y = global_to_local(*q_, {0, 1, 0});
         const Vector3 z = global_to_local(*q_, {0, 0, 1});
-
         const Vector3 x_mag = cross(m / m_norm, z);
         const T sin2 = x_mag.norm_squared();
         if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
@@ -245,16 +238,17 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                 return false;
         }
         const Vector3 ym = cross(z, x_mag).normalized();
+        const T vm = variance / sin2;
 
         update(std::array{
                 Update{
                        .measurement = ym,
-                       .prediction = y,
-                       .variance = variance / sin2,
+                       .reference = {0, 1, 0},
+                       .variance = vm,
                        },
                 Update{
                        .measurement = z,
-                       .prediction = z,
+                       .reference = {0, 0, 1},
                        .variance = variance_direction,
                        }
         });
@@ -283,11 +277,7 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const Vector3 y = global_to_local(*q_, {0, 1, 0});
         const Vector3 z = global_to_local(*q_, {0, 0, 1});
-
-        const Vector3 zm = a / a_norm;
-
         const Vector3 x_mag = cross(m / m_norm, z);
         const T sin2 = x_mag.norm_squared();
         if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
@@ -295,16 +285,17 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
         const Vector3 ym = cross(z, x_mag).normalized();
+        const T vm = m_variance / sin2;
 
         update(std::array{
                 Update{
                        .measurement = ym,
-                       .prediction = y,
-                       .variance = m_variance / sin2,
+                       .reference = {0, 1, 0},
+                       .variance = vm,
                        },
                 Update{
-                       .measurement = zm,
-                       .prediction = z,
+                       .measurement = a / a_norm,
+                       .reference = {0, 0, 1},
                        .variance = a_variance,
                        }
         });

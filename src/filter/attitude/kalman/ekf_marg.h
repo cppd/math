@@ -51,7 +51,7 @@ class EkfMarg final
         struct Update final
         {
                 Vector3 measurement;
-                Vector3 prediction;
+                Vector3 reference;
                 T variance;
         };
 
