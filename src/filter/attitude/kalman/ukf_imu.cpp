@@ -228,17 +228,14 @@ bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
                 return false;
         }
 
-        const Vector3 zm = a / a_norm;
-        const Vector3 y = global_to_local(*q_, {0, 1, 0});
-
         update(std::array{
                 Update{
-                       .measurement = zm,
+                       .measurement = a / a_norm,
                        .reference = {0, 0, 1},
                        .variance = variance,
                        },
                 Update{
-                       .measurement = y,
+                       .measurement = global_to_local(*q_, {0, 1, 0}),
                        .reference = {0, 1, 0},
                        .variance = variance_direction,
                        }
