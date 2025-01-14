@@ -69,7 +69,8 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         {
                 const Vector3 hx_i = global_to_local(*q_, data[i].reference);
                 const Matrix3 h_i = cross_matrix<1>(hx_i);
-                const Vector3 z_i = data[i].measurement;
+                const auto& m = data[i].measurement;
+                const Vector3 z_i = m ? *m : hx_i;
                 const T variance_i = data[i].variance;
                 const std::size_t offset = 3 * i;
                 numerical::set_block(hx, offset, hx_i);
@@ -206,7 +207,7 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
                        .variance = variance,
                        },
                 Update{
-                       .measurement = global_to_local(*q_, {0, 1, 0}),
+                       .measurement = std::nullopt,
                        .reference = {0, 1, 0},
                        .variance = variance_direction,
                        }
@@ -247,7 +248,7 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                        .variance = vm,
                        },
                 Update{
-                       .measurement = z,
+                       .measurement = std::nullopt,
                        .reference = {0, 0, 1},
                        .variance = variance_direction,
                        }

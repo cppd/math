@@ -50,7 +50,7 @@ class EkfMarg final
 
         struct Update final
         {
-                Vector3 measurement;
+                std::optional<Vector3> measurement;
                 Vector3 reference;
                 T variance;
         };
