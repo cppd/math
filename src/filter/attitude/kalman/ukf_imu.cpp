@@ -121,14 +121,11 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
         }
         predicted_ = false;
 
-        numerical::Vector<3 * N, T> z;
         numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
-                const Vector3 z_i = data[i].measurement;
                 const T variance_i = data[i].variance;
                 const std::size_t offset = 3 * i;
-                numerical::set_block(z, offset, z_i);
                 for (std::size_t j = offset; j < offset + 3; ++j)
                 {
                         r[j, j] = variance_i;
@@ -152,7 +149,17 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
                 core::cross_covariance(sigma_points_.wc(), propagated_points_, x_, sigmas_h, x_z);
 
         const numerical::Matrix<3 * N, 3 * N, T> p_z_inversed = p_z.inversed();
-        const numerical::Vector<3 * N, T> residual = z - x_z;
+        const numerical::Vector<3 * N, T> residual = [&]
+        {
+                numerical::Vector<3 * N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        const auto& m = data[i].measurement;
+                        const std::size_t offset = 3 * i;
+                        numerical::set_block(res, offset, m ? (*m - numerical::block<3>(x_z, offset)) : Vector3(0));
+                }
+                return res;
+        }();
         const numerical::Matrix<3, 3 * N, T> k = p_xz * p_z_inversed;
 
         x_ = x_ + k * residual;
@@ -235,7 +242,7 @@ bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
                        .variance = variance,
                        },
                 Update{
-                       .measurement = global_to_local(*q_, {0, 1, 0}),
+                       .measurement = std::nullopt,
                        .reference = {0, 1, 0},
                        .variance = variance_direction,
                        }
