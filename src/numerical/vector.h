@@ -173,6 +173,19 @@ template <std::size_t POSITION, std::size_t SIZE, std::size_t N, typename T>
         return v.template segment<POSITION, SIZE>();
 }
 
+template <std::size_t SIZE, std::size_t N, typename T>
+[[nodiscard]] constexpr Vector<SIZE, T> block(const Vector<N, T>& v, const std::size_t start)
+{
+        ASSERT(start + SIZE <= N);
+
+        Vector<SIZE, T> res;
+        for (std::size_t i = start, bi = 0; bi < SIZE; ++i, ++bi)
+        {
+                res[bi] = v[i];
+        }
+        return res;
+}
+
 template <std::size_t N, std::size_t BN, typename T>
 void set_block(Vector<N, T>& v, const std::size_t start, const Vector<BN, T>& block)
 {
