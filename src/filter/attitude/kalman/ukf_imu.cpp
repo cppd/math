@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cstddef>
+#include <optional>
 
 namespace ns::filter::attitude::kalman
 {
@@ -124,11 +125,11 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
         numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
-                const T variance_i = data[i].variance;
+                const T v = data[i].variance;
                 const std::size_t offset = 3 * i;
                 for (std::size_t j = offset; j < offset + 3; ++j)
                 {
-                        r[j, j] = variance_i;
+                        r[j, j] = v;
                 }
         }
 
@@ -137,9 +138,9 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
         {
                 for (std::size_t j = 0; j < N; ++j)
                 {
+                        const Vector3 h = global_to_local(propagated_quaternions_[i], data[j].reference);
                         const std::size_t offset = 3 * j;
-                        numerical::set_block(
-                                sigmas_h[i], offset, global_to_local(propagated_quaternions_[i], data[j].reference));
+                        numerical::set_block(sigmas_h[i], offset, h);
                 }
         }
 
@@ -149,17 +150,15 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
                 core::cross_covariance(sigma_points_.wc(), propagated_points_, x_, sigmas_h, x_z);
 
         const numerical::Matrix<3 * N, 3 * N, T> p_z_inversed = p_z.inversed();
-        const numerical::Vector<3 * N, T> residual = [&]
+
+        numerical::Vector<3 * N, T> residual;
+        for (std::size_t i = 0; i < N; ++i)
         {
-                numerical::Vector<3 * N, T> res;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        const auto& m = data[i].measurement;
-                        const std::size_t offset = 3 * i;
-                        numerical::set_block(res, offset, m ? (*m - numerical::block<3>(x_z, offset)) : Vector3(0));
-                }
-                return res;
-        }();
+                const auto& m = data[i].measurement;
+                const std::size_t offset = 3 * i;
+                numerical::set_block(residual, offset, m ? (*m - numerical::block<3>(x_z, offset)) : Vector3(0));
+        }
+
         const numerical::Matrix<3, 3 * N, T> k = p_xz * p_z_inversed;
 
         x_ = x_ + k * residual;

@@ -69,16 +69,16 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         {
                 const Vector3 hx_i = global_to_local(*q_, data[i].reference);
                 const Matrix3 h_i = cross_matrix<1>(hx_i);
-                const auto& m = data[i].measurement;
-                const Vector3 z_i = m ? *m : hx_i;
-                const T variance_i = data[i].variance;
+                const auto& m_i = data[i].measurement;
+                const Vector3 z_i = m_i ? *m_i : hx_i;
+                const T v_i = data[i].variance;
                 const std::size_t offset = 3 * i;
                 numerical::set_block(hx, offset, hx_i);
                 numerical::set_block(h, offset, 0, h_i);
                 numerical::set_block(z, offset, z_i);
                 for (std::size_t j = offset; j < offset + 3; ++j)
                 {
-                        r[j, j] = variance_i;
+                        r[j, j] = v_i;
                 }
         }
 

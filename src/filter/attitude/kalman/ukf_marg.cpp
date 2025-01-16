@@ -148,13 +148,12 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
         for (std::size_t i = 0; i < N; ++i)
         {
-                const Vector3 z_i = data[i].measurement;
-                const T variance_i = data[i].variance;
                 const std::size_t offset = 3 * i;
-                numerical::set_block(z, offset, z_i);
+                numerical::set_block(z, offset, data[i].measurement);
+                const T v = data[i].variance;
                 for (std::size_t j = offset; j < offset + 3; ++j)
                 {
-                        r[j, j] = variance_i;
+                        r[j, j] = v;
                 }
         }
 
@@ -163,9 +162,9 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         {
                 for (std::size_t j = 0; j < N; ++j)
                 {
+                        const Vector3 h = global_to_local(propagated_quaternions_[i], data[j].reference);
                         const std::size_t offset = 3 * j;
-                        numerical::set_block(
-                                sigmas_h[i], offset, global_to_local(propagated_quaternions_[i], data[j].reference));
+                        numerical::set_block(sigmas_h[i], offset, h);
                 }
         }
 
