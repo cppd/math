@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utility.h"
 
 #include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
@@ -231,21 +230,17 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                 return false;
         }
 
-        const Vector3 z = global_to_local(*q_, {0, 0, 1});
-        const Vector3 x_mag = cross(m / m_norm, z);
-        const T sin2 = x_mag.norm_squared();
-        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
+        const auto& mag = mag_measurement(global_to_local(*q_, {0, 0, 1}), m / m_norm, variance);
+        if (!mag)
         {
                 return false;
         }
-        const Vector3 ym = cross(z, x_mag).normalized();
-        const T vm = variance / sin2;
 
         update(std::array{
                 Update{
-                       .measurement = ym,
+                       .measurement = mag->y,
                        .reference = {0, 1, 0},
-                       .variance = vm,
+                       .variance = mag->variance,
                        },
                 Update{
                        .measurement = std::nullopt,
@@ -278,21 +273,17 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const Vector3 z = global_to_local(*q_, {0, 0, 1});
-        const Vector3 x_mag = cross(m / m_norm, z);
-        const T sin2 = x_mag.norm_squared();
-        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
+        const auto& mag = mag_measurement(global_to_local(*q_, {0, 0, 1}), m / m_norm, m_variance);
+        if (!mag)
         {
                 return false;
         }
-        const Vector3 ym = cross(z, x_mag).normalized();
-        const T vm = m_variance / sin2;
 
         update(std::array{
                 Update{
-                       .measurement = ym,
+                       .measurement = mag->y,
                        .reference = {0, 1, 0},
-                       .variance = vm,
+                       .variance = mag->variance,
                        },
                 Update{
                        .measurement = a / a_norm,

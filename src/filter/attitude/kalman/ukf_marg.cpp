@@ -276,21 +276,17 @@ bool UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const Vector3 z = global_to_local(*q_, {0, 0, 1});
-        const Vector3 x_mag = cross(m / m_norm, z);
-        const T sin2 = x_mag.norm_squared();
-        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
+        const auto& mag = mag_measurement(global_to_local(*q_, {0, 0, 1}), m / m_norm, m_variance);
+        if (!mag)
         {
                 return false;
         }
-        const Vector3 ym = cross(z, x_mag).normalized();
-        const T vm = m_variance / sin2;
 
         update(std::array{
                 Update{
-                       .measurement = ym,
+                       .measurement = mag->y,
                        .reference = {0, 1, 0},
-                       .variance = vm,
+                       .variance = mag->variance,
                        },
                 Update{
                        .measurement = a / a_norm,
