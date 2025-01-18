@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
@@ -63,6 +64,18 @@ bool equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, c
         }
         return true;
 }
+}
+
+template <typename T>
+        requires (std::is_floating_point_v<T>)
+void test_equal(const T a, const T b, const T precision)
+{
+        namespace impl = cmp_implementation;
+
+        if (!impl::equal(a, b, precision))
+        {
+                error(to_string(a) + " is not equal to " + to_string(b));
+        }
 }
 
 template <std::size_t N, typename T>

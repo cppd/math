@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cmp.h"
 
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/quaternion.h>
 #include <src/filter/attitude/kalman/utility.h>
@@ -53,6 +54,30 @@ void test_impl(const T precision)
                 const numerical::Vector<3, T> c(
                         5.0222059063468757101L, -2.42440854951868102712L, 1.4281775167237726246L);
                 test_equal(v, c, precision);
+        }
+        {
+                const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3).normalized();
+                const numerical::Vector<3, T> m = numerical::Vector<3, T>(2, 1, -4).normalized();
+                const T variance = 0.1;
+                const auto mag = mag_measurement(z, m, variance);
+                if (!mag)
+                {
+                        error("No mag measurement");
+                }
+                const numerical::Vector<3, T> c(
+                        0.872871560943969525108L, -0.218217890235992381223L, -0.436435780471984762472L);
+                test_equal(mag->y, c, precision);
+                test_equal(mag->variance, T{0.196000000000000010938L}, precision);
+        }
+        {
+                const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3).normalized();
+                const numerical::Vector<3, T> m = numerical::Vector<3, T>(1.1, -2.1, 3.1).normalized();
+                const T variance = 0.1;
+                const auto mag = mag_measurement(z, m, variance);
+                if (mag)
+                {
+                        error("Mag measurement");
+                }
         }
 }
 
