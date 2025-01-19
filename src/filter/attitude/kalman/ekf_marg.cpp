@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ekf_marg.h"
 
-#include "constant.h"
 #include "cross_matrix.h"
 #include "ekf_utility.h"
 #include "integrator.h"
@@ -99,83 +98,6 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-void EkfMarg<T>::init()
-{
-        ASSERT(!q_);
-
-        if (acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT)
-        {
-                return;
-        }
-
-        const Vector3 a_avg = acc_data_ / T(acc_count_);
-        const T a_avg_norm = a_avg.norm();
-
-        if (!acc_suitable(a_avg_norm))
-        {
-                reset_init();
-                return;
-        }
-
-        const Vector3 m_avg = mag_data_ / T(mag_count_);
-        const T m_avg_norm = m_avg.norm();
-
-        if (!mag_suitable(m_avg_norm))
-        {
-                reset_init();
-                return;
-        }
-
-        q_ = initial_quaternion(a_avg / a_avg_norm, m_avg / m_avg_norm);
-}
-
-template <typename T>
-void EkfMarg<T>::init_acc(const Vector3& a)
-{
-        acc_data_ += a;
-        ++acc_count_;
-
-        init();
-}
-
-template <typename T>
-void EkfMarg<T>::init_mag(const Vector3& m)
-{
-        mag_data_ += m;
-        ++mag_count_;
-
-        init();
-}
-
-template <typename T>
-void EkfMarg<T>::init_acc_mag(const Vector3& a, const Vector3& m)
-{
-        acc_data_ += a;
-        ++acc_count_;
-        mag_data_ += m;
-        ++mag_count_;
-
-        init();
-}
-
-template <typename T>
-void EkfMarg<T>::reset_init()
-{
-        ASSERT(!q_);
-
-        acc_data_ = Vector3(0);
-        acc_count_ = 0;
-        mag_data_ = Vector3(0);
-        mag_count_ = 0;
-}
-
-template <typename T>
-EkfMarg<T>::EkfMarg()
-{
-        reset_init();
-}
-
-template <typename T>
 void EkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
         if (q_)
@@ -189,7 +111,7 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
 {
         if (!q_)
         {
-                init_acc(a);
+                q_ = init_.update_acc(a);
                 return q_.has_value();
         }
 
@@ -220,7 +142,7 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
 {
         if (!q_)
         {
-                init_mag(m);
+                q_ = init_.update_mag(m);
                 return q_.has_value();
         }
 
@@ -257,7 +179,7 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
 {
         if (!q_)
         {
-                init_acc_mag(a, m);
+                q_ = init_.update_acc_mag(a, m);
                 return q_.has_value();
         }
 

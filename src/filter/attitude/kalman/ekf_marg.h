@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "init_marg.h"
 #include "quaternion.h"
 
 #include <src/numerical/matrix.h>
@@ -37,10 +38,7 @@ class EkfMarg final
         using Matrix3 = numerical::Matrix<3, 3, T>;
         using Matrix6 = numerical::Matrix<6, 6, T>;
 
-        Vector3 acc_data_{0};
-        unsigned acc_count_{0};
-        Vector3 mag_data_{0};
-        unsigned mag_count_{0};
+        InitMarg<T> init_;
 
         std::optional<Quaternion<T>> q_;
         Vector3 b_{0};
@@ -58,15 +56,7 @@ class EkfMarg final
         template <std::size_t N>
         void update(const std::array<Update, N>& data);
 
-        void init();
-        void init_acc(const Vector3& a);
-        void init_mag(const Vector3& m);
-        void init_acc_mag(const Vector3& a, const Vector3& m);
-        void reset_init();
-
 public:
-        EkfMarg();
-
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
         bool update_acc(const Vector3& a, T variance, T variance_direction);

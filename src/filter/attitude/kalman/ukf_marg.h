@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "init_marg.h"
 #include "quaternion.h"
 
 #include <src/filter/core/sigma_points.h>
@@ -45,10 +46,7 @@ class UkfMarg final
 
         const core::SigmaPoints<6, T> sigma_points_;
 
-        Vector3 acc_data_{0};
-        Vector3 mag_data_{0};
-        unsigned acc_count_{0};
-        unsigned mag_count_{0};
+        InitMarg<T> init_;
 
         std::optional<Quaternion<T>> q_;
         std::array<Vector6, POINT_COUNT> propagated_points_;
@@ -69,10 +67,6 @@ class UkfMarg final
 
         template <std::size_t N>
         void update(const std::array<Update, N>& data);
-
-        void init();
-        void init_acc_mag(const Vector3& a, const Vector3& m);
-        void reset_init();
 
 public:
         UkfMarg(T variance_error, T variance_bias);
