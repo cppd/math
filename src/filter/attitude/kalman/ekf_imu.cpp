@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ekf_imu.h"
 
-#include "constant.h"
 #include "cross_matrix.h"
 #include "ekf_utility.h"
 #include "integrator.h"
@@ -91,46 +90,6 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-void EkfImu<T>::init_acc(const Vector3& a)
-{
-        ASSERT(!q_);
-
-        acc_data_ += a;
-        ++acc_count_;
-
-        if (acc_count_ < INIT_COUNT)
-        {
-                return;
-        }
-
-        const Vector3 a_avg = acc_data_ / T(acc_count_);
-        const T a_avg_norm = a_avg.norm();
-
-        if (!acc_suitable(a_avg_norm))
-        {
-                reset_init();
-                return;
-        }
-
-        q_ = initial_quaternion(a_avg / a_avg_norm);
-}
-
-template <typename T>
-void EkfImu<T>::reset_init()
-{
-        ASSERT(!q_);
-
-        acc_data_ = Vector3(0);
-        acc_count_ = 0;
-}
-
-template <typename T>
-EkfImu<T>::EkfImu()
-{
-        reset_init();
-}
-
-template <typename T>
 void EkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance, const T dt)
 {
         if (q_)
@@ -144,7 +103,7 @@ bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
 {
         if (!q_)
         {
-                init_acc(a);
+                q_ = init_.update(a);
                 return q_.has_value();
         }
 

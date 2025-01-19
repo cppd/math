@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ukf_imu.h"
 
-#include "constant.h"
 #include "integrator.h"
 #include "matrix.h"
 #include "ukf_utility.h"
@@ -168,46 +167,11 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-void UkfImu<T>::init_acc(const Vector3& a)
-{
-        ASSERT(!q_);
-
-        acc_data_ += a;
-        ++acc_count_;
-
-        if (acc_count_ < INIT_COUNT)
-        {
-                return;
-        }
-
-        const Vector3 a_avg = acc_data_ / T(acc_count_);
-        const T a_avg_norm = a_avg.norm();
-
-        if (!acc_suitable(a_avg_norm))
-        {
-                reset_init();
-                return;
-        }
-
-        q_ = initial_quaternion(a_avg / a_avg_norm);
-}
-
-template <typename T>
-void UkfImu<T>::reset_init()
-{
-        ASSERT(!q_);
-
-        acc_data_ = Vector3(0);
-        acc_count_ = 0;
-}
-
-template <typename T>
 UkfImu<T>::UkfImu(const T variance)
         : sigma_points_(create_sigma_points<3, T>()),
           x_(0),
           p_(numerical::make_diagonal_matrix<3, T>({variance, variance, variance}))
 {
-        reset_init();
 }
 
 template <typename T>
@@ -224,7 +188,7 @@ bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
 {
         if (!q_)
         {
-                init_acc(a);
+                q_ = init_.update(a);
                 return q_.has_value();
         }
 
