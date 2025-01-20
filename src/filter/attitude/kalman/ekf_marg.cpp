@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ekf_utility.h"
 #include "integrator.h"
 #include "matrix.h"
+#include "measurement.h"
 #include "quaternion.h"
-#include "utility.h"
 
 #include <src/com/error.h>
 #include <src/filter/attitude/limit.h>
