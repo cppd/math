@@ -19,31 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quaternion.h"
 
-#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
-
-#include <optional>
 
 namespace ns::filter::attitude::kalman
 {
 template <typename T>
-struct MagMeasurement
-{
-        numerical::Vector<3, T> y;
-        T variance;
-};
+[[nodiscard]] Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc);
 
 template <typename T>
-[[nodiscard]] std::optional<MagMeasurement<T>> mag_measurement(
-        const numerical::Vector<3, T>& z_unit,
-        const numerical::Vector<3, T>& m_unit,
-        T variance);
-
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> global_to_local(
-        const Quaternion<T>& q_unit,
-        const numerical::Vector<3, T>& global)
-{
-        return numerical::rotate_vector(q_unit.q().conjugate(), global);
-}
+[[nodiscard]] Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numerical::Vector<3, T>& mag);
 }
