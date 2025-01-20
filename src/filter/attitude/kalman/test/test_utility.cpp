@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/filter/attitude/kalman/quaternion.h>
 #include <src/filter/attitude/kalman/utility.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -31,13 +30,6 @@ namespace
 template <typename T>
 void test_impl(const T precision)
 {
-        {
-                const Quaternion<T> q = Quaternion<T>(-2, {5.2, -3.3, 4.4}).normalized();
-                const numerical::Vector<3, T> v = global_to_local(q, {2.1, -3.2, 4.3});
-                const numerical::Vector<3, T> c(
-                        5.0222059063468757101L, -2.42440854951868102712L, 1.4281775167237726246L);
-                test_equal(v, c, precision);
-        }
         {
                 const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3).normalized();
                 const numerical::Vector<3, T> m = numerical::Vector<3, T>(2, 1, -4).normalized();

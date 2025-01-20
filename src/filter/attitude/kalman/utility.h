@@ -17,9 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "quaternion.h"
-
-#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -38,12 +35,4 @@ template <typename T>
         const numerical::Vector<3, T>& z_unit,
         const numerical::Vector<3, T>& m_unit,
         T variance);
-
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> global_to_local(
-        const Quaternion<T>& q_unit,
-        const numerical::Vector<3, T>& global)
-{
-        return numerical::rotate_vector(q_unit.q().conjugate(), global);
-}
 }

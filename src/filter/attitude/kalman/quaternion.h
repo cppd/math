@@ -139,4 +139,12 @@ template <typename T>
 {
         return Quaternion(b.q() * a);
 }
+
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> global_to_local(
+        const Quaternion<T>& q_unit,
+        const numerical::Vector<3, T>& global)
+{
+        return numerical::rotate_vector(q_unit.q().conjugate(), global);
+}
 }
