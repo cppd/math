@@ -40,5 +40,4 @@ public:
 
         [[nodiscard]] std::optional<Quaternion<T>> update(const Vector3& acc);
 };
-
 }
