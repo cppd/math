@@ -19,12 +19,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quaternion.h"
 
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <cmath>
+#include <cstddef>
 
 namespace ns::filter::attitude::kalman
 {
+template <std::size_t N, typename T>
+[[nodiscard]] numerical::Matrix<N, N, T> add_diagonal(numerical::Matrix<N, N, T> m, const numerical::Vector<N, T>& v)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                m[i, i] += v[i];
+        }
+        return m;
+}
+
+template <std::size_t R, std::size_t C, typename T>
+[[nodiscard]] numerical::Matrix<R, C, T> mul_diagonal(
+        const numerical::Matrix<R, C, T>& m,
+        const numerical::Vector<C, T>& v)
+{
+        numerical::Matrix<R, C, T> res;
+        for (std::size_t r = 0; r < R; ++r)
+        {
+                for (std::size_t c = 0; c < C; ++c)
+                {
+                        res[r, c] = m[r, c] * v[c];
+                }
+        }
+        return res;
+}
+
 template <typename T>
 [[nodiscard]] Quaternion<T> ekf_delta_quaternion(const numerical::Vector<3, T>& v)
 {
