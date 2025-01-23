@@ -23,23 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-#include <cstddef>
-
 namespace ns::filter::attitude::kalman
 {
-namespace
-{
-template <std::size_t N, typename T>
-numerical::Matrix<N, N, T> add_diagonal(const T v, numerical::Matrix<N, N, T> m)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                m[i, i] += v;
-        }
-        return m;
-}
-}
-
 template <typename T>
 numerical::Matrix<3, 3, T> ekf_state_transition_matrix_3(const numerical::Vector<3, T>& w, const T dt)
 {

@@ -393,6 +393,76 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
         return m * v;
 }
 
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(const numerical::Matrix<N, N, T>& m, const T& d)
+{
+        numerical::Matrix<N, N, T> res = m;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i, i] += d;
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(const T& d, const numerical::Matrix<N, N, T>& m)
+{
+        return add_diagonal(m, d);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(
+        const numerical::Matrix<N, N, T>& m,
+        const numerical::Vector<N, T>& d)
+{
+        numerical::Matrix<N, N, T> res = m;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i, i] += d[i];
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(
+        const numerical::Vector<N, T>& d,
+        const numerical::Matrix<N, N, T>& m)
+{
+        return add_diagonal(m, d);
+}
+
+template <std::size_t R, std::size_t C, typename T>
+[[nodiscard]] constexpr numerical::Matrix<R, C, T> mul_diagonal(
+        const numerical::Matrix<R, C, T>& m,
+        const numerical::Vector<C, T>& d)
+{
+        numerical::Matrix<R, C, T> res;
+        for (std::size_t r = 0; r < R; ++r)
+        {
+                for (std::size_t c = 0; c < C; ++c)
+                {
+                        res[r, c] = m[r, c] * d[c];
+                }
+        }
+        return res;
+}
+
+template <std::size_t R, std::size_t C, typename T>
+[[nodiscard]] constexpr numerical::Matrix<R, C, T> mul_diagonal(
+        const numerical::Vector<R, T>& d,
+        const numerical::Matrix<R, C, T>& m)
+{
+        numerical::Matrix<R, C, T> res;
+        for (std::size_t r = 0; r < R; ++r)
+        {
+                for (std::size_t c = 0; c < C; ++c)
+                {
+                        res[r, c] = d[r] * m[r, c];
+                }
+        }
+        return res;
+}
+
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 [[nodiscard]] decltype(auto) is_finite(const Matrix<ROWS, COLUMNS, T>& m)
 {
