@@ -61,7 +61,7 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         numerical::Vector<3 * N, T> z;
         numerical::Vector<3 * N, T> hx;
         numerical::Matrix<3 * N, 6, T> h(numerical::ZERO_MATRIX);
-        numerical::Vector<3 * N, T> r_diagonal;
+        numerical::Vector<3 * N, T> r;
 
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -74,11 +74,11 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
                 numerical::set_block(hx, offset, hx_i);
                 numerical::set_block(h, offset, 0, h_i);
                 numerical::set_block(z, offset, z_i);
-                numerical::set_block(r_diagonal, offset, r_i);
+                numerical::set_block(r, offset, r_i);
         }
 
         const numerical::Matrix<6, 3 * N, T> ht = h.transposed();
-        const numerical::Matrix<3 * N, 3 * N, T> s = add_diagonal(h * p_ * ht, r_diagonal);
+        const numerical::Matrix<3 * N, 3 * N, T> s = add_diagonal(h * p_ * ht, r);
         const numerical::Matrix<6, 3 * N, T> k = p_ * ht * s.inversed();
         const Vector6 dx = k * (z - hx);
 
@@ -91,7 +91,7 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         b_ += dx_b;
 
         const Matrix6 i_kh = numerical::IDENTITY_MATRIX<6, T> - k * h;
-        p_ = i_kh * p_ * i_kh.transposed() + mul_diagonal(k, r_diagonal) * k.transposed();
+        p_ = i_kh * p_ * i_kh.transposed() + mul_diagonal(k, r) * k.transposed();
 }
 
 template <typename T>

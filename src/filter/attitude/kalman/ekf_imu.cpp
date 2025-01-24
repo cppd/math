@@ -57,7 +57,7 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
         numerical::Vector<3 * N, T> z;
         numerical::Vector<3 * N, T> hx;
         numerical::Matrix<3 * N, 3, T> h;
-        numerical::Vector<3 * N, T> r_diagonal;
+        numerical::Vector<3 * N, T> r;
 
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -70,11 +70,11 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
                 numerical::set_block(hx, offset, hx_i);
                 numerical::set_block(h, offset, 0, h_i);
                 numerical::set_block(z, offset, z_i);
-                numerical::set_block(r_diagonal, offset, r_i);
+                numerical::set_block(r, offset, r_i);
         }
 
         const numerical::Matrix<3, 3 * N, T> ht = h.transposed();
-        const numerical::Matrix<3 * N, 3 * N, T> s = add_diagonal(h * p_ * ht, r_diagonal);
+        const numerical::Matrix<3 * N, 3 * N, T> s = add_diagonal(h * p_ * ht, r);
         const numerical::Matrix<3, 3 * N, T> k = p_ * ht * s.inversed();
         const Vector3 dx = k * (z - hx);
 
@@ -82,7 +82,7 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
         q_ = (dq * *q_).normalized();
 
         const Matrix3 i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
-        p_ = i_kh * p_ * i_kh.transposed() + mul_diagonal(k, r_diagonal) * k.transposed();
+        p_ = i_kh * p_ * i_kh.transposed() + mul_diagonal(k, r) * k.transposed();
 }
 
 template <typename T>
