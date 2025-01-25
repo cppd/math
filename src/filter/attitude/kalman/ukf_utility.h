@@ -69,6 +69,17 @@ template <typename T>
         return {w, c * p};
 }
 
+template <typename T>
+[[nodiscard]] Quaternion<T> make_normalized_quaternion(
+        const numerical::Vector<3, T>& error,
+        const Quaternion<T>& quaternion)
+{
+        const Quaternion dq = error_to_quaternion(error);
+        ASSERT(dq.is_unit());
+
+        return (dq * quaternion).normalized();
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] core::SigmaPoints<N, T> create_sigma_points()
 {

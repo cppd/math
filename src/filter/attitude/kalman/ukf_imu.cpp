@@ -77,15 +77,6 @@ std::array<numerical::Vector<3, T>, COUNT> propagate_points(
         }
         return res;
 }
-
-template <typename T>
-Quaternion<T> make_quaternion(const numerical::Vector<3, T>& x, const Quaternion<T>& propagated_quaternion)
-{
-        const Quaternion dq = error_to_quaternion(x);
-        ASSERT(dq.is_unit());
-
-        return (dq * propagated_quaternion).normalized();
-}
 }
 
 template <typename T>
@@ -105,7 +96,7 @@ void UkfImu<T>::predict(const Vector3& w0, const Vector3& w1, const T variance, 
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
 
-        q_ = make_quaternion(x_, propagated_quaternions_[0]);
+        q_ = make_normalized_quaternion(x_, propagated_quaternions_[0]);
 
         predicted_ = true;
 }
@@ -162,7 +153,7 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
         x_ = x_ + k * residual;
         p_ = p_ - p_xz * k.transposed();
 
-        q_ = make_quaternion(x_, propagated_quaternions_[0]);
+        q_ = make_normalized_quaternion(x_, propagated_quaternions_[0]);
 }
 
 template <typename T>
