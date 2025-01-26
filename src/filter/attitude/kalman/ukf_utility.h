@@ -78,6 +78,15 @@ template <typename T>
         return dq * center;
 }
 
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q, const Quaternion<T>& center_inversed)
+{
+        ASSERT(q.is_unit());
+        ASSERT(center_inversed.is_unit());
+        const Quaternion<T> dq = q * center_inversed;
+        return quaternion_to_error(dq);
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] core::SigmaPoints<N, T> create_sigma_points()
 {

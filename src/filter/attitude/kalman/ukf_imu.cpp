@@ -59,16 +59,13 @@ std::array<numerical::Vector<3, T>, COUNT> propagate_points(
 {
         ASSERT(sigma_points[0].is_zero());
 
-        const Quaternion<T> zero_inversed = propagated_quaternions[0].conjugate();
+        const Quaternion<T> center_inversed = propagated_quaternions[0].conjugate();
 
         std::array<numerical::Vector<3, T>, COUNT> res;
         res[0] = sigma_points[0];
         for (std::size_t i = 1; i < COUNT; ++i)
         {
-                const Quaternion<T> error_quaternion = propagated_quaternions[i] * zero_inversed;
-                ASSERT(error_quaternion.is_unit());
-
-                res[i] = quaternion_to_error(error_quaternion);
+                res[i] = quaternion_to_error(propagated_quaternions[i], center_inversed);
         }
         return res;
 }
