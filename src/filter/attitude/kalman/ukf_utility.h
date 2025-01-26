@@ -70,14 +70,12 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> make_normalized_quaternion(
-        const numerical::Vector<3, T>& error,
-        const Quaternion<T>& quaternion)
+[[nodiscard]] Quaternion<T> error_to_quaternion(const numerical::Vector<3, T>& error, const Quaternion<T>& center)
 {
+        ASSERT(center.is_unit());
         const Quaternion dq = error_to_quaternion(error);
         ASSERT(dq.is_unit());
-
-        return (dq * quaternion).normalized();
+        return dq * center;
 }
 
 template <std::size_t N, typename T>

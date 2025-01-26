@@ -66,14 +66,10 @@ std::array<Quaternion<T>, COUNT> propagate_quaternions(
         {
                 const numerical::Vector<3, T> error = to_error(sigma_points[i]);
                 const numerical::Vector<3, T> bias = to_bias(sigma_points[i]);
-
-                const Quaternion<T> error_quaternion = error_to_quaternion(error);
-                ASSERT(error_quaternion.is_unit());
-
-                const Quaternion<T> point_quaternion = error_quaternion * q;
-                ASSERT(point_quaternion.is_unit());
-
-                res[i] = first_order_quaternion_integrator(point_quaternion, w0 - bias, w1 - bias, dt).normalized();
+                const numerical::Vector<3, T> wb0 = w0 - bias;
+                const numerical::Vector<3, T> wb1 = w1 - bias;
+                const Quaternion<T> point_quaternion = error_to_quaternion(error, q);
+                res[i] = first_order_quaternion_integrator(point_quaternion, wb0, wb1, dt).normalized();
         }
         return res;
 }
@@ -119,7 +115,7 @@ void UkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_
 
         std::tie(x_, p_) = core::unscented_transform(propagated_points_, sigma_points_.wm(), sigma_points_.wc(), q);
 
-        q_ = make_normalized_quaternion(to_error(x_), propagated_quaternions_[0]);
+        q_ = error_to_quaternion(to_error(x_), propagated_quaternions_[0]).normalized();
 
         predicted_ = true;
 }
@@ -170,7 +166,7 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         x_ = x_ + k * residual;
         p_ = p_ - p_xz * k.transposed();
 
-        q_ = make_normalized_quaternion(to_error(x_), propagated_quaternions_[0]);
+        q_ = error_to_quaternion(to_error(x_), propagated_quaternions_[0]).normalized();
 }
 
 template <typename T>
