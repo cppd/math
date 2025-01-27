@@ -19,73 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quaternion.h"
 
-#include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/numerical/vector.h>
 
-#include <cmath>
 #include <cstddef>
 
 namespace ns::filter::attitude::kalman
 {
-namespace ukf_utility_implementation
-{
 template <typename T>
-inline constexpr T A = 0.1;
+[[nodiscard]] Quaternion<T> error_to_quaternion(const numerical::Vector<3, T>& error, const Quaternion<T>& center);
 
 template <typename T>
-inline constexpr T F = 2 * (A<T> + 1);
-}
-
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q)
-{
-        namespace impl = ukf_utility_implementation;
-
-        constexpr T A = impl::A<T>;
-        constexpr T F = impl::F<T>;
-
-        const T c = F / (A + q.w());
-        return c * q.vec();
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> error_to_quaternion(const numerical::Vector<3, T>& p)
-{
-        namespace impl = ukf_utility_implementation;
-
-        constexpr T A = impl::A<T>;
-        constexpr T F = impl::F<T>;
-
-        constexpr T A2 = square(A);
-        constexpr T F2 = square(F);
-        const T n2 = p.norm_squared();
-
-        const T w = (F * std::sqrt(F2 + (1 - A2) * n2) - A * n2) / (F2 + n2);
-        ASSERT(w >= 0);
-
-        const T c = (A + w) / F;
-        return {w, c * p};
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> error_to_quaternion(const numerical::Vector<3, T>& error, const Quaternion<T>& center)
-{
-        ASSERT(center.is_unit());
-        const Quaternion dq = error_to_quaternion(error);
-        ASSERT(dq.is_unit());
-        return dq * center;
-}
-
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q, const Quaternion<T>& center_inversed)
-{
-        ASSERT(q.is_unit());
-        ASSERT(center_inversed.is_unit());
-        const Quaternion<T> dq = q * center_inversed;
-        return quaternion_to_error(dq);
-}
+[[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q, const Quaternion<T>& center_inversed);
 
 template <std::size_t N, typename T>
 [[nodiscard]] core::SigmaPoints<N, T> create_sigma_points()
