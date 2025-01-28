@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/filter/attitude/limit.h>
+#include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf_transform.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -35,6 +36,13 @@ namespace ns::filter::attitude::kalman
 {
 namespace
 {
+template <typename T>
+constexpr core::SigmaPoints<3, T>::Parameters SIGMA_POINTS_PARAMETERS{
+        .alpha = 1,
+        .beta = 0,
+        .kappa = 1,
+};
+
 template <std::size_t COUNT, typename T>
 std::array<Quaternion<T>, COUNT> propagate_quaternions(
         const Quaternion<T>& q,
@@ -150,7 +158,7 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
 
 template <typename T>
 UkfImu<T>::UkfImu(const T variance)
-        : sigma_points_(create_sigma_points<3, T>()),
+        : sigma_points_(SIGMA_POINTS_PARAMETERS<T>),
           x_(0),
           p_(numerical::make_diagonal_matrix<3, T>({variance, variance, variance}))
 {

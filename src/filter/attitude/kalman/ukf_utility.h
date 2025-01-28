@@ -19,10 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quaternion.h"
 
-#include <src/filter/core/sigma_points.h>
 #include <src/numerical/vector.h>
-
-#include <cstddef>
 
 namespace ns::filter::attitude::kalman
 {
@@ -31,14 +28,4 @@ template <typename T>
 
 template <typename T>
 [[nodiscard]] numerical::Vector<3, T> quaternion_to_error(const Quaternion<T>& q, const Quaternion<T>& center_inversed);
-
-template <std::size_t N, typename T>
-[[nodiscard]] core::SigmaPoints<N, T> create_sigma_points()
-{
-        return core::SigmaPoints<N, T>({
-                .alpha = 1,
-                .beta = 0,
-                .kappa = 1,
-        });
-}
 }
