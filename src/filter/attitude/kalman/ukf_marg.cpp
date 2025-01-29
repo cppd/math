@@ -39,7 +39,7 @@ namespace
 template <typename T>
 constexpr core::SigmaPoints<6, T>::Parameters SIGMA_POINTS_PARAMETERS{
         .alpha = 1,
-        .beta = 0,
+        .beta = 2,
         .kappa = 1,
 };
 
