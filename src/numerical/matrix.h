@@ -463,6 +463,30 @@ template <std::size_t R, std::size_t C, typename T>
         return res;
 }
 
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_md(
+        const numerical::Matrix<N, N, T>& m,
+        const numerical::Vector<N, T>& d)
+{
+        return add_diagonal(m, d);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_md(
+        const numerical::Vector<N, T>& d,
+        const numerical::Matrix<N, N, T>& m)
+{
+        return add_diagonal(d, m);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_md(
+        const numerical::Matrix<N, N, T>& a,
+        const numerical::Matrix<N, N, T>& b)
+{
+        return a + b;
+}
+
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 [[nodiscard]] decltype(auto) is_finite(const Matrix<ROWS, COLUMNS, T>& m)
 {
