@@ -35,14 +35,18 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter::core
 {
-template <std::size_t N, typename T, std::size_t COUNT>
+template <std::size_t N, typename T, std::size_t COUNT, typename NoiseCovariance>
 [[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> unscented_transform(
         const std::array<numerical::Vector<N, T>, COUNT>& points,
         const numerical::Vector<COUNT, T>& wm,
         const numerical::Vector<COUNT, T>& wc,
-        const numerical::Matrix<N, N, T>& noise_covariance,
+        const NoiseCovariance& noise_covariance,
         const T fading_memory_alpha = 1)
 {
+        static_assert(
+                std::is_same_v<NoiseCovariance, numerical::Matrix<N, N, T>>
+                || std::is_same_v<NoiseCovariance, numerical::Vector<N, T>>);
+
         const numerical::Vector<N, T> mean = [&]()
         {
                 static_assert(COUNT > 0);
@@ -69,11 +73,11 @@ template <std::size_t N, typename T, std::size_t COUNT>
 
         if (fading_memory_alpha == 1)
         {
-                return {mean, covariance + noise_covariance};
+                return {mean, numerical::add_md(covariance, noise_covariance)};
         }
 
         const T factor = square(fading_memory_alpha);
-        return {mean, factor * covariance + noise_covariance};
+        return {mean, numerical::add_md(factor * covariance, noise_covariance)};
 }
 
 template <std::size_t N, std::size_t M, typename T, std::size_t COUNT>
