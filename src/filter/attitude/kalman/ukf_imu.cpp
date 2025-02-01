@@ -111,15 +111,11 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
         }
         predicted_ = false;
 
-        numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
+        numerical::Vector<3 * N, T> r;
         for (std::size_t i = 0; i < N; ++i)
         {
-                const T v = data[i].variance;
                 const std::size_t offset = 3 * i;
-                for (std::size_t j = offset; j < offset + 3; ++j)
-                {
-                        r[j, j] = v;
-                }
+                numerical::set_block(r, offset, Vector3(data[i].variance));
         }
 
         std::array<numerical::Vector<3 * N, T>, POINT_COUNT> sigmas_h;

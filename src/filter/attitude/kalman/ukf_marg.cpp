@@ -136,16 +136,12 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         predicted_ = false;
 
         numerical::Vector<3 * N, T> z;
-        numerical::Matrix<3 * N, 3 * N, T> r(numerical::ZERO_MATRIX);
+        numerical::Vector<3 * N, T> r;
         for (std::size_t i = 0; i < N; ++i)
         {
                 const std::size_t offset = 3 * i;
                 numerical::set_block(z, offset, data[i].measurement);
-                const T v = data[i].variance;
-                for (std::size_t j = offset; j < offset + 3; ++j)
-                {
-                        r[j, j] = v;
-                }
+                numerical::set_block(r, offset, Vector3(data[i].variance));
         }
 
         std::array<numerical::Vector<3 * N, T>, POINT_COUNT> sigmas_h;
