@@ -27,41 +27,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-namespace moving_variance_implemetation
-{
-template <typename T>
-        requires (std::is_floating_point_v<T>)
-[[nodiscard]] T standard_deviation(const T data)
-{
-        return std::sqrt(data);
-}
-
-template <typename T>
-        requires requires { std::declval<T>()[0]; }
-[[nodiscard]] T standard_deviation(const T& data)
-{
-        T res;
-        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
-        {
-                res[i] = std::sqrt(data[i]);
-        }
-        return res;
-}
-}
-
 template <typename T>
 class MovingVariance final
 {
-        [[nodiscard]] static auto to_data_type(const std::size_t size)
+        static constexpr bool VECTOR = requires { std::declval<T>()[0]; };
+
+        static auto to_data_type(const std::size_t size)
         {
-                if constexpr (requires { std::declval<T>().data(); })
+                if constexpr (VECTOR)
                 {
-                        using Value = std::remove_pointer_t<decltype(std::declval<T>().data())>;
-                        return static_cast<std::remove_cvref_t<Value>>(size);
+                        using DataType = std::remove_cvref_t<decltype(std::declval<T>()[0])>;
+                        return static_cast<DataType>(size);
                 }
                 else
                 {
                         return static_cast<T>(size);
+                }
+        }
+
+        static auto sqrt(const T& data)
+        {
+                if constexpr (VECTOR)
+                {
+                        T res;
+                        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
+                        {
+                                res[i] = std::sqrt(data[i]);
+                        }
+                        return res;
+                }
+                else
+                {
+                        return std::sqrt(data);
                 }
         }
 
@@ -141,12 +138,12 @@ public:
 
         [[nodiscard]] T standard_deviation_n() const
         {
-                return moving_variance_implemetation::standard_deviation(variance_n());
+                return sqrt(variance_n());
         }
 
         [[nodiscard]] T standard_deviation() const
         {
-                return moving_variance_implemetation::standard_deviation(variance());
+                return sqrt(variance());
         }
 };
 }
