@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-namespace variance_implemetation
+namespace moving_variance_implemetation
 {
 template <typename T>
         requires (std::is_floating_point_v<T>)
@@ -141,12 +141,12 @@ public:
 
         [[nodiscard]] T standard_deviation_n() const
         {
-                return variance_implemetation::standard_deviation(variance_n());
+                return moving_variance_implemetation::standard_deviation(variance_n());
         }
 
         [[nodiscard]] T standard_deviation() const
         {
-                return variance_implemetation::standard_deviation(variance());
+                return moving_variance_implemetation::standard_deviation(variance());
         }
 };
 }

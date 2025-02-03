@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/variance.h>
+#include <src/numerical/moving_variance.h>
 #include <src/numerical/vector.h>
 
 #include <array>
