@@ -122,7 +122,7 @@ void test(const T& precision)
         }
 }
 
-void test_variance()
+void test_average()
 {
         LOG("Test average");
 
@@ -137,6 +137,6 @@ void test_variance()
         LOG("Test average passed");
 }
 
-TEST_SMALL("Average", test_variance)
+TEST_SMALL("Average", test_average)
 }
 }
