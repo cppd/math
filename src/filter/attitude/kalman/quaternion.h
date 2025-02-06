@@ -17,72 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "quaternion_object.h" // IWYU pragma: export
+
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
-#include <string>
 #include <type_traits>
 
 namespace ns::filter::attitude::kalman
 {
-template <typename T>
-class Quaternion final
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        numerical::Quaternion<T> q_;
-
-public:
-        constexpr Quaternion()
-        {
-        }
-
-        explicit constexpr Quaternion(const numerical::Quaternion<T>& q)
-                : q_(q)
-        {
-        }
-
-        constexpr Quaternion(const T w, const numerical::Vector<3, T>& v)
-                : q_(w, v)
-        {
-        }
-
-        [[nodiscard]] const numerical::Quaternion<T>& q() const
-        {
-                return q_;
-        }
-
-        [[nodiscard]] constexpr numerical::Vector<3, T> vec() const
-        {
-                return q_.vec();
-        }
-
-        [[nodiscard]] constexpr T w() const
-        {
-                return q_.w();
-        }
-
-        [[nodiscard]] Quaternion<T> normalized() const
-        {
-                return Quaternion(q_.normalized());
-        }
-
-        [[nodiscard]] Quaternion<T> conjugate() const
-        {
-                return Quaternion(q_.conjugate());
-        }
-
-        [[nodiscard]] constexpr bool is_unit() const
-        {
-                return q_.is_unit();
-        }
-
-        [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
-        {
-                return to_string(a.q_);
-        }
-};
-
 template <typename T>
 [[nodiscard]] constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
 {
