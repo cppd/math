@@ -73,7 +73,7 @@ void test_random()
                 data.push_back(nd(engine));
         }
 
-        for (std::size_t i = 0; i < ERROR_COUNT; ++i)
+        for (std::size_t i = 1; i <= ERROR_COUNT; ++i)
         {
                 data.push_back(MEAN + T{10'000} * i * STD_DEV);
         }
