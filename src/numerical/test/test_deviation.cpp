@@ -43,14 +43,27 @@ void compare(const T a, const T b)
 template <typename T>
 void test_constant()
 {
-        const std::vector<T> data{-2, 3, 7, -15, -6, 0, 1, 3, 19};
+        {
+                const std::vector<T> data{-2, 3, 7, -15, -6, 0, 1, 3, 19};
 
-        const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
-        compare(mad.median, T{1});
-        compare(mad.deviation, T{3});
+                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
+                compare(mad.median, T{1});
+                compare(mad.deviation, T{3});
 
-        const T sd = numerical::standard_deviation(mad);
-        compare(sd, T{4.44780665551680558147L});
+                const T sd = numerical::standard_deviation(mad);
+                compare(sd, T{4.44780665551680558147L});
+        }
+
+        {
+                const std::vector<T> data{-2, 3, 2, 7, -15, -6, 0, 1, 3, 19};
+
+                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
+                compare(mad.median, T{1.5});
+                compare(mad.deviation, T{3.5});
+
+                const T sd = numerical::standard_deviation(mad);
+                compare(sd, T{5.18910776476960651201L});
+        }
 }
 
 template <typename T>

@@ -36,6 +36,8 @@ struct MedianAbsoluteDeviation final
 template <typename T>
 [[nodiscard]] MedianAbsoluteDeviation<T> median_absolute_deviation(std::vector<T> data)
 {
+        static_assert(std::is_floating_point_v<T>);
+
         if (data.empty())
         {
                 error("No data for median absolute deviation");
@@ -44,7 +46,17 @@ template <typename T>
         const std::size_t m = data.size() / 2;
 
         std::ranges::nth_element(data, data.begin() + m);
-        const T median = data[m];
+
+        const T median = [&]
+        {
+                if ((data.size() % 2) == 1)
+                {
+                        return data[m];
+                }
+                const auto iter = std::max_element(data.begin(), data.begin() + m);
+                return (*iter + data[m]) / 2;
+        }();
+
         for (T& v : data)
         {
                 v = std::abs(v - median);
