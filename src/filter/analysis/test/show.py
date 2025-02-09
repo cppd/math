@@ -76,7 +76,7 @@ def show_data(info):
             )
         )
 
-    figure.update_layout(title=None, xaxis_title="\u03C4", yaxis_title="Deviation")
+    figure.update_layout(title=None, xaxis_title="\u03c4", yaxis_title="Deviation")
 
     with tempfile.NamedTemporaryFile(delete=False, prefix=FILE_PREFIX, suffix=FILE_SUFFIX) as f:
         figure.write_html(f.name, auto_open=True)
