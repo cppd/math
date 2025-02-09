@@ -59,10 +59,10 @@ void test_constant()
 
                 const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
                 compare(mad.median, T{1.5});
-                compare(mad.deviation, T{3.5});
+                compare(mad.deviation, T{2.5});
 
                 const T sd = numerical::standard_deviation(mad);
-                compare(sd, T{5.18910776476960651201L});
+                compare(sd, T{3.70650554626400465137L});
         }
 }
 

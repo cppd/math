@@ -43,27 +43,28 @@ template <typename T>
                 error("No data for median absolute deviation");
         }
 
+        const bool odd = (data.size() % 2) == 1;
         const std::size_t m = data.size() / 2;
 
-        std::ranges::nth_element(data, data.begin() + m);
-
-        const T median = [&]
+        const auto data_median = [&]
         {
-                if ((data.size() % 2) == 1)
+                std::ranges::nth_element(data, data.begin() + m);
+                if (odd)
                 {
                         return data[m];
                 }
                 const auto iter = std::max_element(data.begin(), data.begin() + m);
                 return (*iter + data[m]) / 2;
-        }();
+        };
+
+        const T median = data_median();
 
         for (T& v : data)
         {
                 v = std::abs(v - median);
         }
 
-        std::ranges::nth_element(data, data.begin() + m);
-        const T deviation = data[m];
+        const T deviation = data_median();
 
         return {
                 .median = median,
