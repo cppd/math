@@ -26,6 +26,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
+namespace deviation_implementation
+{
+template <typename T>
+T median(std::vector<T>& data)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        ASSERT(!data.empty());
+
+        const std::size_t m = data.size() / 2;
+
+        std::ranges::nth_element(data, data.begin() + m);
+
+        if (data.size() & 1u)
+        {
+                return data[m];
+        }
+
+        const auto iter = std::max_element(data.begin(), data.begin() + m);
+        return (*iter + data[m]) / 2;
+}
+}
+
 template <typename T>
 struct MedianAbsoluteDeviation final
 {
@@ -38,33 +61,21 @@ template <typename T>
 {
         static_assert(std::is_floating_point_v<T>);
 
+        namespace impl = deviation_implementation;
+
         if (data.empty())
         {
                 error("No data for median absolute deviation");
         }
 
-        const bool odd = (data.size() % 2) == 1;
-        const std::size_t m = data.size() / 2;
-
-        const auto data_median = [&]
-        {
-                std::ranges::nth_element(data, data.begin() + m);
-                if (odd)
-                {
-                        return data[m];
-                }
-                const auto iter = std::max_element(data.begin(), data.begin() + m);
-                return (*iter + data[m]) / 2;
-        };
-
-        const T median = data_median();
+        const T median = impl::median(data);
 
         for (T& v : data)
         {
                 v = std::abs(v - median);
         }
 
-        const T deviation = data_median();
+        const T deviation = impl::median(data);
 
         return {
                 .median = median,
@@ -76,6 +87,7 @@ template <typename T>
 [[nodiscard]] T standard_deviation(const MedianAbsoluteDeviation<T>& mad)
 {
         // mad = sigma * sqrt(2) * inverse_erf(1/2)
+        // sigma = k * mad
         // k = 1 / (sqrt(2) * inverse_erf(1/2))
         static constexpr T K = 1.4826022185056018605L;
 
