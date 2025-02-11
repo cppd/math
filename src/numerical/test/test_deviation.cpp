@@ -74,22 +74,22 @@ void test_random()
         constexpr T MEAN = -1;
         constexpr T STD_DEV = 10;
 
-        PCG engine;
-
-        std::normal_distribution<T> nd(MEAN, STD_DEV);
-
-        std::vector<T> data;
-        data.reserve(COUNT + ERROR_COUNT);
-
-        for (std::size_t i = 0; i < COUNT; ++i)
+        const std::vector<T> data = []
         {
-                data.push_back(nd(engine));
-        }
-
-        for (std::size_t i = 1; i <= ERROR_COUNT; ++i)
-        {
-                data.push_back(MEAN + T{10'000} * i * STD_DEV);
-        }
+                PCG engine;
+                std::normal_distribution<T> nd(MEAN, STD_DEV);
+                std::vector<T> res;
+                res.reserve(COUNT + ERROR_COUNT);
+                for (std::size_t i = 0; i < COUNT; ++i)
+                {
+                        res.push_back(nd(engine));
+                }
+                for (std::size_t i = 1; i <= ERROR_COUNT; ++i)
+                {
+                        res.push_back(MEAN + T{10'000} * i * STD_DEV);
+                }
+                return res;
+        }();
 
         const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
         const T sd = numerical::standard_deviation(mad);
