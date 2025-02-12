@@ -44,20 +44,17 @@ template <typename T>
 void test_constant()
 {
         {
-                const std::vector<T> data{-2, 3, 7, -15, -6, 0, 1, 3, 19};
-
-                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
+                std::vector<T> data{-2, 3, 7, -15, -6, 0, 1, 3, 19};
+                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
                 compare(mad.median, T{1});
                 compare(mad.deviation, T{3});
 
                 const T sd = numerical::standard_deviation(mad);
                 compare(sd, T{4.44780665551680558147L});
         }
-
         {
-                const std::vector<T> data{-2, 3, 2, 7, -15, -6, 0, 1, 3, 19};
-
-                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
+                std::vector<T> data{-2, 3, 2, 7, -15, -6, 0, 1, 3, 19};
+                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
                 compare(mad.median, T{1.5});
                 compare(mad.deviation, T{2.5});
 
@@ -74,7 +71,7 @@ void test_random()
         constexpr T MEAN = -1;
         constexpr T STD_DEV = 10;
 
-        const std::vector<T> data = []
+        std::vector<T> data = []
         {
                 PCG engine;
                 std::normal_distribution<T> nd(MEAN, STD_DEV);
@@ -91,7 +88,7 @@ void test_random()
                 return res;
         }();
 
-        const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(data);
+        const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
         const T sd = numerical::standard_deviation(mad);
 
         if (!(mad.median > -2 && mad.median < 0))

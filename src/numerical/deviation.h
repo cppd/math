@@ -57,25 +57,25 @@ struct MedianAbsoluteDeviation final
 };
 
 template <typename T>
-[[nodiscard]] MedianAbsoluteDeviation<T> median_absolute_deviation(std::vector<T> data)
+[[nodiscard]] MedianAbsoluteDeviation<T> median_absolute_deviation(std::vector<T>* const data)
 {
         static_assert(std::is_floating_point_v<T>);
 
         namespace impl = deviation_implementation;
 
-        if (data.empty())
+        if (!data || data->empty())
         {
                 error("No data for median absolute deviation");
         }
 
-        const T median = impl::median(data);
+        const T median = impl::median(*data);
 
-        for (T& v : data)
+        for (T& v : *data)
         {
                 v = std::abs(v - median);
         }
 
-        const T deviation = impl::median(data);
+        const T deviation = impl::median(*data);
 
         return {
                 .median = median,
