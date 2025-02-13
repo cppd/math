@@ -45,20 +45,20 @@ void test_constant()
 {
         {
                 std::vector<T> data{-2, 3, 7, -15, -6, 0, 1, 3, 19};
-                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
+                const MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
                 compare(mad.median, T{1});
                 compare(mad.deviation, T{3});
 
-                const T sd = numerical::standard_deviation(mad);
+                const T sd = standard_deviation(mad);
                 compare(sd, T{4.44780665551680558147L});
         }
         {
                 std::vector<T> data{-2, 3, 2, 7, -15, -6, 0, 1, 3, 19};
-                const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
+                const MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
                 compare(mad.median, T{1.5});
                 compare(mad.deviation, T{2.5});
 
-                const T sd = numerical::standard_deviation(mad);
+                const T sd = standard_deviation(mad);
                 compare(sd, T{3.70650554626400465137L});
         }
 }
@@ -88,8 +88,8 @@ void test_random()
                 return res;
         }();
 
-        const numerical::MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
-        const T sd = numerical::standard_deviation(mad);
+        const MedianAbsoluteDeviation<T> mad = median_absolute_deviation(&data);
+        const T sd = standard_deviation(mad);
 
         if (!(mad.median > -2 && mad.median < 0))
         {
