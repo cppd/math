@@ -394,9 +394,9 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(const numerical::Matrix<N, N, T>& m, const T& d)
+[[nodiscard]] constexpr Matrix<N, N, T> add_diagonal(const Matrix<N, N, T>& m, const T& d)
 {
-        numerical::Matrix<N, N, T> res = m;
+        Matrix<N, N, T> res = m;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, i] += d;
@@ -405,17 +405,15 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(const T& d, const numerical::Matrix<N, N, T>& m)
+[[nodiscard]] constexpr Matrix<N, N, T> add_diagonal(const T& d, const Matrix<N, N, T>& m)
 {
         return add_diagonal(m, d);
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(
-        const numerical::Matrix<N, N, T>& m,
-        const numerical::Vector<N, T>& d)
+[[nodiscard]] constexpr Matrix<N, N, T> add_diagonal(const Matrix<N, N, T>& m, const Vector<N, T>& d)
 {
-        numerical::Matrix<N, N, T> res = m;
+        Matrix<N, N, T> res = m;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i, i] += d[i];
@@ -424,19 +422,15 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_diagonal(
-        const numerical::Vector<N, T>& d,
-        const numerical::Matrix<N, N, T>& m)
+[[nodiscard]] constexpr Matrix<N, N, T> add_diagonal(const Vector<N, T>& d, const Matrix<N, N, T>& m)
 {
         return add_diagonal(m, d);
 }
 
 template <std::size_t R, std::size_t C, typename T>
-[[nodiscard]] constexpr numerical::Matrix<R, C, T> mul_diagonal(
-        const numerical::Matrix<R, C, T>& m,
-        const numerical::Vector<C, T>& d)
+[[nodiscard]] constexpr Matrix<R, C, T> mul_diagonal(const Matrix<R, C, T>& m, const Vector<C, T>& d)
 {
-        numerical::Matrix<R, C, T> res;
+        Matrix<R, C, T> res;
         for (std::size_t r = 0; r < R; ++r)
         {
                 for (std::size_t c = 0; c < C; ++c)
@@ -448,11 +442,9 @@ template <std::size_t R, std::size_t C, typename T>
 }
 
 template <std::size_t R, std::size_t C, typename T>
-[[nodiscard]] constexpr numerical::Matrix<R, C, T> mul_diagonal(
-        const numerical::Vector<R, T>& d,
-        const numerical::Matrix<R, C, T>& m)
+[[nodiscard]] constexpr Matrix<R, C, T> mul_diagonal(const Vector<R, T>& d, const Matrix<R, C, T>& m)
 {
-        numerical::Matrix<R, C, T> res;
+        Matrix<R, C, T> res;
         for (std::size_t r = 0; r < R; ++r)
         {
                 for (std::size_t c = 0; c < C; ++c)
@@ -464,25 +456,19 @@ template <std::size_t R, std::size_t C, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_md(
-        const numerical::Matrix<N, N, T>& m,
-        const numerical::Vector<N, T>& d)
+[[nodiscard]] constexpr Matrix<N, N, T> add_md(const Matrix<N, N, T>& m, const Vector<N, T>& d)
 {
         return add_diagonal(m, d);
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_md(
-        const numerical::Vector<N, T>& d,
-        const numerical::Matrix<N, N, T>& m)
+[[nodiscard]] constexpr Matrix<N, N, T> add_md(const Vector<N, T>& d, const Matrix<N, N, T>& m)
 {
         return add_diagonal(d, m);
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr numerical::Matrix<N, N, T> add_md(
-        const numerical::Matrix<N, N, T>& a,
-        const numerical::Matrix<N, N, T>& b)
+[[nodiscard]] constexpr Matrix<N, N, T> add_md(const Matrix<N, N, T>& a, const Matrix<N, N, T>& b)
 {
         return a + b;
 }

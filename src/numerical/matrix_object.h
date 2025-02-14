@@ -203,13 +203,13 @@ public:
         [[nodiscard]] Matrix<ROWS, ROWS, T> inversed() const
                 requires (ROWS == COLUMNS)
         {
-                return Matrix<ROWS, ROWS, T>(numerical::inverse(rows_));
+                return Matrix<ROWS, ROWS, T>(inverse(rows_));
         }
 
         [[nodiscard]] Vector<ROWS, T> solve(const Vector<ROWS, T>& b) const
                 requires (ROWS == COLUMNS)
         {
-                return numerical::linear_solve<ROWS, T>(rows_, b);
+                return linear_solve<ROWS, T>(rows_, b);
         }
 
         template <std::size_t R, std::size_t C>
