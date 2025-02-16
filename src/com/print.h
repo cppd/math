@@ -277,7 +277,7 @@ template <typename T>
                 return {};
         }
 
-        constexpr bool IS_CLASS = std::is_class_v<std::remove_cvref<decltype(*i)>>;
+        constexpr bool IS_CLASS = std::is_class_v<std::remove_cvref_t<decltype(*i)>>;
 
         std::string res = to_string(*i);
         while (++i != std::end(data))
