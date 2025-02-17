@@ -11,7 +11,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received v1 copy of the GNU General Public License
+You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -23,16 +23,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cstddef>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 namespace ns::numerical
 {
 namespace median_implementation
 {
-template <typename T>
+template <typename T, typename F1, typename F2>
 std::optional<T> compute(
-        const std::vector<T>& v1,
-        const std::vector<T>& v2,
+        const F1& f1,
+        const F2& f2,
         const std::size_t s1,
         const std::size_t s2,
         std::size_t& l,
@@ -42,12 +43,12 @@ std::optional<T> compute(
         const std::size_t m2 = (s1 + s2 + 1) / 2 - m1;
 
         ASSERT(m1 <= s1);
-        const T l1 = (m1 == 0 ? Limits<T>::lowest() : v1[m1 - 1]);
-        const T r1 = (m1 == s1 ? Limits<T>::max() : v1[m1]);
+        const T l1 = (m1 == 0 ? Limits<T>::lowest() : f1(m1 - 1));
+        const T r1 = (m1 == s1 ? Limits<T>::max() : f1(m1));
 
         ASSERT(m2 <= s2);
-        const T l2 = (m2 == 0 ? Limits<T>::lowest() : v2[m2 - 1]);
-        const T r2 = (m2 == s2 ? Limits<T>::max() : v2[m2]);
+        const T l2 = (m2 == 0 ? Limits<T>::lowest() : f2(m2 - 1));
+        const T r2 = (m2 == s2 ? Limits<T>::max() : f2(m2));
 
         if (l1 <= r2 && l2 <= r1)
         {
@@ -76,35 +77,56 @@ std::optional<T> compute(
 }
 }
 
-template <typename T>
-[[nodiscard]] T median_of_sorted_data(const std::vector<T>& v1, const std::vector<T>& v2)
+template <typename F1, typename F2>
+[[nodiscard]] std::remove_cvref_t<decltype(std::declval<F1>()(0))> median_of_sorted_data(
+        // T f(std::size_t i)
+        const F1& f1,
+        const std::size_t size_1,
+        // T f(std::size_t i)
+        const F2& f2,
+        const std::size_t size_2)
 {
         namespace impl = median_implementation;
 
+        static_assert(std::is_same_v<decltype(f1(std::size_t{0})), decltype(f2(std::size_t{0}))>);
+        using T = std::remove_cvref_t<decltype(f1(std::size_t{0}))>;
         static_assert(std::is_floating_point_v<T>);
 
-        if (v1.empty() && v2.empty())
+        if (size_1 == 0 && size_2 == 0)
         {
                 error("No data for median");
         }
 
-        const std::size_t s1 = v1.size();
-        const std::size_t s2 = v2.size();
-
-        if (s1 > s2)
+        if (size_1 > size_2)
         {
-                return median_of_sorted_data(v2, v1);
+                return median_of_sorted_data(f2, size_2, f1, size_1);
         }
 
         std::size_t l = 0;
-        std::size_t h = s1;
+        std::size_t h = size_1;
 
         while (true)
         {
-                if (const auto r = impl::compute(v1, v2, s1, s2, l, h))
+                if (const auto r = impl::compute<T>(f1, f2, size_1, size_2, l, h))
                 {
                         return *r;
                 }
         }
+}
+
+template <typename T>
+[[nodiscard]] T median_of_sorted_data(const std::vector<T>& v1, const std::vector<T>& v2)
+{
+        return median_of_sorted_data(
+                [&v1](const std::size_t i)
+                {
+                        return v1[i];
+                },
+                v1.size(),
+                [&v2](const std::size_t i)
+                {
+                        return v2[i];
+                },
+                v2.size());
 }
 }
