@@ -33,11 +33,32 @@ namespace ns::numerical
 namespace
 {
 template <typename T>
-void compare(const T a, const T b)
+void compare(const T& a, const T& b)
 {
         if (!(a == b))
         {
                 error(to_string(a) + " is not equal to " + to_string(b));
+        }
+}
+
+template <typename T>
+void test_vector()
+{
+        {
+                std::vector<T> data{5, 2, 4, 1, 3};
+                std::vector<T> v = data;
+                compare(median(&v), T{3});
+                std::ranges::sort(data);
+                std::ranges::sort(v);
+                compare(v, data);
+        }
+        {
+                std::vector<T> data{5, 2, 4, 3};
+                std::vector<T> v = data;
+                compare(median(&v), T{3.5});
+                std::ranges::sort(data);
+                std::ranges::sort(v);
+                compare(v, data);
         }
 }
 
@@ -81,7 +102,7 @@ std::vector<T> make_sorted_data(PCG& pcg)
 }
 
 template <typename T>
-T median(const std::vector<T>& data)
+T median_of_sorted_vector(const std::vector<T>& data)
 {
         ASSERT(!data.empty());
         const std::size_t s = data.size();
@@ -93,7 +114,7 @@ T median(const std::vector<T>& data)
 }
 
 template <typename T>
-std::tuple<std::vector<T>, std::vector<T>> samples(const std::vector<T>& data, const std::size_t p, PCG& pcg)
+std::tuple<std::vector<T>, std::vector<T>> sample_two_vectors(const std::vector<T>& data, const std::size_t p, PCG& pcg)
 {
         ASSERT(p <= data.size());
         std::tuple<std::vector<T>, std::vector<T>> res;
@@ -129,7 +150,7 @@ void test_random()
         PCG pcg;
 
         const std::vector<T> data = make_sorted_data<T>(pcg);
-        const T m = median(data);
+        const T m = median_of_sorted_vector(data);
         const std::size_t p = std::uniform_int_distribution<std::size_t>(0, data.size())(pcg);
 
         {
@@ -138,7 +159,7 @@ void test_random()
                 compare(median_of_sorted_data(v1, v2), m);
         }
         {
-                const auto [v1, v2] = samples(data, p, pcg);
+                const auto [v1, v2] = sample_two_vectors(data, p, pcg);
                 compare(median_of_sorted_data(v1, v2), m);
         }
 }
@@ -146,6 +167,7 @@ void test_random()
 template <typename T>
 void test()
 {
+        test_vector<T>();
         test_constant<T>();
         for (int i = 0; i < 10; ++i)
         {

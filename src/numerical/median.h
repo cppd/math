@@ -77,6 +77,29 @@ std::optional<T> compute(
 }
 }
 
+template <typename T>
+[[nodiscard]] T median(std::vector<T>* const data)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        if (!data || data->empty())
+        {
+                error("No data for median");
+        }
+
+        const std::size_t m = data->size() / 2;
+
+        std::ranges::nth_element(*data, data->begin() + m);
+
+        if (data->size() & 1u)
+        {
+                return (*data)[m];
+        }
+
+        const auto iter = std::max_element(data->begin(), data->begin() + m);
+        return (*iter + (*data)[m]) / 2;
+}
+
 template <typename F1, typename F2>
 [[nodiscard]] std::remove_cvref_t<decltype(std::declval<F1>()(0))> median_of_sorted_data(
         // T f(std::size_t i)

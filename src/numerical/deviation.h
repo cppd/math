@@ -17,38 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "median.h"
+
 #include <src/com/error.h>
 
-#include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <vector>
 
 namespace ns::numerical
 {
-namespace deviation_implementation
-{
-template <typename T>
-T median(std::vector<T>& data)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        ASSERT(!data.empty());
-
-        const std::size_t m = data.size() / 2;
-
-        std::ranges::nth_element(data, data.begin() + m);
-
-        if (data.size() & 1u)
-        {
-                return data[m];
-        }
-
-        const auto iter = std::max_element(data.begin(), data.begin() + m);
-        return (*iter + data[m]) / 2;
-}
-}
-
 template <typename T>
 struct MedianAbsoluteDeviation final
 {
@@ -61,24 +38,22 @@ template <typename T>
 {
         static_assert(std::is_floating_point_v<T>);
 
-        namespace impl = deviation_implementation;
-
         if (!data || data->empty())
         {
                 error("No data for median absolute deviation");
         }
 
-        const T median = impl::median(*data);
+        const T m = median(data);
 
         for (T& v : *data)
         {
-                v = std::abs(v - median);
+                v = std::abs(v - m);
         }
 
-        const T deviation = impl::median(*data);
+        const T deviation = median(data);
 
         return {
-                .median = median,
+                .median = m,
                 .deviation = deviation,
         };
 }
