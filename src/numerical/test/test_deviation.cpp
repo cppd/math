@@ -101,7 +101,7 @@ void test_random()
                 error("Deviation " + to_string(mad.deviation) + " is out of range");
         }
 
-        if (!(sd > 9 && mad.deviation < 11))
+        if (!(sd > 9 && sd < 11))
         {
                 error("Standard deviation " + to_string(sd) + " is out of range");
         }
