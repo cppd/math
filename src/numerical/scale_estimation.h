@@ -32,9 +32,7 @@ template <typename T>
 {
         static_assert(std::is_floating_point_v<T>);
 
-        constexpr T CORRECTION = 1.1926;
-
-        if (data->size() <= 1)
+        if (data.size() <= 1)
         {
                 error("No data for scale estimation");
         }
@@ -68,6 +66,14 @@ template <typename T>
                 v.push_back(m);
         }
 
-        return CORRECTION * median(&v);
+        return median(&v);
+}
+
+template <typename T>
+[[nodiscard]] T scale_estimation_sn_standard_deviation(const T sn)
+{
+        static constexpr T CORRECTION = 1.1926L;
+
+        return CORRECTION * sn;
 }
 }

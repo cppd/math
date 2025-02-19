@@ -1,0 +1,164 @@
+/*
+Copyright (C) 2017-2025 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <src/com/error.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/random/pcg.h>
+#include <src/numerical/scale_estimation.h>
+#include <src/test/test.h>
+
+#include <cmath>
+#include <cstddef>
+#include <random>
+#include <type_traits>
+#include <vector>
+
+namespace ns::numerical
+{
+namespace
+{
+template <typename T>
+void compare(const T a, const T b, const T precision)
+{
+        if (!(std::abs(a - b) <= precision))
+        {
+                error(to_string(a) + " is not equal to " + to_string(b));
+        }
+}
+
+template <typename T>
+void test_constant(const std::type_identity_t<T> precision)
+{
+        {
+                const std::vector<T> data{1, 4, -1, 15};
+
+                const T sn = scale_estimation_sn(data);
+                compare(sn, T{5}, precision);
+
+                const T sd = scale_estimation_sn_standard_deviation(sn);
+                compare(sd, T{5.9630000000000000001L}, precision);
+        }
+        {
+                const std::vector<T> data{1, 4, -1, 15, -2};
+                const T sn = scale_estimation_sn(data);
+                compare(sn, T{4.5}, precision);
+
+                const T sd = scale_estimation_sn_standard_deviation(sn);
+                compare(sd, T{5.36670000000000000035L}, precision);
+        }
+}
+
+template <typename T>
+T scale_estimation_sn_n2(const std::vector<T>& data)
+{
+        ASSERT(!data.empty());
+        std::vector<T> v;
+        for (std::size_t i = 0; i < data.size(); ++i)
+        {
+                std::vector<T> t;
+                t.reserve(data.size() - 1);
+                for (std::size_t j = 0; j < i; ++j)
+                {
+                        t.push_back(std::abs(data[i] - data[j]));
+                }
+                for (std::size_t j = i + 1; j < data.size(); ++j)
+                {
+                        t.push_back(std::abs(data[i] - data[j]));
+                }
+                const T m = median(&t);
+                v.push_back(m);
+        }
+        return median(&v);
+}
+
+template <typename T>
+std::vector<T> make_data(const std::size_t count)
+{
+        constexpr std::size_t ERROR_COUNT = 10;
+        constexpr T MEAN = -1;
+        constexpr T STD_DEV = 10;
+
+        PCG engine;
+        std::normal_distribution<T> nd(MEAN, STD_DEV);
+        std::uniform_int_distribution<unsigned> uid(0, 1);
+        std::vector<T> res;
+        const std::size_t count_1 = count + uid(engine);
+        res.reserve(count_1 + ERROR_COUNT);
+        for (std::size_t i = 0; i < count_1; ++i)
+        {
+                res.push_back(nd(engine));
+        }
+        for (std::size_t i = 1; i <= ERROR_COUNT; ++i)
+        {
+                res.push_back(MEAN + T{10'000} * i * STD_DEV);
+        }
+        return res;
+}
+
+template <typename T>
+void test_random()
+{
+        const std::vector<T> data = make_data<T>(500);
+
+        const T sn = scale_estimation_sn(data);
+        const T sn_n2 = scale_estimation_sn_n2(data);
+
+        compare(sn, sn_n2, T{0});
+}
+
+template <typename T>
+void test_random_big()
+{
+        const std::vector<T> data = make_data<T>(10'000);
+
+        const T sn = scale_estimation_sn(data);
+        const T sd = scale_estimation_sn_standard_deviation(sn);
+
+        if (!(sn > T{8.0} && sn < T{8.8}))
+        {
+                error("Scale " + to_string(sn) + " is out of range");
+        }
+
+        if (!(sd > T{9.5} && sd < T{10.5}))
+        {
+                error("Standard deviation " + to_string(sd) + " is out of range");
+        }
+}
+
+template <typename T>
+void test(const std::type_identity_t<T> precision)
+{
+        test_constant<T>(precision);
+        test_random<T>();
+        test_random_big<T>();
+}
+
+void test_deviation()
+{
+        LOG("Test scale estimation sn");
+
+        test<float>(1e-6);
+        test<double>(1e-15);
+        test<long double>(0);
+
+        LOG("Test scale estimation sn passed");
+}
+
+TEST_SMALL("Scale Estimation", test_deviation)
+}
+}
