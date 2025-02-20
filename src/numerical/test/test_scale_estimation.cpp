@@ -55,6 +55,7 @@ void test_constant(const std::type_identity_t<T> precision)
         }
         {
                 const std::vector<T> data{1, 4, -1, 15, -2};
+
                 const T sn = scale_estimation_sn(data);
                 compare(sn, T{4.5}, precision);
 
@@ -67,11 +68,17 @@ template <typename T>
 T scale_estimation_sn_n2(const std::vector<T>& data)
 {
         ASSERT(!data.empty());
+
         std::vector<T> v;
+        v.reserve(data.size());
+
+        std::vector<T> t;
+        t.reserve(data.size() - 1);
+
         for (std::size_t i = 0; i < data.size(); ++i)
         {
-                std::vector<T> t;
-                t.reserve(data.size() - 1);
+                t.clear();
+
                 for (std::size_t j = 0; j < i; ++j)
                 {
                         t.push_back(std::abs(data[i] - data[j]));
@@ -80,9 +87,11 @@ T scale_estimation_sn_n2(const std::vector<T>& data)
                 {
                         t.push_back(std::abs(data[i] - data[j]));
                 }
+
                 const T m = median(&t);
                 v.push_back(m);
         }
+
         return median(&v);
 }
 
@@ -95,18 +104,23 @@ std::vector<T> make_data(const std::size_t count)
 
         PCG engine;
         std::normal_distribution<T> nd(MEAN, STD_DEV);
-        std::uniform_int_distribution<unsigned> uid(0, 1);
+        std::uniform_int_distribution<unsigned> uid_size(0, 1);
+
+        const std::size_t size = count + uid_size(engine);
+
         std::vector<T> res;
-        const std::size_t count_1 = count + uid(engine);
-        res.reserve(count_1 + ERROR_COUNT);
-        for (std::size_t i = 0; i < count_1; ++i)
+        res.reserve(size + ERROR_COUNT);
+
+        for (std::size_t i = 0; i < size; ++i)
         {
                 res.push_back(nd(engine));
         }
+
         for (std::size_t i = 1; i <= ERROR_COUNT; ++i)
         {
                 res.push_back(MEAN + T{10'000} * i * STD_DEV);
         }
+
         return res;
 }
 
