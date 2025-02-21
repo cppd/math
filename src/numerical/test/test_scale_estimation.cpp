@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/numerical/median.h>
 #include <src/numerical/scale_estimation.h>
 #include <src/test/test.h>
 
@@ -67,15 +68,16 @@ void test_constant(const std::type_identity_t<T> precision)
 template <typename T>
 T scale_estimation_sn_n2(const std::vector<T>& data)
 {
-        ASSERT(!data.empty());
+        const std::size_t size = data.size();
+        ASSERT(size > 1);
 
         std::vector<T> v;
-        v.reserve(data.size());
+        v.reserve(size);
 
         std::vector<T> t;
-        t.reserve(data.size() - 1);
+        t.reserve(size - 1);
 
-        for (std::size_t i = 0; i < data.size(); ++i)
+        for (std::size_t i = 0; i < size; ++i)
         {
                 t.clear();
 
@@ -83,7 +85,7 @@ T scale_estimation_sn_n2(const std::vector<T>& data)
                 {
                         t.push_back(std::abs(data[i] - data[j]));
                 }
-                for (std::size_t j = i + 1; j < data.size(); ++j)
+                for (std::size_t j = i + 1; j < size; ++j)
                 {
                         t.push_back(std::abs(data[i] - data[j]));
                 }
