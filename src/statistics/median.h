@@ -17,55 +17,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "median.h"
-
 #include <src/com/error.h>
 
-#include <cmath>
+#include <algorithm>
+#include <cstddef>
+#include <type_traits>
 #include <vector>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 template <typename T>
-struct MedianAbsoluteDeviation final
-{
-        T median;
-        T deviation;
-};
-
-template <typename T>
-[[nodiscard]] MedianAbsoluteDeviation<T> median_absolute_deviation(std::vector<T>* const data)
+[[nodiscard]] T median(std::vector<T>* const data)
 {
         static_assert(std::is_floating_point_v<T>);
 
         if (!data || data->empty())
         {
-                error("No data for median absolute deviation");
+                error("No data for median");
         }
 
-        const T m = median(data);
+        const std::size_t m = data->size() / 2;
 
-        for (T& v : *data)
+        std::ranges::nth_element(*data, data->begin() + m);
+
+        if (data->size() & 1u)
         {
-                v = std::abs(v - m);
+                return (*data)[m];
         }
 
-        const T deviation = median(data);
-
-        return {
-                .median = m,
-                .deviation = deviation,
-        };
-}
-
-template <typename T>
-[[nodiscard]] T standard_deviation(const MedianAbsoluteDeviation<T>& mad)
-{
-        // mad = sigma * sqrt(2) * inverse_erf(1/2)
-        // sigma = k * mad
-        // k = 1 / (sqrt(2) * inverse_erf(1/2))
-        static constexpr T K = 1.4826022185056018605L;
-
-        return K * mad.deviation;
+        const auto iter = std::max_element(data->begin(), data->begin() + m);
+        return (*iter + (*data)[m]) / 2;
 }
 }

@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/numerical/median.h>
-#include <src/numerical/scale_estimation.h>
+#include <src/statistics/median.h>
+#include <src/statistics/scale_estimation.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 namespace
 {

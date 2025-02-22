@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/numerical/median_array.h>
+#include <src/statistics/median_array.h>
 #include <src/test/test.h>
 
 #include <algorithm>
@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 namespace
 {

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <vector>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 template <typename T>
 [[nodiscard]] T scale_estimation_sn(std::vector<T> data)

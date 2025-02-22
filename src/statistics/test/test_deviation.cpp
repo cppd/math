@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/numerical/deviation.h>
+#include <src/statistics/deviation.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 namespace
 {
