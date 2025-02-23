@@ -18,15 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/numerical/moving_average.h>
 #include <src/numerical/vector.h>
+#include <src/statistics/moving_average.h>
 #include <src/test/test.h>
 
 #include <array>
 #include <cmath>
 #include <cstddef>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 namespace
 {
@@ -41,7 +41,10 @@ void compare(const T a, const T b, const T precision)
 }
 
 template <std::size_t N, typename T>
-void compare(const Vector<N, T>& a, const Vector<N, T>& b, const Vector<N, T>& precision)
+void compare(
+        const numerical::Vector<N, T>& a,
+        const numerical::Vector<N, T>& b,
+        const numerical::Vector<N, T>& precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -130,9 +133,9 @@ void test_average()
         test<double>(1e-15);
         test<long double>(1e-18);
 
-        test(Vector<3, float>(1e-6));
-        test(Vector<3, double>(1e-15));
-        test(Vector<3, long double>(1e-18));
+        test(numerical::Vector<3, float>(1e-6));
+        test(numerical::Vector<3, double>(1e-15));
+        test(numerical::Vector<3, long double>(1e-18));
 
         LOG("Test average passed");
 }

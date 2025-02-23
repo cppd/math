@@ -18,15 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/numerical/moving_variance.h>
 #include <src/numerical/vector.h>
+#include <src/statistics/moving_variance.h>
 #include <src/test/test.h>
 
 #include <array>
 #include <cmath>
 #include <cstddef>
 
-namespace ns::numerical
+namespace ns::statistics
 {
 namespace
 {
@@ -41,7 +41,10 @@ void compare(const T a, const T b, const T precision)
 }
 
 template <std::size_t N, typename T>
-void compare(const Vector<N, T>& a, const Vector<N, T>& b, const Vector<N, T>& precision)
+void compare(
+        const numerical::Vector<N, T>& a,
+        const numerical::Vector<N, T>& b,
+        const numerical::Vector<N, T>& precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -60,9 +63,9 @@ template <typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> sqrt(const Vector<N, T>& a)
+[[nodiscard]] numerical::Vector<N, T> sqrt(const numerical::Vector<N, T>& a)
 {
-        Vector<N, T> res;
+        numerical::Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
                 res[i] = std::sqrt(a[i]);
@@ -166,9 +169,9 @@ void test_variance()
         test<double>(1e-13);
         test<long double>(1e-17);
 
-        test(Vector<3, float>(1e-5));
-        test(Vector<3, double>(1e-13));
-        test(Vector<3, long double>(1e-17));
+        test(numerical::Vector<3, float>(1e-5));
+        test(numerical::Vector<3, double>(1e-13));
+        test(numerical::Vector<3, long double>(1e-17));
 
         LOG("Test variance passed");
 }

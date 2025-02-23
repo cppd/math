@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/moving_variance.h>
 #include <src/numerical/vector.h>
+#include <src/statistics/moving_variance.h>
 
 #include <array>
 #include <cstddef>
@@ -33,7 +33,7 @@ class MovingVariance final
         static_assert(N > 0);
 
         std::array<std::vector<T>, N> estimation_residuals_;
-        numerical::MovingVariance<numerical::Vector<N, T>> variance_;
+        statistics::MovingVariance<numerical::Vector<N, T>> variance_;
 
         void fill_estimation(const numerical::Vector<N, T>& residual);
 
