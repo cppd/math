@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
-#include <src/statistics/deviation.h>
+#include <src/statistics/mad.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -116,15 +116,15 @@ void test()
 
 void test_deviation()
 {
-        LOG("Test deviation");
+        LOG("Test median absolute deviation");
 
         test<float>();
         test<double>();
         test<long double>();
 
-        LOG("Test deviation passed");
+        LOG("Test median absolute deviation passed");
 }
 
-TEST_SMALL("Deviation", test_deviation)
+TEST_SMALL("Median Absolute Deviation", test_deviation)
 }
 }
