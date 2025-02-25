@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/statistics/estimator_sn.h>
 #include <src/statistics/median.h>
-#include <src/statistics/scale_estimation.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -48,25 +48,25 @@ void test_constant(const std::type_identity_t<T> precision)
         {
                 const std::vector<T> data{1, 4, -1, 15};
 
-                const T sn = scale_estimation_sn(data);
+                const T sn = estimator_sn(data);
                 compare(sn, T{5}, precision);
 
-                const T sd = scale_estimation_sn_standard_deviation(sn);
+                const T sd = estimator_sn_standard_deviation(sn);
                 compare(sd, T{5.9630000000000000001L}, precision);
         }
         {
                 const std::vector<T> data{1, 4, -1, 15, -2};
 
-                const T sn = scale_estimation_sn(data);
+                const T sn = estimator_sn(data);
                 compare(sn, T{4.5}, precision);
 
-                const T sd = scale_estimation_sn_standard_deviation(sn);
+                const T sd = estimator_sn_standard_deviation(sn);
                 compare(sd, T{5.36670000000000000035L}, precision);
         }
 }
 
 template <typename T>
-T scale_estimation_sn_n2(const std::vector<T>& data)
+T estimator_sn_n2(const std::vector<T>& data)
 {
         const std::size_t size = data.size();
         ASSERT(size > 1);
@@ -131,8 +131,8 @@ void test_random()
 {
         const std::vector<T> data = make_data<T>(500);
 
-        const T sn = scale_estimation_sn(data);
-        const T sn_n2 = scale_estimation_sn_n2(data);
+        const T sn = estimator_sn(data);
+        const T sn_n2 = estimator_sn_n2(data);
 
         compare(sn, sn_n2, T{0});
 }
@@ -142,8 +142,8 @@ void test_random_big()
 {
         const std::vector<T> data = make_data<T>(10'000);
 
-        const T sn = scale_estimation_sn(data);
-        const T sd = scale_estimation_sn_standard_deviation(sn);
+        const T sn = estimator_sn(data);
+        const T sd = estimator_sn_standard_deviation(sn);
 
         if (!(sn > T{8.0} && sn < T{8.8}))
         {
@@ -157,24 +157,24 @@ void test_random_big()
 }
 
 template <typename T>
-void test(const std::type_identity_t<T> precision)
+void test_impl(const std::type_identity_t<T> precision)
 {
         test_constant<T>(precision);
         test_random<T>();
         test_random_big<T>();
 }
 
-void test_deviation()
+void test()
 {
-        LOG("Test scale estimation sn");
+        LOG("Test estimator Sn");
 
-        test<float>(1e-6);
-        test<double>(1e-15);
-        test<long double>(0);
+        test_impl<float>(1e-6);
+        test_impl<double>(1e-15);
+        test_impl<long double>(0);
 
-        LOG("Test scale estimation sn passed");
+        LOG("Test estimator Sn passed");
 }
 
-TEST_SMALL("Scale Estimation", test_deviation)
+TEST_SMALL("Estimator Sn", test)
 }
 }

@@ -29,13 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::statistics
 {
 template <typename T>
-[[nodiscard]] T scale_estimation_sn(std::vector<T> data)
+[[nodiscard]] T estimator_sn(std::vector<T> data)
 {
         static_assert(std::is_floating_point_v<T>);
 
         if (data.size() <= 1)
         {
-                error("No data for scale estimation");
+                error("No data for estimator Sn");
         }
 
         std::ranges::sort(data);
@@ -71,7 +71,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T scale_estimation_sn_standard_deviation(const T sn)
+[[nodiscard]] T estimator_sn_standard_deviation(const T sn)
 {
         static constexpr T CORRECTION = 1.1926L;
 
