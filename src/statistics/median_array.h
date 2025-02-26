@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <optional>
 #include <type_traits>
-#include <vector>
 
 namespace ns::statistics
 {
@@ -112,21 +111,5 @@ template <typename F1, typename F2>
                         return *r;
                 }
         }
-}
-
-template <typename T>
-[[nodiscard]] T median_of_sorted_data(const std::vector<T>& v1, const std::vector<T>& v2)
-{
-        return median_of_sorted_data(
-                [&v1](const std::size_t i)
-                {
-                        return v1[i];
-                },
-                v1.size(),
-                [&v2](const std::size_t i)
-                {
-                        return v2[i];
-                },
-                v2.size());
 }
 }

@@ -42,27 +42,55 @@ void compare(const T& a, const T& b)
 }
 
 template <typename T>
+T median_of_sorted_vector(const std::vector<T>& data)
+{
+        ASSERT(!data.empty());
+        const std::size_t s = data.size();
+        if (s & 1u)
+        {
+                return data[s / 2];
+        }
+        return (data[s / 2 - 1] + data[s / 2]) / 2;
+}
+
+template <typename T>
+T median_of_sorted_vectors(const std::vector<T>& v1, const std::vector<T>& v2)
+{
+        return median_of_sorted_data(
+                [&v1](const std::size_t i)
+                {
+                        return v1[i];
+                },
+                v1.size(),
+                [&v2](const std::size_t i)
+                {
+                        return v2[i];
+                },
+                v2.size());
+}
+
+template <typename T>
 void test_constant()
 {
-        compare(median_of_sorted_data<T>({}, {2}), T{2});
-        compare(median_of_sorted_data<T>({2}, {}), T{2});
-        compare(median_of_sorted_data<T>({}, {2, 3}), T{2.5});
-        compare(median_of_sorted_data<T>({}, {1, 2, 3}), T{2});
-        compare(median_of_sorted_data<T>({1}, {2}), T{1.5});
-        compare(median_of_sorted_data<T>({2}, {1}), T{1.5});
-        compare(median_of_sorted_data<T>({1}, {1, 1}), T{1});
-        compare(median_of_sorted_data<T>({1}, {1, 2}), T{1});
-        compare(median_of_sorted_data<T>({1}, {1, 3}), T{1});
-        compare(median_of_sorted_data<T>({1, 2}, {1, 2}), T{1.5});
-        compare(median_of_sorted_data<T>({1}, {1, 2, 3}), T{1.5});
-        compare(median_of_sorted_data<T>({3, 4}, {1, 2}), T{2.5});
-        compare(median_of_sorted_data<T>({1, 2}, {3, 4}), T{2.5});
-        compare(median_of_sorted_data<T>({1}, {2, 3, 4}), T{2.5});
-        compare(median_of_sorted_data<T>({1, 2}, {3, 4, 5}), T{3});
-        compare(median_of_sorted_data<T>({1, 2, 3}, {4, 5}), T{3});
-        compare(median_of_sorted_data<T>({1, 2}, {0, 3}), T{1.5});
-        compare(median_of_sorted_data<T>({1, 2}, {0, 3, 4}), T{2});
-        compare(median_of_sorted_data<T>({1, 4}, {0, 2, 3}), T{2});
+        compare(median_of_sorted_vectors<T>({}, {2}), T{2});
+        compare(median_of_sorted_vectors<T>({2}, {}), T{2});
+        compare(median_of_sorted_vectors<T>({}, {2, 3}), T{2.5});
+        compare(median_of_sorted_vectors<T>({}, {1, 2, 3}), T{2});
+        compare(median_of_sorted_vectors<T>({1}, {2}), T{1.5});
+        compare(median_of_sorted_vectors<T>({2}, {1}), T{1.5});
+        compare(median_of_sorted_vectors<T>({1}, {1, 1}), T{1});
+        compare(median_of_sorted_vectors<T>({1}, {1, 2}), T{1});
+        compare(median_of_sorted_vectors<T>({1}, {1, 3}), T{1});
+        compare(median_of_sorted_vectors<T>({1, 2}, {1, 2}), T{1.5});
+        compare(median_of_sorted_vectors<T>({1}, {1, 2, 3}), T{1.5});
+        compare(median_of_sorted_vectors<T>({3, 4}, {1, 2}), T{2.5});
+        compare(median_of_sorted_vectors<T>({1, 2}, {3, 4}), T{2.5});
+        compare(median_of_sorted_vectors<T>({1}, {2, 3, 4}), T{2.5});
+        compare(median_of_sorted_vectors<T>({1, 2}, {3, 4, 5}), T{3});
+        compare(median_of_sorted_vectors<T>({1, 2, 3}, {4, 5}), T{3});
+        compare(median_of_sorted_vectors<T>({1, 2}, {0, 3}), T{1.5});
+        compare(median_of_sorted_vectors<T>({1, 2}, {0, 3, 4}), T{2});
+        compare(median_of_sorted_vectors<T>({1, 4}, {0, 2, 3}), T{2});
 }
 
 template <typename T>
@@ -81,18 +109,6 @@ std::vector<T> make_sorted_data(PCG& pcg)
 
         std::ranges::sort(res);
         return res;
-}
-
-template <typename T>
-T median_of_sorted_vector(const std::vector<T>& data)
-{
-        ASSERT(!data.empty());
-        const std::size_t s = data.size();
-        if (s & 1u)
-        {
-                return data[s / 2];
-        }
-        return (data[s / 2 - 1] + data[s / 2]) / 2;
 }
 
 template <typename T>
@@ -143,11 +159,11 @@ void test_random()
         {
                 const std::vector<T> v1(data.begin(), data.begin() + p);
                 const std::vector<T> v2(data.begin() + p, data.end());
-                compare(median_of_sorted_data(v1, v2), m);
+                compare(median_of_sorted_vectors(v1, v2), m);
         }
         {
                 const auto [v1, v2] = sample_two_vectors(data, p, pcg);
-                compare(median_of_sorted_data(v1, v2), m);
+                compare(median_of_sorted_vectors(v1, v2), m);
         }
 }
 
