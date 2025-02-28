@@ -83,6 +83,7 @@ UpdateInfo<typename Filter::Type> reset_filter(
                 .x_stddev = std::sqrt(variance[0]),
                 .v = x[1],
                 .v_stddev = std::sqrt(variance[1]),
+                .xv_p = p,
         };
 }
 
@@ -169,10 +170,13 @@ class FilterImpl : public Filter<typename F::Type>
                         filter_->position_speed_p());
 
                 return {
-                        {.x = filter_->position(),
+                        {
+                         .x = filter_->position(),
                          .x_stddev = std::sqrt(filter_->position_p()),
                          .v = filter_->speed(),
-                         .v_stddev = std::sqrt(filter_->speed_p())}
+                         .v_stddev = std::sqrt(filter_->speed_p()),
+                         .xv_p = filter_->position_speed_p(),
+                         }
                 };
         }
 
@@ -279,10 +283,13 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         filter_->position_speed_p());
 
                 return {
-                        {.x = filter_->position(),
+                        {
+                         .x = filter_->position(),
                          .x_stddev = std::sqrt(filter_->position_p()),
                          .v = filter_->speed(),
-                         .v_stddev = std::sqrt(filter_->speed_p())}
+                         .v_stddev = std::sqrt(filter_->speed_p()),
+                         .xv_p = filter_->position_speed_p(),
+                         }
                 };
         }
 
