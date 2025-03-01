@@ -32,8 +32,9 @@ template <std::size_t N, typename T>
 [[nodiscard]] std::vector<numerical::Vector<N, T>> smooth(
         std::vector<numerical::Vector<N, T>> x,
         const std::vector<numerical::Matrix<N, N, T>>& p,
-        const numerical::Matrix<N, N, T>& f,
-        const numerical::Matrix<N, N, T>& q)
+        const std::vector<numerical::Matrix<N, N, T>>& f,
+        const std::vector<numerical::Vector<N, T>> x_predict,
+        const std::vector<numerical::Matrix<N, N, T>>& p_predict)
 {
         ASSERT(x.size() == p.size());
 
@@ -46,12 +47,10 @@ template <std::size_t N, typename T>
 
         for (auto i = std::ssize(x) - 2; i >= 0; --i)
         {
-                const numerical::Matrix<N, N, T> ft = f.transposed();
-                const numerical::Matrix<N, N, T> pp = f * p[i] * ft + q;
-                const numerical::Matrix<N, N, T> k = p[i] * ft * pp.inversed();
+                const numerical::Matrix<N, N, T> k = p[i] * f[i].transposed() * p_predict[i].inversed();
 
-                x[i] = x[i] + k * (x[i + 1] - f * x[i]);
-                p_next = p[i] + k * (p_next - pp) * k.transposed();
+                x[i] = x[i] + k * (x[i + 1] - x_predict[i]);
+                p_next = p[i] + k * (p_next - p_predict[i]) * k.transposed();
 
                 check_x_p("Smooth", x[i], p_next);
         }
