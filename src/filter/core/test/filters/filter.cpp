@@ -87,6 +87,7 @@ UpdateInfo<typename Filter::Type> reset_filter(
                 .p_predict = p,
                 .x_update = x,
                 .p_update = p,
+                .f_predict = std::nullopt,
         };
 }
 
@@ -161,7 +162,15 @@ class FilterImpl : public Filter<typename F::Type>
                 ASSERT(dt >= 0);
                 last_time_ = m.time;
 
-                filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                numerical::Matrix<2, 2, T> f_predict;
+                if constexpr (std::is_same_v<F, FilterUkf<typename F::Type>>)
+                {
+                        filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                }
+                else
+                {
+                        f_predict = filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                }
 
                 const numerical::Vector<2, T> x_predict = filter_->position_speed();
                 const numerical::Matrix<2, 2, T> p_predict = filter_->position_speed_p();
@@ -185,6 +194,7 @@ class FilterImpl : public Filter<typename F::Type>
                          .p_predict = p_predict,
                          .x_update = filter_->position_speed(),
                          .p_update = filter_->position_speed_p(),
+                         .f_predict = f_predict,
                          }
                 };
         }
@@ -270,6 +280,7 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         return std::nullopt;
                 }
 
+                std::optional<numerical::Matrix<2, 2, T>> f_predict;
                 numerical::Vector<2, T> x_predict;
                 numerical::Matrix<2, 2, T> p_predict;
 
@@ -288,7 +299,7 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         const T dt = m.time - *last_time_;
                         ASSERT(dt >= 0);
                         last_time_ = m.time;
-                        filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                        f_predict = filter_->predict(dt, noise_model_, fading_memory_alpha_);
                         x_predict = filter_->position_speed();
                         p_predict = filter_->position_speed_p();
                         update_filter(filter_.get(), m, gate_);
@@ -308,6 +319,7 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                          .p_predict = p_predict,
                          .x_update = filter_->position_speed(),
                          .p_update = filter_->position_speed_p(),
+                         .f_predict = f_predict,
                          }
                 };
         }

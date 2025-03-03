@@ -40,6 +40,7 @@ struct UpdateInfo final
         numerical::Matrix<2, 2, T> p_predict;
         numerical::Vector<2, T> x_update;
         numerical::Matrix<2, 2, T> p_update;
+        std::optional<numerical::Matrix<2, 2, T>> f_predict;
 };
 
 template <typename T>

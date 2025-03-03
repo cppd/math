@@ -70,7 +70,8 @@ class Filter final : public FilterEkf<T, H_INFINITY>
                 filter_.emplace(x, p);
         }
 
-        void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
+        numerical::Matrix<2, 2, T> predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha)
+                override
         {
                 ASSERT(filter_);
 
@@ -86,6 +87,8 @@ class Filter final : public FilterEkf<T, H_INFINITY>
                                 return f;
                         },
                         model::q(dt, noise_model), fading_memory_alpha);
+
+                return f;
         }
 
         void update_position(const T position, const T position_variance, const std::optional<T> gate) override
