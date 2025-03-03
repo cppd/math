@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/core/consistency.h>
 #include <src/filter/core/test/measurements.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
@@ -35,7 +36,10 @@ struct UpdateInfo final
         T x_stddev;
         T v;
         T v_stddev;
-        numerical::Matrix<2, 2, T> xv_p;
+        numerical::Vector<2, T> x_predict;
+        numerical::Matrix<2, 2, T> p_predict;
+        numerical::Vector<2, T> x_update;
+        numerical::Matrix<2, 2, T> p_update;
 };
 
 template <typename T>

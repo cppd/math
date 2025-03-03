@@ -83,7 +83,10 @@ UpdateInfo<typename Filter::Type> reset_filter(
                 .x_stddev = std::sqrt(variance[0]),
                 .v = x[1],
                 .v_stddev = std::sqrt(variance[1]),
-                .xv_p = p,
+                .x_predict = x,
+                .p_predict = p,
+                .x_update = x,
+                .p_update = p,
         };
 }
 
@@ -160,6 +163,9 @@ class FilterImpl : public Filter<typename F::Type>
 
                 filter_->predict(dt, noise_model_, fading_memory_alpha_);
 
+                const numerical::Vector<2, T> x_predict = filter_->position_speed();
+                const numerical::Matrix<2, 2, T> p_predict = filter_->position_speed_p();
+
                 if (!update_filter(filter_.get(), m, gate_))
                 {
                         return std::nullopt;
@@ -175,7 +181,10 @@ class FilterImpl : public Filter<typename F::Type>
                          .x_stddev = std::sqrt(filter_->position_p()),
                          .v = filter_->speed(),
                          .v_stddev = std::sqrt(filter_->speed_p()),
-                         .xv_p = filter_->position_speed_p(),
+                         .x_predict = x_predict,
+                         .p_predict = p_predict,
+                         .x_update = filter_->position_speed(),
+                         .p_update = filter_->position_speed_p(),
                          }
                 };
         }
@@ -261,12 +270,17 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         return std::nullopt;
                 }
 
+                numerical::Vector<2, T> x_predict;
+                numerical::Matrix<2, 2, T> p_predict;
+
                 if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
                 {
                         if (!init_update(m))
                         {
                                 return std::nullopt;
                         }
+                        x_predict = filter_->position_speed();
+                        p_predict = filter_->position_speed_p();
                 }
                 else
                 {
@@ -275,6 +289,8 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         ASSERT(dt >= 0);
                         last_time_ = m.time;
                         filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                        x_predict = filter_->position_speed();
+                        p_predict = filter_->position_speed_p();
                         update_filter(filter_.get(), m, gate_);
                 }
 
@@ -288,7 +304,10 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                          .x_stddev = std::sqrt(filter_->position_p()),
                          .v = filter_->speed(),
                          .v_stddev = std::sqrt(filter_->speed_p()),
-                         .xv_p = filter_->position_speed_p(),
+                         .x_predict = x_predict,
+                         .p_predict = p_predict,
+                         .x_update = filter_->position_speed(),
+                         .p_update = filter_->position_speed_p(),
                          }
                 };
         }

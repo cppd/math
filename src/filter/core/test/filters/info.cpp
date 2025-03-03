@@ -130,8 +130,11 @@ class Filter final : public FilterInfo<T>
                 ASSERT(filter_);
 
                 const auto& p = filter_->p();
-                ASSERT(p);
-                return *p;
+                if (p)
+                {
+                        return *p;
+                }
+                return filter_->i().inversed();
         }
 
         [[nodiscard]] T speed() const override
