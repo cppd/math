@@ -123,6 +123,7 @@ public:
 
                 // inv(q + f * inv(i) * t(f))
                 i_ = impl::inversion(q_inv, fjx, fjx_t, i_);
+                p_.reset();
         }
 
         template <std::size_t M, typename H, typename HJ, typename AddX, typename ResidualZ>
