@@ -29,10 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/filter/core/consistency.h>
+#include <src/filter/core/smooth.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -94,6 +98,55 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& re
                          .x_stddev = r.info.x_stddev,
                          .v = r.info.v,
                          .v_stddev = r.info.v_stddev});
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result)
+{
+        std::vector<numerical::Matrix<2, 2, T>> f_predict;
+        std::vector<numerical::Vector<2, T>> x_predict;
+        std::vector<numerical::Matrix<2, 2, T>> p_predict;
+        std::vector<numerical::Vector<2, T>> x;
+        std::vector<numerical::Matrix<2, 2, T>> p;
+
+        for (std::size_t i = 0; i < result.size(); ++i)
+        {
+                if (i > 0 && !(result[i].time - result[i - 1].time < T{1.5}))
+                {
+                        return {};
+                }
+                if (const auto& f_p = result[i].info.f_predict)
+                {
+                        f_predict.push_back(*f_p);
+                }
+                else
+                {
+                        if (i > 0)
+                        {
+                                return {};
+                        }
+                        f_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
+                }
+                x_predict.push_back(result[i].info.x_predict);
+                p_predict.push_back(result[i].info.p_predict);
+                x.push_back(result[i].info.x_update);
+                p.push_back(result[i].info.p_update);
+        }
+
+        x = smooth(f_predict, x_predict, p_predict, x, p);
+
+        std::vector<view::Point<T>> res;
+        res.reserve(result.size());
+        for (std::size_t i = 0; i < result.size(); ++i)
+        {
+                res.push_back(
+                        {.time = result[i].time,
+                         .x = x[i][0],
+                         .x_stddev = result[i].info.x_stddev,
+                         .v = x[i][1],
+                         .v_stddev = result[i].info.v_stddev});
         }
         return res;
 }
@@ -181,7 +234,9 @@ void test_impl(
         view::write(
                 name, annotation, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
-                 view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result))});
+                 view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result)),
+                 view::Filter<T>("Smooth Position", color::RGB8(0, 170, 0), smooth_view_points(result_x.result)),
+                 view::Filter<T>("Smooth Speed", color::RGB8(0, 200, 0), smooth_view_points(result_xv.result))});
 }
 
 template <typename T>

@@ -306,6 +306,10 @@ void write_filters(
         const std::unordered_map<T, Measurements<T>> time_map = measurement_time_map(measurements);
         for (const Filter<T>& filter : filters)
         {
+                if (filter.points.empty())
+                {
+                        continue;
+                }
                 write_filter_position(file, filter, interval);
                 write_filter_position_sigma(file, time_map, filter, interval);
                 write_filter_speed(file, filter, interval);

@@ -162,15 +162,18 @@ class FilterImpl : public Filter<typename F::Type>
                 ASSERT(dt >= 0);
                 last_time_ = m.time;
 
-                numerical::Matrix<2, 2, T> f_predict;
-                if constexpr (std::is_same_v<F, FilterUkf<typename F::Type>>)
+                const std::optional<numerical::Matrix<2, 2, T>> f_predict = [&]
                 {
-                        filter_->predict(dt, noise_model_, fading_memory_alpha_);
-                }
-                else
-                {
-                        f_predict = filter_->predict(dt, noise_model_, fading_memory_alpha_);
-                }
+                        if constexpr (std::is_same_v<F, FilterUkf<typename F::Type>>)
+                        {
+                                filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                                return std::nullopt;
+                        }
+                        else
+                        {
+                                return filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                        }
+                }();
 
                 const numerical::Vector<2, T> x_predict = filter_->position_speed();
                 const numerical::Matrix<2, 2, T> p_predict = filter_->position_speed_p();
