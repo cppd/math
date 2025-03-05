@@ -117,6 +117,7 @@ std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<
                 {
                         return {};
                 }
+
                 if (const auto& f_p = result[i].info.f_predict)
                 {
                         f_predict.push_back(*f_p);
@@ -129,24 +130,26 @@ std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<
                         }
                         f_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
                 }
+
                 x_predict.push_back(result[i].info.x_predict);
                 p_predict.push_back(result[i].info.p_predict);
                 x.push_back(result[i].info.x_update);
                 p.push_back(result[i].info.p_update);
         }
 
-        x = smooth(f_predict, x_predict, p_predict, x, p);
+        std::tie(x, p) = smooth(f_predict, x_predict, p_predict, x, p);
 
         std::vector<view::Point<T>> res;
         res.reserve(result.size());
         for (std::size_t i = 0; i < result.size(); ++i)
         {
-                res.push_back(
-                        {.time = result[i].time,
-                         .x = x[i][0],
-                         .x_stddev = result[i].info.x_stddev,
-                         .v = x[i][1],
-                         .v_stddev = result[i].info.v_stddev});
+                res.push_back({
+                        .time = result[i].time,
+                        .x = x[i][0],
+                        .x_stddev = std::sqrt(p[i][0, 0]),
+                        .v = x[i][1],
+                        .v_stddev = std::sqrt(p[i][1, 1]),
+                });
         }
         return res;
 }

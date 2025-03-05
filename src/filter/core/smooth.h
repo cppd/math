@@ -24,37 +24,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <cstddef>
+#include <tuple>
 #include <vector>
 
 namespace ns::filter::core
 {
 template <std::size_t N, typename T>
-[[nodiscard]] std::vector<numerical::Vector<N, T>> smooth(
+[[nodiscard]] std::tuple<std::vector<numerical::Vector<N, T>>, std::vector<numerical::Matrix<N, N, T>>> smooth(
         const std::vector<numerical::Matrix<N, N, T>>& f_predict,
         const std::vector<numerical::Vector<N, T>> x_predict,
         const std::vector<numerical::Matrix<N, N, T>>& p_predict,
         std::vector<numerical::Vector<N, T>> x,
-        const std::vector<numerical::Matrix<N, N, T>>& p)
+        std::vector<numerical::Matrix<N, N, T>> p)
 {
         ASSERT(x.size() == p.size());
+        ASSERT(x.size() == x_predict.size());
+        ASSERT(x.size() == p_predict.size());
+        ASSERT(x.size() == f_predict.size());
 
         if (x.size() <= 1)
         {
-                return x;
+                return {x, p};
         }
-
-        numerical::Matrix<N, N, T> p_next = p.back();
 
         for (auto i = std::ssize(x) - 2; i >= 0; --i)
         {
                 const numerical::Matrix<N, N, T> k = p[i] * f_predict[i + 1].transposed() * p_predict[i + 1].inversed();
 
                 x[i] = x[i] + k * (x[i + 1] - x_predict[i + 1]);
-                p_next = p[i] + k * (p_next - p_predict[i + 1]) * k.transposed();
+                p[i] = p[i] + k * (p[i + 1] - p_predict[i + 1]) * k.transposed();
 
-                check_x_p("Smooth", x[i], p_next);
+                check_x_p("Smooth", x[i], p[i]);
         }
 
-        return x;
+        return {std::move(x), std::move(p)};
 }
 }
