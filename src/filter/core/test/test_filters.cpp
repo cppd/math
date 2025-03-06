@@ -217,6 +217,8 @@ void test_impl(
 
         result_x.distribution.check(expected_distribution);
 
+        const std::vector<view::Point<T>> smooth_view_points_x = smooth_view_points(result_x.result);
+
         //
 
         const TestResult<T> result_xv = test_filter(filter.get(), measurements);
@@ -232,14 +234,16 @@ void test_impl(
                 error("NEES XV; " + result_xv.nees.check_string());
         }
 
+        const std::vector<view::Point<T>> smooth_view_points_xv = smooth_view_points(result_xv.result);
+
         //
 
         view::write(
                 name, annotation, measurements, DATA_CONNECT_INTERVAL<T>,
                 {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
                  view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result)),
-                 view::Filter<T>("Smooth Position", color::RGB8(0, 170, 0), smooth_view_points(result_x.result)),
-                 view::Filter<T>("Smooth Speed", color::RGB8(0, 200, 0), smooth_view_points(result_xv.result))});
+                 view::Filter<T>("Smooth Position", color::RGB8(0, 170, 0), smooth_view_points_x),
+                 view::Filter<T>("Smooth Speed", color::RGB8(0, 200, 0), smooth_view_points_xv)});
 }
 
 template <typename T>
