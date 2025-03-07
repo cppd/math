@@ -55,7 +55,7 @@ numerical::Vector<2, T> init_variance(const Measurements<T>& m, const T init_v_v
 }
 
 template <typename Filter>
-UpdateInfo<typename Filter::Type> reset_filter(
+UpdateInfo<typename Filter::Type> filter_reset(
         Filter* const filter,
         const Measurements<typename Filter::Type>& m,
         const typename Filter::Type init_v,
@@ -83,16 +83,34 @@ UpdateInfo<typename Filter::Type> reset_filter(
                 .x_stddev = std::sqrt(variance[0]),
                 .v = x[1],
                 .v_stddev = std::sqrt(variance[1]),
-                .x_predict = x,
-                .p_predict = p,
+                .f_predict = std::nullopt,
+                .x_predict = std::nullopt,
+                .p_predict = std::nullopt,
                 .x_update = x,
                 .p_update = p,
-                .f_predict = std::nullopt,
         };
 }
 
 template <typename Filter>
-bool update_filter(
+std::optional<numerical::Matrix<2, 2, typename Filter::Type>> filter_predict(
+        Filter* const filter,
+        const typename Filter::Type dt,
+        const NoiseModel<typename Filter::Type>& noise_model,
+        const typename Filter::Type& fading_memory_alpha)
+{
+        if constexpr (std::is_same_v<Filter, FilterUkf<typename Filter::Type>>)
+        {
+                filter->predict(dt, noise_model, fading_memory_alpha);
+                return std::nullopt;
+        }
+        else
+        {
+                return filter->predict(dt, noise_model, fading_memory_alpha);
+        }
+}
+
+template <typename Filter>
+bool filter_update(
         Filter* const filter,
         const Measurements<typename Filter::Type>& m,
         const std::optional<typename Filter::Type> gate)
@@ -155,30 +173,20 @@ class FilterImpl : public Filter<typename F::Type>
                                 return std::nullopt;
                         }
                         last_time_ = m.time;
-                        return reset_filter(filter_.get(), m, init_v_, init_v_variance_);
+                        return filter_reset(filter_.get(), m, init_v_, init_v_variance_);
                 }
 
                 const T dt = m.time - *last_time_;
                 ASSERT(dt >= 0);
                 last_time_ = m.time;
 
-                const std::optional<numerical::Matrix<2, 2, T>> f_predict = [&]
-                {
-                        if constexpr (std::is_same_v<F, FilterUkf<typename F::Type>>)
-                        {
-                                filter_->predict(dt, noise_model_, fading_memory_alpha_);
-                                return std::nullopt;
-                        }
-                        else
-                        {
-                                return filter_->predict(dt, noise_model_, fading_memory_alpha_);
-                        }
-                }();
+                const std::optional<numerical::Matrix<2, 2, T>> f_predict =
+                        filter_predict(filter_.get(), dt, noise_model_, fading_memory_alpha_);
 
                 const numerical::Vector<2, T> x_predict = filter_->position_speed();
                 const numerical::Matrix<2, 2, T> p_predict = filter_->position_speed_p();
 
-                if (!update_filter(filter_.get(), m, gate_))
+                if (!filter_update(filter_.get(), m, gate_))
                 {
                         return std::nullopt;
                 }
@@ -193,11 +201,11 @@ class FilterImpl : public Filter<typename F::Type>
                          .x_stddev = std::sqrt(filter_->position_p()),
                          .v = filter_->speed(),
                          .v_stddev = std::sqrt(filter_->speed_p()),
+                         .f_predict = f_predict,
                          .x_predict = x_predict,
                          .p_predict = p_predict,
                          .x_update = filter_->position_speed(),
                          .p_update = filter_->position_speed_p(),
-                         .f_predict = f_predict,
                          }
                 };
         }
@@ -265,13 +273,13 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
 
                 if (m.v)
                 {
-                        update_filter(filter_.get(), m, gate_);
+                        filter_update(filter_.get(), m, gate_);
                 }
                 else
                 {
                         Measurements<T> mv = m;
                         mv.v = {.value = init_v_, .variance = init_v_variance_};
-                        update_filter(filter_.get(), mv, gate_);
+                        filter_update(filter_.get(), mv, gate_);
                 }
                 return true;
         }
@@ -284,8 +292,8 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                 }
 
                 std::optional<numerical::Matrix<2, 2, T>> f_predict;
-                numerical::Vector<2, T> x_predict;
-                numerical::Matrix<2, 2, T> p_predict;
+                std::optional<numerical::Vector<2, T>> x_predict;
+                std::optional<numerical::Matrix<2, 2, T>> p_predict;
 
                 if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
                 {
@@ -293,8 +301,6 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         {
                                 return std::nullopt;
                         }
-                        x_predict = filter_->position_speed();
-                        p_predict = filter_->position_speed_p();
                 }
                 else
                 {
@@ -305,7 +311,7 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                         f_predict = filter_->predict(dt, noise_model_, fading_memory_alpha_);
                         x_predict = filter_->position_speed();
                         p_predict = filter_->position_speed_p();
-                        update_filter(filter_.get(), m, gate_);
+                        filter_update(filter_.get(), m, gate_);
                 }
 
                 nees_.add(
@@ -318,11 +324,11 @@ class FilterImpl<FilterInfo<T>> : public Filter<T>
                          .x_stddev = std::sqrt(filter_->position_p()),
                          .v = filter_->speed(),
                          .v_stddev = std::sqrt(filter_->speed_p()),
+                         .f_predict = f_predict,
                          .x_predict = x_predict,
                          .p_predict = p_predict,
                          .x_update = filter_->position_speed(),
                          .p_update = filter_->position_speed_p(),
-                         .f_predict = f_predict,
                          }
                 };
         }

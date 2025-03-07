@@ -105,34 +105,43 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& re
 template <typename T>
 std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result)
 {
+        if (result.empty())
+        {
+                return {};
+        }
+
         std::vector<numerical::Matrix<2, 2, T>> f_predict;
         std::vector<numerical::Vector<2, T>> x_predict;
         std::vector<numerical::Matrix<2, 2, T>> p_predict;
+
         std::vector<numerical::Vector<2, T>> x;
         std::vector<numerical::Matrix<2, 2, T>> p;
 
-        for (std::size_t i = 0; i < result.size(); ++i)
+        ASSERT(!result[0].info.f_predict);
+        ASSERT(!result[0].info.x_predict);
+        ASSERT(!result[0].info.p_predict);
+        f_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
+        x_predict.push_back(numerical::Vector<2, T>(0));
+        p_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
+
+        x.push_back(result[0].info.x_update);
+        p.push_back(result[0].info.p_update);
+
+        for (std::size_t i = 1; i < result.size(); ++i)
         {
-                if (i > 0 && !(result[i].time - result[i - 1].time < T{1.5}))
+                const auto& f_p = result[i].info.f_predict;
+                const auto& x_p = result[i].info.x_predict;
+                const auto& p_p = result[i].info.p_predict;
+
+                if (!(f_p && x_p && p_p))
                 {
                         return {};
                 }
 
-                if (const auto& f_p = result[i].info.f_predict)
-                {
-                        f_predict.push_back(*f_p);
-                }
-                else
-                {
-                        if (i > 0)
-                        {
-                                return {};
-                        }
-                        f_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
-                }
+                f_predict.push_back(*f_p);
+                x_predict.push_back(*x_p);
+                p_predict.push_back(*p_p);
 
-                x_predict.push_back(result[i].info.x_predict);
-                p_predict.push_back(result[i].info.p_predict);
                 x.push_back(result[i].info.x_update);
                 p.push_back(result[i].info.p_update);
         }
