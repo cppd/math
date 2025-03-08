@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/filters/noise_model.h>
 #include <src/filter/filters/position/filter_2.h>
@@ -155,13 +154,13 @@ void PositionVariance<N, T>::update_position_variance(const Measurements<N, T>& 
 }
 
 template <std::size_t N, typename T>
-std::optional<UpdateInfo<N, T>> PositionVariance<N, T>::update(const Measurements<N, T>& m)
+void PositionVariance<N, T>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
         if (!m.position)
         {
-                return {};
+                return;
         }
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
@@ -174,19 +173,6 @@ std::optional<UpdateInfo<N, T>> PositionVariance<N, T>::update(const Measurement
         {
                 update_position_variance(m);
         }
-
-        return {
-                {.position = filter_->position(),
-                 .position_p = filter_->position_p().diagonal(),
-                 .speed = filter_->speed(),
-                 .speed_p = filter_->speed_p()}
-        };
-}
-
-template <std::size_t N, typename T>
-std::optional<UpdateInfo<N, T>> PositionVariance<N, T>::predict(const Measurements<N, T>& /*m*/)
-{
-        error("predict is not supported");
 }
 
 template <std::size_t N, typename T>

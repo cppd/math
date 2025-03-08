@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "moving_variance.h"
 
-#include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/filters/noise_model.h>
 #include <src/filter/filters/position/filter_2.h>
@@ -58,8 +57,8 @@ public:
                 T fading_memory_alpha,
                 const position::Init<T>& init);
 
-        std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m);
-        std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m);
+        void update(const Measurements<N, T>& m);
+
         [[nodiscard]] std::string consistency_string() const;
 
         [[nodiscard]] const std::optional<numerical::Vector<N, T>>& last_position_variance() const;
