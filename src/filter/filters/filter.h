@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters
 {
 template <std::size_t N, typename T>
-struct UpdateInfo final
+struct UpdateInfoPosition final
 {
         numerical::Vector<N, T> position;
         numerical::Vector<N, T> position_p;
@@ -44,8 +44,7 @@ class FilterPosition
 public:
         virtual ~FilterPosition() = default;
 
-        [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) = 0;
-        [[nodiscard]] virtual std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) = 0;
+        [[nodiscard]] virtual std::optional<UpdateInfoPosition<N, T>> update(const Measurements<N, T>& m) = 0;
 
         [[nodiscard]] virtual std::string consistency_string() const = 0;
 
@@ -59,6 +58,15 @@ public:
         [[nodiscard]] virtual numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
+};
+
+template <std::size_t N, typename T>
+struct UpdateInfo final
+{
+        numerical::Vector<N, T> position;
+        numerical::Vector<N, T> position_p;
+        T speed;
+        T speed_p;
 };
 
 template <std::size_t N, typename T>

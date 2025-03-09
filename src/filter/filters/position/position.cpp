@@ -59,7 +59,7 @@ class Position final : public FilterPosition<N, T>
 
         void check_time(T time) const;
 
-        std::optional<UpdateInfo<N, T>> update_info() const;
+        std::optional<UpdateInfoPosition<N, T>> update_info() const;
 
 public:
         Position(
@@ -71,8 +71,8 @@ public:
                 T fading_memory_alpha,
                 std::unique_ptr<F<N, T>>&& filter);
 
-        [[nodiscard]] std::optional<UpdateInfo<N, T>> update(const Measurements<N, T>& m) override;
-        [[nodiscard]] std::optional<UpdateInfo<N, T>> predict(const Measurements<N, T>& m) override;
+        [[nodiscard]] std::optional<UpdateInfoPosition<N, T>> update(const Measurements<N, T>& m) override;
+
         [[nodiscard]] std::string consistency_string() const override;
 
         [[nodiscard]] bool empty() const override;
@@ -124,7 +124,7 @@ void Position<N, T, F>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-std::optional<UpdateInfo<N, T>> Position<N, T, F>::update_info() const
+std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update_info() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -147,7 +147,7 @@ std::optional<UpdateInfo<N, T>> Position<N, T, F>::update_info() const
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-std::optional<UpdateInfo<N, T>> Position<N, T, F>::update(const Measurements<N, T>& m)
+std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
@@ -190,29 +190,6 @@ std::optional<UpdateInfo<N, T>> Position<N, T, F>::update(const Measurements<N, 
         {
                 update_nis(update, nis_);
         }
-
-        return update_info();
-}
-
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-std::optional<UpdateInfo<N, T>> Position<N, T, F>::predict(const Measurements<N, T>& m)
-{
-        if (m.position)
-        {
-                error("Predict with position");
-        }
-
-        check_time(m.time);
-
-        if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
-        {
-                return {};
-        }
-
-        filter_->predict(m.time - *last_predict_time_, noise_model_, fading_memory_alpha_);
-        last_predict_time_ = m.time;
-
-        update_nees(*filter_, m.true_data, nees_);
 
         return update_info();
 }
