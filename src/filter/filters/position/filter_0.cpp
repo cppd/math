@@ -52,12 +52,14 @@ class FilterImpl final : public Filter0<N, T>
                 filter_.emplace(model::x(position), model::p(variance));
         }
 
-        void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
+        numerical::Matrix<N, N, T> predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha)
+                override
         {
                 ASSERT(filter_);
                 ASSERT(com::check_dt(dt));
 
                 const numerical::Matrix<N, N, T> f = model::f<N, T>(dt);
+
                 filter_->predict(
                         [&](const numerical::Vector<N, T>& x)
                         {
@@ -68,6 +70,8 @@ class FilterImpl final : public Filter0<N, T>
                                 return f;
                         },
                         model::q<N, T>(dt, noise_model), fading_memory_alpha);
+
+                return f;
         }
 
         [[nodiscard]] core::UpdateInfo<N, T> update(
@@ -100,6 +104,20 @@ class FilterImpl final : public Filter0<N, T>
         }
 
         [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->p();
+        }
+
+        [[nodiscard]] const numerical::Vector<N, T>& x() const override
+        {
+                ASSERT(filter_);
+
+                return filter_->x();
+        }
+
+        [[nodiscard]] const numerical::Matrix<N, N, T>& p() const override
         {
                 ASSERT(filter_);
 

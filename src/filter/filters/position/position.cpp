@@ -59,7 +59,10 @@ class Position final : public FilterPosition<N, T>
 
         void check_time(T time) const;
 
-        std::optional<UpdateInfoPosition<N, T>> update_info() const;
+        [[nodiscard]] UpdateInfoPosition<N, T> update_info(
+                const auto& f_predict,
+                const auto& x_predict,
+                const auto& p_predict) const;
 
 public:
         Position(
@@ -124,26 +127,38 @@ void Position<N, T, F>::check_time(const T time) const
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update_info() const
+UpdateInfoPosition<N, T> Position<N, T, F>::update_info(
+        const auto& f_predict,
+        const auto& x_predict,
+        const auto& p_predict) const
 {
-        if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
+        T speed = 0;
+        T speed_p = 0;
+
+        if constexpr (!std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
-                return {
-                        {.position = filter_->position(),
-                         .position_p = filter_->position_p().diagonal(),
-                         .speed = 0,
-                         .speed_p = 0}
-                };
+                speed = filter_->speed();
+                speed_p = filter_->speed_p();
         }
-        else
+
+        return [&]<std::size_t U>(const numerical::Vector<U, T>& x_update, const numerical::Matrix<U, U, T>& p_update)
         {
-                return {
-                        {.position = filter_->position(),
-                         .position_p = filter_->position_p().diagonal(),
-                         .speed = filter_->speed(),
-                         .speed_p = filter_->speed_p()}
+                const UpdateDetails<U, T> details{
+                        .f_predict = f_predict,
+                        .x_predict = x_predict,
+                        .p_predict = p_predict,
+                        .x_update = x_update,
+                        .p_update = p_update,
                 };
-        }
+
+                return UpdateInfoPosition<N, T>{
+                        .position = filter_->position(),
+                        .position_p = filter_->position_p().diagonal(),
+                        .speed = speed,
+                        .speed_p = speed_p,
+                        .details = details,
+                };
+        }(filter_->x(), filter_->p());
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>
@@ -170,10 +185,12 @@ std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurem
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
 
-                return update_info();
+                return update_info(std::nullopt, std::nullopt, std::nullopt);
         }
 
-        filter_->predict(m.time - *last_predict_time_, noise_model_, fading_memory_alpha_);
+        const auto f_predict = filter_->predict(m.time - *last_predict_time_, noise_model_, fading_memory_alpha_);
+        const auto x_predict = filter_->x();
+        const auto p_predict = filter_->p();
         last_predict_time_ = m.time;
 
         update_nees(*filter_, m.true_data, nees_);
@@ -181,7 +198,7 @@ std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurem
         const auto update = filter_->update(m.position->value, *m.position->variance, gate_);
         if (update.gate)
         {
-                return update_info();
+                return update_info(f_predict, x_predict, p_predict);
         }
         const T update_dt = m.time - *last_update_time_;
         last_update_time_ = m.time;
@@ -191,7 +208,7 @@ std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurem
                 update_nis(update, nis_);
         }
 
-        return update_info();
+        return update_info(f_predict, x_predict, p_predict);
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename F>

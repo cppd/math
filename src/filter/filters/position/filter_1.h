@@ -41,7 +41,10 @@ public:
                 const numerical::Vector<N, T>& variance,
                 const Init<T>& init) = 0;
 
-        virtual void predict(T dt, const NoiseModel<T>& noise_model, T fading_memory_alpha) = 0;
+        virtual numerical::Matrix<2 * N, 2 * N, T> predict(
+                T dt,
+                const NoiseModel<T>& noise_model,
+                T fading_memory_alpha) = 0;
 
         [[nodiscard]] virtual core::UpdateInfo<N, T> update(
                 const numerical::Vector<N, T>& position,
@@ -59,6 +62,9 @@ public:
 
         [[nodiscard]] virtual numerical::Vector<2 * N, T> position_velocity() const = 0;
         [[nodiscard]] virtual numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
+
+        [[nodiscard]] virtual const numerical::Vector<2 * N, T>& x() const = 0;
+        [[nodiscard]] virtual const numerical::Matrix<2 * N, 2 * N, T>& p() const = 0;
 };
 
 template <std::size_t N, typename T>
