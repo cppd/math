@@ -152,17 +152,21 @@ void update_filters(const filters::Measurements<2, T>& m, Filters<T>* const filt
 template <typename T>
 void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const filters)
 {
-        for (auto& f : filters->positions_1)
+        const auto update = [&](auto& filters_positions)
         {
-                const auto& update_info = f.filter->update(m);
-                add_info(m.time, update_info, &f.data);
-        }
+                for (auto& f : filters_positions)
+                {
+                        const auto& update_info = f.filter->update(m);
+                        add_info(m.time, update_info, &f.data);
+                        if (update_info)
+                        {
+                                f.details.push_back(update_info->details);
+                        }
+                }
+        };
 
-        for (auto& f : filters->positions_2)
-        {
-                const auto& update_info = f.filter->update(m);
-                add_info(m.time, update_info, &f.data);
-        }
+        update(filters->positions_1);
+        update(filters->positions_2);
 
         filters->position_estimation->update(m);
 }

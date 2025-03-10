@@ -47,7 +47,7 @@ numerical::Vector<N, T> stddev_degrees(const numerical::Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T>
-PositionEstimation<N, T>::PositionEstimation(const FilterPosition<N, T>* const position)
+PositionEstimation<N, T>::PositionEstimation(const FilterPosition<N, T, 2>* const position)
         : position_(position)
 {
 }

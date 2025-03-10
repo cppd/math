@@ -29,13 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, std::size_t ORDER>
 struct TestFilterPosition final
 {
-        std::unique_ptr<filters::FilterPosition<N, T>> filter;
+        std::unique_ptr<filters::FilterPosition<N, T, ORDER>> filter;
         view::Filter<N, T> data;
+        std::vector<filters::UpdateDetails<N * (1 + ORDER), T>> details;
 
-        TestFilterPosition(std::unique_ptr<filters::FilterPosition<N, T>>&& filter, view::Filter<N, T> data)
+        TestFilterPosition(std::unique_ptr<filters::FilterPosition<N, T, ORDER>>&& filter, view::Filter<N, T> data)
                 : filter(std::move(filter)),
                   data(std::move(data))
         {
@@ -58,9 +59,9 @@ struct TestFilter final
 template <typename T>
 struct Filters final
 {
-        std::vector<TestFilterPosition<2, T>> positions_0;
-        std::vector<TestFilterPosition<2, T>> positions_1;
-        std::vector<TestFilterPosition<2, T>> positions_2;
+        std::vector<TestFilterPosition<2, T, 0>> positions_0;
+        std::vector<TestFilterPosition<2, T, 1>> positions_1;
+        std::vector<TestFilterPosition<2, T, 2>> positions_2;
 
         std::vector<TestFilter<2, T>> accelerations;
         std::vector<TestFilter<2, T>> directions;

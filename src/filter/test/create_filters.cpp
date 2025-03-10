@@ -87,7 +87,7 @@ std::unique_ptr<filters::estimation::PositionVariance<N, T>> create_position_var
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-TestFilterPosition<N, T> create_position(const PositionConfig<T>& config, const unsigned i, const T theta)
+TestFilterPosition<N, T, ORDER> create_position(const PositionConfig<T>& config, const unsigned i, const T theta)
 {
         ASSERT(theta >= 0 && theta <= 1);
         ASSERT(i <= 4);
@@ -102,33 +102,37 @@ TestFilterPosition<N, T> create_position(const PositionConfig<T>& config, const 
                 return oss.str();
         }();
 
-        static_assert(ORDER >= 0 && ORDER <= 2);
-        switch (ORDER)
+        if constexpr (ORDER == 0)
         {
-        case 0:
                 return {filters::position::create_position_0<N, T>(
                                 config.reset_dt, config.linear_dt, config.gate_0, config.init, theta,
                                 config.noise_model_0, config.fading_memory_alpha_0),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
-        case 1:
+        }
+        else if constexpr (ORDER == 1)
+        {
                 return {filters::position::create_position_1<N, T>(
                                 config.reset_dt, config.linear_dt, config.gate_1, config.init, theta,
                                 config.noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
-        case 2:
+        }
+        else if constexpr (ORDER == 2)
+        {
                 return {filters::position::create_position_2<N, T>(
                                 config.reset_dt, config.linear_dt, config.gate_2, config.init, theta,
                                 config.noise_model_2, config.fading_memory_alpha_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
-        default:
-                ASSERT(false);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<TestFilterPosition<N, T>> create_positions(const PositionConfig<T>& config)
+std::vector<TestFilterPosition<N, T, ORDER>> create_positions(const PositionConfig<T>& config)
 {
-        std::vector<TestFilterPosition<N, T>> res;
+        std::vector<TestFilterPosition<N, T, ORDER>> res;
 
         const auto thetas = sort(std::array(config.thetas));
 

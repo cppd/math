@@ -31,7 +31,7 @@ namespace ns::filter::filters::estimation
 template <std::size_t N, typename T>
 class PositionEstimation final : public Estimation<N, T>
 {
-        const FilterPosition<N, T>* const position_;
+        const FilterPosition<N, T, 2>* const position_;
         std::optional<numerical::Vector<N, T>> angle_variance_;
 
         [[nodiscard]] bool angle_variance_less_than(T variance) const override;
@@ -47,7 +47,7 @@ class PositionEstimation final : public Estimation<N, T>
         [[nodiscard]] T speed_p() const override;
 
 public:
-        explicit PositionEstimation(const FilterPosition<N, T>* position);
+        explicit PositionEstimation(const FilterPosition<N, T, 2>* position);
 
         void update(const Measurements<N, T>& m);
 };

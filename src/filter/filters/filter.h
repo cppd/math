@@ -26,13 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <optional>
 #include <string>
-#include <variant>
 
 namespace ns::filter::filters
 {
 template <std::size_t N, typename T>
 struct UpdateDetails final
 {
+        T time;
+
         std::optional<numerical::Matrix<N, N, T>> f_predict;
         std::optional<numerical::Vector<N, T>> x_predict;
         std::optional<numerical::Matrix<N, N, T>> p_predict;
@@ -41,7 +42,7 @@ struct UpdateDetails final
         numerical::Matrix<N, N, T> p_update;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, std::size_t ORDER>
 struct UpdateInfoPosition final
 {
         numerical::Vector<N, T> position;
@@ -49,16 +50,16 @@ struct UpdateInfoPosition final
         T speed;
         T speed_p;
 
-        std::variant<UpdateDetails<N, T>, UpdateDetails<2 * N, T>, UpdateDetails<3 * N, T>> details;
+        UpdateDetails<N * (1 + ORDER), T> details;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, std::size_t ORDER>
 class FilterPosition
 {
 public:
         virtual ~FilterPosition() = default;
 
-        [[nodiscard]] virtual std::optional<UpdateInfoPosition<N, T>> update(const Measurements<N, T>& m) = 0;
+        [[nodiscard]] virtual std::optional<UpdateInfoPosition<N, T, ORDER>> update(const Measurements<N, T>& m) = 0;
 
         [[nodiscard]] virtual std::string consistency_string() const = 0;
 

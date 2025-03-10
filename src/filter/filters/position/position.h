@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::position
 {
 template <std::size_t N, typename T>
-std::unique_ptr<FilterPosition<N, T>> create_position_0(
+std::unique_ptr<FilterPosition<N, T, 0>> create_position_0(
         T reset_dt,
         T linear_dt,
         std::optional<T> gate,
@@ -39,7 +39,7 @@ std::unique_ptr<FilterPosition<N, T>> create_position_0(
         T fading_memory_alpha);
 
 template <std::size_t N, typename T>
-std::unique_ptr<FilterPosition<N, T>> create_position_1(
+std::unique_ptr<FilterPosition<N, T, 1>> create_position_1(
         T reset_dt,
         T linear_dt,
         std::optional<T> gate,
@@ -49,7 +49,7 @@ std::unique_ptr<FilterPosition<N, T>> create_position_1(
         T fading_memory_alpha);
 
 template <std::size_t N, typename T>
-std::unique_ptr<FilterPosition<N, T>> create_position_2(
+std::unique_ptr<FilterPosition<N, T, 2>> create_position_2(
         T reset_dt,
         T linear_dt,
         std::optional<T> gate,

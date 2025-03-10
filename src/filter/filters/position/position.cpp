@@ -40,8 +40,8 @@ namespace ns::filter::filters::position
 {
 namespace
 {
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-class Position final : public FilterPosition<N, T>
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+class Position final : public FilterPosition<N, T, ORDER>
 {
         T reset_dt_;
         T linear_dt_;
@@ -59,7 +59,8 @@ class Position final : public FilterPosition<N, T>
 
         void check_time(T time) const;
 
-        [[nodiscard]] UpdateInfoPosition<N, T> update_info(
+        [[nodiscard]] UpdateInfoPosition<N, T, ORDER> update_info(
+                T time,
                 const auto& f_predict,
                 const auto& x_predict,
                 const auto& p_predict) const;
@@ -74,7 +75,7 @@ public:
                 T fading_memory_alpha,
                 std::unique_ptr<F<N, T>>&& filter);
 
-        [[nodiscard]] std::optional<UpdateInfoPosition<N, T>> update(const Measurements<N, T>& m) override;
+        [[nodiscard]] std::optional<UpdateInfoPosition<N, T, ORDER>> update(const Measurements<N, T>& m) override;
 
         [[nodiscard]] std::string consistency_string() const override;
 
@@ -90,8 +91,8 @@ public:
         [[nodiscard]] T speed_p() const override;
 };
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-Position<N, T, F>::Position(
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+Position<N, T, ORDER, F>::Position(
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
@@ -110,8 +111,8 @@ Position<N, T, F>::Position(
         ASSERT(filter_);
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-void Position<N, T, F>::check_time(const T time) const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+void Position<N, T, ORDER, F>::check_time(const T time) const
 {
         if (last_predict_time_ && !(*last_predict_time_ < time))
         {
@@ -126,8 +127,9 @@ void Position<N, T, F>::check_time(const T time) const
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-UpdateInfoPosition<N, T> Position<N, T, F>::update_info(
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+UpdateInfoPosition<N, T, ORDER> Position<N, T, ORDER, F>::update_info(
+        const T time,
         const auto& f_predict,
         const auto& x_predict,
         const auto& p_predict) const
@@ -144,6 +146,7 @@ UpdateInfoPosition<N, T> Position<N, T, F>::update_info(
         return [&]<std::size_t U>(const numerical::Vector<U, T>& x_update, const numerical::Matrix<U, U, T>& p_update)
         {
                 const UpdateDetails<U, T> details{
+                        .time = time,
                         .f_predict = f_predict,
                         .x_predict = x_predict,
                         .p_predict = p_predict,
@@ -151,7 +154,7 @@ UpdateInfoPosition<N, T> Position<N, T, F>::update_info(
                         .p_update = p_update,
                 };
 
-                return UpdateInfoPosition<N, T>{
+                return UpdateInfoPosition<N, T, ORDER>{
                         .position = filter_->position(),
                         .position_p = filter_->position_p().diagonal(),
                         .speed = speed,
@@ -161,8 +164,8 @@ UpdateInfoPosition<N, T> Position<N, T, F>::update_info(
         }(filter_->x(), filter_->p());
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurements<N, T>& m)
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+std::optional<UpdateInfoPosition<N, T, ORDER>> Position<N, T, ORDER, F>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
 
@@ -185,7 +188,7 @@ std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurem
                 last_predict_time_ = m.time;
                 last_update_time_ = m.time;
 
-                return update_info(std::nullopt, std::nullopt, std::nullopt);
+                return update_info(m.time, std::nullopt, std::nullopt, std::nullopt);
         }
 
         const auto f_predict = filter_->predict(m.time - *last_predict_time_, noise_model_, fading_memory_alpha_);
@@ -198,7 +201,7 @@ std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurem
         const auto update = filter_->update(m.position->value, *m.position->variance, gate_);
         if (update.gate)
         {
-                return update_info(f_predict, x_predict, p_predict);
+                return update_info(m.time, f_predict, x_predict, p_predict);
         }
         const T update_dt = m.time - *last_update_time_;
         last_update_time_ = m.time;
@@ -208,29 +211,29 @@ std::optional<UpdateInfoPosition<N, T>> Position<N, T, F>::update(const Measurem
                 update_nis(update, nis_);
         }
 
-        return update_info(f_predict, x_predict, p_predict);
+        return update_info(m.time, f_predict, x_predict, p_predict);
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-[[nodiscard]] bool Position<N, T, F>::empty() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+[[nodiscard]] bool Position<N, T, ORDER, F>::empty() const
 {
         return !last_predict_time_ || !last_update_time_;
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-[[nodiscard]] numerical::Vector<N, T> Position<N, T, F>::position() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+[[nodiscard]] numerical::Vector<N, T> Position<N, T, ORDER, F>::position() const
 {
         return filter_->position();
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-[[nodiscard]] numerical::Matrix<N, N, T> Position<N, T, F>::position_p() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+[[nodiscard]] numerical::Matrix<N, N, T> Position<N, T, ORDER, F>::position_p() const
 {
         return filter_->position_p();
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-[[nodiscard]] numerical::Vector<N, T> Position<N, T, F>::velocity() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+[[nodiscard]] numerical::Vector<N, T> Position<N, T, ORDER, F>::velocity() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -242,8 +245,8 @@ template <std::size_t N, typename T, template <std::size_t, typename> typename F
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-[[nodiscard]] numerical::Matrix<N, N, T> Position<N, T, F>::velocity_p() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+[[nodiscard]] numerical::Matrix<N, N, T> Position<N, T, ORDER, F>::velocity_p() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -255,8 +258,8 @@ template <std::size_t N, typename T, template <std::size_t, typename> typename F
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-numerical::Vector<2 * N, T> Position<N, T, F>::position_velocity() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+numerical::Vector<2 * N, T> Position<N, T, ORDER, F>::position_velocity() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -268,8 +271,8 @@ numerical::Vector<2 * N, T> Position<N, T, F>::position_velocity() const
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-numerical::Matrix<2 * N, 2 * N, T> Position<N, T, F>::position_velocity_p() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+numerical::Matrix<2 * N, 2 * N, T> Position<N, T, ORDER, F>::position_velocity_p() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -281,8 +284,8 @@ numerical::Matrix<2 * N, 2 * N, T> Position<N, T, F>::position_velocity_p() cons
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-T Position<N, T, F>::speed() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+T Position<N, T, ORDER, F>::speed() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -294,8 +297,8 @@ T Position<N, T, F>::speed() const
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-T Position<N, T, F>::speed_p() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+T Position<N, T, ORDER, F>::speed_p() const
 {
         if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
         {
@@ -307,15 +310,15 @@ T Position<N, T, F>::speed_p() const
         }
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename F>
-std::string Position<N, T, F>::consistency_string() const
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+std::string Position<N, T, ORDER, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
 }
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<FilterPosition<N, T>> create_position_0(
+std::unique_ptr<FilterPosition<N, T, 0>> create_position_0(
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
@@ -324,12 +327,12 @@ std::unique_ptr<FilterPosition<N, T>> create_position_0(
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha)
 {
-        return std::make_unique<Position<N, T, Filter0>>(
+        return std::make_unique<Position<N, T, 0, Filter0>>(
                 reset_dt, linear_dt, gate, init, noise_model, fading_memory_alpha, create_filter_0<N, T>(theta));
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<FilterPosition<N, T>> create_position_1(
+std::unique_ptr<FilterPosition<N, T, 1>> create_position_1(
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
@@ -338,12 +341,12 @@ std::unique_ptr<FilterPosition<N, T>> create_position_1(
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha)
 {
-        return std::make_unique<Position<N, T, Filter1>>(
+        return std::make_unique<Position<N, T, 1, Filter1>>(
                 reset_dt, linear_dt, gate, init, noise_model, fading_memory_alpha, create_filter_1<N, T>(theta));
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<FilterPosition<N, T>> create_position_2(
+std::unique_ptr<FilterPosition<N, T, 2>> create_position_2(
         const T reset_dt,
         const T linear_dt,
         const std::optional<T> gate,
@@ -352,16 +355,16 @@ std::unique_ptr<FilterPosition<N, T>> create_position_2(
         const NoiseModel<T>& noise_model,
         const T fading_memory_alpha)
 {
-        return std::make_unique<Position<N, T, Filter2>>(
+        return std::make_unique<Position<N, T, 2, Filter2>>(
                 reset_dt, linear_dt, gate, init, noise_model, fading_memory_alpha, create_filter_2<N, T>(theta));
 }
 
 #define TEMPLATE(N, T)                                                               \
-        template std::unique_ptr<FilterPosition<(N), T>> create_position_0(          \
+        template std::unique_ptr<FilterPosition<(N), T, 0>> create_position_0(       \
                 T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, T); \
-        template std::unique_ptr<FilterPosition<(N), T>> create_position_1(          \
+        template std::unique_ptr<FilterPosition<(N), T, 1>> create_position_1(       \
                 T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, T); \
-        template std::unique_ptr<FilterPosition<(N), T>> create_position_2(          \
+        template std::unique_ptr<FilterPosition<(N), T, 2>> create_position_2(       \
                 T, T, std::optional<T>, const Init<T>&, T, const NoiseModel<T>&, T);
 
 FILTER_TEMPLATE_INSTANTIATION_N_T(TEMPLATE)
