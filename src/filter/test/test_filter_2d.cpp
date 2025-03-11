@@ -67,9 +67,21 @@ void write_file(
                 }
         };
 
+        const auto push_smooth = [&](const auto& v)
+        {
+                for (const auto& p : v)
+                {
+                        view_filters.push_back(p.data_smooth);
+                }
+        };
+
         push(filters.positions_0);
         push(filters.positions_1);
         push(filters.positions_2);
+
+        push_smooth(filters.positions_0);
+        push_smooth(filters.positions_1);
+        push_smooth(filters.positions_2);
 
         push(filters.accelerations);
         push(filters.directions);

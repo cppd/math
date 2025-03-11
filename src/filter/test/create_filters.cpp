@@ -102,26 +102,31 @@ TestFilterPosition<N, T, ORDER> create_position(const PositionConfig<T>& config,
                 return oss.str();
         }();
 
+        const auto name_smooth = name + " Smooth";
+
         if constexpr (ORDER == 0)
         {
                 return {filters::position::create_position_0<N, T>(
                                 config.reset_dt, config.linear_dt, config.gate_0, config.init, theta,
                                 config.noise_model_0, config.fading_memory_alpha_0),
-                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200))};
+                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 100, 200)),
+                        view::Filter<N, T>(name_smooth, color::RGB8(100, 160 - 40 * i, 200))};
         }
         else if constexpr (ORDER == 1)
         {
                 return {filters::position::create_position_1<N, T>(
                                 config.reset_dt, config.linear_dt, config.gate_1, config.init, theta,
                                 config.noise_model_1, config.fading_memory_alpha_1),
-                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200))};
+                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200)),
+                        view::Filter<N, T>(name_smooth, color::RGB8(0, 160 - 40 * i, 200))};
         }
         else if constexpr (ORDER == 2)
         {
                 return {filters::position::create_position_2<N, T>(
                                 config.reset_dt, config.linear_dt, config.gate_2, config.init, theta,
                                 config.noise_model_2, config.fading_memory_alpha_2),
-                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0))};
+                        view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0)),
+                        view::Filter<N, T>(name_smooth, color::RGB8(0, 160 - 40 * i, 0))};
         }
         else
         {
