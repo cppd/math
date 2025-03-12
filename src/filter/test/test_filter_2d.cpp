@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "create_filters.h"
+#include "smooth.h"
 
 #include "simulator/simulator.h"
 #include "view/write.h"
@@ -184,6 +185,21 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
 }
 
 template <typename T>
+void smooth_positions(Filters<T>* const filters)
+{
+        const auto s = [&](auto& filters_positions)
+        {
+                for (auto& f : filters_positions)
+                {
+                        smooth(f.details, &f.data_smooth);
+                }
+        };
+
+        s(filters->positions_1);
+        s(filters->positions_2);
+}
+
+template <typename T>
 void run(const simulator::Track<2, T>& track)
 {
         Filters<T> filters = create_filters<T>();
@@ -201,6 +217,8 @@ void run(const simulator::Track<2, T>& track)
                 update_positions(m, &filters);
                 update_filters(m, &filters);
         }
+
+        smooth_positions(&filters);
 
         write_file(track.annotation(), track.measurements(), filters);
 
