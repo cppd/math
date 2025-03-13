@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view/write.h"
 
+#include <src/com/error.h>
+#include <src/filter/core/smooth.h>
 #include <src/filter/filters/filter.h>
+#include <src/numerical/matrix_object.h>
+#include <src/numerical/vector_object.h>
 
 #include <cstddef>
 #include <vector>
@@ -27,9 +31,68 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, std::size_t D, typename T>
-void smooth(const std::vector<filters::UpdateDetails<D, T>>& /*details*/, view::Filter<N, T>* const /*data*/)
+void smooth(const std::vector<filters::UpdateDetails<D, T>>& details, view::Filter<N, T>* const data)
 {
         static_assert(D >= N);
         static_assert((D % N) == 0);
+
+        if (details.empty())
+        {
+                return;
+        }
+
+        std::vector<numerical::Matrix<D, D, T>> f_predict;
+        std::vector<numerical::Vector<D, T>> x_predict;
+        std::vector<numerical::Matrix<D, D, T>> p_predict;
+
+        std::vector<numerical::Vector<D, T>> x;
+        std::vector<numerical::Matrix<D, D, T>> p;
+
+        std::vector<T> time;
+
+        ASSERT(!details[0].f_predict);
+        ASSERT(!details[0].x_predict);
+        ASSERT(!details[0].p_predict);
+        f_predict.push_back(numerical::Matrix<D, D, T>(numerical::ZERO_MATRIX));
+        x_predict.push_back(numerical::Vector<D, T>(0));
+        p_predict.push_back(numerical::Matrix<D, D, T>(numerical::ZERO_MATRIX));
+
+        x.push_back(details[0].x_update);
+        p.push_back(details[0].p_update);
+
+        time.push_back(details[0].time);
+
+        for (std::size_t i = 1; i < details.size(); ++i)
+        {
+                const auto& f_p = details[i].f_predict;
+                const auto& x_p = details[i].x_predict;
+                const auto& p_p = details[i].p_predict;
+
+                if (!(f_p && x_p && p_p))
+                {
+                        break;
+                }
+
+                f_predict.push_back(*f_p);
+                x_predict.push_back(*x_p);
+                p_predict.push_back(*p_p);
+
+                x.push_back(details[i].x_update);
+                p.push_back(details[i].p_update);
+
+                time.push_back(details[i].time);
+        }
+
+        std::tie(x, p) = core::smooth(f_predict, x_predict, p_predict, x, p);
+
+        static constexpr std::size_t SLICE_STEP = D / N;
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                data->position.push_back({
+                        .time = time[i],
+                        .point = numerical::slice<0, SLICE_STEP>(x[i]),
+                });
+        }
 }
 }
