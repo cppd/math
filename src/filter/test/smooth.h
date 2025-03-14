@@ -36,6 +36,8 @@ void smooth(const std::vector<filters::UpdateDetails<D, T>>& details, view::Filt
         static_assert(D >= N);
         static_assert((D % N) == 0);
 
+        static constexpr std::size_t SLICE_STEP = D / N;
+
         if (details.empty())
         {
                 return;
@@ -50,17 +52,48 @@ void smooth(const std::vector<filters::UpdateDetails<D, T>>& details, view::Filt
 
         std::vector<T> time;
 
-        ASSERT(!details[0].f_predict);
-        ASSERT(!details[0].x_predict);
-        ASSERT(!details[0].p_predict);
-        f_predict.push_back(numerical::Matrix<D, D, T>(numerical::ZERO_MATRIX));
-        x_predict.push_back(numerical::Vector<D, T>(0));
-        p_predict.push_back(numerical::Matrix<D, D, T>(numerical::ZERO_MATRIX));
+        const auto init = [&](const std::size_t i)
+        {
+                ASSERT(!details[i].f_predict);
+                ASSERT(!details[i].x_predict);
+                ASSERT(!details[i].p_predict);
 
-        x.push_back(details[0].x_update);
-        p.push_back(details[0].p_update);
+                f_predict.clear();
+                x_predict.clear();
+                p_predict.clear();
+                x.clear();
+                p.clear();
+                time.clear();
 
-        time.push_back(details[0].time);
+                f_predict.push_back(numerical::Matrix<D, D, T>(numerical::ZERO_MATRIX));
+                x_predict.push_back(numerical::Vector<D, T>(0));
+                p_predict.push_back(numerical::Matrix<D, D, T>(numerical::ZERO_MATRIX));
+
+                x.push_back(details[i].x_update);
+                p.push_back(details[i].p_update);
+
+                time.push_back(details[i].time);
+        };
+
+        const auto write = [&]
+        {
+                for (std::size_t i = 0; i < x.size(); ++i)
+                {
+                        data->position.push_back({
+                                .time = time[i],
+                                .point = numerical::slice<0, SLICE_STEP>(x[i]),
+                        });
+                }
+        };
+
+        const auto smooth = [&]
+        {
+                std::tie(x, p) = core::smooth(f_predict, x_predict, p_predict, x, p);
+
+                write();
+        };
+
+        init(0);
 
         for (std::size_t i = 1; i < details.size(); ++i)
         {
@@ -70,7 +103,9 @@ void smooth(const std::vector<filters::UpdateDetails<D, T>>& details, view::Filt
 
                 if (!(f_p && x_p && p_p))
                 {
-                        break;
+                        smooth();
+                        init(i);
+                        continue;
                 }
 
                 f_predict.push_back(*f_p);
@@ -83,16 +118,6 @@ void smooth(const std::vector<filters::UpdateDetails<D, T>>& details, view::Filt
                 time.push_back(details[i].time);
         }
 
-        std::tie(x, p) = core::smooth(f_predict, x_predict, p_predict, x, p);
-
-        static constexpr std::size_t SLICE_STEP = D / N;
-
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                data->position.push_back({
-                        .time = time[i],
-                        .point = numerical::slice<0, SLICE_STEP>(x[i]),
-                });
-        }
+        smooth();
 }
 }
