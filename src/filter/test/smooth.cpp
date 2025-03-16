@@ -31,70 +31,89 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
+namespace
+{
+template <std::size_t N, typename T>
+struct Vectors
+{
+        std::vector<numerical::Matrix<N, N, T>> f_predict;
+        std::vector<numerical::Vector<N, T>> x_predict;
+        std::vector<numerical::Matrix<N, N, T>> p_predict;
+        std::vector<numerical::Vector<N, T>> x;
+        std::vector<numerical::Matrix<N, N, T>> p;
+        std::vector<T> time;
+};
+
+template <std::size_t N, typename T>
+void init(const filters::UpdateDetails<N, T>& details, Vectors<N, T>& v)
+{
+        ASSERT(!details.f_predict);
+        ASSERT(!details.x_predict);
+        ASSERT(!details.p_predict);
+
+        v.f_predict.clear();
+        v.x_predict.clear();
+        v.p_predict.clear();
+        v.x.clear();
+        v.p.clear();
+        v.time.clear();
+
+        v.f_predict.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
+        v.x_predict.push_back(numerical::Vector<N, T>(0));
+        v.p_predict.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
+        v.x.push_back(details.x_update);
+        v.p.push_back(details.p_update);
+        v.time.push_back(details.time);
+}
+
+template <std::size_t N, typename T>
+void add(const filters::UpdateDetails<N, T>& details, Vectors<N, T>& v)
+{
+        ASSERT(details.f_predict);
+        ASSERT(details.x_predict);
+        ASSERT(details.p_predict);
+
+        v.f_predict.push_back(*details.f_predict);
+        v.x_predict.push_back(*details.x_predict);
+        v.p_predict.push_back(*details.p_predict);
+        v.x.push_back(details.x_update);
+        v.p.push_back(details.p_update);
+        v.time.push_back(details.time);
+}
+
+template <std::size_t N, typename T>
+void write_smooth(const Vectors<N, T>& v, view::Filter<2, T>* const data)
+{
+        static constexpr std::size_t SLICE_STEP = N / 2;
+
+        const auto [x, p] = core::smooth(v.f_predict, v.x_predict, v.p_predict, v.x, v.p);
+
+        ASSERT(x.size() == v.time.size());
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                data->position.push_back({
+                        .time = v.time[i],
+                        .point = numerical::slice<0, SLICE_STEP>(x[i]),
+                });
+        }
+}
+}
+
 template <std::size_t N, typename T>
 void smooth(const std::vector<filters::UpdateDetails<N, T>>& details, view::Filter<2, T>* const data)
 {
         static_assert(N >= 2);
         static_assert((N % 2) == 0);
 
-        static constexpr std::size_t SLICE_STEP = N / 2;
-
         if (details.empty())
         {
                 return;
         }
 
-        std::vector<numerical::Matrix<N, N, T>> f_predict;
-        std::vector<numerical::Vector<N, T>> x_predict;
-        std::vector<numerical::Matrix<N, N, T>> p_predict;
+        Vectors<N, T> vectors;
 
-        std::vector<numerical::Vector<N, T>> x;
-        std::vector<numerical::Matrix<N, N, T>> p;
-
-        std::vector<T> time;
-
-        const auto init = [&](const std::size_t i)
-        {
-                ASSERT(!details[i].f_predict);
-                ASSERT(!details[i].x_predict);
-                ASSERT(!details[i].p_predict);
-
-                f_predict.clear();
-                x_predict.clear();
-                p_predict.clear();
-                x.clear();
-                p.clear();
-                time.clear();
-
-                f_predict.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
-                x_predict.push_back(numerical::Vector<N, T>(0));
-                p_predict.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
-
-                x.push_back(details[i].x_update);
-                p.push_back(details[i].p_update);
-
-                time.push_back(details[i].time);
-        };
-
-        const auto write = [&]
-        {
-                for (std::size_t i = 0; i < x.size(); ++i)
-                {
-                        data->position.push_back({
-                                .time = time[i],
-                                .point = numerical::slice<0, SLICE_STEP>(x[i]),
-                        });
-                }
-        };
-
-        const auto smooth = [&]
-        {
-                std::tie(x, p) = core::smooth(f_predict, x_predict, p_predict, x, p);
-
-                write();
-        };
-
-        init(0);
+        init(details[0], vectors);
 
         for (std::size_t i = 1; i < details.size(); ++i)
         {
@@ -104,22 +123,15 @@ void smooth(const std::vector<filters::UpdateDetails<N, T>>& details, view::Filt
 
                 if (!(f_p && x_p && p_p))
                 {
-                        smooth();
-                        init(i);
+                        write_smooth(vectors, data);
+                        init(details[i], vectors);
                         continue;
                 }
 
-                f_predict.push_back(*f_p);
-                x_predict.push_back(*x_p);
-                p_predict.push_back(*p_p);
-
-                x.push_back(details[i].x_update);
-                p.push_back(details[i].p_update);
-
-                time.push_back(details[i].time);
+                add(details[i], vectors);
         }
 
-        smooth();
+        write_smooth(vectors, data);
 }
 
 #define TEMPLATE(T)                                                                                  \
