@@ -73,6 +73,9 @@ public:
         [[nodiscard]] virtual numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const = 0;
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
+
+        [[nodiscard]] virtual numerical::Vector<N, T> x_to_position(
+                const numerical::Vector<N * (1 + ORDER), T>& x) const = 0;
 };
 
 template <std::size_t N, typename T>

@@ -89,6 +89,9 @@ public:
         [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override;
         [[nodiscard]] T speed() const override;
         [[nodiscard]] T speed_p() const override;
+
+        [[nodiscard]] numerical::Vector<N, T> x_to_position(
+                const numerical::Vector<N * (1 + ORDER), T>& x) const override;
 };
 
 template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
@@ -314,6 +317,12 @@ template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, t
 std::string Position<N, T, ORDER, F>::consistency_string() const
 {
         return make_consistency_string(nees_, nis_);
+}
+
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+numerical::Vector<N, T> Position<N, T, ORDER, F>::x_to_position(const numerical::Vector<N * (1 + ORDER), T>& x) const
+{
+        return filter_->x_to_position(x);
 }
 }
 

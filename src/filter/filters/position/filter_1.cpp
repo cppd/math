@@ -168,6 +168,11 @@ class FilterImpl final : public Filter1<N, T>
                 return filter_->p();
         }
 
+        [[nodiscard]] numerical::Vector<N, T> x_to_position(const numerical::Vector<2 * N, T>& x) const override
+        {
+                return numerical::slice<0, 2>(x);
+        }
+
 public:
         explicit FilterImpl(const T theta)
                 : theta_(theta)
