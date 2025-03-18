@@ -26,6 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::test
 {
-template <std::size_t N, typename T>
-void smooth(const std::vector<filters::UpdateDetails<N, T>>& details, view::Filter<2, T>* data);
+template <std::size_t N, typename T, std::size_t ORDER>
+void smooth(
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        const std::vector<filters::UpdateDetails<N, T>>& details,
+        view::Filter<2, T>* data);
 }

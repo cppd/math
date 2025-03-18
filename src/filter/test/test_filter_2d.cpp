@@ -191,7 +191,7 @@ void smooth_positions(Filters<T>* const filters)
         {
                 for (auto& f : filters_positions)
                 {
-                        smooth(f.details, &f.data_smooth);
+                        smooth(*f.filter, f.details, &f.data_smooth);
                 }
         };
 

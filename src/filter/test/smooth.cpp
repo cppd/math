@@ -81,11 +81,12 @@ void add(const filters::UpdateDetails<N, T>& details, Vectors<N, T>& v)
         v.time.push_back(details.time);
 }
 
-template <std::size_t N, typename T>
-void write_smooth(const Vectors<N, T>& v, view::Filter<2, T>* const data)
+template <std::size_t N, typename T, std::size_t ORDER>
+void write_smooth(
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        const Vectors<N, T>& v,
+        view::Filter<2, T>* const data)
 {
-        static constexpr std::size_t SLICE_STEP = N / 2;
-
         const auto [x, p] = core::smooth(v.f_predict, v.x_predict, v.p_predict, v.x, v.p);
 
         ASSERT(x.size() == v.time.size());
@@ -94,14 +95,17 @@ void write_smooth(const Vectors<N, T>& v, view::Filter<2, T>* const data)
         {
                 data->position.push_back({
                         .time = v.time[i],
-                        .point = numerical::slice<0, SLICE_STEP>(x[i]),
+                        .point = filter.x_to_position(x[i]),
                 });
         }
 }
 }
 
-template <std::size_t N, typename T>
-void smooth(const std::vector<filters::UpdateDetails<N, T>>& details, view::Filter<2, T>* const data)
+template <std::size_t N, typename T, std::size_t ORDER>
+void smooth(
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        const std::vector<filters::UpdateDetails<N, T>>& details,
+        view::Filter<2, T>* const data)
 {
         static_assert(N >= 2);
         static_assert((N % 2) == 0);
@@ -123,7 +127,7 @@ void smooth(const std::vector<filters::UpdateDetails<N, T>>& details, view::Filt
 
                 if (!(f_p && x_p && p_p))
                 {
-                        write_smooth(vectors, data);
+                        write_smooth(filter, vectors, data);
                         init(details[i], vectors);
                         continue;
                 }
@@ -131,13 +135,19 @@ void smooth(const std::vector<filters::UpdateDetails<N, T>>& details, view::Filt
                 add(details[i], vectors);
         }
 
-        write_smooth(vectors, data);
+        write_smooth(filter, vectors, data);
 }
 
-#define TEMPLATE(T)                                                                                  \
-        template void smooth(const std::vector<filters::UpdateDetails<2, T>>&, view::Filter<2, T>*); \
-        template void smooth(const std::vector<filters::UpdateDetails<4, T>>&, view::Filter<2, T>*); \
-        template void smooth(const std::vector<filters::UpdateDetails<6, T>>&, view::Filter<2, T>*);
+#define TEMPLATE(T)                                                                                        \
+        template void smooth(                                                                              \
+                const filters::FilterPosition<2, T, 0>&, const std::vector<filters::UpdateDetails<2, T>>&, \
+                view::Filter<2, T>*);                                                                      \
+        template void smooth(                                                                              \
+                const filters::FilterPosition<2, T, 1>&, const std::vector<filters::UpdateDetails<4, T>>&, \
+                view::Filter<2, T>*);                                                                      \
+        template void smooth(                                                                              \
+                const filters::FilterPosition<2, T, 2>&, const std::vector<filters::UpdateDetails<6, T>>&, \
+                view::Filter<2, T>*);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 
