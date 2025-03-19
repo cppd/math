@@ -129,6 +129,11 @@ class FilterImpl final : public Filter0<N, T>
                 return x;
         }
 
+        [[nodiscard]] numerical::Vector<N, T> p_to_position_p(const numerical::Matrix<N, N, T>& p) const override
+        {
+                return p.diagonal();
+        }
+
 public:
         explicit FilterImpl(const T theta)
                 : theta_(theta)

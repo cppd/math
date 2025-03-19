@@ -92,6 +92,8 @@ public:
 
         [[nodiscard]] numerical::Vector<N, T> x_to_position(
                 const numerical::Vector<N * (1 + ORDER), T>& x) const override;
+        [[nodiscard]] numerical::Vector<N, T> p_to_position_p(
+                const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const override;
 };
 
 template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
@@ -323,6 +325,13 @@ template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, t
 numerical::Vector<N, T> Position<N, T, ORDER, F>::x_to_position(const numerical::Vector<N * (1 + ORDER), T>& x) const
 {
         return filter_->x_to_position(x);
+}
+
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+numerical::Vector<N, T> Position<N, T, ORDER, F>::p_to_position_p(
+        const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const
+{
+        return filter_->p_to_position_p(p);
 }
 }
 

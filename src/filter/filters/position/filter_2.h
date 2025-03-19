@@ -67,6 +67,8 @@ public:
         [[nodiscard]] virtual const numerical::Matrix<3 * N, 3 * N, T>& p() const = 0;
 
         [[nodiscard]] virtual numerical::Vector<N, T> x_to_position(const numerical::Vector<3 * N, T>& x) const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> p_to_position_p(
+                const numerical::Matrix<3 * N, 3 * N, T>& p) const = 0;
 };
 
 template <std::size_t N, typename T>
