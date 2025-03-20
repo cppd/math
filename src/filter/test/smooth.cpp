@@ -89,6 +89,7 @@ void write_smooth(
 {
         const auto [x, p] = core::smooth(v.f_predict, v.x_predict, v.p_predict, v.x, v.p);
 
+        ASSERT(x.size() == p.size());
         ASSERT(x.size() == v.time.size());
 
         for (std::size_t i = 0; i < x.size(); ++i)
@@ -96,6 +97,11 @@ void write_smooth(
                 data->position.push_back({
                         .time = v.time[i],
                         .point = filter.x_to_position(x[i]),
+                });
+
+                data->position_p.push_back({
+                        .time = v.time[i],
+                        .point = filter.p_to_position_p(p[i]),
                 });
         }
 }
