@@ -69,6 +69,7 @@ public:
         [[nodiscard]] virtual numerical::Vector<N, T> x_to_position(const numerical::Vector<2 * N, T>& x) const = 0;
         [[nodiscard]] virtual numerical::Vector<N, T> p_to_position_p(
                 const numerical::Matrix<2 * N, 2 * N, T>& p) const = 0;
+        [[nodiscard]] virtual T x_to_speed(const numerical::Vector<2 * N, T>& x) const = 0;
 };
 
 template <std::size_t N, typename T>

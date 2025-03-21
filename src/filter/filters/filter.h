@@ -78,6 +78,7 @@ public:
                 const numerical::Vector<N * (1 + ORDER), T>& x) const = 0;
         [[nodiscard]] virtual numerical::Vector<N, T> p_to_position_p(
                 const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const = 0;
+        [[nodiscard]] virtual T x_to_speed(const numerical::Vector<N * (1 + ORDER), T>& x) const = 0;
 };
 
 template <std::size_t N, typename T>

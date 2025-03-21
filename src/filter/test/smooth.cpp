@@ -103,6 +103,14 @@ void write_smooth(
                         .time = v.time[i],
                         .point = filter.p_to_position_p(p[i]),
                 });
+
+                if constexpr (ORDER > 0)
+                {
+                        data->speed.push_back({
+                                .time = v.time[i],
+                                .point = numerical::Vector<1, T>(filter.x_to_speed(x[i])),
+                        });
+                }
         }
 }
 }

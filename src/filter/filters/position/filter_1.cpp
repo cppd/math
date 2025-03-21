@@ -179,6 +179,11 @@ class FilterImpl final : public Filter1<N, T>
                 return numerical::slice<0, 2>(p).diagonal();
         }
 
+        [[nodiscard]] T x_to_speed(const numerical::Vector<2 * N, T>& x) const override
+        {
+                return numerical::slice<1, 2>(x).norm();
+        }
+
 public:
         explicit FilterImpl(const T theta)
                 : theta_(theta)
