@@ -95,6 +95,9 @@ public:
         [[nodiscard]] numerical::Vector<N, T> p_to_position_p(
                 const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const override;
         [[nodiscard]] T x_to_speed(const numerical::Vector<N * (1 + ORDER), T>& x) const override;
+        [[nodiscard]] T xp_to_speed_p(
+                const numerical::Vector<N * (1 + ORDER), T>& x,
+                const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const override;
 };
 
 template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
@@ -345,6 +348,21 @@ T Position<N, T, ORDER, F>::x_to_speed(const numerical::Vector<N * (1 + ORDER), 
         else
         {
                 return filter_->x_to_speed(x);
+        }
+}
+
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+T Position<N, T, ORDER, F>::xp_to_speed_p(
+        const numerical::Vector<N * (1 + ORDER), T>& x,
+        const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const
+{
+        if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
+        {
+                error("speed_p is not supported");
+        }
+        else
+        {
+                return filter_->xp_to_speed_p(x, p);
         }
 }
 }

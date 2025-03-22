@@ -208,6 +208,14 @@ class FilterImpl final : public Filter2<N, T>
                 return numerical::slice<1, 3>(x).norm();
         }
 
+        [[nodiscard]] T xp_to_speed_p(const numerical::Vector<3 * N, T>& x, const numerical::Matrix<3 * N, 3 * N, T>& p)
+                const override
+        {
+                const numerical::Vector<N, T> velocity = numerical::slice<1, 3>(x);
+                const numerical::Matrix<N, N, T> velocity_p = numerical::slice<1, 3>(p);
+                return com::compute_speed_p(velocity, velocity_p);
+        }
+
 public:
         explicit FilterImpl(const T theta)
                 : theta_(theta)
