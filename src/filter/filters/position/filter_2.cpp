@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_2.h"
 
+#include "filter_2_conv.h"
 #include "filter_2_model.h"
 #include "init.h"
 
@@ -36,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::position
 {
 namespace model = filter_2_model;
+namespace conv = filter_2_conv;
 
 namespace
 {
@@ -102,82 +104,6 @@ class FilterImpl final : public Filter2<N, T>
                         model::add_x<N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        [[nodiscard]] numerical::Vector<N, T> position() const override
-        {
-                ASSERT(filter_);
-
-                return numerical::slice<0, 3>(filter_->x());
-        }
-
-        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
-        {
-                ASSERT(filter_);
-
-                return numerical::slice<0, 3>(filter_->p());
-        }
-
-        [[nodiscard]] T speed() const override
-        {
-                return velocity().norm();
-        }
-
-        [[nodiscard]] T speed_p() const override
-        {
-                return com::compute_speed_p(velocity(), velocity_p());
-        }
-
-        [[nodiscard]] numerical::Vector<N, T> velocity() const override
-        {
-                ASSERT(filter_);
-
-                return numerical::slice<1, 3>(filter_->x());
-        }
-
-        [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const override
-        {
-                ASSERT(filter_);
-
-                return numerical::slice<1, 3>(filter_->p());
-        }
-
-        [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override
-        {
-                ASSERT(filter_);
-
-                const numerical::Vector<3 * N, T>& x = filter_->x();
-                numerical::Vector<2 * N, T> res;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        for (std::size_t j = 0; j < 2; ++j)
-                        {
-                                res[2 * i + j] = x[3 * i + j];
-                        }
-                }
-                return res;
-        }
-
-        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override
-        {
-                ASSERT(filter_);
-
-                const numerical::Matrix<3 * N, 3 * N, T>& p = filter_->p();
-                numerical::Matrix<2 * N, 2 * N, T> res;
-                for (std::size_t r = 0; r < N; ++r)
-                {
-                        for (std::size_t i = 0; i < 2; ++i)
-                        {
-                                for (std::size_t c = 0; c < N; ++c)
-                                {
-                                        for (std::size_t j = 0; j < 2; ++j)
-                                        {
-                                                res[2 * r + i, 2 * c + j] = p[3 * r + i, 3 * c + j];
-                                        }
-                                }
-                        }
-                }
-                return res;
-        }
-
         [[nodiscard]] const numerical::Vector<3 * N, T>& x() const override
         {
                 ASSERT(filter_);
@@ -192,28 +118,66 @@ class FilterImpl final : public Filter2<N, T>
                 return filter_->p();
         }
 
+        [[nodiscard]] numerical::Vector<N, T> position() const override
+        {
+                return conv::position(x());
+        }
+
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
+        {
+                return conv::position_p(p());
+        }
+
+        [[nodiscard]] T speed() const override
+        {
+                return conv::speed(x());
+        }
+
+        [[nodiscard]] T speed_p() const override
+        {
+                return conv::speed_p(x(), p());
+        }
+
+        [[nodiscard]] numerical::Vector<N, T> velocity() const override
+        {
+                return conv::velocity(x());
+        }
+
+        [[nodiscard]] numerical::Matrix<N, N, T> velocity_p() const override
+        {
+                return conv::velocity_p(p());
+        }
+
+        [[nodiscard]] numerical::Vector<2 * N, T> position_velocity() const override
+        {
+                return conv::position_velocity(x());
+        }
+
+        [[nodiscard]] numerical::Matrix<2 * N, 2 * N, T> position_velocity_p() const override
+        {
+                return conv::position_velocity_p(p());
+        }
+
         [[nodiscard]] numerical::Vector<N, T> x_to_position(const numerical::Vector<3 * N, T>& x) const override
         {
-                return numerical::slice<0, 3>(x);
+                return conv::position(x);
         }
 
         [[nodiscard]] numerical::Vector<N, T> p_to_position_p(
                 const numerical::Matrix<3 * N, 3 * N, T>& p) const override
         {
-                return numerical::slice<0, 3>(p).diagonal();
+                return conv::position_p(p).diagonal();
         }
 
         [[nodiscard]] T x_to_speed(const numerical::Vector<3 * N, T>& x) const override
         {
-                return numerical::slice<1, 3>(x).norm();
+                return conv::speed(x);
         }
 
         [[nodiscard]] T xp_to_speed_p(const numerical::Vector<3 * N, T>& x, const numerical::Matrix<3 * N, 3 * N, T>& p)
                 const override
         {
-                const numerical::Vector<N, T> velocity = numerical::slice<1, 3>(x);
-                const numerical::Matrix<N, N, T> velocity_p = numerical::slice<1, 3>(p);
-                return com::compute_speed_p(velocity, velocity_p);
+                return conv::speed_p(x, p);
         }
 
 public:

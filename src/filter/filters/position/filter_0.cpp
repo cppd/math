@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_0.h"
 
+#include "filter_0_conv.h"
 #include "filter_0_model.h"
 
 #include <src/com/error.h>
@@ -35,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::position
 {
 namespace model = filter_0_model;
+namespace conv = filter_0_conv;
 
 namespace
 {
@@ -96,20 +98,6 @@ class FilterImpl final : public Filter0<N, T>
                         model::add_x<N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        [[nodiscard]] numerical::Vector<N, T> position() const override
-        {
-                ASSERT(filter_);
-
-                return filter_->x();
-        }
-
-        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
-        {
-                ASSERT(filter_);
-
-                return filter_->p();
-        }
-
         [[nodiscard]] const numerical::Vector<N, T>& x() const override
         {
                 ASSERT(filter_);
@@ -124,14 +112,24 @@ class FilterImpl final : public Filter0<N, T>
                 return filter_->p();
         }
 
+        [[nodiscard]] numerical::Vector<N, T> position() const override
+        {
+                return conv::position(x());
+        }
+
+        [[nodiscard]] numerical::Matrix<N, N, T> position_p() const override
+        {
+                return conv::position_p(p());
+        }
+
         [[nodiscard]] numerical::Vector<N, T> x_to_position(const numerical::Vector<N, T>& x) const override
         {
-                return x;
+                return conv::position(x);
         }
 
         [[nodiscard]] numerical::Vector<N, T> p_to_position_p(const numerical::Matrix<N, N, T>& p) const override
         {
-                return p.diagonal();
+                return conv::position_p(p).diagonal();
         }
 
 public:
