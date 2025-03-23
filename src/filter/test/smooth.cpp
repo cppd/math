@@ -110,6 +110,11 @@ void write_smooth(
                                 .time = v.time[i],
                                 .point = numerical::Vector<1, T>(filter.x_to_speed(x[i])),
                         });
+
+                        data->speed_p.push_back({
+                                .time = v.time[i],
+                                .point = numerical::Vector<1, T>(filter.xp_to_speed_p(x[i], p[i])),
+                        });
                 }
         }
 }
