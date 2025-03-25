@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_2_1.h"
 
+#include "filter_2_1_conv.h"
 #include "filter_2_1_model.h"
 #include "init.h"
 
@@ -37,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters::direction
 {
 namespace model = filter_2_1_model;
+namespace conv = filter_2_1_conv;
 
 namespace
 {
@@ -48,16 +50,6 @@ class Filter final : public Filter21<T>
 {
         const T sigma_points_alpha_;
         std::optional<core::Ukf<8, T, core::SigmaPoints<8, T>>> filter_;
-
-        [[nodiscard]] numerical::Matrix<2, 2, T> velocity_p() const
-        {
-                ASSERT(filter_);
-
-                return {
-                        {filter_->p()[1, 1], filter_->p()[1, 4]},
-                        {filter_->p()[4, 1], filter_->p()[4, 4]}
-                };
-        }
 
         void reset(
                 const numerical::Vector<4, T>& position_velocity,
@@ -195,66 +187,63 @@ class Filter final : public Filter21<T>
                         model::velocity_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        [[nodiscard]] numerical::Vector<2, T> position() const override
+        [[nodiscard]] const numerical::Vector<8, T>& x() const
         {
                 ASSERT(filter_);
 
-                return {filter_->x()[0], filter_->x()[3]};
+                return filter_->x();
+        }
+
+        [[nodiscard]] const numerical::Matrix<8, 8, T>& p() const
+        {
+                ASSERT(filter_);
+
+                return filter_->p();
+        }
+
+        [[nodiscard]] numerical::Vector<2, T> position() const override
+        {
+                return conv::position(x());
         }
 
         [[nodiscard]] numerical::Matrix<2, 2, T> position_p() const override
         {
-                ASSERT(filter_);
-
-                return {
-                        {filter_->p()[0, 0], filter_->p()[0, 3]},
-                        {filter_->p()[3, 0], filter_->p()[3, 3]}
-                };
+                return conv::position_p(p());
         }
 
         [[nodiscard]] numerical::Vector<2, T> velocity() const override
         {
-                ASSERT(filter_);
-
-                return {filter_->x()[1], filter_->x()[4]};
+                return conv::velocity(x());
         }
 
         [[nodiscard]] T speed() const override
         {
-                return velocity().norm();
+                return conv::speed(x());
         }
 
         [[nodiscard]] T speed_p() const override
         {
-                return com::compute_speed_p(velocity(), velocity_p());
+                return conv::speed_p(x(), p());
         }
 
         [[nodiscard]] T angle() const override
         {
-                ASSERT(filter_);
-
-                return filter_->x()[6];
+                return conv::angle(x());
         }
 
         [[nodiscard]] T angle_p() const override
         {
-                ASSERT(filter_);
-
-                return filter_->p()[6, 6];
+                return conv::angle_p(p());
         }
 
         [[nodiscard]] T angle_speed() const override
         {
-                ASSERT(filter_);
-
-                return filter_->x()[7];
+                return conv::angle_speed(x());
         }
 
         [[nodiscard]] T angle_speed_p() const override
         {
-                ASSERT(filter_);
-
-                return filter_->p()[7, 7];
+                return conv::angle_speed_p(p());
         }
 
 public:
