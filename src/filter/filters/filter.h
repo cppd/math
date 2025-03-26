@@ -56,6 +56,9 @@ struct UpdateInfoPosition final
 template <std::size_t N, typename T, std::size_t ORDER>
 class FilterPosition
 {
+private:
+        static constexpr std::size_t D = N * (1 + ORDER);
+
 public:
         virtual ~FilterPosition() = default;
 
@@ -74,14 +77,11 @@ public:
         [[nodiscard]] virtual T speed() const = 0;
         [[nodiscard]] virtual T speed_p() const = 0;
 
-        [[nodiscard]] virtual numerical::Vector<N, T> x_to_position(
-                const numerical::Vector<N * (1 + ORDER), T>& x) const = 0;
-        [[nodiscard]] virtual numerical::Vector<N, T> p_to_position_p(
-                const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const = 0;
-        [[nodiscard]] virtual T x_to_speed(const numerical::Vector<N * (1 + ORDER), T>& x) const = 0;
-        [[nodiscard]] virtual T xp_to_speed_p(
-                const numerical::Vector<N * (1 + ORDER), T>& x,
-                const numerical::Matrix<N * (1 + ORDER), N * (1 + ORDER), T>& p) const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> x_to_position(const numerical::Vector<D, T>& x) const = 0;
+        [[nodiscard]] virtual numerical::Vector<N, T> p_to_position_p(const numerical::Matrix<D, D, T>& p) const = 0;
+        [[nodiscard]] virtual T x_to_speed(const numerical::Vector<D, T>& x) const = 0;
+        [[nodiscard]] virtual T xp_to_speed_p(const numerical::Vector<D, T>& x, const numerical::Matrix<D, D, T>& p)
+                const = 0;
 };
 
 template <std::size_t N, typename T>
