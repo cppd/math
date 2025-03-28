@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ukf.h"
 
 #include "noise_model.h"
+#include "ukf_conv.h"
 #include "ukf_model.h"
 
 #include <src/com/error.h>
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core::test::filters
 {
 namespace model = ukf_model;
+namespace conv = ukf_conv;
 
 namespace
 {
@@ -96,46 +98,48 @@ class Filter final : public FilterUkf<T>
                         model::add_x<T>, model::speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
-        [[nodiscard]] T position() const override
-        {
-                ASSERT(filter_);
-
-                return filter_->x()[0];
-        }
-
-        [[nodiscard]] T position_p() const override
-        {
-                ASSERT(filter_);
-
-                return filter_->p()[0, 0];
-        }
-
-        [[nodiscard]] numerical::Vector<2, T> position_speed() const override
+        [[nodiscard]] const numerical::Vector<2, T>& x() const
         {
                 ASSERT(filter_);
 
                 return filter_->x();
         }
 
-        [[nodiscard]] numerical::Matrix<2, 2, T> position_speed_p() const override
+        [[nodiscard]] const numerical::Matrix<2, 2, T>& p() const
         {
                 ASSERT(filter_);
 
                 return filter_->p();
         }
 
+        [[nodiscard]] T position() const override
+        {
+                return conv::position(x());
+        }
+
+        [[nodiscard]] T position_p() const override
+        {
+                return conv::position_p(p());
+        }
+
+        [[nodiscard]] numerical::Vector<2, T> position_speed() const override
+        {
+                return conv::position_speed(x());
+        }
+
+        [[nodiscard]] numerical::Matrix<2, 2, T> position_speed_p() const override
+        {
+                return conv::position_speed_p(p());
+        }
+
         [[nodiscard]] T speed() const override
         {
-                ASSERT(filter_);
-
-                return filter_->x()[1];
+                return conv::speed(x());
         }
 
         [[nodiscard]] T speed_p() const override
         {
-                ASSERT(filter_);
-
-                return filter_->p()[1, 1];
+                return conv::speed_p(p());
         }
 
 public:
