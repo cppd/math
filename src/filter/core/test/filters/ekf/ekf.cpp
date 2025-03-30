@@ -19,21 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ekf_conv.h"
 #include "ekf_model.h"
-#include "noise_model.h"
 
 #include <src/com/error.h>
 #include <src/filter/core/ekf.h>
+#include <src/filter/core/test/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
 
-namespace ns::filter::core::test::filters
+namespace ns::filter::core::test::filters::ekf
 {
-namespace model = ekf_model;
-namespace conv = ekf_conv;
-
 namespace
 {
 template <typename T, bool H_INFINITY>

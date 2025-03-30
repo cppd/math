@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "noise_model.h"
-
 #include <src/com/variant.h>
 #include <src/filter/core/kinematic_models.h>
+#include <src/filter/core/test/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-namespace ns::filter::core::test::filters::ekf_model
+namespace ns::filter::core::test::filters::ekf::model
 {
 template <typename T>
 numerical::Vector<2, T> add_x(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)

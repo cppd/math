@@ -17,14 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "noise_model.h"
-
 #include <src/com/variant.h>
 #include <src/filter/core/kinematic_models.h>
+#include <src/filter/core/test/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
-namespace ns::filter::core::test::filters::ukf_model
+namespace ns::filter::core::test::filters::info::model
 {
 template <typename T>
 numerical::Vector<2, T> add_x(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
@@ -33,9 +32,17 @@ numerical::Vector<2, T> add_x(const numerical::Vector<2, T>& a, const numerical:
 }
 
 template <typename T>
-numerical::Vector<2, T> f(const T dt, const numerical::Vector<2, T>& x)
+numerical::Matrix<2, 2, T> f(const T dt)
 {
-        return {x[0] + dt * x[1], x[1]};
+        // x[0] = x[0] + dt * x[1]
+        // x[1] = x[1]
+        // Jacobian matrix
+        //  1 dt
+        //  0  1
+        return {
+                {1, dt},
+                {0,  1}
+        };
 }
 
 template <typename T>
@@ -72,6 +79,17 @@ numerical::Vector<1, T> position_h(const numerical::Vector<2, T>& x)
 }
 
 template <typename T>
+numerical::Matrix<1, 2, T> position_hj(const numerical::Vector<2, T>& /*x*/)
+{
+        // x = x[0]
+        // Jacobian matrix
+        //  1 0
+        return {
+                {1, 0}
+        };
+}
+
+template <typename T>
 numerical::Vector<1, T> position_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
         return a - b;
@@ -97,6 +115,20 @@ numerical::Vector<2, T> position_speed_h(const numerical::Vector<2, T>& x)
 }
 
 template <typename T>
+numerical::Matrix<2, 2, T> position_speed_hj(const numerical::Vector<2, T>& /*x*/)
+{
+        // x = x[0]
+        // v = x[1]
+        // Jacobian matrix
+        //  1 0
+        //  0 1
+        return {
+                {1, 0},
+                {0, 1}
+        };
+}
+
+template <typename T>
 numerical::Vector<2, T> position_speed_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
         return a - b;
@@ -115,6 +147,17 @@ numerical::Vector<1, T> speed_h(const numerical::Vector<2, T>& x)
 {
         // v = x[1]
         return numerical::Vector<1, T>(x[1]);
+}
+
+template <typename T>
+numerical::Matrix<1, 2, T> speed_hj(const numerical::Vector<2, T>& /*x*/)
+{
+        // v = x[1]
+        // Jacobian matrix
+        //  0 1
+        return {
+                {0, 1},
+        };
 }
 
 template <typename T>

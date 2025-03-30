@@ -17,30 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "noise_model.h"
-
+#include <src/filter/core/test/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
 
-namespace ns::filter::core::test::filters
+namespace ns::filter::core::test::filters::ukf
 {
-template <typename T, bool H_INFINITY>
-class FilterEkf
+template <typename T>
+class FilterUkf
 {
 public:
         using Type = T;
 
-        virtual ~FilterEkf() = default;
+        virtual ~FilterUkf() = default;
 
         virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) = 0;
 
-        [[nodiscard]] virtual numerical::Matrix<2, 2, T> predict(
-                T dt,
-                const NoiseModel<T>& noise_model,
-                T fading_memory_alpha) = 0;
+        virtual void predict(T dt, const NoiseModel<T>& noise_model, T fading_memory_alpha) = 0;
 
         virtual void update_position(T position, T position_variance, std::optional<T> gate) = 0;
 
@@ -63,6 +59,6 @@ public:
         [[nodiscard]] virtual T speed_p() const = 0;
 };
 
-template <typename T, bool H_INFINITY>
-[[nodiscard]] std::unique_ptr<FilterEkf<T, H_INFINITY>> create_filter_ekf();
+template <typename T>
+[[nodiscard]] std::unique_ptr<FilterUkf<T>> create_filter_ukf();
 }

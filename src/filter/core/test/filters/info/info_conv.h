@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
 
-namespace ns::filter::core::test::filters::info_conv
+namespace ns::filter::core::test::filters::info::conv
 {
 template <typename T>
 [[nodiscard]] T position(const numerical::Vector<2, T>& x)

@@ -17,25 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "noise_model.h"
-
+#include <src/filter/core/test/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
 
-namespace ns::filter::core::test::filters
+namespace ns::filter::core::test::filters::ekf
 {
-template <typename T>
-class FilterInfo
+template <typename T, bool H_INFINITY>
+class FilterEkf
 {
 public:
         using Type = T;
 
-        virtual ~FilterInfo() = default;
+        virtual ~FilterEkf() = default;
 
-        virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& i) = 0;
+        virtual void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) = 0;
 
         [[nodiscard]] virtual numerical::Matrix<2, 2, T> predict(
                 T dt,
@@ -63,6 +62,6 @@ public:
         [[nodiscard]] virtual T speed_p() const = 0;
 };
 
-template <typename T>
-[[nodiscard]] std::unique_ptr<FilterInfo<T>> create_filter_info();
+template <typename T, bool H_INFINITY>
+[[nodiscard]] std::unique_ptr<FilterEkf<T, H_INFINITY>> create_filter_ekf();
 }

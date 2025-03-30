@@ -15,63 +15,65 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ukf.h"
+#include "info.h"
 
-#include "noise_model.h"
-#include "ukf_conv.h"
-#include "ukf_model.h"
+#include "info_conv.h"
+#include "info_model.h"
 
 #include <src/com/error.h>
-#include <src/filter/core/sigma_points.h>
-#include <src/filter/core/ukf.h>
+#include <src/filter/core/info.h>
+#include <src/filter/core/test/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <memory>
 #include <optional>
 
-namespace ns::filter::core::test::filters
+namespace ns::filter::core::test::filters::info
 {
-namespace model = ukf_model;
-namespace conv = ukf_conv;
-
 namespace
 {
 template <typename T>
-class Filter final : public FilterUkf<T>
+class Filter final : public FilterInfo<T>
 {
-        static constexpr bool NORMALIZED_INNOVATION{true};
-        static constexpr bool LIKELIHOOD{true};
+        std::optional<Info<2, T>> filter_;
 
-        static constexpr T SIGMA_POINTS_ALPHA = 0.1;
-
-        std::optional<Ukf<2, T, SigmaPoints<2, T>>> filter_;
-
-        void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p) override
+        void reset(const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& i) override
         {
-                filter_.emplace(create_sigma_points<2, T>(SIGMA_POINTS_ALPHA), x, p);
+                filter_.emplace(x, i);
         }
 
-        void predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha) override
+        numerical::Matrix<2, 2, T> predict(const T dt, const NoiseModel<T>& noise_model, const T fading_memory_alpha)
+                override
         {
                 ASSERT(filter_);
 
+                const numerical::Matrix<2, 2, T> f = model::f(dt);
+                const numerical::Matrix<2, 2, T> q_inv = model::q(dt, noise_model).inversed();
+
                 filter_->predict(
-                        [dt](const numerical::Vector<2, T>& x)
+                        [&](const numerical::Vector<2, T>& x)
                         {
-                                return model::f(dt, x);
+                                return f * x;
                         },
-                        model::q(dt, noise_model), fading_memory_alpha);
+                        [&](const numerical::Vector<2, T>& /*x*/)
+                        {
+                                return f;
+                        },
+                        q_inv, fading_memory_alpha);
+
+                return f;
         }
 
         void update_position(const T position, const T position_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
+                const auto r_inv = model::position_r<T>(position_variance).inversed();
+
                 filter_->update(
-                        model::position_h<T>, model::position_r<T>(position_variance),
-                        numerical::Vector<1, T>(position), model::add_x<T>, model::position_residual<T>, gate,
-                        NORMALIZED_INNOVATION, LIKELIHOOD);
+                        model::position_h<T>, model::position_hj<T>, r_inv, numerical::Vector<1, T>(position),
+                        model::add_x<T>, model::position_residual<T>, gate);
         }
 
         void update_position_speed(
@@ -83,19 +85,23 @@ class Filter final : public FilterUkf<T>
         {
                 ASSERT(filter_);
 
+                const auto r_inv = model::position_speed_r<T>(position_variance, speed_variance).inversed();
+
                 filter_->update(
-                        model::position_speed_h<T>, model::position_speed_r<T>(position_variance, speed_variance),
+                        model::position_speed_h<T>, model::position_speed_hj<T>, r_inv,
                         numerical::Vector<2, T>(position, speed), model::add_x<T>, model::position_speed_residual<T>,
-                        gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        gate);
         }
 
         void update_speed(const T speed, const T speed_variance, const std::optional<T> gate) override
         {
                 ASSERT(filter_);
 
+                const auto r_inv = model::speed_r<T>(speed_variance).inversed();
+
                 filter_->update(
-                        model::speed_h<T>, model::speed_r<T>(speed_variance), numerical::Vector<1, T>(speed),
-                        model::add_x<T>, model::speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        model::speed_h<T>, model::speed_hj<T>, r_inv, numerical::Vector<1, T>(speed), model::add_x<T>,
+                        model::speed_residual<T>, gate);
         }
 
         [[nodiscard]] const numerical::Vector<2, T>& x() const
@@ -105,11 +111,18 @@ class Filter final : public FilterUkf<T>
                 return filter_->x();
         }
 
-        [[nodiscard]] const numerical::Matrix<2, 2, T>& p() const
+        [[nodiscard]] const std::optional<numerical::Matrix<2, 2, T>>& p() const
         {
                 ASSERT(filter_);
 
                 return filter_->p();
+        }
+
+        [[nodiscard]] const numerical::Matrix<2, 2, T>& i() const
+        {
+                ASSERT(filter_);
+
+                return filter_->i();
         }
 
         [[nodiscard]] T position() const override
@@ -129,7 +142,7 @@ class Filter final : public FilterUkf<T>
 
         [[nodiscard]] numerical::Matrix<2, 2, T> position_speed_p() const override
         {
-                return conv::position_speed_p(p());
+                return conv::position_speed_p(p(), i());
         }
 
         [[nodiscard]] T speed() const override
@@ -148,12 +161,12 @@ public:
 }
 
 template <typename T>
-[[nodiscard]] std::unique_ptr<FilterUkf<T>> create_filter_ukf()
+[[nodiscard]] std::unique_ptr<FilterInfo<T>> create_filter_info()
 {
         return std::make_unique<Filter<T>>();
 }
 
-#define INSTANTIATION(T) template std::unique_ptr<FilterUkf<T>> create_filter_ukf();
+#define INSTANTIATION(T) template std::unique_ptr<FilterInfo<T>> create_filter_info();
 
 INSTANTIATION(float)
 INSTANTIATION(double)
