@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurements.h"
 
 #include "filters/filter.h"
+#include "filters/filter_info.h"
+#include "filters/filters.h"
 #include "filters/noise_model.h"
 #include "simulator/speed.h"
 #include "view/write.h"

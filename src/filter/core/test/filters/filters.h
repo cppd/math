@@ -17,39 +17,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/filter/core/consistency.h>
-#include <src/filter/core/test/measurements.h>
-#include <src/numerical/matrix.h>
-#include <src/numerical/vector.h>
+#include "filter.h"
+#include "noise_model.h"
 
+#include <memory>
 #include <optional>
 
 namespace ns::filter::core::test::filters
 {
 template <typename T>
-struct UpdateInfo final
-{
-        T x;
-        T x_stddev;
-        T v;
-        T v_stddev;
-        std::optional<numerical::Matrix<2, 2, T>> f_predict;
-        std::optional<numerical::Vector<2, T>> x_predict;
-        std::optional<numerical::Matrix<2, 2, T>> p_predict;
-        numerical::Vector<2, T> x_update;
-        numerical::Matrix<2, 2, T> p_update;
-};
+std::unique_ptr<Filter<T>> create_ekf(
+        T init_v,
+        T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        T fading_memory_alpha,
+        T reset_dt,
+        std::optional<T> gate);
 
 template <typename T>
-class Filter
-{
-public:
-        virtual ~Filter() = default;
+std::unique_ptr<Filter<T>> create_h_infinity(
+        T init_v,
+        T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        T fading_memory_alpha,
+        T reset_dt,
+        std::optional<T> gate);
 
-        virtual void reset() = 0;
-
-        [[nodiscard]] virtual std::optional<UpdateInfo<T>> update(const Measurements<T>& m) = 0;
-
-        [[nodiscard]] virtual const NormalizedSquared<T>& nees() const = 0;
-};
+template <typename T>
+std::unique_ptr<Filter<T>> create_ukf(
+        T init_v,
+        T init_v_variance,
+        const NoiseModel<T>& noise_model,
+        T fading_memory_alpha,
+        T reset_dt,
+        std::optional<T> gate);
 }
