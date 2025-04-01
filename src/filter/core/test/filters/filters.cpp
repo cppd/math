@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter.h"
 #include "noise_model.h"
+#include "utility.h"
 
 #include "ekf/ekf.h"
 #include "ukf/ukf.h"
@@ -110,58 +111,30 @@ std::optional<numerical::Matrix<2, 2, typename Filter::Type>> filter_predict(
         }
 }
 
-template <typename Filter>
-bool filter_update(
-        Filter* const filter,
-        const Measurements<typename Filter::Type>& m,
-        const std::optional<typename Filter::Type> gate)
-{
-        ASSERT(filter);
-        ASSERT(m.x || m.v);
-
-        if (m.x)
-        {
-                if (m.v)
-                {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance, gate);
-                        return true;
-                }
-                filter->update_position(m.x->value, m.x->variance, gate);
-                return true;
-        }
-        if (m.v)
-        {
-                filter->update_speed(m.v->value, m.v->variance, gate);
-                return true;
-        }
-        return false;
-}
-
 template <typename F>
 class FilterImpl : public Filter<typename F::Type>
 {
-        F::Type init_v_;
-        F::Type init_v_variance_;
-        NoiseModel<typename F::Type> noise_model_;
-        F::Type fading_memory_alpha_;
-        F::Type reset_dt_;
-        std::optional<typename F::Type> gate_;
+        using T = F::Type;
+
+        T init_v_;
+        T init_v_variance_;
+        NoiseModel<T> noise_model_;
+        T fading_memory_alpha_;
+        T reset_dt_;
+        std::optional<T> gate_;
         std::unique_ptr<F> filter_;
 
-        NormalizedSquared<typename F::Type> nees_;
+        NormalizedSquared<T> nees_;
 
-        std::optional<typename F::Type> last_time_;
+        std::optional<T> last_time_;
 
         void reset() override
         {
                 last_time_.reset();
         }
 
-        [[nodiscard]] std::optional<UpdateInfo<typename F::Type>> update(
-                const Measurements<typename F::Type>& m) override
+        [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<T>& m) override
         {
-                using T = typename F::Type;
-
                 if (!(m.x || m.v))
                 {
                         return std::nullopt;
@@ -211,19 +184,19 @@ class FilterImpl : public Filter<typename F::Type>
                 };
         }
 
-        [[nodiscard]] const NormalizedSquared<typename F::Type>& nees() const override
+        [[nodiscard]] const NormalizedSquared<T>& nees() const override
         {
                 return nees_;
         }
 
 public:
         FilterImpl(
-                const typename F::Type init_v,
-                const typename F::Type init_v_variance,
-                const NoiseModel<typename F::Type>& noise_model,
-                const typename F::Type fading_memory_alpha,
-                const F::Type reset_dt,
-                const std::optional<typename F::Type> gate,
+                const T init_v,
+                const T init_v_variance,
+                const NoiseModel<T>& noise_model,
+                const T fading_memory_alpha,
+                const T reset_dt,
+                const std::optional<T> gate,
                 std::unique_ptr<F>&& filter)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),

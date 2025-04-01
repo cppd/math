@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter.h"
 #include "noise_model.h"
+#include "utility.h"
 
 #include "info/info.h"
 
@@ -36,30 +37,6 @@ namespace ns::filter::core::test::filters
 {
 namespace
 {
-template <typename T>
-bool filter_update(info::FilterInfo<T>* const filter, const Measurements<T>& m, const std::optional<T> gate)
-{
-        ASSERT(filter);
-        ASSERT(m.x || m.v);
-
-        if (m.x)
-        {
-                if (m.v)
-                {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance, gate);
-                        return true;
-                }
-                filter->update_position(m.x->value, m.x->variance, gate);
-                return true;
-        }
-        if (m.v)
-        {
-                filter->update_speed(m.v->value, m.v->variance, gate);
-                return true;
-        }
-        return false;
-}
-
 template <typename T>
 class FilterInfoImpl : public Filter<T>
 {
