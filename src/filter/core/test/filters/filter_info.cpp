@@ -120,19 +120,7 @@ class FilterInfoImpl : public Filter<T>
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
                         filter_->position_speed_p());
 
-                return {
-                        {
-                         .x = filter_->position(),
-                         .x_stddev = std::sqrt(filter_->position_p()),
-                         .v = filter_->speed(),
-                         .v_stddev = std::sqrt(filter_->speed_p()),
-                         .f_predict = f_predict,
-                         .x_predict = x_predict,
-                         .p_predict = p_predict,
-                         .x_update = filter_->position_speed(),
-                         .p_update = filter_->position_speed_p(),
-                         }
-                };
+                return make_update_info(f_predict, x_predict, p_predict, *filter_);
         }
 
         [[nodiscard]] const NormalizedSquared<T>& nees() const override

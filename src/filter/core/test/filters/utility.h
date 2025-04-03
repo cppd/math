@@ -17,7 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "filter.h"
+
+#include <src/com/error.h>
 #include <src/filter/core/test/measurements.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 
 #include <optional>
 
@@ -42,11 +47,33 @@ bool filter_update(
                 filter->update_position(m.x->value, m.x->variance, gate);
                 return true;
         }
+
         if (m.v)
         {
                 filter->update_speed(m.v->value, m.v->variance, gate);
                 return true;
         }
+
         return false;
+}
+
+template <typename Filter>
+UpdateInfo<typename Filter::Type> make_update_info(
+        const std::optional<numerical::Matrix<2, 2, typename Filter::Type>>& f_predict,
+        const std::optional<numerical::Vector<2, typename Filter::Type>>& x_predict,
+        const std::optional<numerical::Matrix<2, 2, typename Filter::Type>>& p_predict,
+        const Filter& filter)
+{
+        return {
+                .x = filter.position(),
+                .x_stddev = std::sqrt(filter.position_p()),
+                .v = filter.speed(),
+                .v_stddev = std::sqrt(filter.speed_p()),
+                .f_predict = f_predict,
+                .x_predict = x_predict,
+                .p_predict = p_predict,
+                .x_update = filter.position_speed(),
+                .p_update = filter.position_speed_p(),
+        };
 }
 }

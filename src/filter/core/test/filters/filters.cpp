@@ -57,7 +57,7 @@ numerical::Vector<2, T> init_variance(const Measurements<T>& m, const T init_v_v
 }
 
 template <typename Filter>
-UpdateInfo<typename Filter::Type> filter_reset(
+void filter_reset(
         Filter* const filter,
         const Measurements<typename Filter::Type>& m,
         const typename Filter::Type init_v,
@@ -79,18 +79,6 @@ UpdateInfo<typename Filter::Type> filter_reset(
 
         ASSERT(filter->position_speed() == x);
         ASSERT(filter->position_speed_p() == p);
-
-        return {
-                .x = x[0],
-                .x_stddev = std::sqrt(variance[0]),
-                .v = x[1],
-                .v_stddev = std::sqrt(variance[1]),
-                .f_predict = std::nullopt,
-                .x_predict = std::nullopt,
-                .p_predict = std::nullopt,
-                .x_update = x,
-                .p_update = p,
-        };
 }
 
 template <typename Filter>
@@ -147,7 +135,8 @@ class FilterImpl : public Filter<typename F::Type>
                                 return std::nullopt;
                         }
                         last_time_ = m.time;
-                        return filter_reset(filter_.get(), m, init_v_, init_v_variance_);
+                        filter_reset(filter_.get(), m, init_v_, init_v_variance_);
+                        return make_update_info(std::nullopt, std::nullopt, std::nullopt, *filter_);
                 }
 
                 const T dt = m.time - *last_time_;
@@ -169,19 +158,7 @@ class FilterImpl : public Filter<typename F::Type>
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
                         filter_->position_speed_p());
 
-                return {
-                        {
-                         .x = filter_->position(),
-                         .x_stddev = std::sqrt(filter_->position_p()),
-                         .v = filter_->speed(),
-                         .v_stddev = std::sqrt(filter_->speed_p()),
-                         .f_predict = f_predict,
-                         .x_predict = x_predict,
-                         .p_predict = p_predict,
-                         .x_update = filter_->position_speed(),
-                         .p_update = filter_->position_speed_p(),
-                         }
-                };
+                return make_update_info(f_predict, x_predict, p_predict, *filter_);
         }
 
         [[nodiscard]] const NormalizedSquared<T>& nees() const override
