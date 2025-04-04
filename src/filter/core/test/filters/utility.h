@@ -58,7 +58,7 @@ bool filter_update(
 }
 
 template <typename Filter>
-UpdateInfo<typename Filter::Type> make_update_info(
+[[nodiscard]] UpdateInfo<typename Filter::Type> make_update_info(
         const std::optional<numerical::Matrix<2, 2, typename Filter::Type>>& f_predict,
         const std::optional<numerical::Vector<2, typename Filter::Type>>& x_predict,
         const std::optional<numerical::Matrix<2, 2, typename Filter::Type>>& p_predict,

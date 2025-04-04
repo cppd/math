@@ -38,7 +38,7 @@ namespace ns::filter::core::test::filters
 namespace
 {
 template <typename T>
-class FilterInfoImpl : public Filter<T>
+class Impl : public Filter<T>
 {
         T init_v_;
         T init_v_variance_;
@@ -129,14 +129,13 @@ class FilterInfoImpl : public Filter<T>
         }
 
 public:
-        FilterInfoImpl(
-                const T init_v,
-                const T init_v_variance,
-                const NoiseModel<T>& noise_model,
-                const T fading_memory_alpha,
-                const T reset_dt,
-                const std::optional<T> gate,
-                std::unique_ptr<info::FilterInfo<T>>&& filter)
+        Impl(const T init_v,
+             const T init_v_variance,
+             const NoiseModel<T>& noise_model,
+             const T fading_memory_alpha,
+             const T reset_dt,
+             const std::optional<T> gate,
+             std::unique_ptr<info::FilterInfo<T>>&& filter)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),
                   noise_model_(noise_model),
@@ -158,7 +157,7 @@ std::unique_ptr<Filter<T>> create_info(
         const T reset_dt,
         const std::optional<T> gate)
 {
-        return std::make_unique<FilterInfoImpl<T>>(
+        return std::make_unique<Impl<T>>(
                 init_v, init_v_variance, noise_model, fading_memory_alpha, reset_dt, gate,
                 info::create_filter_info<T>());
 }

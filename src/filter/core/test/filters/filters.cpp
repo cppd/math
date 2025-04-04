@@ -100,7 +100,7 @@ std::optional<numerical::Matrix<2, 2, typename Filter::Type>> filter_predict(
 }
 
 template <typename F>
-class FilterImpl : public Filter<typename F::Type>
+class Impl : public Filter<typename F::Type>
 {
         using T = F::Type;
 
@@ -167,14 +167,13 @@ class FilterImpl : public Filter<typename F::Type>
         }
 
 public:
-        FilterImpl(
-                std::unique_ptr<F>&& filter,
-                const T init_v,
-                const T init_v_variance,
-                const NoiseModel<T>& noise_model,
-                const T fading_memory_alpha,
-                const T reset_dt,
-                const std::optional<T> gate)
+        Impl(std::unique_ptr<F>&& filter,
+             const T init_v,
+             const T init_v_variance,
+             const NoiseModel<T>& noise_model,
+             const T fading_memory_alpha,
+             const T reset_dt,
+             const std::optional<T> gate)
                 : init_v_(init_v),
                   init_v_variance_(init_v_variance),
                   noise_model_(noise_model),
@@ -189,7 +188,7 @@ public:
 template <typename F, typename... T>
 auto create(std::unique_ptr<F>&& filter, T&&... ts)
 {
-        return std::make_unique<FilterImpl<F>>(std::move(filter), std::forward<T>(ts)...);
+        return std::make_unique<Impl<F>>(std::move(filter), std::forward<T>(ts)...);
 }
 }
 
