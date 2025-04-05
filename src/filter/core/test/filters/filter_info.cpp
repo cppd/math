@@ -93,9 +93,7 @@ class Impl : public Filter<T>
                         return std::nullopt;
                 }
 
-                std::optional<numerical::Matrix<2, 2, T>> f_predict;
-                std::optional<numerical::Vector<2, T>> x_predict;
-                std::optional<numerical::Matrix<2, 2, T>> p_predict;
+                PredictInfo<T> predict;
 
                 if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
                 {
@@ -110,9 +108,9 @@ class Impl : public Filter<T>
                         const T dt = m.time - *last_time_;
                         ASSERT(dt >= 0);
                         last_time_ = m.time;
-                        f_predict = filter_->predict(dt, noise_model_, fading_memory_alpha_);
-                        x_predict = filter_->position_speed();
-                        p_predict = filter_->position_speed_p();
+                        predict.f = filter_->predict(dt, noise_model_, fading_memory_alpha_);
+                        predict.x = filter_->position_speed();
+                        predict.p = filter_->position_speed_p();
                         filter_update(filter_.get(), m, gate_);
                 }
 
@@ -120,7 +118,7 @@ class Impl : public Filter<T>
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
                         filter_->position_speed_p());
 
-                return make_update_info(f_predict, x_predict, p_predict, *filter_);
+                return make_update_info(predict, *filter_);
         }
 
         [[nodiscard]] const NormalizedSquared<T>& nees() const override

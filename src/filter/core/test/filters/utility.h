@@ -57,11 +57,17 @@ bool filter_update(
         return false;
 }
 
+template <typename T>
+struct PredictInfo final
+{
+        std::optional<numerical::Matrix<2, 2, T>> f;
+        std::optional<numerical::Vector<2, T>> x;
+        std::optional<numerical::Matrix<2, 2, T>> p;
+};
+
 template <typename Filter>
 [[nodiscard]] UpdateInfo<typename Filter::Type> make_update_info(
-        const std::optional<numerical::Matrix<2, 2, typename Filter::Type>>& f_predict,
-        const std::optional<numerical::Vector<2, typename Filter::Type>>& x_predict,
-        const std::optional<numerical::Matrix<2, 2, typename Filter::Type>>& p_predict,
+        const PredictInfo<typename Filter::Type>& predict,
         const Filter& filter)
 {
         return {
@@ -69,9 +75,9 @@ template <typename Filter>
                 .x_stddev = std::sqrt(filter.position_p()),
                 .v = filter.speed(),
                 .v_stddev = std::sqrt(filter.speed_p()),
-                .f_predict = f_predict,
-                .x_predict = x_predict,
-                .p_predict = p_predict,
+                .f_predict = predict.f,
+                .x_predict = predict.x,
+                .p_predict = predict.p,
                 .x_update = filter.position_speed(),
                 .p_update = filter.position_speed_p(),
         };

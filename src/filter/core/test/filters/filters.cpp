@@ -82,7 +82,7 @@ void filter_reset(
 }
 
 template <typename Filter>
-std::optional<numerical::Matrix<2, 2, typename Filter::Type>> filter_predict(
+PredictInfo<typename Filter::Type> filter_predict(
         Filter* const filter,
         const typename Filter::Type dt,
         const NoiseModel<typename Filter::Type>& noise_model,
@@ -91,11 +91,15 @@ std::optional<numerical::Matrix<2, 2, typename Filter::Type>> filter_predict(
         if constexpr (std::is_same_v<Filter, ukf::FilterUkf<typename Filter::Type>>)
         {
                 filter->predict(dt, noise_model, fading_memory_alpha);
-                return std::nullopt;
+                return {};
         }
         else
         {
-                return filter->predict(dt, noise_model, fading_memory_alpha);
+                PredictInfo<typename Filter::Type> predict;
+                predict.f = filter->predict(dt, noise_model, fading_memory_alpha);
+                predict.x = filter->position_speed();
+                predict.p = filter->position_speed_p();
+                return predict;
         }
 }
 
@@ -136,18 +140,14 @@ class Impl : public Filter<typename F::Type>
                         }
                         last_time_ = m.time;
                         filter_reset(filter_.get(), m, init_v_, init_v_variance_);
-                        return make_update_info(std::nullopt, std::nullopt, std::nullopt, *filter_);
+                        return make_update_info({}, *filter_);
                 }
 
                 const T dt = m.time - *last_time_;
                 ASSERT(dt >= 0);
                 last_time_ = m.time;
 
-                const std::optional<numerical::Matrix<2, 2, T>> f_predict =
-                        filter_predict(filter_.get(), dt, noise_model_, fading_memory_alpha_);
-
-                const numerical::Vector<2, T> x_predict = filter_->position_speed();
-                const numerical::Matrix<2, 2, T> p_predict = filter_->position_speed_p();
+                const PredictInfo<T> predict = filter_predict(filter_.get(), dt, noise_model_, fading_memory_alpha_);
 
                 if (!filter_update(filter_.get(), m, gate_))
                 {
@@ -158,7 +158,7 @@ class Impl : public Filter<typename F::Type>
                         numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
                         filter_->position_speed_p());
 
-                return make_update_info(f_predict, x_predict, p_predict, *filter_);
+                return make_update_info(predict, *filter_);
         }
 
         [[nodiscard]] const NormalizedSquared<T>& nees() const override
