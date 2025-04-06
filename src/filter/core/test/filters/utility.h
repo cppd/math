@@ -75,11 +75,11 @@ template <typename Filter>
                 .x_stddev = std::sqrt(filter.position_p()),
                 .v = filter.speed(),
                 .v_stddev = std::sqrt(filter.speed_p()),
-                .f_predict = predict.f,
-                .x_predict = predict.x,
-                .p_predict = predict.p,
-                .x_update = filter.position_speed(),
-                .p_update = filter.position_speed_p(),
+                .predict_f = predict.f,
+                .predict_x = predict.x,
+                .predict_p = predict.p,
+                .update_x = filter.position_speed(),
+                .update_p = filter.position_speed_p(),
         };
 }
 }

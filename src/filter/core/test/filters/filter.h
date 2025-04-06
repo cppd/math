@@ -33,11 +33,13 @@ struct UpdateInfo final
         T x_stddev;
         T v;
         T v_stddev;
-        std::optional<numerical::Matrix<2, 2, T>> f_predict;
-        std::optional<numerical::Vector<2, T>> x_predict;
-        std::optional<numerical::Matrix<2, 2, T>> p_predict;
-        numerical::Vector<2, T> x_update;
-        numerical::Matrix<2, 2, T> p_update;
+
+        std::optional<numerical::Matrix<2, 2, T>> predict_f;
+        std::optional<numerical::Vector<2, T>> predict_x;
+        std::optional<numerical::Matrix<2, 2, T>> predict_p;
+
+        numerical::Vector<2, T> update_x;
+        numerical::Matrix<2, 2, T> update_p;
 };
 
 template <typename T>
