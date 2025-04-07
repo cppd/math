@@ -15,10 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Time-effcient algorithms for two highly robust estimators of scale.
+Christophe Croux, Peter J. Rousseeuw.
+
+Alternatives to the Median Absolute Deviation.
+Peter J. Rousseeuw, Christophe Croux.
+*/
+
 #pragma once
 
 #include "median.h"
-#include "median_array.h"
+#include "median_sorted.h"
 
 #include <src/com/error.h>
 
