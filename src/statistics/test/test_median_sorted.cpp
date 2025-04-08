@@ -180,15 +180,15 @@ void test()
 
 void test_median()
 {
-        LOG("Test median array");
+        LOG("Test median sorted");
 
         test<float>();
         test<double>();
         test<long double>();
 
-        LOG("Test median array passed");
+        LOG("Test median sorted passed");
 }
 
-TEST_SMALL("Median Array", test_median)
+TEST_SMALL("Median Sorted", test_median)
 }
 }

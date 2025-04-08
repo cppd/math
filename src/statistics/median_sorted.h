@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::statistics
 {
-namespace median_array_implementation
+namespace median_sorted_implementation
 {
 template <typename T, typename F1, typename F2>
 std::optional<T> compute(
@@ -77,7 +77,7 @@ std::optional<T> compute(
 }
 
 template <typename F1, typename F2>
-[[nodiscard]] std::remove_cvref_t<decltype(std::declval<F1>()(0))> median_of_sorted_data(
+[[nodiscard]] std::remove_cvref_t<decltype(std::declval<F1>()(std::size_t{0}))> median_of_sorted_data(
         // T f(std::size_t i)
         const F1& f1,
         const std::size_t size_1,
@@ -85,7 +85,7 @@ template <typename F1, typename F2>
         const F2& f2,
         const std::size_t size_2)
 {
-        namespace impl = median_array_implementation;
+        namespace impl = median_sorted_implementation;
 
         static_assert(std::is_same_v<decltype(f1(std::size_t{0})), decltype(f2(std::size_t{0}))>);
         using T = std::remove_cvref_t<decltype(f1(std::size_t{0}))>;
