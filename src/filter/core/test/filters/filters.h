@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core::test::filters
 {
 template <typename T>
-std::unique_ptr<Filter<T>> create_ekf(
+[[nodiscard]] std::unique_ptr<Filter<T>> create_ekf(
         T init_v,
         T init_v_variance,
         const NoiseModel<T>& noise_model,
@@ -35,7 +35,7 @@ std::unique_ptr<Filter<T>> create_ekf(
         std::optional<T> gate);
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_h_infinity(
+[[nodiscard]] std::unique_ptr<Filter<T>> create_h_infinity(
         T init_v,
         T init_v_variance,
         const NoiseModel<T>& noise_model,
@@ -44,7 +44,7 @@ std::unique_ptr<Filter<T>> create_h_infinity(
         std::optional<T> gate);
 
 template <typename T>
-std::unique_ptr<Filter<T>> create_ukf(
+[[nodiscard]] std::unique_ptr<Filter<T>> create_ukf(
         T init_v,
         T init_v_variance,
         const NoiseModel<T>& noise_model,

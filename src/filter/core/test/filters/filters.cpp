@@ -104,7 +104,7 @@ PredictInfo<typename Filter::Type> filter_predict(
 }
 
 template <typename F>
-class Impl : public Filter<typename F::Type>
+class Impl final : public Filter<typename F::Type>
 {
         using T = F::Type;
 

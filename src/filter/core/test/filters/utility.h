@@ -44,6 +44,7 @@ bool filter_update(
                         filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance, gate);
                         return true;
                 }
+
                 filter->update_position(m.x->value, m.x->variance, gate);
                 return true;
         }

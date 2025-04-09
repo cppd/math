@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core::test::filters
 {
 template <typename T>
-std::unique_ptr<Filter<T>> create_info(
+[[nodiscard]] std::unique_ptr<Filter<T>> create_info(
         T init_v,
         T init_v_variance,
         const NoiseModel<T>& noise_model,

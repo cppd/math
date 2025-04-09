@@ -38,7 +38,7 @@ namespace ns::filter::core::test::filters
 namespace
 {
 template <typename T>
-class Impl : public Filter<T>
+class Impl final : public Filter<T>
 {
         T init_v_;
         T init_v_variance_;
