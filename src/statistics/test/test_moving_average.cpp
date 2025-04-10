@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "compare.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -26,35 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 
-namespace ns::statistics
+namespace ns::statistics::test
 {
 namespace
 {
-template <typename T>
-        requires (std::is_floating_point_v<T>)
-void compare(const T a, const T b, const T precision)
-{
-        if (!(std::abs(a - b) <= precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
-template <std::size_t N, typename T>
-void compare(
-        const numerical::Vector<N, T>& a,
-        const numerical::Vector<N, T>& b,
-        const numerical::Vector<N, T>& precision)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!(std::abs(a[i] - b[i]) <= precision[i]))
-                {
-                        error(to_string(a) + " is not equal to " + to_string(b));
-                }
-        }
-}
-
 template <typename T>
 void test(const T& precision)
 {
@@ -127,7 +104,7 @@ void test(const T& precision)
 
 void test_average()
 {
-        LOG("Test average");
+        LOG("Test moving average");
 
         test<float>(1e-6);
         test<double>(1e-15);
@@ -137,9 +114,9 @@ void test_average()
         test(numerical::Vector<3, double>(1e-15));
         test(numerical::Vector<3, long double>(1e-18));
 
-        LOG("Test average passed");
+        LOG("Test moving average passed");
 }
 
-TEST_SMALL("Average", test_average)
+TEST_SMALL("Moving Average", test_average)
 }
 }

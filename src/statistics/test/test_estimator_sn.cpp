@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "compare.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -29,19 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <type_traits>
 #include <vector>
 
-namespace ns::statistics
+namespace ns::statistics::test
 {
 namespace
 {
-template <typename T>
-void compare(const T a, const T b, const T precision)
-{
-        if (!(std::abs(a - b) <= precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
 template <typename T>
 void test_constant(const std::type_identity_t<T> precision)
 {

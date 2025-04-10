@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "compare.h"
+
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -26,35 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 
-namespace ns::statistics
+namespace ns::statistics::test
 {
 namespace
 {
-template <typename T>
-        requires (std::is_floating_point_v<T>)
-void compare(const T a, const T b, const T precision)
-{
-        if (!(std::abs(a - b) <= precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
-template <std::size_t N, typename T>
-void compare(
-        const numerical::Vector<N, T>& a,
-        const numerical::Vector<N, T>& b,
-        const numerical::Vector<N, T>& precision)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!(std::abs(a[i] - b[i]) <= precision[i]))
-                {
-                        error(to_string(a) + " is not equal to " + to_string(b));
-                }
-        }
-}
-
 template <typename T>
         requires (std::is_floating_point_v<T>)
 [[nodiscard]] T sqrt(const T a)
@@ -163,7 +140,7 @@ void test(const T& precision)
 
 void test_variance()
 {
-        LOG("Test variance");
+        LOG("Test moving variance");
 
         test<float>(1e-5);
         test<double>(1e-13);
@@ -173,9 +150,9 @@ void test_variance()
         test(numerical::Vector<3, double>(1e-13));
         test(numerical::Vector<3, long double>(1e-17));
 
-        LOG("Test variance passed");
+        LOG("Test moving variance passed");
 }
 
-TEST_SMALL("Variance", test_variance)
+TEST_SMALL("Moving Variance", test_variance)
 }
 }

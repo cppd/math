@@ -15,28 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <src/com/error.h>
+#include "compare.h"
+
 #include <src/com/log.h>
-#include <src/com/print.h>
 #include <src/statistics/median.h>
 #include <src/test/test.h>
 
 #include <algorithm>
 #include <vector>
 
-namespace ns::statistics
+namespace ns::statistics::test
 {
 namespace
 {
-template <typename T>
-void compare(const T& a, const T& b)
-{
-        if (!(a == b))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
 template <typename T>
 void test()
 {
