@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -32,10 +31,13 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T position_p(const std::optional<numerical::Matrix<2, 2, T>>& p)
+[[nodiscard]] T position_p(const std::optional<numerical::Matrix<2, 2, T>>& p, const numerical::Matrix<2, 2, T>& i)
 {
-        ASSERT(p);
-        return (*p)[0, 0];
+        if (p)
+        {
+                return (*p)[0, 0];
+        }
+        return i.inversed()[0, 0];
 }
 
 template <typename T>
@@ -63,9 +65,12 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T speed_p(const std::optional<numerical::Matrix<2, 2, T>>& p)
+[[nodiscard]] T speed_p(const std::optional<numerical::Matrix<2, 2, T>>& p, const numerical::Matrix<2, 2, T>& i)
 {
-        ASSERT(p);
-        return (*p)[1, 1];
+        if (p)
+        {
+                return (*p)[1, 1];
+        }
+        return i.inversed()[1, 1];
 }
 }

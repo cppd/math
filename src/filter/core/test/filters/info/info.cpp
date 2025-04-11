@@ -132,7 +132,7 @@ class Filter final : public FilterInfo<T>
 
         [[nodiscard]] T position_p() const override
         {
-                return conv::position_p(p());
+                return conv::position_p(p(), i());
         }
 
         [[nodiscard]] numerical::Vector<2, T> position_speed() const override
@@ -152,7 +152,7 @@ class Filter final : public FilterInfo<T>
 
         [[nodiscard]] T speed_p() const override
         {
-                return conv::speed_p(p());
+                return conv::speed_p(p(), i());
         }
 
 public:
