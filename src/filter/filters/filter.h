@@ -34,12 +34,12 @@ struct UpdateDetails final
 {
         T time;
 
-        std::optional<numerical::Matrix<N, N, T>> f_predict;
-        std::optional<numerical::Vector<N, T>> x_predict;
-        std::optional<numerical::Matrix<N, N, T>> p_predict;
+        std::optional<numerical::Matrix<N, N, T>> predict_f;
+        std::optional<numerical::Vector<N, T>> predict_x;
+        std::optional<numerical::Matrix<N, N, T>> predict_p;
 
-        numerical::Vector<N, T> x_update;
-        numerical::Matrix<N, N, T> p_update;
+        numerical::Vector<N, T> update_x;
+        numerical::Matrix<N, N, T> update_p;
 };
 
 template <std::size_t N, typename T, std::size_t ORDER>

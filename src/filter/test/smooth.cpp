@@ -36,9 +36,9 @@ namespace
 template <std::size_t N, typename T>
 struct Vectors
 {
-        std::vector<numerical::Matrix<N, N, T>> f_predict;
-        std::vector<numerical::Vector<N, T>> x_predict;
-        std::vector<numerical::Matrix<N, N, T>> p_predict;
+        std::vector<numerical::Matrix<N, N, T>> predict_f;
+        std::vector<numerical::Vector<N, T>> predict_x;
+        std::vector<numerical::Matrix<N, N, T>> predict_p;
         std::vector<numerical::Vector<N, T>> x;
         std::vector<numerical::Matrix<N, N, T>> p;
         std::vector<T> time;
@@ -47,37 +47,37 @@ struct Vectors
 template <std::size_t N, typename T>
 void init(const filters::UpdateDetails<N, T>& details, Vectors<N, T>& v)
 {
-        ASSERT(!details.f_predict);
-        ASSERT(!details.x_predict);
-        ASSERT(!details.p_predict);
+        ASSERT(!details.predict_f);
+        ASSERT(!details.predict_x);
+        ASSERT(!details.predict_p);
 
-        v.f_predict.clear();
-        v.x_predict.clear();
-        v.p_predict.clear();
+        v.predict_f.clear();
+        v.predict_x.clear();
+        v.predict_p.clear();
         v.x.clear();
         v.p.clear();
         v.time.clear();
 
-        v.f_predict.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
-        v.x_predict.push_back(numerical::Vector<N, T>(0));
-        v.p_predict.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
-        v.x.push_back(details.x_update);
-        v.p.push_back(details.p_update);
+        v.predict_f.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
+        v.predict_x.push_back(numerical::Vector<N, T>(0));
+        v.predict_p.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
+        v.x.push_back(details.update_x);
+        v.p.push_back(details.update_p);
         v.time.push_back(details.time);
 }
 
 template <std::size_t N, typename T>
 void add(const filters::UpdateDetails<N, T>& details, Vectors<N, T>& v)
 {
-        ASSERT(details.f_predict);
-        ASSERT(details.x_predict);
-        ASSERT(details.p_predict);
+        ASSERT(details.predict_f);
+        ASSERT(details.predict_x);
+        ASSERT(details.predict_p);
 
-        v.f_predict.push_back(*details.f_predict);
-        v.x_predict.push_back(*details.x_predict);
-        v.p_predict.push_back(*details.p_predict);
-        v.x.push_back(details.x_update);
-        v.p.push_back(details.p_update);
+        v.predict_f.push_back(*details.predict_f);
+        v.predict_x.push_back(*details.predict_x);
+        v.predict_p.push_back(*details.predict_p);
+        v.x.push_back(details.update_x);
+        v.p.push_back(details.update_p);
         v.time.push_back(details.time);
 }
 
@@ -87,7 +87,7 @@ void write_smooth(
         const Vectors<N, T>& v,
         view::Filter<2, T>* const data)
 {
-        const auto [x, p] = core::smooth(v.f_predict, v.x_predict, v.p_predict, v.x, v.p);
+        const auto [x, p] = core::smooth(v.predict_f, v.predict_x, v.predict_p, v.x, v.p);
 
         ASSERT(x.size() == p.size());
         ASSERT(x.size() == v.time.size());
@@ -140,11 +140,11 @@ void smooth(
 
         for (std::size_t i = 1; i < details.size(); ++i)
         {
-                const auto& f_p = details[i].f_predict;
-                const auto& x_p = details[i].x_predict;
-                const auto& p_p = details[i].p_predict;
+                const auto& p_f = details[i].predict_f;
+                const auto& p_x = details[i].predict_x;
+                const auto& p_p = details[i].predict_p;
 
-                if (!(f_p && x_p && p_p))
+                if (!(p_f && p_x && p_p))
                 {
                         write_smooth(filter, vectors, data);
                         init(details[i], vectors);

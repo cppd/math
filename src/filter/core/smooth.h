@@ -31,16 +31,16 @@ namespace ns::filter::core
 {
 template <std::size_t N, typename T>
 [[nodiscard]] std::tuple<std::vector<numerical::Vector<N, T>>, std::vector<numerical::Matrix<N, N, T>>> smooth(
-        const std::vector<numerical::Matrix<N, N, T>>& f_predict,
-        const std::vector<numerical::Vector<N, T>> x_predict,
-        const std::vector<numerical::Matrix<N, N, T>>& p_predict,
+        const std::vector<numerical::Matrix<N, N, T>>& predict_f,
+        const std::vector<numerical::Vector<N, T>> predict_x,
+        const std::vector<numerical::Matrix<N, N, T>>& predict_p,
         std::vector<numerical::Vector<N, T>> x,
         std::vector<numerical::Matrix<N, N, T>> p)
 {
         ASSERT(x.size() == p.size());
-        ASSERT(x.size() == x_predict.size());
-        ASSERT(x.size() == p_predict.size());
-        ASSERT(x.size() == f_predict.size());
+        ASSERT(x.size() == predict_f.size());
+        ASSERT(x.size() == predict_x.size());
+        ASSERT(x.size() == predict_p.size());
 
         if (x.size() <= 1)
         {
@@ -49,10 +49,10 @@ template <std::size_t N, typename T>
 
         for (auto i = std::ssize(x) - 2; i >= 0; --i)
         {
-                const numerical::Matrix<N, N, T> k = p[i] * f_predict[i + 1].transposed() * p_predict[i + 1].inversed();
+                const numerical::Matrix<N, N, T> k = p[i] * predict_f[i + 1].transposed() * predict_p[i + 1].inversed();
 
-                x[i] = x[i] + k * (x[i + 1] - x_predict[i + 1]);
-                p[i] = p[i] + k * (p[i + 1] - p_predict[i + 1]) * k.transposed();
+                x[i] = x[i] + k * (x[i + 1] - predict_x[i + 1]);
+                p[i] = p[i] + k * (p[i + 1] - predict_p[i + 1]) * k.transposed();
 
                 check_x_p("Smooth", x[i], p[i]);
         }

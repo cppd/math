@@ -112,9 +112,9 @@ std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<
                 return {};
         }
 
-        std::vector<numerical::Matrix<2, 2, T>> f_predict;
-        std::vector<numerical::Vector<2, T>> x_predict;
-        std::vector<numerical::Matrix<2, 2, T>> p_predict;
+        std::vector<numerical::Matrix<2, 2, T>> predict_f;
+        std::vector<numerical::Vector<2, T>> predict_x;
+        std::vector<numerical::Matrix<2, 2, T>> predict_p;
 
         std::vector<numerical::Vector<2, T>> x;
         std::vector<numerical::Matrix<2, 2, T>> p;
@@ -122,33 +122,33 @@ std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<
         ASSERT(!result[0].info.predict_f);
         ASSERT(!result[0].info.predict_x);
         ASSERT(!result[0].info.predict_p);
-        f_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
-        x_predict.push_back(numerical::Vector<2, T>(0));
-        p_predict.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
+        predict_f.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
+        predict_x.push_back(numerical::Vector<2, T>(0));
+        predict_p.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
 
         x.push_back(result[0].info.update_x);
         p.push_back(result[0].info.update_p);
 
         for (std::size_t i = 1; i < result.size(); ++i)
         {
-                const auto& f_p = result[i].info.predict_f;
-                const auto& x_p = result[i].info.predict_x;
+                const auto& p_f = result[i].info.predict_f;
+                const auto& p_x = result[i].info.predict_x;
                 const auto& p_p = result[i].info.predict_p;
 
-                if (!(f_p && x_p && p_p))
+                if (!(p_f && p_x && p_p))
                 {
                         return {};
                 }
 
-                f_predict.push_back(*f_p);
-                x_predict.push_back(*x_p);
-                p_predict.push_back(*p_p);
+                predict_f.push_back(*p_f);
+                predict_x.push_back(*p_x);
+                predict_p.push_back(*p_p);
 
                 x.push_back(result[i].info.update_x);
                 p.push_back(result[i].info.update_p);
         }
 
-        std::tie(x, p) = smooth(f_predict, x_predict, p_predict, x, p);
+        std::tie(x, p) = smooth(predict_f, predict_x, predict_p, x, p);
 
         std::vector<view::Point<T>> res;
         res.reserve(result.size());
