@@ -30,8 +30,8 @@ set(shader_environment "vulkan1.3")
 set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})
-set(qt6_version 6.7)
-set(qt6_disable_deprecated_before 0x060700)
+set(qt6_version 6.8)
+set(qt6_disable_deprecated_up_to 0x060800)
 
 ##################################################
 
@@ -150,7 +150,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
 target_compile_definitions(
-        ${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=${qt6_disable_deprecated_before})
+        ${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_UP_TO=${qt6_disable_deprecated_up_to})
 find_package(Qt6 ${qt6_version} REQUIRED COMPONENTS Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
 
