@@ -232,7 +232,7 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
                 });
 
         ui_.check_box_regex->setChecked(true);
-        connect(ui_.check_box_regex, &QCheckBox::stateChanged, this,
+        connect(ui_.check_box_regex, &QCheckBox::checkStateChanged, this,
                 [this]()
                 {
                         filter(ui_.line_edit_filter->text());

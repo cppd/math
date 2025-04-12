@@ -111,7 +111,7 @@ void create_slider(
                 });
 
         dialog->connect(
-                check_box, &QCheckBox::stateChanged, dialog,
+                check_box, &QCheckBox::checkStateChanged, dialog,
                 [=]()
                 {
                         label->setEnabled(check_box->isChecked());
