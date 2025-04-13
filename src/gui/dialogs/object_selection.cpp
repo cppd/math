@@ -66,12 +66,12 @@ ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         setWindowTitle("Object Selection");
 
         connect(ui_.push_button_set_all, &QPushButton::clicked, this,
-                [this]()
+                [this]
                 {
                         set_all(true);
                 });
         connect(ui_.push_button_clear_all, &QPushButton::clicked, this,
-                [this]()
+                [this]
                 {
                         set_all(false);
                 });

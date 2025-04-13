@@ -274,7 +274,7 @@ MeshData<N, T, Color> create_mesh_data(
         const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation,
         const bool write_log)
 {
-        const std::optional<Clock::time_point> start_time = [&]() -> std::optional<Clock::time_point>
+        const std::optional<Clock::time_point> start_time = [&] -> std::optional<Clock::time_point>
         {
                 if (write_log)
                 {

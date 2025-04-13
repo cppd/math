@@ -354,7 +354,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
         unsigned count = 0;
         std::array<Planes, N> p;
 
-        const auto f = [&count, &res, &p]()
+        const auto f = [&count, &res, &p]
         {
                 ASSERT(count < res.size());
                 res[count++].planes_ = p;

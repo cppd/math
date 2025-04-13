@@ -74,21 +74,21 @@ void write_samples_to_files()
 
         write_samples_to_file<N, T>(
                 "on sphere rejection", COUNT,
-                [&]()
+                [&]
                 {
                         return impl::uniform_on_sphere_by_rejection<N, T>(engine);
                 });
 
         write_samples_to_file<N, T>(
                 "on sphere normal distribution", COUNT,
-                [&]()
+                [&]
                 {
                         return impl::uniform_on_sphere_by_normal_distribution<N, T>(engine);
                 });
 
         write_samples_to_file<N, T>(
                 "in sphere rejection", COUNT,
-                [&]()
+                [&]
                 {
                         numerical::Vector<N, T> v;
                         T v_length_square;
@@ -98,7 +98,7 @@ void write_samples_to_files()
 
         write_samples_to_file<N, T>(
                 "in sphere normal distribution", COUNT,
-                [&]()
+                [&]
                 {
                         numerical::Vector<N, T> v;
                         T v_length_square;
@@ -108,7 +108,7 @@ void write_samples_to_files()
 
         write_samples_to_file<N, T>(
                 "in simplex", COUNT,
-                [&]()
+                [&]
                 {
                         static const std::array<numerical::Vector<N, T>, N + 1> vertices = []
                         {
@@ -137,7 +137,7 @@ void write_samples_to_files()
 
         write_samples_to_file<N, T>(
                 "in parallelotope", COUNT,
-                [&]()
+                [&]
                 {
                         return uniform_in_parallelotope(engine, VECTORS);
                 });
@@ -147,7 +147,7 @@ void write_samples_to_files()
         std::size_t sample = 0;
         write_samples_to_file<N, T>(
                 "in parallelotope with sampler", samples.size(),
-                [&]()
+                [&]
                 {
                         ASSERT(sample < samples.size());
                         return uniform_in_parallelotope(VECTORS, samples[sample++]);

@@ -37,7 +37,7 @@ std::vector<numerical::Vector<N, T>> parallelotope_external_points(
         std::uniform_real_distribution<T> high_urd(1.01, 10);
         std::bernoulli_distribution bd(0.5);
 
-        const auto random_point = [&]()
+        const auto random_point = [&]
         {
                 numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
@@ -68,7 +68,7 @@ std::vector<numerical::Vector<N, T>> parallelotope_external_points(
         std::uniform_real_distribution<T> high_urd(1.01, 10);
         std::bernoulli_distribution bd(0.5);
 
-        const auto random_point = [&]()
+        const auto random_point = [&]
         {
                 numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
@@ -97,7 +97,7 @@ std::vector<numerical::Vector<N, T>> parallelotope_internal_points(
 {
         std::uniform_real_distribution<T> urd(0.01, 0.99);
 
-        const auto random_point = [&]()
+        const auto random_point = [&]
         {
                 numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
@@ -125,7 +125,7 @@ std::vector<numerical::Vector<N, T>> parallelotope_internal_points(
 {
         std::uniform_real_distribution<T> urd(0.01, 0.99);
 
-        const auto random_point = [&]()
+        const auto random_point = [&]
         {
                 numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)
@@ -154,7 +154,7 @@ std::vector<numerical::Vector<N, T>> parallelotope_cover_points(
         std::uniform_real_distribution<T> cover_urd(-0.2, 1.2);
         std::uniform_real_distribution<T> len_urd(0, 1);
 
-        const auto cover_point = [&]()
+        const auto cover_point = [&]
         {
                 numerical::Vector<N, T> res = org;
                 for (std::size_t i = 0; i < N; ++i)

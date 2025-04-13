@@ -95,7 +95,7 @@ std::function<void(progress::RatioList*)> action_load_mesh(
                 path = path_from_utf8(*file_name_string);
         }
 
-        const auto selection_parameters = [&]() -> std::optional<gui::dialogs::ObjectSelectionParameters>
+        const auto selection_parameters = [&] -> std::optional<gui::dialogs::ObjectSelectionParameters>
         {
                 if (use_object_selection_dialog)
                 {

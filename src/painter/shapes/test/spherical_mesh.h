@@ -216,7 +216,7 @@ std::vector<numerical::Ray<N, T>> create_random_intersections_rays(
         const numerical::Vector<N, T> diagonal = bb.diagonal();
 
         std::uniform_real_distribution<T> urd(-1, 2);
-        const auto random_cover_point = [&]()
+        const auto random_cover_point = [&]
         {
                 numerical::Vector<N, T> v = bb.min();
                 for (std::size_t i = 0; i < N; ++i)

@@ -241,7 +241,7 @@ public:
 
         std::optional<std::array<int, N>> next_pixel()
         {
-                const auto res = [this]() -> std::optional<std::array<T, N>>
+                const auto res = [this] -> std::optional<std::array<T, N>>
                 {
                         const std::lock_guard lg(lock_);
 

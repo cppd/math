@@ -141,7 +141,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        const vertex::Light<N, T, Color> light = [&]()
+        const vertex::Light<N, T, Color> light = [&]
         {
                 const auto position =
                         sample.distance

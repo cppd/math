@@ -264,7 +264,7 @@ void test_convex_hull(progress::Ratio* const progress)
         constexpr bool WRITE_LOG = true;
         constexpr bool WRITE_INFO = true;
 
-        const int size = [&]()
+        const int size = [&]
         {
                 PCG engine;
                 return std::uniform_int_distribution<int>(MIN_SIZE, MAX_SIZE)(engine);

@@ -108,13 +108,13 @@ public:
 
                 working_ = true;
                 thread_ = std::thread(
-                        [this, func = std::forward<F>(function), description]() noexcept
+                        [this, func = std::forward<F>(function), description] noexcept
                         {
                                 try
                                 {
                                         catch_all(
                                                 description,
-                                                [&]()
+                                                [&]
                                                 {
                                                         func(&progress_list_);
                                                 });
@@ -245,7 +245,7 @@ class Impl final : public WorkerThreads
                 bool res = false;
                 catch_all(
                         description,
-                        [&]()
+                        [&]
                         {
                                 if (!terminate_with_dialog(id))
                                 {

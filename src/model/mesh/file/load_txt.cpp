@@ -97,7 +97,7 @@ void read_points(
         for (unsigned thread = 0; thread < thread_count; ++thread)
         {
                 threads.add(
-                        [&, thread]()
+                        [&, thread]
                         {
                                 read_points_thread(thread, thread_count, lines, vertices, progress);
                         });

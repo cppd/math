@@ -65,7 +65,7 @@ int run_application(int argc, char** const argv)
                 [](const MessageEvent& event)
                 {
                         com::Application::run(
-                                [event]()
+                                [event]
                                 {
                                         message_event(event);
                                 });

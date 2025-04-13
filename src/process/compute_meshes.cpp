@@ -251,7 +251,7 @@ void manifold_constructor(
                 if (build_cocone)
                 {
                         threads.add(
-                                [&]()
+                                [&]
                                 {
                                         cocone(progress_list, id, *manifold_constructor, matrix);
                                 });
@@ -260,7 +260,7 @@ void manifold_constructor(
                 if (build_bound_cocone)
                 {
                         threads.add(
-                                [&]()
+                                [&]
                                 {
                                         bound_cocone(progress_list, id, *manifold_constructor, matrix, rho, alpha);
                                 });
@@ -269,7 +269,7 @@ void manifold_constructor(
                 if (build_mst)
                 {
                         threads.add(
-                                [&]()
+                                [&]
                                 {
                                         mst(progress_list, id, *manifold_constructor, matrix);
                                 });
@@ -301,7 +301,7 @@ void compute_meshes(
                 if (build_convex_hull)
                 {
                         threads.add(
-                                [&]()
+                                [&]
                                 {
                                         const model::mesh::Reading reading(mesh_object);
                                         convex_hull(progress_list, reading);
@@ -311,7 +311,7 @@ void compute_meshes(
                 if (build_cocone || build_bound_cocone || build_mst)
                 {
                         threads.add(
-                                [&]()
+                                [&]
                                 {
                                         std::optional<numerical::Matrix<N + 1, N + 1, double>> matrix;
                                         std::optional<model::ObjectId> id;

@@ -214,13 +214,13 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         }
 
         connect(ui_.push_button_set_all, &QPushButton::clicked, this,
-                [this]()
+                [this]
                 {
                         items_->check(true);
                 });
 
         connect(ui_.push_button_clear_all, &QPushButton::clicked, this,
-                [this]()
+                [this]
                 {
                         items_->check(false);
                 });
@@ -233,7 +233,7 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
 
         ui_.check_box_regex->setChecked(true);
         connect(ui_.check_box_regex, &QCheckBox::checkStateChanged, this,
-                [this]()
+                [this]
                 {
                         filter(ui_.line_edit_filter->text());
                 });

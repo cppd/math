@@ -78,7 +78,7 @@ void load_mesh(
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         com::WorkerThreads::Function f = process::action_load_mesh(path, use_object_selection_dialog);
                         // model_tree->clear();
@@ -91,7 +91,7 @@ void load_volume(com::WorkerThreads* const threads, const std::filesystem::path&
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         return process::action_load_volume(path);
                 });
@@ -101,7 +101,7 @@ void save_mesh(com::WorkerThreads* const threads, const ModelTree* const model_t
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                         if (!object)
@@ -117,7 +117,7 @@ void save_view_image(com::WorkerThreads* const threads, view::View* const view, 
 {
         threads->terminate_and_start(
                 SAVE_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         std::optional<view::info::Image> image;
                         view->receive({&image});
@@ -141,7 +141,7 @@ void painter(
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         const std::vector<storage::MeshObjectConst> objects = model_tree->const_mesh_objects();
                         if (objects.empty())
@@ -169,7 +169,7 @@ void bound_cocone(com::WorkerThreads* const threads, const ModelTree* const mode
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                         if (!object)
@@ -185,7 +185,7 @@ void volume_3d_slice(com::WorkerThreads* const threads, const ModelTree* const m
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         std::optional<storage::VolumeObjectConst> object = model_tree->current_volume_const();
                         if (!object)
@@ -201,7 +201,7 @@ void self_test(com::WorkerThreads* const threads, const process::TestType test_t
 {
         threads->terminate_and_start(
                 SELF_TEST_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         return process::action_self_test(test_type);
                 });
@@ -225,7 +225,7 @@ void create_menu(
         action = menu_file->addAction("Load Mesh...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         load_mesh(threads, "", true, action_name(*action));
                 }));
@@ -233,7 +233,7 @@ void create_menu(
         action = menu_file->addAction("Load Volume...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         load_volume(threads, "", action_name(*action));
                 }));
@@ -241,7 +241,7 @@ void create_menu(
         action = menu_file->addAction("Save...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         save_mesh(threads, model_tree, action_name(*action));
                 }));
@@ -249,7 +249,7 @@ void create_menu(
         action = menu_file->addAction("Save Image...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         save_view_image(threads, view, action_name(*action));
                 }));
@@ -257,7 +257,7 @@ void create_menu(
         action = action_self_test;
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         self_test(threads, process::TestType::ALL, action_name(*action));
                 }));
@@ -265,7 +265,7 @@ void create_menu(
         action = action_benchmark;
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         self_test(threads, process::TestType::BENCHMARK, action_name(*action));
                 }));
@@ -273,7 +273,7 @@ void create_menu(
         action = menu_rendering->addAction("Painter...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         painter(threads, model_tree, view, lighting, colors, action_name(*action));
                 }));
@@ -281,7 +281,7 @@ void create_menu(
         action = menu_edit->addAction("BoundCocone...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         bound_cocone(threads, model_tree, action_name(*action));
                 }));
@@ -289,7 +289,7 @@ void create_menu(
         action = menu_edit->addAction("3D Slice...");
         connections->emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         volume_3d_slice(threads, model_tree, action_name(*action));
                 }));

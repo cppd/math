@@ -287,7 +287,7 @@ void all_tests(
 template <std::size_t N>
 void test(const int low, const int high, progress::Ratio* const progress)
 {
-        const int point_count = [&]()
+        const int point_count = [&]
         {
                 PCG engine;
                 return std::uniform_int_distribution<int>(low, high)(engine);

@@ -58,7 +58,7 @@ void load_point_mesh(
 {
         threads->terminate_and_start(
                 thread_id, action,
-                [&]()
+                [&]
                 {
                         com::WorkerThreads::Function f =
                                 process::action_load_point_mesh(repository, dimension, object_name);
@@ -78,7 +78,7 @@ void load_facet_mesh(
 {
         threads->terminate_and_start(
                 thread_id, action,
-                [&]()
+                [&]
                 {
                         com::WorkerThreads::Function f =
                                 process::action_load_facet_mesh(repository, dimension, object_name);
@@ -98,7 +98,7 @@ void load_volume(
 {
         threads->terminate_and_start(
                 thread_id, action,
-                [&]()
+                [&]
                 {
                         return process::action_load_volume(repository, dimension, object_name);
                 });
@@ -131,7 +131,7 @@ void create_point_mesh_menu(
                 QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
                 connections->emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [=]()
+                        [=]
                         {
                                 load_point_mesh(
                                         thread_id, threads, repository, dimension, object_name, action_name(*action));
@@ -166,7 +166,7 @@ void create_facet_mesh_menu(
                 QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
                 connections->emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [=]()
+                        [=]
                         {
                                 load_facet_mesh(
                                         thread_id, threads, repository, dimension, object_name, action_name(*action));
@@ -201,7 +201,7 @@ void create_volume_menu(
                 QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
                 connections->emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [=]()
+                        [=]
                         {
                                 load_volume(
                                         thread_id, threads, repository, dimension, object_name, action_name(*action));

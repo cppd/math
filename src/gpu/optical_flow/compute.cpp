@@ -137,7 +137,7 @@ class Impl final : public Compute
 
                 const VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
-                const auto commands = [&]()
+                const auto commands = [&]
                 {
                         program_image_pyramid_.commands(images_, 0, command_buffer);
                 };
@@ -154,7 +154,7 @@ class Impl final : public Compute
                 {
                         const VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
-                        const auto commands = [&]()
+                        const auto commands = [&]
                         {
                                 // i — previous image, 1-i — current image
                                 program_image_pyramid_.commands(images_, 1 - index, command_buffer);

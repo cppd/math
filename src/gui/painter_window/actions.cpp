@@ -74,7 +74,7 @@ Actions::Actions(
         action = menu->addAction("Save...");
         connections_.emplace_back(QObject::connect(
                 action, &QAction::triggered,
-                [this, action, slice_number = std::move(slice_number)]()
+                [this, action, slice_number = std::move(slice_number)]
                 {
                         save_image(action_name(*action), slice_number());
                 }));
@@ -84,7 +84,7 @@ Actions::Actions(
                 action = menu->addAction("Save all...");
                 connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [action, this]()
+                        [action, this]
                         {
                                 save_image(action_name(*action));
                         }));
@@ -94,7 +94,7 @@ Actions::Actions(
                 action = menu->addAction("Add volume...");
                 connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [action, this]()
+                        [action, this]
                         {
                                 add_volume(action_name(*action));
                         }));
@@ -128,7 +128,7 @@ void Actions::save_image(const std::string& action, const long long slice) const
 
         worker_threads_->terminate_and_start(
                 SAVE_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         return painter_window::save_image(
                                 images->size[0], images->size[1], images->rgb.color_format,
@@ -148,7 +148,7 @@ void Actions::save_image(const std::string& action) const
 
         worker_threads_->terminate_and_start(
                 SAVE_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         return painter_window::save_image(
                                 images->size, images->rgb.color_format, std::move(images->rgb.pixels),
@@ -167,7 +167,7 @@ void Actions::add_volume(const std::string& action) const
 
         worker_threads_->terminate_and_start(
                 ADD_THREAD_ID, action,
-                [&]()
+                [&]
                 {
                         return painter_window::add_volume(
                                 images->size, images->rgb.color_format, std::move(images->rgb.pixels),

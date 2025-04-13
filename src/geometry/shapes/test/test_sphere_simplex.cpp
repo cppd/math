@@ -55,7 +55,7 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
 
         PCG engine;
 
-        const std::array<numerical::Vector<N, T>, N> simplex_vertices = [&]()
+        const std::array<numerical::Vector<N, T>, N> simplex_vertices = [&]
         {
                 std::array<numerical::Vector<N, T>, N> res;
                 for (numerical::Vector<N, T>& v : res)

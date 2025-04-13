@@ -103,7 +103,7 @@ void create_painter_window(
 {
         com::Application::run(
                 [=, name = std::move(name),
-                 scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]()
+                 scene = std::make_shared<painter::scenes::StorageScene<N, T, Color>>(std::move(scene))]
                 {
                         auto pixels = std::make_unique<PainterPixels<N, T, Color>>(
                                 std::move(*scene), integrator, thread_count, samples_per_pixel, flat_shading);

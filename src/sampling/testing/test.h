@@ -68,7 +68,7 @@ void test_unit(
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
         const double count_per_thread_reciprocal = 1.0 / count_per_thread;
 
-        const auto f = [&]()
+        const auto f = [&]
         {
                 PCG engine;
                 for (long long i = 0; i < count_per_thread; ++i)

@@ -42,7 +42,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
         action = menu->addAction("Show Only It");
         QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         actions->show_only_it(id);
                 });
@@ -50,7 +50,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
         action = visible ? menu->addAction("Hide") : menu->addAction("Show");
         QObject::connect(
                 action, &QAction::triggered,
-                [=, show = !visible]()
+                [=, show = !visible]
                 {
                         actions->show(id, show);
                 });
@@ -60,7 +60,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
         action = menu->addAction("Delete");
         QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         const auto yes = dialogs::message_question_default_no("Delete?");
                         if (yes && *yes)
@@ -72,7 +72,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
         action = menu->addAction("Delete All");
         QObject::connect(
                 action, &QAction::triggered,
-                [=]()
+                [=]
                 {
                         const auto yes = dialogs::message_question_default_no("Delete All?");
                         if (yes && *yes)

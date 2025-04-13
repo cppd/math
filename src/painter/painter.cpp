@@ -99,7 +99,7 @@ public:
                         multiply_all<long long>(scene->projector().screen_size()));
 
                 thread_ = std::thread(
-                        [=, stop = &stop_, statistics = statistics_.get(), scene = scene]() noexcept
+                        [=, stop = &stop_, statistics = statistics_.get(), scene = scene] noexcept
                         {
                                 if (flat_shading)
                                 {

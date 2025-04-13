@@ -211,7 +211,7 @@ void test_mesh_files(
         constexpr bool WRITE_LOG = false;
         const std::unique_ptr<const mesh::Mesh<N>> mesh = mesh::create_mesh_for_facets(vertices, facets, WRITE_LOG);
 
-        const std::string comment = [&]()
+        const std::string comment = [&]
         {
                 std::string c;
                 c += name + "\n";

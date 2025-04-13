@@ -230,7 +230,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
         ThreadTasks<Task<Box>> tasks;
         tasks.emplace(&boxes.front(), 1 /*depth*/);
 
-        const auto f = [&]()
+        const auto f = [&]
         {
                 try
                 {

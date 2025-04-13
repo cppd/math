@@ -116,7 +116,7 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
 
         //
 
-        const std::size_t handle_size = [&]()
+        const std::size_t handle_size = [&]
         {
                 const auto& pipeline = device.properties().ray_tracing_pipeline;
                 ASSERT(pipeline);

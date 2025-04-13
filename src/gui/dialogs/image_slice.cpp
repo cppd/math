@@ -102,7 +102,7 @@ void create_slider(
 
         dialog->connect(
                 slider, &QSlider::valueChanged, dialog,
-                [=]()
+                [=]
                 {
                         com::set_label_text_and_minimum_width(label, to_string_digit_groups(slider->value()));
 
@@ -112,7 +112,7 @@ void create_slider(
 
         dialog->connect(
                 check_box, &QCheckBox::checkStateChanged, dialog,
-                [=]()
+                [=]
                 {
                         label->setEnabled(check_box->isChecked());
                         slider->setEnabled(check_box->isChecked());

@@ -133,7 +133,7 @@ std::array<std::array<numerical::Vector<N, T>, 2>, parallelotope_edges_implement
         numerical::Vector<N, T> p;
         std::array<bool, N> dimensions;
 
-        const auto f = [&]()
+        const auto f = [&]
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {

@@ -82,7 +82,7 @@ com::ModelTreeEvents* ModelTree::events()
 void ModelTree::clear()
 {
         thread_queue_.push(
-                [this]()
+                [this]
                 {
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -144,7 +144,7 @@ void ModelTree::update_weak(const T& object)
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<model::ObjectId>& parent_object_id)
 {
         thread_queue_.push(
-                [this, object = std::move(object), parent_object_id]()
+                [this, object = std::move(object), parent_object_id]
                 {
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -162,7 +162,7 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<model::
 void ModelTree::insert(storage::VolumeObject&& object, const std::optional<model::ObjectId>& parent_object_id)
 {
         thread_queue_.push(
-                [this, object = std::move(object), parent_object_id]()
+                [this, object = std::move(object), parent_object_id]
                 {
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -180,7 +180,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<model
 void ModelTree::update(storage::MeshObjectWeak&& object)
 {
         thread_queue_.push(
-                [this, object = std::move(object)]()
+                [this, object = std::move(object)]
                 {
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -191,7 +191,7 @@ void ModelTree::update(storage::MeshObjectWeak&& object)
 void ModelTree::update(storage::VolumeObjectWeak&& object)
 {
         thread_queue_.push(
-                [this, object = std::move(object)]()
+                [this, object = std::move(object)]
                 {
                         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -202,7 +202,7 @@ void ModelTree::update(storage::VolumeObjectWeak&& object)
 void ModelTree::erase(const model::ObjectId id)
 {
         thread_queue_.push(
-                [this, id]()
+                [this, id]
                 {
                         ASSERT(std::this_thread::get_id() == thread_id_);
 

@@ -193,7 +193,7 @@ void Painting<N, T, Color, Integrator>::paint(const unsigned thread_count)
         for (unsigned i = 0; i < thread_count; ++i)
         {
                 threads.emplace_back(
-                        [this, &barrier, i]() noexcept
+                        [this, &barrier, i] noexcept
                         {
                                 paint(i, &barrier);
                         });

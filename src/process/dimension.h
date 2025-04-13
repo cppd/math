@@ -38,7 +38,7 @@ auto apply(const std::size_t dimension, const T& f, std::index_sequence<N...>&&)
         if constexpr (std::is_same_v<void, ReturnType>)
         {
                 const bool r = ((
-                        [&]()
+                        [&]
                         {
                                 if (N == dimension)
                                 {
@@ -57,7 +57,7 @@ auto apply(const std::size_t dimension, const T& f, std::index_sequence<N...>&&)
         {
                 std::optional<ReturnType> r;
                 static_cast<void>((
-                        [&]()
+                        [&]
                         {
                                 if (N == dimension)
                                 {

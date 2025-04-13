@@ -241,7 +241,7 @@ class DftVector final : public ComputeVector
                 {
                         const VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
-                        const auto commands = [&]()
+                        const auto commands = [&]
                         {
                                 const bool inverse = (index == DftType::INVERSE);
                                 dft_->compute_commands(command_buffer, inverse);

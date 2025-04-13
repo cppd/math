@@ -284,7 +284,7 @@ void MainWindow::showEvent(QShowEvent* const /*event*/)
         // window is not yet visible on showEvent
         QTimer::singleShot(
                 WINDOW_SHOW_DELAY, this,
-                [this]()
+                [this]
                 {
                         try
                         {

@@ -158,7 +158,7 @@ void read_obj(
         for (unsigned thread = 0; thread < thread_count; ++thread)
         {
                 threads.add(
-                        [&, thread]()
+                        [&, thread]
                         {
                                 read_obj_stage_one(
                                         thread, thread_count, lines, &counters[thread], &obj_lines, progress);

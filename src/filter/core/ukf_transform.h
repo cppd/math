@@ -47,7 +47,7 @@ template <std::size_t N, typename T, std::size_t COUNT, typename NoiseCovariance
                 std::is_same_v<NoiseCovariance, numerical::Matrix<N, N, T>>
                 || std::is_same_v<NoiseCovariance, numerical::Vector<N, T>>);
 
-        const numerical::Vector<N, T> mean = [&]()
+        const numerical::Vector<N, T> mean = [&]
         {
                 static_assert(COUNT > 0);
                 numerical::Vector<N, T> res = points[0] * wm[0];
