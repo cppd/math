@@ -42,6 +42,7 @@ struct Features final
         VkPhysicalDeviceVulkan11Features features_11{};
         VkPhysicalDeviceVulkan12Features features_12{};
         VkPhysicalDeviceVulkan13Features features_13{};
+        VkPhysicalDeviceVulkan14Features features_14{};
         VkPhysicalDeviceAccelerationStructureFeaturesKHR acceleration_structure{};
         VkPhysicalDeviceRayQueryFeaturesKHR ray_query{};
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR ray_tracing_pipeline{};

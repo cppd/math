@@ -170,6 +170,8 @@ void set_features(const Features& features, const Features& supported, Features*
 
         set_features<REQUIRED>(features.features_13, supported.features_13, &result->features_13);
 
+        set_features<REQUIRED>(features.features_14, supported.features_14, &result->features_14);
+
         set_features<REQUIRED>(
                 features.acceleration_structure, supported.acceleration_structure, &result->acceleration_structure);
 
@@ -186,6 +188,7 @@ void add_features(Features* const dst, const Features& src)
         add_features(&dst->features_11, src.features_11);
         add_features(&dst->features_12, src.features_12);
         add_features(&dst->features_13, src.features_13);
+        add_features(&dst->features_14, src.features_14);
         add_features(&dst->acceleration_structure, src.acceleration_structure);
         add_features(&dst->ray_query, src.ray_query);
         add_features(&dst->ray_tracing_pipeline, src.ray_tracing_pipeline);
@@ -224,6 +227,7 @@ bool check_features(const Features& required, const Features& supported)
                 check_features(required.features_11, supported.features_11);
                 check_features(required.features_12, supported.features_12);
                 check_features(required.features_13, supported.features_13);
+                check_features(required.features_14, supported.features_14);
                 check_features(required.acceleration_structure, supported.acceleration_structure);
                 check_features(required.ray_query, supported.ray_query);
                 check_features(required.ray_tracing_pipeline, supported.ray_tracing_pipeline);
@@ -243,6 +247,7 @@ std::vector<std::string> features_to_strings(const Features& features, const boo
         features_to_strings(features.features_11, enabled, &res);
         features_to_strings(features.features_12, enabled, &res);
         features_to_strings(features.features_13, enabled, &res);
+        features_to_strings(features.features_14, enabled, &res);
         features_to_strings(features.acceleration_structure, enabled, &res);
         features_to_strings(features.ray_query, enabled, &res);
         features_to_strings(features.ray_tracing_pipeline, enabled, &res);
@@ -276,6 +281,7 @@ template bool any_feature_enabled(const VkPhysicalDeviceFeatures&);
 template bool any_feature_enabled(const VkPhysicalDeviceVulkan11Features&);
 template bool any_feature_enabled(const VkPhysicalDeviceVulkan12Features&);
 template bool any_feature_enabled(const VkPhysicalDeviceVulkan13Features&);
+template bool any_feature_enabled(const VkPhysicalDeviceVulkan14Features&);
 template bool any_feature_enabled(const VkPhysicalDeviceAccelerationStructureFeaturesKHR&);
 template bool any_feature_enabled(const VkPhysicalDeviceRayQueryFeaturesKHR&);
 template bool any_feature_enabled(const VkPhysicalDeviceRayTracingPipelineFeaturesKHR&);

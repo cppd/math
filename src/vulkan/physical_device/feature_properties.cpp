@@ -46,6 +46,7 @@ template struct Check<VkPhysicalDeviceFeatures>;
 template struct Check<VkPhysicalDeviceVulkan11Features>;
 template struct Check<VkPhysicalDeviceVulkan12Features>;
 template struct Check<VkPhysicalDeviceVulkan13Features>;
+template struct Check<VkPhysicalDeviceVulkan14Features>;
 template struct Check<VkPhysicalDeviceAccelerationStructureFeaturesKHR>;
 template struct Check<VkPhysicalDeviceRayQueryFeaturesKHR>;
 template struct Check<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>;
@@ -62,6 +63,8 @@ template struct Check<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>;
 #define CASE_FEATURE_12(feature) CASE_FEATURE("Vulkan12Features", VkPhysicalDeviceVulkan12Features, feature)
 
 #define CASE_FEATURE_13(feature) CASE_FEATURE("Vulkan13Features", VkPhysicalDeviceVulkan13Features, feature)
+
+#define CASE_FEATURE_14(feature) CASE_FEATURE("Vulkan14Features", VkPhysicalDeviceVulkan14Features, feature)
 
 #define CASE_ACCELERATION_STRUCTURE(feature) \
         CASE_FEATURE("AccelerationStructureFeaturesKHR", VkPhysicalDeviceAccelerationStructureFeaturesKHR, feature)
@@ -233,6 +236,36 @@ std::string FeatureProperties<VkPhysicalDeviceVulkan13Features>::name(const std:
                 CASE_FEATURE_13(maintenance4)
         default:
                 return "Unknown feature (index " + std::to_string(index) + ") in VkPhysicalDeviceVulkan13Features)";
+        }
+}
+
+std::string FeatureProperties<VkPhysicalDeviceVulkan14Features>::name(const std::size_t index)
+{
+        switch (index)
+        {
+                CASE_FEATURE_14(globalPriorityQuery)
+                CASE_FEATURE_14(shaderSubgroupRotate)
+                CASE_FEATURE_14(shaderSubgroupRotateClustered)
+                CASE_FEATURE_14(shaderFloatControls2)
+                CASE_FEATURE_14(shaderExpectAssume)
+                CASE_FEATURE_14(rectangularLines)
+                CASE_FEATURE_14(bresenhamLines)
+                CASE_FEATURE_14(smoothLines)
+                CASE_FEATURE_14(stippledRectangularLines)
+                CASE_FEATURE_14(stippledBresenhamLines)
+                CASE_FEATURE_14(stippledSmoothLines)
+                CASE_FEATURE_14(vertexAttributeInstanceRateDivisor)
+                CASE_FEATURE_14(vertexAttributeInstanceRateZeroDivisor)
+                CASE_FEATURE_14(indexTypeUint8)
+                CASE_FEATURE_14(dynamicRenderingLocalRead)
+                CASE_FEATURE_14(maintenance5)
+                CASE_FEATURE_14(maintenance6)
+                CASE_FEATURE_14(pipelineProtectedAccess)
+                CASE_FEATURE_14(pipelineRobustness)
+                CASE_FEATURE_14(hostImageCopy)
+                CASE_FEATURE_14(pushDescriptor)
+        default:
+                return "Unknown feature (index " + std::to_string(index) + ") in VkPhysicalDeviceVulkan14Features)";
         }
 }
 

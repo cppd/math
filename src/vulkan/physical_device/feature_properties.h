@@ -60,6 +60,14 @@ struct FeatureProperties<VkPhysicalDeviceVulkan13Features> final
 };
 
 template <>
+struct FeatureProperties<VkPhysicalDeviceVulkan14Features> final
+{
+        static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceVulkan14Features, globalPriorityQuery);
+        static constexpr std::size_t COUNT = 21;
+        static std::string name(std::size_t index);
+};
+
+template <>
 struct FeatureProperties<VkPhysicalDeviceAccelerationStructureFeaturesKHR> final
 {
         static constexpr std::size_t OFFSET =

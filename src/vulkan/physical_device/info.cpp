@@ -107,6 +107,7 @@ void set_nullptr_next(Features* const features)
         features->features_11.pNext = nullptr;
         features->features_12.pNext = nullptr;
         features->features_13.pNext = nullptr;
+        features->features_14.pNext = nullptr;
         features->acceleration_structure.pNext = nullptr;
         features->ray_query.pNext = nullptr;
         features->ray_tracing_pipeline.pNext = nullptr;
@@ -173,6 +174,9 @@ Features find_features(const VkPhysicalDevice device, const std::unordered_set<s
 
         res.features_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
         connect(last, res.features_13);
+
+        res.features_14.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+        connect(last, res.features_14);
 
         if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
         {
@@ -294,6 +298,9 @@ void make_features(
 
         device_features->features_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
         connect(last, device_features->features_13);
+
+        device_features->features_14.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+        connect(last, device_features->features_14);
 
         if (any_feature_enabled(device_features->acceleration_structure))
         {
