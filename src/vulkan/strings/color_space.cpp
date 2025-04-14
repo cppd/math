@@ -51,6 +51,7 @@ std::string color_space_to_string(const VkColorSpaceKHR color_space)
                 CASE(VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT)
                 CASE(VK_COLOR_SPACE_PASS_THROUGH_EXT)
                 CASE(VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT)
+                CASE(VK_COLOR_SPACE_DISPLAY_NATIVE_AMD)
         }
 #pragma GCC diagnostic pop
 

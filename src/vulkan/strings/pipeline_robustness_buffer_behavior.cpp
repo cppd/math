@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "present_mode.h"
+#include "pipeline_robustness_buffer_behavior.h"
 
 #include <src/com/enum.h>
 #include <src/com/print.h>
@@ -30,22 +30,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::strings
 {
-std::string present_mode_to_string(const VkPresentModeKHR present_mode)
+std::string pipeline_robustness_buffer_behavior_to_string(
+        const VkPipelineRobustnessBufferBehavior pipeline_robustness_buffer_behavior)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
-        switch (present_mode)
+        switch (pipeline_robustness_buffer_behavior)
         {
-                CASE(VK_PRESENT_MODE_IMMEDIATE_KHR)
-                CASE(VK_PRESENT_MODE_MAILBOX_KHR)
-                CASE(VK_PRESENT_MODE_FIFO_KHR)
-                CASE(VK_PRESENT_MODE_FIFO_RELAXED_KHR)
-                CASE(VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR)
-                CASE(VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR)
-                CASE(VK_PRESENT_MODE_FIFO_LATEST_READY_EXT)
+                CASE(VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DEVICE_DEFAULT)
+                CASE(VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DISABLED)
+                CASE(VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_ROBUST_BUFFER_ACCESS)
+                CASE(VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_ROBUST_BUFFER_ACCESS_2)
         }
 #pragma GCC diagnostic pop
 
-        return "Unknown VkPresentModeKHR " + to_string(enum_to_int(present_mode));
+        return "Unknown VkPipelineRobustnessBufferBehavior "
+               + to_string(enum_to_int(pipeline_robustness_buffer_behavior));
 }
 }
