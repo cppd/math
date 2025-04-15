@@ -28,10 +28,11 @@ namespace ns::vulkan::physical_device
 {
 struct Properties final
 {
-        VkPhysicalDeviceProperties properties_10;
-        VkPhysicalDeviceVulkan11Properties properties_11;
-        VkPhysicalDeviceVulkan12Properties properties_12;
-        VkPhysicalDeviceVulkan13Properties properties_13;
+        VkPhysicalDeviceProperties properties_10{};
+        VkPhysicalDeviceVulkan11Properties properties_11{};
+        VkPhysicalDeviceVulkan12Properties properties_12{};
+        VkPhysicalDeviceVulkan13Properties properties_13{};
+        VkPhysicalDeviceVulkan14Properties properties_14{};
         std::optional<VkPhysicalDeviceAccelerationStructurePropertiesKHR> acceleration_structure;
         std::optional<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> ray_tracing_pipeline;
 };

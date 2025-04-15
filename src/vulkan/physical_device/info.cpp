@@ -92,6 +92,7 @@ void set_nullptr_next(Properties* const properties)
         properties->properties_11.pNext = nullptr;
         properties->properties_12.pNext = nullptr;
         properties->properties_13.pNext = nullptr;
+        properties->properties_14.pNext = nullptr;
         if (properties->acceleration_structure)
         {
                 properties->acceleration_structure->pNext = nullptr;
@@ -132,6 +133,9 @@ Properties find_properties(const VkPhysicalDevice device, const std::unordered_s
         res.properties_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
         connect(last, res.properties_13);
 
+        res.properties_14.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_PROPERTIES;
+        connect(last, res.properties_14);
+
         if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
         {
                 res.acceleration_structure.emplace();
@@ -150,6 +154,11 @@ Properties find_properties(const VkPhysicalDevice device, const std::unordered_s
         vkGetPhysicalDeviceProperties2(device, &properties_2);
 
         res.properties_10 = properties_2.properties;
+
+        res.properties_14.copyDstLayoutCount = 0;
+        res.properties_14.copySrcLayoutCount = 0;
+        res.properties_14.pCopyDstLayouts = nullptr;
+        res.properties_14.pCopySrcLayouts = nullptr;
 
         set_nullptr_next(&res);
 

@@ -59,6 +59,22 @@ void add_value(
         strings->emplace_back(name, strings::shader_float_controls_independence_to_string(value));
 }
 
+void add_value(
+        const VkPipelineRobustnessBufferBehavior value,
+        const std::string_view name,
+        std::vector<std::tuple<std::string, std::string>>* const strings)
+{
+        strings->emplace_back(name, strings::pipeline_robustness_buffer_behavior_to_string(value));
+}
+
+void add_value(
+        const VkPipelineRobustnessImageBehavior value,
+        const std::string_view name,
+        std::vector<std::tuple<std::string, std::string>>* const strings)
+{
+        strings->emplace_back(name, strings::pipeline_robustness_image_behavior_to_string(value));
+}
+
 void add_sample_count(
         const VkSampleCountFlags flags,
         const std::string_view name,
@@ -111,6 +127,8 @@ void add_resolve_mode(
 #define ADD_VALUE_13(v) add_value(properties.properties_13.v, "Vulkan13::" #v, &strings)
 
 #define ADD_SHADER_STAGE_13(v) add_shader_stage(properties.properties_13.v, "Vulkan13::" #v, &strings)
+
+#define ADD_VALUE_14(v) add_value(properties.properties_14.v, "Vulkan14::" #v, &strings)
 
 #define ADD_VALUE_ACCELERATION_STRUCTURE(v) \
         add_value(properties.acceleration_structure->v, "AccelerationStructure::" #v, &strings)
@@ -332,6 +350,27 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(c
         ADD_VALUE_13(storageTexelBufferOffsetSingleTexelAlignment);
         ADD_VALUE_13(uniformTexelBufferOffsetAlignmentBytes);
         ADD_VALUE_13(uniformTexelBufferOffsetSingleTexelAlignment);
+
+        ADD_VALUE_14(lineSubPixelPrecisionBits);
+        ADD_VALUE_14(maxVertexAttribDivisor);
+        ADD_VALUE_14(supportsNonZeroFirstInstance);
+        ADD_VALUE_14(maxPushDescriptors);
+        ADD_VALUE_14(dynamicRenderingLocalReadDepthStencilAttachments);
+        ADD_VALUE_14(dynamicRenderingLocalReadMultisampledAttachments);
+        ADD_VALUE_14(earlyFragmentMultisampleCoverageAfterSampleCounting);
+        ADD_VALUE_14(earlyFragmentSampleMaskTestBeforeSampleCounting);
+        ADD_VALUE_14(depthStencilSwizzleOneSupport);
+        ADD_VALUE_14(polygonModePointSize);
+        ADD_VALUE_14(nonStrictSinglePixelWideLinesUseParallelogram);
+        ADD_VALUE_14(nonStrictWideLinesUseParallelogram);
+        ADD_VALUE_14(blockTexelViewCompatibleMultipleLayers);
+        ADD_VALUE_14(maxCombinedImageSamplerDescriptorCount);
+        ADD_VALUE_14(fragmentShadingRateClampCombinerInputs);
+        ADD_VALUE_14(defaultRobustnessStorageBuffers);
+        ADD_VALUE_14(defaultRobustnessUniformBuffers);
+        ADD_VALUE_14(defaultRobustnessVertexInputs);
+        ADD_VALUE_14(defaultRobustnessImages);
+        ADD_VALUE_14(identicalMemoryTypeRequirements);
 
         if (properties.acceleration_structure)
         {
