@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "strings/image_layout.h" // IWYU pragma: export
 #include "strings/image_type.h" // IWYU pragma: export
 #include "strings/physical_device_type.h" // IWYU pragma: export
+#include "strings/pipeline_robustness_buffer_behavior.h" // IWYU pragma: export
+#include "strings/pipeline_robustness_image_behavior.h" // IWYU pragma: export
 #include "strings/point_clipping_behavior.h" // IWYU pragma: export
 #include "strings/present_mode.h" // IWYU pragma: export
 #include "strings/primitive_topology.h" // IWYU pragma: export
