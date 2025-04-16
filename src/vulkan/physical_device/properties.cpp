@@ -75,6 +75,14 @@ void add_value(
         strings->emplace_back(name, strings::pipeline_robustness_image_behavior_to_string(value));
 }
 
+void add_image_layouts(
+        const std::vector<VkImageLayout>& layouts,
+        const std::string_view name,
+        std::vector<std::tuple<std::string, std::string>>* const strings)
+{
+        strings->emplace_back(name, strings::image_layouts_to_sorted_string(layouts, ", "));
+}
+
 void add_sample_count(
         const VkSampleCountFlags flags,
         const std::string_view name,
@@ -129,6 +137,10 @@ void add_resolve_mode(
 #define ADD_SHADER_STAGE_13(v) add_shader_stage(properties.properties_13.v, "Vulkan13::" #v, &strings)
 
 #define ADD_VALUE_14(v) add_value(properties.properties_14.v, "Vulkan14::" #v, &strings)
+
+#define ADD_COPY_SRC_LAYOUTS_14(v) add_image_layouts(properties.copy_src_layouts, "Vulkan14::copySrcLayouts", &strings)
+
+#define ADD_COPY_DST_LAYOUTS_14(v) add_image_layouts(properties.copy_dst_layouts, "Vulkan14::copyDstLayouts", &strings)
 
 #define ADD_VALUE_ACCELERATION_STRUCTURE(v) \
         add_value(properties.acceleration_structure->v, "AccelerationStructure::" #v, &strings)
@@ -370,6 +382,8 @@ std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(c
         ADD_VALUE_14(defaultRobustnessUniformBuffers);
         ADD_VALUE_14(defaultRobustnessVertexInputs);
         ADD_VALUE_14(defaultRobustnessImages);
+        ADD_COPY_SRC_LAYOUTS_14(v);
+        ADD_COPY_DST_LAYOUTS_14(v);
         ADD_VALUE_14(identicalMemoryTypeRequirements);
 
         if (properties.acceleration_structure)

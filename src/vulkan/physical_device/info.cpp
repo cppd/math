@@ -151,14 +151,26 @@ Properties find_properties(const VkPhysicalDevice device, const std::unordered_s
                 connect(last, *res.ray_tracing_pipeline);
         }
 
+        res.properties_14.pCopySrcLayouts = nullptr;
+        res.properties_14.pCopyDstLayouts = nullptr;
+
+        vkGetPhysicalDeviceProperties2(device, &properties_2);
+
+        res.copy_src_layouts.resize(res.properties_14.copySrcLayoutCount);
+        res.copy_dst_layouts.resize(res.properties_14.copyDstLayoutCount);
+        res.properties_14.pCopySrcLayouts = res.copy_src_layouts.data();
+        res.properties_14.pCopyDstLayouts = res.copy_dst_layouts.data();
+
         vkGetPhysicalDeviceProperties2(device, &properties_2);
 
         res.properties_10 = properties_2.properties;
 
-        res.properties_14.copyDstLayoutCount = 0;
+        res.copy_src_layouts.resize(res.properties_14.copySrcLayoutCount);
+        res.copy_dst_layouts.resize(res.properties_14.copyDstLayoutCount);
         res.properties_14.copySrcLayoutCount = 0;
-        res.properties_14.pCopyDstLayouts = nullptr;
+        res.properties_14.copyDstLayoutCount = 0;
         res.properties_14.pCopySrcLayouts = nullptr;
+        res.properties_14.pCopyDstLayouts = nullptr;
 
         set_nullptr_next(&res);
 

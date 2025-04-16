@@ -33,6 +33,8 @@ struct Properties final
         VkPhysicalDeviceVulkan12Properties properties_12{};
         VkPhysicalDeviceVulkan13Properties properties_13{};
         VkPhysicalDeviceVulkan14Properties properties_14{};
+        std::vector<VkImageLayout> copy_src_layouts;
+        std::vector<VkImageLayout> copy_dst_layouts;
         std::optional<VkPhysicalDeviceAccelerationStructurePropertiesKHR> acceleration_structure;
         std::optional<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> ray_tracing_pipeline;
 };
