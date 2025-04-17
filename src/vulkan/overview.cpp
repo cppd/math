@@ -135,9 +135,25 @@ void properties(const physical_device::PhysicalDevice& device, const std::size_t
         {
                 for (auto& [name, value] : device_properties_to_strings(device.properties()))
                 {
-                        name += " = ";
-                        name += value;
-                        tree->add(node, std::move(name));
+                        if (value.empty())
+                        {
+                                name += " = ";
+                                tree->add(node, std::move(name));
+                        }
+                        else if (value.size() == 1)
+                        {
+                                name += " = ";
+                                name += value.front();
+                                tree->add(node, std::move(name));
+                        }
+                        else
+                        {
+                                const std::size_t n = tree->add(node, std::move(name));
+                                for (const std::string& s : sorted(value))
+                                {
+                                        tree->add(n, s);
+                                }
+                        }
                 }
         }
         catch (const std::exception& e)

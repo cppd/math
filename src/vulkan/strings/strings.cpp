@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "strings.h"
 
 #include "format.h"
-#include "image_layout.h"
 
 #include <src/com/string/strings.h>
 
@@ -48,28 +47,6 @@ std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const
         for (const VkFormat format : formats)
         {
                 strings.push_back(format_to_string(format));
-        }
-
-        return strings_to_sorted_string(std::move(strings), separator);
-}
-
-std::string image_layouts_to_sorted_string(const std::vector<VkImageLayout>& image_layouts, std::string_view separator)
-{
-        if (image_layouts.empty())
-        {
-                return {};
-        }
-
-        if (image_layouts.size() == 1)
-        {
-                return image_layout_to_string(image_layouts.front());
-        }
-
-        std::vector<std::string> strings;
-        strings.reserve(image_layouts.size());
-        for (const VkImageLayout image_layout : image_layouts)
-        {
-                strings.push_back(image_layout_to_string(image_layout));
         }
 
         return strings_to_sorted_string(std::move(strings), separator);

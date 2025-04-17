@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace ns::vulkan::physical_device
@@ -38,81 +39,87 @@ template <typename T>
 void add_value(
         const T& value,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, to_string(value));
+        strings->emplace_back(name, std::vector{to_string(value)});
 }
 
 void add_value(
         const VkPointClippingBehavior value,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::point_clipping_behavior_to_string(value));
+        strings->emplace_back(name, std::vector{strings::point_clipping_behavior_to_string(value)});
 }
 
 void add_value(
         const VkShaderFloatControlsIndependence value,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::shader_float_controls_independence_to_string(value));
+        strings->emplace_back(name, std::vector{strings::shader_float_controls_independence_to_string(value)});
 }
 
 void add_value(
         const VkPipelineRobustnessBufferBehavior value,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::pipeline_robustness_buffer_behavior_to_string(value));
+        strings->emplace_back(name, std::vector{strings::pipeline_robustness_buffer_behavior_to_string(value)});
 }
 
 void add_value(
         const VkPipelineRobustnessImageBehavior value,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::pipeline_robustness_image_behavior_to_string(value));
+        strings->emplace_back(name, std::vector{strings::pipeline_robustness_image_behavior_to_string(value)});
 }
 
 void add_image_layouts(
         const std::vector<VkImageLayout>& layouts,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::image_layouts_to_sorted_string(layouts, ", "));
+        std::vector<std::string> s;
+        s.reserve(layouts.size());
+        for (const VkImageLayout layout : layouts)
+        {
+                s.push_back(strings::image_layout_to_string(layout));
+        }
+        strings->emplace_back(name, std::move(s));
 }
 
 void add_sample_count(
         const VkSampleCountFlags flags,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::sample_counts_to_string(flags));
+        strings->emplace_back(name, std::vector{strings::sample_counts_to_string(flags)});
 }
 
 void add_shader_stage(
         const VkShaderStageFlags flags,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::shader_stages_to_string(flags));
+        strings->emplace_back(name, std::vector{strings::shader_stages_to_string(flags)});
 }
 
 void add_subgroup_feature(
         const VkSubgroupFeatureFlags flags,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::subgroup_features_to_string(flags));
+        strings->emplace_back(name, std::vector{strings::subgroup_features_to_string(flags)});
 }
 
 void add_resolve_mode(
         const VkResolveModeFlags flags,
         const std::string_view name,
-        std::vector<std::tuple<std::string, std::string>>* const strings)
+        std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, strings::resolve_modes_to_string(flags));
+        strings->emplace_back(name, std::vector{strings::resolve_modes_to_string(flags)});
 }
 }
 
@@ -148,9 +155,10 @@ void add_resolve_mode(
 #define ADD_VALUE_RAY_TRACING_PIPELINE(v) \
         add_value(properties.ray_tracing_pipeline->v, "RayTracingPipeline::" #v, &strings)
 
-std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(const Properties& properties)
+std::vector<std::tuple<std::string, std::vector<std::string>>> device_properties_to_strings(
+        const Properties& properties)
 {
-        std::vector<std::tuple<std::string, std::string>> strings;
+        std::vector<std::tuple<std::string, std::vector<std::string>>> strings;
 
         ADD_SAMPLE_COUNT_10(framebufferColorSampleCounts);
         ADD_SAMPLE_COUNT_10(framebufferDepthSampleCounts);

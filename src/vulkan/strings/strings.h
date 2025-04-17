@@ -27,8 +27,6 @@ namespace ns::vulkan::strings
 {
 std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, std::string_view separator);
 
-std::string image_layouts_to_sorted_string(const std::vector<VkImageLayout>& image_layouts, std::string_view separator);
-
 template <typename T>
 std::vector<const char*> strings_to_char_pointers(const T& v)
 {
