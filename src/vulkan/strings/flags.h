@@ -20,12 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vulkan/vulkan_core.h>
 
 #include <string>
+#include <vector>
 
 namespace ns::vulkan::strings
 {
-std::string sample_counts_to_string(VkSampleCountFlags flags);
-std::string resolve_modes_to_string(VkResolveModeFlags flags);
-std::string shader_stages_to_string(VkShaderStageFlags flags);
-std::string subgroup_features_to_string(VkSubgroupFeatureFlags flags);
-std::string queues_to_string(VkQueueFlags flags);
+std::vector<std::string> sample_counts_to_strings(VkSampleCountFlags flags);
+std::vector<std::string> resolve_modes_to_strings(VkResolveModeFlags flags);
+std::vector<std::string> shader_stages_to_strings(VkShaderStageFlags flags);
+std::vector<std::string> subgroup_features_to_strings(VkSubgroupFeatureFlags flags);
+std::vector<std::string> queues_to_strings(VkQueueFlags flags);
 }

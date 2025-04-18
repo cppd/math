@@ -35,6 +35,12 @@ namespace ns::vulkan::physical_device
 {
 namespace
 {
+std::vector<std::string> sorted(std::vector<std::string>&& s)
+{
+        std::ranges::sort(s);
+        return s;
+}
+
 template <typename T>
 void add_value(
         const T& value,
@@ -87,7 +93,7 @@ void add_image_layouts(
         {
                 s.push_back(strings::image_layout_to_string(layout));
         }
-        strings->emplace_back(name, std::move(s));
+        strings->emplace_back(name, sorted(std::move(s)));
 }
 
 void add_sample_count(
@@ -95,7 +101,7 @@ void add_sample_count(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, std::vector{strings::sample_counts_to_string(flags)});
+        strings->emplace_back(name, strings::sample_counts_to_strings(flags));
 }
 
 void add_shader_stage(
@@ -103,7 +109,7 @@ void add_shader_stage(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, std::vector{strings::shader_stages_to_string(flags)});
+        strings->emplace_back(name, sorted(strings::shader_stages_to_strings(flags)));
 }
 
 void add_subgroup_feature(
@@ -111,7 +117,7 @@ void add_subgroup_feature(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, std::vector{strings::subgroup_features_to_string(flags)});
+        strings->emplace_back(name, sorted(strings::subgroup_features_to_strings(flags)));
 }
 
 void add_resolve_mode(
@@ -119,7 +125,7 @@ void add_resolve_mode(
         const std::string_view name,
         std::vector<std::tuple<std::string, std::vector<std::string>>>* const strings)
 {
-        strings->emplace_back(name, std::vector{strings::resolve_modes_to_string(flags)});
+        strings->emplace_back(name, sorted(strings::resolve_modes_to_strings(flags)));
 }
 }
 

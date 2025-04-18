@@ -54,6 +54,34 @@ std::vector<std::string> sorted(const T& s)
         return res;
 }
 
+void add_strings(
+        std::string name,
+        const std::vector<std::string>& strings,
+        const std::size_t node,
+        StringTree* const tree)
+{
+        if (strings.empty())
+        {
+                name += " = ";
+                tree->add(node, std::move(name));
+                return;
+        }
+
+        if (strings.size() == 1)
+        {
+                name += " = ";
+                name += strings.front();
+                tree->add(node, std::move(name));
+                return;
+        }
+
+        const std::size_t n = tree->add(node, std::move(name));
+        for (const std::string& s : strings)
+        {
+                tree->add(n, s);
+        }
+}
+
 void conformance_version(
         const physical_device::PhysicalDevice& device,
         const std::size_t device_node,
@@ -133,27 +161,9 @@ void properties(const physical_device::PhysicalDevice& device, const std::size_t
         const std::size_t node = tree->add(device_node, "Properties");
         try
         {
-                for (auto& [name, value] : device_properties_to_strings(device.properties()))
+                for (auto& [name, strings] : device_properties_to_strings(device.properties()))
                 {
-                        if (value.empty())
-                        {
-                                name += " = ";
-                                tree->add(node, std::move(name));
-                        }
-                        else if (value.size() == 1)
-                        {
-                                name += " = ";
-                                name += value.front();
-                                tree->add(node, std::move(name));
-                        }
-                        else
-                        {
-                                const std::size_t n = tree->add(node, std::move(name));
-                                for (const std::string& s : sorted(value))
-                                {
-                                        tree->add(n, s);
-                                }
-                        }
+                        add_strings(name, strings, node, tree);
                 }
         }
         catch (const std::exception& e)
@@ -202,7 +212,7 @@ void family_queues(
                         return;
                 }
 
-                tree->add(node, "queueFlags = " + strings::queues_to_string(family_properties.queueFlags));
+                add_strings("queueFlags", strings::queues_to_strings(family_properties.queueFlags), node, tree);
 
                 if (device.queue_family_supports_presentation(family_index))
                 {
