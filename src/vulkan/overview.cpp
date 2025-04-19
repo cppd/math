@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/print.h>
 #include <src/com/string_tree.h>
+#include <src/com/variant.h>
 #include <src/window/surface.h>
 
 #include <vulkan/vulkan_core.h>
@@ -38,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace ns::vulkan
@@ -56,30 +58,34 @@ std::vector<std::string> sorted(const T& s)
 
 void add_strings(
         std::string name,
-        const std::vector<std::string>& strings,
+        const std::variant<std::string, std::vector<std::string>>& strings,
         const std::size_t node,
         StringTree* const tree)
 {
-        if (strings.empty())
+        const auto s = [&](const std::string& s)
         {
                 name += " = ";
+                name += s;
                 tree->add(node, std::move(name));
-                return;
-        }
+        };
 
-        if (strings.size() == 1)
+        const auto v = [&](const std::vector<std::string>& v)
         {
-                name += " = ";
-                name += strings.front();
-                tree->add(node, std::move(name));
-                return;
-        }
+                if (v.empty())
+                {
+                        name += " = ";
+                        tree->add(node, std::move(name));
+                        return;
+                }
 
-        const std::size_t n = tree->add(node, std::move(name));
-        for (const std::string& s : strings)
-        {
-                tree->add(n, s);
-        }
+                const std::size_t n = tree->add(node, std::move(name));
+                for (const std::string& s : v)
+                {
+                        tree->add(n, s);
+                }
+        };
+
+        std::visit(Visitors{s, v}, strings);
 }
 
 void conformance_version(

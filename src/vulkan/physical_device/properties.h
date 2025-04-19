@@ -21,10 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 namespace ns::vulkan::physical_device
 {
-std::vector<std::tuple<std::string, std::vector<std::string>>> device_properties_to_strings(
+std::vector<std::tuple<std::string, std::variant<std::string, std::vector<std::string>>>> device_properties_to_strings(
         const Properties& properties);
 }
