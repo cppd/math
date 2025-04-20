@@ -357,13 +357,13 @@ void MeshRenderer::create_render_command_buffers(
                 {
                         draw_commands(
                                 opaque_meshes, command_buffer, show_clip_plane_lines, show_normals,
-                                false /*transparent*/);
+                                /*transparent=*/false);
                 }
                 if (!transparent_meshes.empty())
                 {
                         draw_commands(
                                 transparent_meshes, command_buffer, show_clip_plane_lines, show_normals,
-                                true /*transparent*/);
+                                /*transparent=*/true);
                 }
         };
         command_buffers_all_ = vulkan::create_command_buffers(info);
@@ -376,7 +376,7 @@ void MeshRenderer::create_render_command_buffers(
                 {
                         draw_commands(
                                 transparent_meshes, command_buffer, show_clip_plane_lines, show_normals,
-                                false /*transparent*/);
+                                /*transparent=*/false);
                 };
                 command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
         }

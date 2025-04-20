@@ -282,12 +282,12 @@ PhysicalDevice find_device(
         }
 
         std::vector<std::size_t> suitable_devices = suitable_physical_devices(
-                std::as_const(devices), surface, device_functionality, true /*optional_as_required*/);
+                std::as_const(devices), surface, device_functionality, /*optional_as_required=*/true);
 
         if (suitable_devices.empty())
         {
                 suitable_devices = suitable_physical_devices(
-                        std::as_const(devices), surface, device_functionality, false /*optional_as_required*/);
+                        std::as_const(devices), surface, device_functionality, /*optional_as_required=*/false);
         }
 
         const std::size_t device = find_physical_device(search_type, devices, suitable_devices);

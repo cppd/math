@@ -61,7 +61,7 @@ void run_ray_tracing_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline_layout(),
-                        memory.set_number(), 1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
+                        memory.set_number(), /*descriptorSetCount=*/1, &memory.descriptor_set(), 0, nullptr);
 
                 program.command_trace_rays(command_buffer, width, height, 1);
         };
@@ -84,7 +84,7 @@ void run_ray_query_commands(
 
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline_layout(), memory.set_number(),
-                        1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
+                        /*descriptorSetCount=*/1, &memory.descriptor_set(), 0, nullptr);
 
                 vkCmdDispatch(command_buffer, group_count(width, GROUP_SIZE), group_count(height, GROUP_SIZE), 1);
         };

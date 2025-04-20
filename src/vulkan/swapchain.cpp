@@ -322,7 +322,7 @@ std::optional<std::uint32_t> acquire_next_image(
 
         std::uint32_t image_index;
         const VkResult result =
-                vkAcquireNextImageKHR(device, swapchain, TIMEOUT, semaphore, VK_NULL_HANDLE /*fence*/, &image_index);
+                vkAcquireNextImageKHR(device, swapchain, TIMEOUT, semaphore, /*fence=*/VK_NULL_HANDLE, &image_index);
 
         if (result == VK_SUCCESS)
         {

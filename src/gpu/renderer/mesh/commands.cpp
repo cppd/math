@@ -44,7 +44,8 @@ void commands_triangles(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &triangles_shared_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), /*descriptorSetCount=*/1, &triangles_shared_memory.descriptor_set(), 0,
+                nullptr);
 
         push_constant_command(command_buffer, triangles_program.pipeline_layout(), transparent);
 
@@ -52,14 +53,14 @@ void commands_triangles(
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program.pipeline_layout(),
-                        MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MeshMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         const auto bind_descriptor_set_material = [&](VkDescriptorSet descriptor_set)
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program.pipeline_layout(),
-                        MaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MaterialMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
@@ -81,13 +82,14 @@ void commands_shadow(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &shadow_shared_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), /*descriptorSetCount=*/1, &shadow_shared_memory.descriptor_set(), 0,
+                nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_program.pipeline_layout(),
-                        MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MeshMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
@@ -109,7 +111,8 @@ void commands_lines(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &points_shared_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), /*descriptorSetCount=*/1, &points_shared_memory.descriptor_set(), 0,
+                nullptr);
 
         push_constant_command(command_buffer, points_program.pipeline_layout(), transparent);
 
@@ -117,7 +120,7 @@ void commands_lines(
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
-                        MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MeshMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
@@ -139,7 +142,8 @@ void commands_points(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &points_shared_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), /*descriptorSetCount=*/1, &points_shared_memory.descriptor_set(), 0,
+                nullptr);
 
         push_constant_command(command_buffer, points_program.pipeline_layout(), transparent);
 
@@ -147,7 +151,7 @@ void commands_points(
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
-                        MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MeshMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
@@ -169,7 +173,7 @@ void commands_triangle_lines(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangle_lines_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &triangle_lines_shared_memory.descriptor_set(), 0,
+                SharedMemory::set_number(), /*descriptorSetCount=*/1, &triangle_lines_shared_memory.descriptor_set(), 0,
                 nullptr);
 
         push_constant_command(command_buffer, triangle_lines_program.pipeline_layout(), transparent);
@@ -178,7 +182,7 @@ void commands_triangle_lines(
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangle_lines_program.pipeline_layout(),
-                        MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MeshMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
@@ -200,7 +204,8 @@ void commands_normals(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &normals_shared_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), /*descriptorSetCount=*/1, &normals_shared_memory.descriptor_set(), 0,
+                nullptr);
 
         push_constant_command(command_buffer, normals_program.pipeline_layout(), transparent);
 
@@ -208,7 +213,7 @@ void commands_normals(
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program.pipeline_layout(),
-                        MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MeshMemory::set_number(), /*descriptorSetCount=*/1, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)

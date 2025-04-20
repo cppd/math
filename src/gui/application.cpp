@@ -42,7 +42,7 @@ void message_event(const MessageEvent& event)
                 dialogs::message_critical(event.text);
                 return;
         case MessageType::ERROR_FATAL:
-                dialogs::message_critical(event.text, false /*with_parent*/);
+                dialogs::message_critical(event.text, /*with_parent=*/false);
                 error_fatal("Exit after error message\n" + event.text);
         case MessageType::INFORMATION:
                 dialogs::message_information(event.text);

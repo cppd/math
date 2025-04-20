@@ -258,7 +258,7 @@ std::function<void(progress::RatioList*)> save_image(
         std::vector<std::byte>&& pixels_rgba)
 {
         std::optional<dialogs::PainterImageParameters> dialog_parameters =
-                dialogs::PainterImageDialog::show("Save Image", dialogs::PainterImagePathType::FILE, false /*use_all*/);
+                dialogs::PainterImageDialog::show("Save Image", dialogs::PainterImagePathType::FILE, /*use_all=*/false);
         if (!dialog_parameters)
         {
                 return nullptr;
@@ -298,7 +298,7 @@ std::function<void(progress::RatioList*)> save_image(
         }
 
         std::optional<dialogs::PainterImageParameters> dialog_parameters = dialogs::PainterImageDialog::show(
-                "Save All Images", dialogs::PainterImagePathType::DIRECTORY, true /*use_all*/);
+                "Save All Images", dialogs::PainterImagePathType::DIRECTORY, /*use_all=*/true);
         if (!dialog_parameters)
         {
                 return nullptr;
@@ -348,7 +348,7 @@ std::function<void(progress::RatioList*)> add_volume(
         }
 
         std::optional<dialogs::PainterImageParameters> dialog_parameters =
-                dialogs::PainterImageDialog::show("Add Volume", dialogs::PainterImagePathType::NONE, false /*use_all*/);
+                dialogs::PainterImageDialog::show("Add Volume", dialogs::PainterImagePathType::NONE, /*use_all=*/false);
         if (!dialog_parameters)
         {
                 return nullptr;

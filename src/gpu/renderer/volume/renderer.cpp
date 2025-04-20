@@ -209,7 +209,8 @@ void VolumeRenderer::draw_commands_fragments(const VolumeProgramPipelineType typ
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared(),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
+                VolumeSharedMemory::set_number(), /*descriptorSetCount=*/1, &shared_memory_.descriptor_set(), 0,
+                nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
@@ -232,11 +233,12 @@ void VolumeRenderer::draw_commands_image(
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
+                VolumeSharedMemory::set_number(), /*descriptorSetCount=*/1, &shared_memory_.descriptor_set(), 0,
+                nullptr);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, volume_program_.pipeline_layout_shared_image(),
-                VolumeImageMemory::set_number(), 1 /*set count*/,
+                VolumeImageMemory::set_number(), /*descriptorSetCount=*/1,
                 &volume->descriptor_set(volume_program_.descriptor_set_layout_image()), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);

@@ -223,8 +223,8 @@ void test_mesh_files(
 
         test_obj_file(*mesh, name, comment, progress);
 
-        test_stl_file(*mesh, name, comment, progress, true /*ascii_format*/);
-        test_stl_file(*mesh, name, comment, progress, false /*ascii_format*/);
+        test_stl_file(*mesh, name, comment, progress, /*ascii_format=*/true);
+        test_stl_file(*mesh, name, comment, progress, /*ascii_format=*/false);
 }
 
 template <std::size_t N>

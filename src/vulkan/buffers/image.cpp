@@ -46,7 +46,7 @@ VkExtent3D find_max_image_extent(
 {
         VkImageFormatProperties image_properties;
         VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
-                physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties));
+                physical_device, format, image_type, tiling, usage, /*flags=*/0, &image_properties));
         return image_properties.maxExtent;
 }
 

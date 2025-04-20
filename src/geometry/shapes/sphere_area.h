@@ -130,7 +130,7 @@ T sphere_relative_area(const std::type_identity_t<T> a, const std::type_identity
                         {
                                 return std::pow(std::sin(x), static_cast<T>(N - 2));
                         },
-                        a, b, /*count*/ 100);
+                        a, b, /*count=*/100);
         }
         else
         {

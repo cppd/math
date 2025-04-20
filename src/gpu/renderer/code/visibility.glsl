@@ -37,7 +37,7 @@ bool ray_tracing_intersect_any(
         const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
 
         rayQueryEXT ray_query;
-        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask*/ 0xFF, org, t_min, dir, t_max);
+        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask=*/0xFF, org, t_min, dir, t_max);
         rayQueryProceedEXT(ray_query);
 
         return rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
@@ -54,7 +54,7 @@ bool ray_tracing_intersect(
         const uint flags = gl_RayFlagsOpaqueEXT;
 
         rayQueryEXT ray_query;
-        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask*/ 0xFF, org, t_min, dir, t_max);
+        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, /*cullMask=*/0xFF, org, t_min, dir, t_max);
         rayQueryProceedEXT(ray_query);
 
         if (rayQueryGetIntersectionTypeEXT(ray_query, true) != gl_RayQueryCommittedIntersectionTriangleEXT)
@@ -75,11 +75,11 @@ bool occluded_impl(
 {
         if (dot(dir, geometric_normal) >= 0)
         {
-                return ray_tracing_intersect_any(org, dir, acceleration_structure, /*t_min*/ 0, t_max);
+                return ray_tracing_intersect_any(org, dir, acceleration_structure, /*t_min=*/0, t_max);
         }
 
         float t;
-        if (!ray_tracing_intersect(org, dir, acceleration_structure, /*t_min*/ 0, t_max, t))
+        if (!ray_tracing_intersect(org, dir, acceleration_structure, /*t_min=*/0, t_max, t))
         {
                 return false;
         }

@@ -112,7 +112,7 @@ VkFormat find_supported_image_format(
 
                 VkImageFormatProperties image_properties;
                 VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
-                        device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties));
+                        device, format, image_type, tiling, usage, /*flags=*/0, &image_properties));
 
                 if ((image_properties.sampleCounts & sample_count) != sample_count)
                 {

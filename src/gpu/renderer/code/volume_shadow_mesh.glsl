@@ -43,7 +43,7 @@ float mesh_shadow_transparency_world(const vec3 world_position, const vec3 geome
 float mesh_shadow_transparency_texture(const vec3 texture_position)
 {
         const vec4 world_position = volume_coordinates.texture_to_world_matrix * vec4(texture_position, 1);
-        return mesh_shadow_transparency_world(world_position.xyz, /*geometric_normal*/ vec3(0));
+        return mesh_shadow_transparency_world(world_position.xyz, /*geometric_normal=*/vec3(0));
 }
 #endif
 
