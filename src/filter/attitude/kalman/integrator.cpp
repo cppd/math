@@ -35,13 +35,11 @@ Quaternion<T> zeroth_order_theta(const numerical::Vector<3, T>& w, const T dt)
 
         if (wn < W_THRESHOLD<T>)
         {
-                const Quaternion<T> theta{1, (dt / 2) * w};
-                return theta;
+                return {1, (dt / 2) * w};
         }
 
         const T k = wn * dt / 2;
-        const Quaternion<T> theta{std::cos(k), (std::sin(k) / wn) * w};
-        return theta;
+        return {std::cos(k), (std::sin(k) / wn) * w};
 }
 }
 
@@ -59,13 +57,8 @@ Quaternion<T> first_order_quaternion_integrator(
         const numerical::Vector<3, T>& w1,
         const T dt)
 {
-        const numerical::Vector<3, T> wa = (w0 + w1) / T{2};
-        const Quaternion<T> q0 = zeroth_order_theta(wa, dt);
-
-        const Quaternion<T> qw0 = Quaternion<T>(0, w0);
-        const Quaternion<T> qw1 = Quaternion<T>(0, w1);
-        const Quaternion<T> q1 = (qw1 * qw0 - qw0 * qw1) * (dt * dt / 48);
-
+        const Quaternion<T> q0 = zeroth_order_theta((w0 + w1) / T{2}, dt);
+        const Quaternion<T> q1 = {0, cross(w0, w1) * (dt * dt / 24)};
         return (q0 + q1) * q;
 }
 

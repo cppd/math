@@ -31,11 +31,13 @@ namespace
 template <typename T>
 void test_impl(const T precision)
 {
-        constexpr numerical::Vector<3, T> W(-W_THRESHOLD<T> / 3, W_THRESHOLD<T> * T{2}, -W_THRESHOLD<T> / T{2});
+        constexpr T WT = W_THRESHOLD<T>;
+        constexpr numerical::Vector<3, T> W_0(-WT / T{3}, WT * T{2}, -WT / T{2});
+        constexpr numerical::Vector<3, T> W_1(-WT / T{3.2}, WT * T{2.2}, -WT / T{2.2});
 
         {
                 const Quaternion<T> q0 = Quaternion<T>(-2, {3, -4, 5}).normalized();
-                const Quaternion<T> q = zeroth_order_quaternion_integrator(q0, T{1000} * W, T{0.01});
+                const Quaternion<T> q = zeroth_order_quaternion_integrator(q0, T{1000} * W_0, T{0.01});
                 const Quaternion<T> c(
                         0.272087277903365161506L,
                         {-0.408198391225154576625L, 0.54435940156013223895L, -0.680452370513489564142L});
@@ -43,7 +45,7 @@ void test_impl(const T precision)
         }
         {
                 const Quaternion<T> q0 = Quaternion<T>(-2, {3, -4, 5}).normalized();
-                const Quaternion<T> q = zeroth_order_quaternion_integrator(q0, W / T{100}, T{0.01});
+                const Quaternion<T> q = zeroth_order_quaternion_integrator(q0, W_0 / T{100}, T{0.01});
                 const Quaternion<T> c(
                         0.27216552619343278754L,
                         {-0.408248289964892883573L, 0.54433105423532311245L, -0.680413817825339523862L});
@@ -51,18 +53,18 @@ void test_impl(const T precision)
         }
         {
                 const Quaternion<T> q0 = Quaternion<T>(-2, {3, -4, 5}).normalized();
-                const Quaternion<T> q = first_order_quaternion_integrator(q0, T{1000} * W, T{2000} * W, T{0.01});
+                const Quaternion<T> q = first_order_quaternion_integrator(q0, T{1000} * W_0, T{2000} * W_1, T{0.01});
                 const Quaternion<T> c(
-                        0.272048152254599909765L,
-                        {-0.408173439936830223003L, 0.544373573138672902131L, -0.680471644268316900564L});
+                        0.272044680206759212409L,
+                        {-0.408165114591462740046L, 0.544376512937662761791L, -0.680475674336394548548L});
                 test_equal(q, c, precision);
         }
         {
                 const Quaternion<T> q0 = Quaternion<T>(-2, {3, -4, 5}).normalized();
-                const Quaternion<T> q = first_order_quaternion_integrator(q0, W / T{100}, W / T{200}, T{0.01});
+                const Quaternion<T> q = first_order_quaternion_integrator(q0, W_0 / T{100}, W_1 / T{200}, T{0.01});
                 const Quaternion<T> c(
-                        0.272165526389051760058L,
-                        {-0.408248290089635416743L, 0.544331054164446673075L, -0.680413817728947566458L});
+                        0.272165526380372617882L,
+                        {-0.408248290068823516851L, 0.544331054171798492858L, -0.680413817739024907383L});
                 test_equal(q, c, precision);
         }
 }
