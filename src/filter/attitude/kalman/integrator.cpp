@@ -46,8 +46,8 @@ Quaternion<T> zeroth_order_theta(const numerical::Vector<3, T>& w, const T dt)
 template <typename T>
 Quaternion<T> zeroth_order_quaternion_integrator(const Quaternion<T>& q, const numerical::Vector<3, T>& w, const T dt)
 {
-        const Quaternion<T> theta = zeroth_order_theta(w, dt);
-        return theta * q;
+        const Quaternion<T> q0 = zeroth_order_theta(w, dt);
+        return q0 * q;
 }
 
 template <typename T>
