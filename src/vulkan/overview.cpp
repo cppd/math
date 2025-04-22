@@ -62,14 +62,14 @@ void add_strings(
         const std::size_t node,
         StringTree* const tree)
 {
-        const auto s = [&](const std::string& s)
+        const auto string = [&](const std::string& s)
         {
                 name += " = ";
                 name += s;
                 tree->add(node, std::move(name));
         };
 
-        const auto v = [&](const std::vector<std::string>& v)
+        const auto vector = [&](const std::vector<std::string>& v)
         {
                 if (v.empty())
                 {
@@ -85,7 +85,7 @@ void add_strings(
                 }
         };
 
-        std::visit(Visitors{s, v}, strings);
+        std::visit(Visitors{string, vector}, strings);
 }
 
 void conformance_version(
