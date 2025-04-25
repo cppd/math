@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_1.h"
 
 #include "filter_1_conv.h"
+#include "filter_1_measurement.h"
 #include "filter_1_model.h"
 #include "init.h"
 
@@ -38,8 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::speed
 {
-namespace model = filter_1_model;
 namespace conv = filter_1_conv;
+namespace measurement = filter_1_measurement;
+namespace model = filter_1_model;
 
 namespace
 {
@@ -81,8 +83,9 @@ class Filter final : public Filter1<N, T>
                 ASSERT(com::check_variance(position.variance));
 
                 return filter_->update(
-                        model::position_h<N, T>, model::position_r(position.variance), position.value,
-                        model::add_x<N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        measurement::position_h<N, T>, measurement::position_r(position.variance), position.value,
+                        model::add_x<N, T>, measurement::position_residual<N, T>, gate, NORMALIZED_INNOVATION,
+                        LIKELIHOOD);
         }
 
         core::UpdateInfo<N + 1, T> update_position_speed(
@@ -95,9 +98,10 @@ class Filter final : public Filter1<N, T>
                 ASSERT(com::check_variance(speed.variance));
 
                 return filter_->update(
-                        model::position_speed_h<N, T>, model::position_speed_r(position.variance, speed.variance),
-                        model::position_speed_z(position.value, speed.value), model::add_x<N, T>,
-                        model::position_speed_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        measurement::position_speed_h<N, T>,
+                        measurement::position_speed_r(position.variance, speed.variance),
+                        measurement::position_speed_z(position.value, speed.value), model::add_x<N, T>,
+                        measurement::position_speed_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         core::UpdateInfo<1, T> update_speed(const Measurement<1, T>& speed, const std::optional<T> gate) override
@@ -106,8 +110,8 @@ class Filter final : public Filter1<N, T>
                 ASSERT(com::check_variance(speed.variance));
 
                 return filter_->update(
-                        model::speed_h<N, T>, model::speed_r(speed.variance), speed.value, model::add_x<N, T>,
-                        model::speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        measurement::speed_h<N, T>, measurement::speed_r(speed.variance), speed.value,
+                        model::add_x<N, T>, measurement::speed_residual<T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] const numerical::Vector<2 * N, T>& x() const
