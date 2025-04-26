@@ -97,43 +97,4 @@ numerical::Matrix<2 * N, 2 * N, T> q(const T dt, const NoiseModel<T>& noise_mode
                 }};
         return std::visit(visitors, noise_model);
 }
-
-template <std::size_t N, typename T>
-numerical::Matrix<N, N, T> position_r(const numerical::Vector<N, T>& measurement_variance)
-{
-        return numerical::make_diagonal_matrix(measurement_variance);
-}
-
-template <std::size_t N, typename T>
-numerical::Vector<N, T> position_h(const numerical::Vector<2 * N, T>& x)
-{
-        // px = px
-        // py = py
-        numerical::Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = x[2 * i];
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-numerical::Matrix<N, 2 * N, T> position_hj(const numerical::Vector<2 * N, T>& /*x*/)
-{
-        // px = px
-        // py = py
-        // Jacobian
-        numerical::Matrix<N, 2 * N, T> res(numerical::ZERO_MATRIX);
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i, 2 * i] = 1;
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
-numerical::Vector<N, T> position_residual(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b)
-{
-        return a - b;
-}
 }

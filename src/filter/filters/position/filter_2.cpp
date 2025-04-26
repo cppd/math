@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter_2.h"
 
 #include "filter_2_conv.h"
+#include "filter_2_measurement.h"
 #include "filter_2_model.h"
 #include "init.h"
 
@@ -36,8 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::position
 {
-namespace model = filter_2_model;
 namespace conv = filter_2_conv;
+namespace measurement = filter_2_measurement;
+namespace model = filter_2_model;
 
 namespace
 {
@@ -94,14 +96,15 @@ class FilterImpl final : public Filter2<N, T>
                 if (theta_)
                 {
                         return filter_->update(
-                                model::position_h<N, T>, model::position_hj<N, T>, model::position_r(variance),
-                                position, model::add_x<N, T>, model::position_residual<N, T>, gate,
-                                NORMALIZED_INNOVATION, LIKELIHOOD, *theta_);
+                                measurement::position_h<N, T>, measurement::position_hj<N, T>,
+                                measurement::position_r(variance), position, model::add_x<N, T>,
+                                measurement::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD, *theta_);
                 }
 
                 return filter_->update(
-                        model::position_h<N, T>, model::position_hj<N, T>, model::position_r(variance), position,
-                        model::add_x<N, T>, model::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
+                        measurement::position_h<N, T>, measurement::position_hj<N, T>,
+                        measurement::position_r(variance), position, model::add_x<N, T>,
+                        measurement::position_residual<N, T>, gate, NORMALIZED_INNOVATION, LIKELIHOOD);
         }
 
         [[nodiscard]] const numerical::Vector<3 * N, T>& x() const override
