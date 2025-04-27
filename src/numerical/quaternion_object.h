@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vector.h"
 
+#include <src/com/type/limit.h>
+
 #include <cstddef>
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -131,7 +134,16 @@ public:
 
         [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
         {
-                return to_string(a.data_);
+                std::ostringstream oss;
+                oss.precision(Limits<T>::max_digits10());
+                oss << '(';
+                oss << a.data_[0];
+                oss << ", {";
+                oss << a.data_[1];
+                oss << ", " << a.data_[2];
+                oss << ", " << a.data_[3];
+                oss << "})";
+                return oss.str();
         }
 
         [[nodiscard]] friend constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
