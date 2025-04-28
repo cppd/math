@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/attitude/madgwick/gain.h>
 #include <src/filter/attitude/madgwick/madgwick_imu.h>
 #include <src/filter/attitude/madgwick/madgwick_marg.h>
+#include <src/numerical/quaternion.h>
 #include <src/test/test.h>
 
 namespace ns::filter::attitude::madgwick::test
@@ -36,7 +37,7 @@ void test_imu(const T precision)
 
         const auto cmp = [&](const T w, const T x, const T y, const T z)
         {
-                test_equal(m.attitude(), {w, x, y, z}, precision);
+                test_equal(m.attitude(), numerical::Quaternion<T>(w, {x, y, z}), precision);
         };
 
         for (int i = 0; i < 10; ++i)
@@ -59,7 +60,7 @@ void test_marg(const T precision)
 
         const auto cmp = [&](const T w, const T x, const T y, const T z)
         {
-                test_equal(m.attitude(), {w, x, y, z}, precision);
+                test_equal(m.attitude(), numerical::Quaternion<T>(w, {x, y, z}), precision);
         };
 
         const auto cmp_b = [&](const T x, const T y, const T z)

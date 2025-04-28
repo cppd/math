@@ -36,8 +36,8 @@ namespace
 template <typename T>
 struct Test final
 {
-        static constexpr Quaternion<T> A{2, 3, 4, 5};
-        static constexpr Quaternion<T> B{11, 12, 13, 14};
+        static constexpr Quaternion<T> A = Quaternion<T>(2, {3, 4, 5});
+        static constexpr Quaternion<T> B = Quaternion<T>(11, {12, 13, 14});
 
         static_assert(A == Quaternion<T>(2, {3, 4, 5}));
         static_assert(A.w() == 2);
@@ -45,15 +45,15 @@ struct Test final
         static_assert(A.y() == 4);
         static_assert(A.z() == 5);
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
-        static_assert(A.conjugate() == Quaternion<T>(2, -3, -4, -5));
-        static_assert(A * T{3} == Quaternion<T>(6, 9, 12, 15));
-        static_assert(T{3} * A == Quaternion<T>(6, 9, 12, 15));
-        static_assert(A / T{2} == Quaternion<T>(1, T{3} / 2, 2, T{5} / 2));
-        static_assert(A + B == Quaternion<T>(13, 15, 17, 19));
-        static_assert(A - B == Quaternion<T>(-9, -9, -9, -9));
-        static_assert(A * B == Quaternion<T>(-136, 48, 88, 74));
-        static_assert(A * Vector<3, T>(11, 12, 13) == Quaternion<T>(-146, 14, 40, 18));
-        static_assert(Vector<3, T>(11, 12, 13) * A == Quaternion<T>(-146, 30, 8, 34));
+        static_assert(A.conjugate() == Quaternion<T>(2, {-3, -4, -5}));
+        static_assert(A * T{3} == Quaternion<T>(6, {9, 12, 15}));
+        static_assert(T{3} * A == Quaternion<T>(6, {9, 12, 15}));
+        static_assert(A / T{2} == Quaternion<T>(1, {T{3} / 2, 2, T{5} / 2}));
+        static_assert(A + B == Quaternion<T>(13, {15, 17, 19}));
+        static_assert(A - B == Quaternion<T>(-9, {-9, -9, -9}));
+        static_assert(A * B == Quaternion<T>(-136, {48, 88, 74}));
+        static_assert(A * Vector<3, T>(11, 12, 13) == Quaternion<T>(-146, {14, 40, 18}));
+        static_assert(Vector<3, T>(11, 12, 13) * A == Quaternion<T>(-146, {30, 8, 34}));
         static_assert(multiply_vec(A, B) == Vector<3, T>(48, 88, 74));
 };
 
@@ -130,7 +130,10 @@ template <typename T>
 Quaternion<T> random_rotation_quaternion(PCG& pcg)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
-        const Quaternion<T> q{std::abs(urd(pcg)), urd(pcg), urd(pcg), urd(pcg)};
+        const Quaternion<T> q{
+                std::abs(urd(pcg)),
+                {urd(pcg), urd(pcg), urd(pcg)}
+        };
         return q.normalized();
 }
 
@@ -138,27 +141,31 @@ template <typename T>
 void test(const T precision)
 {
         test_equal(
-                Quaternion<T>(2, 4, 3, 5).normalized(),
-                {0.272165526975908677584L, 0.544331053951817355168L, 0.408248290463863016363L,
-                 0.680413817439771693974L},
+                Quaternion<T>(2, {4, 3, 5}).normalized(),
+                Quaternion<T>(
+                        0.272165526975908677584L,
+                        {0.544331053951817355168L, 0.408248290463863016363L, 0.680413817439771693974L}),
                 precision);
 
         test_equal(
-                Quaternion<T>(-2, 4, 3, 5).normalized(),
-                {0.272165526975908677584L, -0.544331053951817355168L, -0.408248290463863016363L,
-                 -0.680413817439771693974L},
+                Quaternion<T>(-2, {4, 3, 5}).normalized(),
+                Quaternion<T>(
+                        0.272165526975908677584L,
+                        {-0.544331053951817355168L, -0.408248290463863016363L, -0.680413817439771693974L}),
                 precision);
 
         test_equal(
-                Quaternion<T>(3, -7, 2, -8).inversed(),
-                {0.0238095238095238095235L, 0.0555555555555555555548L, -0.0158730158730158730157L,
-                 0.0634920634920634920626L},
+                Quaternion<T>(3, {-7, 2, -8}).inversed(),
+                Quaternion<T>(
+                        0.0238095238095238095235L,
+                        {0.0555555555555555555548L, -0.0158730158730158730157L, 0.0634920634920634920626L}),
                 precision);
 
         test_equal(
                 unit_quaternion_for_rotation({4, -5, 6}, T{2}),
-                {0.540302305868139717414L, 0.383578074011068530816L, -0.479472592513835663554L,
-                 0.57536711101660279621L},
+                Quaternion<T>(
+                        0.540302305868139717414L,
+                        {0.383578074011068530816L, -0.479472592513835663554L, 0.57536711101660279621L}),
                 precision);
 
         test_equal(
@@ -166,7 +173,7 @@ void test(const T precision)
                 {5.46996008744151012305L, 0.27754662586912375613L, -2.82886982950179797927L}, precision);
 
         {
-                const Quaternion<T> q1 = Quaternion<T>(2, -3, 4, -5).normalized();
+                const Quaternion<T> q1 = Quaternion<T>(2, {-3, 4, -5}).normalized();
                 const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
                 const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
                 test_equal(q1, q2, precision);

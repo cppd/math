@@ -35,7 +35,7 @@ template <typename T>
 [[nodiscard]] numerical::Quaternion<T> normalize(const T w, const T x, const T y, const T z)
 {
         // normalizing without changing the sign of w
-        const numerical::Quaternion<T> q(w, x, y, z);
+        const numerical::Quaternion<T> q(w, {x, y, z});
         const T norm = q.norm();
         if (norm > 0)
         {

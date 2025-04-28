@@ -177,12 +177,18 @@ template <typename T>
                 if (m00 > m11)
                 {
                         const T t = 1 + m00 - m11 - m22;
-                        q = {m21 - m12, t, m01 + m10, m20 + m02};
+                        q = {
+                                m21 - m12,
+                                {t, m01 + m10, m20 + m02}
+                        };
                 }
                 else
                 {
                         const T t = 1 - m00 + m11 - m22;
-                        q = {m02 - m20, m01 + m10, t, m12 + m21};
+                        q = {
+                                m02 - m20,
+                                {m01 + m10, t, m12 + m21}
+                        };
                 }
         }
         else
@@ -190,12 +196,18 @@ template <typename T>
                 if (m00 < -m11)
                 {
                         const T t = 1 - m00 - m11 + m22;
-                        q = {m10 - m01, m20 + m02, m12 + m21, t};
+                        q = {
+                                m10 - m01,
+                                {m20 + m02, m12 + m21, t}
+                        };
                 }
                 else
                 {
                         const T t = 1 + m00 + m11 + m22;
-                        q = {t, m21 - m12, m02 - m20, m10 - m01};
+                        q = {
+                                t,
+                                {m21 - m12, m02 - m20, m10 - m01}
+                        };
                 }
         }
 

@@ -27,7 +27,10 @@ class MadgwickImu final
 {
         using Vector3 = numerical::Vector<3, T>;
 
-        numerical::Quaternion<T> q_{1, 0, 0, 0};
+        numerical::Quaternion<T> q_{
+                1,
+                {0, 0, 0}
+        };
 
 public:
         bool update(const Vector3& w, const Vector3& a, T beta, T dt);

@@ -45,11 +45,6 @@ public:
         {
         }
 
-        constexpr Quaternion(const T w, const T x, const T y, const T z)
-                : data_(w, x, y, z)
-        {
-        }
-
         constexpr Quaternion(const T w, const Vector<3, T>& v)
                 : data_(w, v[0], v[1], v[2])
         {
@@ -62,7 +57,7 @@ public:
 
         [[nodiscard]] constexpr Vector<3, T> vec() const
         {
-                return {data_[1], data_[2], data_[3]};
+                return {x(), y(), z()};
         }
 
         [[nodiscard]] constexpr T w() const
@@ -107,7 +102,7 @@ public:
 
         [[nodiscard]] constexpr Quaternion<T> conjugate() const
         {
-                return {w(), -x(), -y(), -z()};
+                return {w(), -vec()};
         }
 
         [[nodiscard]] T norm() const
