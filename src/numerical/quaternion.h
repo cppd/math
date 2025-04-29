@@ -170,53 +170,53 @@ template <typename T>
         const T m21 = m[2, 1];
         const T m22 = m[2, 2];
 
-        Quaternion<T> q;
+        T w;
+        T x;
+        T y;
+        T z;
 
         if (m22 < 0)
         {
                 if (m00 > m11)
                 {
-                        const T t = 1 + m00 - m11 - m22;
-                        q = {
-                                m21 - m12,
-                                {t, m01 + m10, m20 + m02}
-                        };
+                        w = m21 - m12;
+                        x = 1 + m00 - m11 - m22;
+                        y = m01 + m10;
+                        z = m20 + m02;
                 }
                 else
                 {
-                        const T t = 1 - m00 + m11 - m22;
-                        q = {
-                                m02 - m20,
-                                {m01 + m10, t, m12 + m21}
-                        };
+                        w = m02 - m20;
+                        x = m01 + m10;
+                        y = 1 - m00 + m11 - m22;
+                        z = m12 + m21;
                 }
         }
         else
         {
                 if (m00 < -m11)
                 {
-                        const T t = 1 - m00 - m11 + m22;
-                        q = {
-                                m10 - m01,
-                                {m20 + m02, m12 + m21, t}
-                        };
+                        w = m10 - m01;
+                        x = m20 + m02;
+                        y = m12 + m21;
+                        z = 1 - m00 - m11 + m22;
                 }
                 else
                 {
-                        const T t = 1 + m00 + m11 + m22;
-                        q = {
-                                t,
-                                {m21 - m12, m02 - m20, m10 - m01}
-                        };
+                        w = 1 + m00 + m11 + m22;
+                        x = m21 - m12;
+                        y = m02 - m20;
+                        z = m10 - m01;
                 }
         }
 
-        T norm = q.norm();
-        if (q.w() < 0)
-        {
-                norm = -norm;
-        }
+        const Quaternion<T> q{
+                w,
+                {x, y, z}
+        };
 
-        return q / norm;
+        const T norm = q.norm();
+
+        return q / ((q.w() < 0) ? -norm : norm);
 }
 }
