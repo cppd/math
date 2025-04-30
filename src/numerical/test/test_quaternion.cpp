@@ -173,6 +173,28 @@ void test(const T precision)
                 {5.46996008744151012305L, 0.27754662586912375613L, -2.82886982950179797927L}, precision);
 
         {
+                const Quaternion<T> q = unit_quaternion_for_rotation<T>({1, 0, 0}, T{1} / 10);
+                const Vector<3, T> v(0, 1, 0);
+                const Vector<3, T> r(0, 0.995004165278025766135L, 0.0998334166468281523107L);
+                test_equal(rotate_vector(q, v), r, precision);
+                test_equal((q * v * q.conjugate()).vec(), r, precision);
+        }
+        {
+                const Quaternion<T> q = unit_quaternion_for_rotation<T>({0, 1, 0}, T{1} / 10);
+                const Vector<3, T> v(1, 0, 0);
+                const Vector<3, T> r(0.995004165278025766135L, 0, -0.0998334166468281523107L);
+                test_equal(rotate_vector(q, v), r, precision);
+                test_equal((q * v * q.conjugate()).vec(), r, precision);
+        }
+        {
+                const Quaternion<T> q = unit_quaternion_for_rotation<T>({0, 0, 1}, T{1} / 10);
+                const Vector<3, T> v(1, 0, 0);
+                const Vector<3, T> r(0.995004165278025766135L, 0.0998334166468281523107L, 0);
+                test_equal(rotate_vector(q, v), r, precision);
+                test_equal((q * v * q.conjugate()).vec(), r, precision);
+        }
+
+        {
                 const Quaternion<T> q1 = Quaternion<T>(2, {-3, 4, -5}).normalized();
                 const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
                 const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
