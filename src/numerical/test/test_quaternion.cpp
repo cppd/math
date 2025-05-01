@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
@@ -106,10 +107,23 @@ bool equal(const Quaternion<T>& a, const Quaternion<T>& b, const P precision)
         return true;
 }
 
+template <std::size_t R, std::size_t C, typename T>
+bool equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T precision)
+{
+        for (std::size_t r = 0; r < R; ++r)
+        {
+                if (!equal(a.row(r), b.row(r), precision))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
 template <typename T, typename P>
 void test_equal(const T& a, const T& b, const P precision)
 {
-        if constexpr (std::tuple_size_v<T> == 4)
+        if constexpr (requires { a.w(); })
         {
                 if (a.w() == 0 && b.w() == 0)
                 {
@@ -120,6 +134,7 @@ void test_equal(const T& a, const T& b, const P precision)
                         return;
                 }
         }
+
         if (!equal(a, b, precision))
         {
                 error(to_string(a) + " is not equal to " + to_string(b));
@@ -195,10 +210,20 @@ void test(const T precision)
         }
 
         {
-                const Quaternion<T> q1 = Quaternion<T>(2, {-3, 4, -5}).normalized();
-                const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
-                const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
-                test_equal(q1, q2, precision);
+                PCG pcg;
+                std::uniform_real_distribution<T> urd(-100, 100);
+                for (int i = 0; i < 100; ++i)
+                {
+                        const Quaternion<T> q = random_rotation_quaternion<T>(pcg);
+                        const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
+                        const Vector<3, T> r1 = rotate_vector(q, v);
+                        const Quaternion<T> q1 = q * v * q.conjugate();
+                        const Quaternion<T> q2 = q * Quaternion<T>(0, v) * q.conjugate();
+                        test_equal(r1, q1.vec(), precision);
+                        test_equal(r1, q2.vec(), precision);
+                        test_equal(T{0}, q1.w(), precision);
+                        test_equal(T{0}, q2.w(), precision);
+                }
         }
 
         {
@@ -223,6 +248,21 @@ void test(const T precision)
                         const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
                         const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
                         test_equal(q1, q2, precision);
+                }
+        }
+
+        {
+                const auto m = [](const auto& q)
+                {
+                        return unit_quaternion_to_rotation_matrix(q);
+                };
+
+                PCG pcg;
+                for (int i = 0; i < 100; ++i)
+                {
+                        const Quaternion<T> q1 = random_rotation_quaternion<T>(pcg);
+                        const Quaternion<T> q2 = random_rotation_quaternion<T>(pcg);
+                        test_equal(m(q1 * q2), m(q1) * m(q2), precision);
                 }
         }
 }
