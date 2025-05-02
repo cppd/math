@@ -60,6 +60,25 @@ void test_impl(const T precision)
                         {2.63925759187696671888L, 0.0979446157356596890445L, 4.93221100668856692224L});
                 test_equal(a * b, c, precision);
         }
+
+        {
+                const Quaternion<T> q(numerical::unit_quaternion_for_rotation<T>({1, 0, 0}, T{1} / 10));
+                const numerical::Vector<3, T> v(0, 1, 0);
+                const numerical::Vector<3, T> r(0, 0.995004165278025766135L, -0.0998334166468281523107L);
+                test_equal((q * v * q.conjugate()).vec(), r, precision);
+        }
+        {
+                const Quaternion<T> q(numerical::unit_quaternion_for_rotation<T>({0, 1, 0}, T{1} / 10));
+                const numerical::Vector<3, T> v(1, 0, 0);
+                const numerical::Vector<3, T> r(0.995004165278025766135L, 0, 0.0998334166468281523107L);
+                test_equal((q * v * q.conjugate()).vec(), r, precision);
+        }
+        {
+                const Quaternion<T> q(numerical::unit_quaternion_for_rotation<T>({0, 0, 1}, T{1} / 10));
+                const numerical::Vector<3, T> v(1, 0, 0);
+                const numerical::Vector<3, T> r(0.995004165278025766135L, -0.0998334166468281523107L, 0);
+                test_equal((q * v * q.conjugate()).vec(), r, precision);
+        }
 }
 
 void test()
