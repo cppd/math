@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/type/limit.h>
 
+#include <cmath>
 #include <cstddef>
 #include <sstream>
 #include <string>
@@ -28,26 +29,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-template <typename T>
-class Quaternion final
+template <typename T, bool JPL>
+class QuaternionHJ final
 {
         static_assert(std::is_floating_point_v<T>);
 
         Vector<4, T> data_;
 
-        explicit constexpr Quaternion(const Vector<4, T>& v)
+        explicit constexpr QuaternionHJ(const Vector<4, T>& v)
                 : data_(v)
         {
         }
 
 public:
-        constexpr Quaternion()
+        constexpr QuaternionHJ()
         {
         }
 
-        constexpr Quaternion(const T w, const Vector<3, T>& v)
+        constexpr QuaternionHJ(const T w, const Vector<3, T>& v)
                 : data_(w, v[0], v[1], v[2])
         {
+        }
+
+        [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Vector<3, T>& axis, const T angle)
+        {
+                return {std::cos(angle / 2), std::sin(angle / 2) * axis.normalized()};
         }
 
         [[nodiscard]] std::size_t hash() const
@@ -100,7 +106,7 @@ public:
                 return data_[3];
         }
 
-        [[nodiscard]] constexpr Quaternion<T> conjugate() const
+        [[nodiscard]] constexpr QuaternionHJ<T, JPL> conjugate() const
         {
                 return {w(), -vec()};
         }
@@ -110,11 +116,11 @@ public:
                 return data_.norm();
         }
 
-        [[nodiscard]] Quaternion<T> normalized() const
+        [[nodiscard]] QuaternionHJ<T, JPL> normalized() const
         {
                 const T norm = data_.norm();
                 const T n = (w() >= 0) ? norm : -norm;
-                return Quaternion<T>(data_ / n);
+                return QuaternionHJ<T, JPL>(data_ / n);
         }
 
         [[nodiscard]] bool is_unit() const
@@ -122,12 +128,12 @@ public:
                 return data_.is_unit();
         }
 
-        [[nodiscard]] Quaternion<T> inversed() const
+        [[nodiscard]] QuaternionHJ<T, JPL> inversed() const
         {
                 return conjugate() / data_.norm_squared();
         }
 
-        [[nodiscard]] friend std::string to_string(const Quaternion<T>& a)
+        [[nodiscard]] friend std::string to_string(const QuaternionHJ<T, JPL>& a)
         {
                 std::ostringstream oss;
                 oss.precision(Limits<T>::max_digits10());
@@ -141,40 +147,47 @@ public:
                 return oss.str();
         }
 
-        [[nodiscard]] friend constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
+        [[nodiscard]] friend constexpr bool operator==(const QuaternionHJ<T, JPL>& a, const QuaternionHJ<T, JPL>& b)
         {
                 return a.data_ == b.data_;
         }
 
-        [[nodiscard]] friend constexpr Quaternion<T> operator+(const Quaternion<T>& a, const Quaternion<T>& b)
+        [[nodiscard]] friend constexpr QuaternionHJ<T, JPL> operator+(
+                const QuaternionHJ<T, JPL>& a,
+                const QuaternionHJ<T, JPL>& b)
         {
-                return Quaternion<T>(a.data_ + b.data_);
+                return QuaternionHJ<T, JPL>(a.data_ + b.data_);
         }
 
-        [[nodiscard]] friend constexpr Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
+        [[nodiscard]] friend constexpr QuaternionHJ<T, JPL> operator-(
+                const QuaternionHJ<T, JPL>& a,
+                const QuaternionHJ<T, JPL>& b)
         {
-                return Quaternion<T>(a.data_ - b.data_);
-        }
-
-        template <typename S>
-                requires (std::is_same_v<T, S>)
-        [[nodiscard]] friend constexpr Quaternion<T> operator*(const Quaternion<T>& a, const S b)
-        {
-                return Quaternion<T>(a.data_ * b);
+                return QuaternionHJ<T, JPL>(a.data_ - b.data_);
         }
 
         template <typename S>
                 requires (std::is_same_v<T, S>)
-        [[nodiscard]] friend constexpr Quaternion<T> operator*(const S b, const Quaternion<T>& a)
+        [[nodiscard]] friend constexpr QuaternionHJ<T, JPL> operator*(const QuaternionHJ<T, JPL>& a, const S b)
         {
-                return Quaternion<T>(a.data_ * b);
+                return QuaternionHJ<T, JPL>(a.data_ * b);
         }
 
         template <typename S>
                 requires (std::is_same_v<T, S>)
-        [[nodiscard]] friend constexpr Quaternion<T> operator/(const Quaternion<T>& a, const S b)
+        [[nodiscard]] friend constexpr QuaternionHJ<T, JPL> operator*(const S b, const QuaternionHJ<T, JPL>& a)
         {
-                return Quaternion<T>(a.data_ / b);
+                return QuaternionHJ<T, JPL>(a.data_ * b);
+        }
+
+        template <typename S>
+                requires (std::is_same_v<T, S>)
+        [[nodiscard]] friend constexpr QuaternionHJ<T, JPL> operator/(const QuaternionHJ<T, JPL>& a, const S b)
+        {
+                return QuaternionHJ<T, JPL>(a.data_ / b);
         }
 };
+
+template <typename T>
+using Quaternion = QuaternionHJ<T, false>;
 }

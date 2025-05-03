@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <tuple>
@@ -48,12 +47,16 @@ struct tuple_size<::ns::numerical::Quaternion<T>> final : integral_constant<size
 
 namespace ns::numerical
 {
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
+namespace quaternion_implementation
+{
+template <typename T, bool JPL>
+[[nodiscard]] constexpr QuaternionHJ<T, JPL> multiply_hamilton(
+        const QuaternionHJ<T, JPL>& a,
+        const QuaternionHJ<T, JPL>& b)
 {
         // a.w() * b.w() - dot(a.vec(), b.vec())
         // a.w() * b.vec() + b.w() * a.vec() + cross(a.vec(), b.vec())
-        Quaternion<T> res;
+        QuaternionHJ<T, JPL> res;
         res.w() = a.w() * b.w() - a.x() * b.x() - a.y() * b.y() - a.z() * b.z();
         res.x() = a.w() * b.x() + b.w() * a.x() + a.y() * b.z() - a.z() * b.y();
         res.y() = a.w() * b.y() + b.w() * a.y() - a.x() * b.z() + a.z() * b.x();
@@ -61,12 +64,12 @@ template <typename T>
         return res;
 }
 
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator*(const Quaternion<T>& a, const Vector<3, T>& b)
+template <typename T, bool JPL>
+[[nodiscard]] constexpr QuaternionHJ<T, JPL> multiply_hamilton(const QuaternionHJ<T, JPL>& a, const Vector<3, T>& b)
 {
         // -dot(a.vec(), b)
         // a.w() * b + cross(a.vec(), b)
-        Quaternion<T> res;
+        QuaternionHJ<T, JPL> res;
         res.w() = -a.x() * b[0] - a.y() * b[1] - a.z() * b[2];
         res.x() = a.w() * b[0] + a.y() * b[2] - a.z() * b[1];
         res.y() = a.w() * b[1] - a.x() * b[2] + a.z() * b[0];
@@ -74,12 +77,12 @@ template <typename T>
         return res;
 }
 
-template <typename T>
-[[nodiscard]] constexpr Quaternion<T> operator*(const Vector<3, T>& a, const Quaternion<T>& b)
+template <typename T, bool JPL>
+[[nodiscard]] constexpr QuaternionHJ<T, JPL> multiply_hamilton(const Vector<3, T>& a, const QuaternionHJ<T, JPL>& b)
 {
         // -dot(a, b.vec())
         // b.w() * a + cross(a, b.vec())
-        Quaternion<T> res;
+        QuaternionHJ<T, JPL> res;
         res.w() = -a[0] * b.x() - a[1] * b.y() - a[2] * b.z();
         res.x() = b.w() * a[0] + a[1] * b.z() - a[2] * b.y();
         res.y() = b.w() * a[1] - a[0] * b.z() + a[2] * b.x();
@@ -87,8 +90,8 @@ template <typename T>
         return res;
 }
 
-template <typename T>
-[[nodiscard]] constexpr Vector<3, T> multiply_vec(const Quaternion<T>& a, const Quaternion<T>& b)
+template <typename T, bool JPL>
+[[nodiscard]] constexpr Vector<3, T> multiply_hamilton_vec(const QuaternionHJ<T, JPL>& a, const QuaternionHJ<T, JPL>& b)
 {
         // (a * b).vec()
         // a.w() * b.vec() + b.w() * a.vec() + cross(a.vec(), b.vec())
@@ -98,9 +101,66 @@ template <typename T>
         res[2] = a.w() * b.z() + b.w() * a.z() + a.x() * b.y() - a.y() * b.x();
         return res;
 }
+}
 
-template <typename T>
-[[nodiscard]] Vector<3, T> rotate_vector(const Quaternion<T>& q_unit, const Vector<3, T>& v)
+template <typename T, bool JPL>
+[[nodiscard]] constexpr QuaternionHJ<T, JPL> operator*(const QuaternionHJ<T, JPL>& a, const QuaternionHJ<T, JPL>& b)
+{
+        namespace impl = quaternion_implementation;
+        if constexpr (JPL)
+        {
+                return impl::multiply_hamilton(b, a);
+        }
+        else
+        {
+                return impl::multiply_hamilton(a, b);
+        }
+}
+
+template <typename T, bool JPL>
+[[nodiscard]] constexpr QuaternionHJ<T, JPL> operator*(const QuaternionHJ<T, JPL>& a, const Vector<3, T>& b)
+{
+        namespace impl = quaternion_implementation;
+        if constexpr (JPL)
+        {
+                return impl::multiply_hamilton(b, a);
+        }
+        else
+        {
+                return impl::multiply_hamilton(a, b);
+        }
+}
+
+template <typename T, bool JPL>
+[[nodiscard]] constexpr QuaternionHJ<T, JPL> operator*(const Vector<3, T>& a, const QuaternionHJ<T, JPL>& b)
+{
+        namespace impl = quaternion_implementation;
+        if constexpr (JPL)
+        {
+                return impl::multiply_hamilton(b, a);
+        }
+        else
+        {
+                return impl::multiply_hamilton(a, b);
+        }
+}
+
+template <typename T, bool JPL>
+[[nodiscard]] constexpr Vector<3, T> multiply_vec(const QuaternionHJ<T, JPL>& a, const QuaternionHJ<T, JPL>& b)
+{
+        namespace impl = quaternion_implementation;
+        if constexpr (JPL)
+        {
+                return impl::multiply_hamilton_vec(b, a);
+        }
+        else
+        {
+                return impl::multiply_hamilton_vec(a, b);
+        }
+}
+
+template <typename T, bool JPL>
+[[nodiscard]] Vector<3, T> rotate_vector(const QuaternionHJ<T, JPL>& q_unit, const Vector<3, T>& v)
 {
         ASSERT(q_unit.is_unit());
 
@@ -108,15 +168,9 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Quaternion<T> unit_quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
-{
-        return {std::cos(angle / 2), std::sin(angle / 2) * axis.normalized()};
-}
-
-template <typename T>
 [[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
-        const Quaternion q = unit_quaternion_for_rotation(axis, angle);
+        const auto q = QuaternionHJ<T, false>::rotation_quaternion(axis, angle);
         return rotate_vector(q, v);
 }
 

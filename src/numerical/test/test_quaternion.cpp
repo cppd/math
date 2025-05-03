@@ -177,7 +177,7 @@ void test(const T precision)
                 precision);
 
         test_equal(
-                unit_quaternion_for_rotation({4, -5, 6}, T{2}),
+                Quaternion<T>::rotation_quaternion({4, -5, 6}, T{2}),
                 Quaternion<T>(
                         0.540302305868139717414L,
                         {0.383578074011068530816L, -0.479472592513835663554L, 0.57536711101660279621L}),
@@ -188,21 +188,21 @@ void test(const T precision)
                 {5.46996008744151012305L, 0.27754662586912375613L, -2.82886982950179797927L}, precision);
 
         {
-                const Quaternion<T> q = unit_quaternion_for_rotation<T>({1, 0, 0}, T{1} / 10);
+                const Quaternion<T> q = Quaternion<T>::rotation_quaternion({1, 0, 0}, T{1} / 10);
                 const Vector<3, T> v(0, 1, 0);
                 const Vector<3, T> r(0, 0.995004165278025766135L, 0.0998334166468281523107L);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const Quaternion<T> q = unit_quaternion_for_rotation<T>({0, 1, 0}, T{1} / 10);
+                const Quaternion<T> q = Quaternion<T>::rotation_quaternion({0, 1, 0}, T{1} / 10);
                 const Vector<3, T> v(1, 0, 0);
                 const Vector<3, T> r(0.995004165278025766135L, 0, -0.0998334166468281523107L);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const Quaternion<T> q = unit_quaternion_for_rotation<T>({0, 0, 1}, T{1} / 10);
+                const Quaternion<T> q = Quaternion<T>::rotation_quaternion({0, 0, 1}, T{1} / 10);
                 const Vector<3, T> v(1, 0, 0);
                 const Vector<3, T> r(0.995004165278025766135L, 0.0998334166468281523107L, 0);
                 test_equal(rotate_vector(q, v), r, precision);

@@ -61,20 +61,25 @@ void test_impl(const T precision)
                 test_equal(a * b, c, precision);
         }
 
+        const auto rotation_quaternion = [](const numerical::Vector<3, T>& axis, const T angle)
         {
-                const Quaternion<T> q(numerical::unit_quaternion_for_rotation<T>({1, 0, 0}, T{1} / 10));
+                return Quaternion<T>(numerical::Quaternion<T>::rotation_quaternion(axis, angle));
+        };
+
+        {
+                const Quaternion<T> q = rotation_quaternion({1, 0, 0}, T{1} / 10);
                 const numerical::Vector<3, T> v(0, 1, 0);
                 const numerical::Vector<3, T> r(0, 0.995004165278025766135L, -0.0998334166468281523107L);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const Quaternion<T> q(numerical::unit_quaternion_for_rotation<T>({0, 1, 0}, T{1} / 10));
+                const Quaternion<T> q = rotation_quaternion({0, 1, 0}, T{1} / 10);
                 const numerical::Vector<3, T> v(1, 0, 0);
                 const numerical::Vector<3, T> r(0.995004165278025766135L, 0, 0.0998334166468281523107L);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const Quaternion<T> q(numerical::unit_quaternion_for_rotation<T>({0, 0, 1}, T{1} / 10));
+                const Quaternion<T> q = rotation_quaternion({0, 0, 1}, T{1} / 10);
                 const numerical::Vector<3, T> v(1, 0, 0);
                 const numerical::Vector<3, T> r(0.995004165278025766135L, -0.0998334166468281523107L, 0);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
