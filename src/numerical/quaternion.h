@@ -30,17 +30,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace std
 {
-template <typename T>
-struct hash<::ns::numerical::Quaternion<T>> final
+template <typename T, bool JPL>
+struct hash<::ns::numerical::QuaternionHJ<T, JPL>> final
 {
-        [[nodiscard]] static size_t operator()(const ::ns::numerical::Quaternion<T>& q)
+        [[nodiscard]] static size_t operator()(const ::ns::numerical::QuaternionHJ<T, JPL>& q)
         {
                 return q.hash();
         }
 };
 
-template <typename T>
-struct tuple_size<::ns::numerical::Quaternion<T>> final : integral_constant<size_t, 4>
+template <typename T, bool JPL>
+struct tuple_size<::ns::numerical::QuaternionHJ<T, JPL>> final : integral_constant<size_t, 4>
 {
 };
 }
