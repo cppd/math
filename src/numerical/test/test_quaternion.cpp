@@ -246,7 +246,7 @@ void test(const T precision)
                 {
                         const Quaternion<T> q1 = random_rotation_quaternion<T>(pcg);
                         const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
-                        const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion(m);
+                        const Quaternion<T> q2 = rotation_matrix_to_unit_quaternion<Quaternion<T>>(m);
                         test_equal(q1, q2, precision);
                 }
         }

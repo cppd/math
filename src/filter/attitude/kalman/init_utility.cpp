@@ -58,7 +58,8 @@ Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
         const numerical::Vector<3, T> y = cross(z, x).normalized();
 
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        const numerical::Quaternion<T> q = numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+        const numerical::Quaternion<T> q =
+                numerical::rotation_matrix_to_unit_quaternion<numerical::Quaternion<T>>(rotation_matrix);
 
         return Quaternion<T>(q);
 }
@@ -71,7 +72,8 @@ Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numer
         const numerical::Vector<3, T> y = cross(z, x).normalized();
 
         const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        const numerical::Quaternion<T> q = numerical::rotation_matrix_to_unit_quaternion(rotation_matrix);
+        const numerical::Quaternion<T> q =
+                numerical::rotation_matrix_to_unit_quaternion<numerical::Quaternion<T>>(rotation_matrix);
 
         return Quaternion<T>(q);
 }

@@ -49,6 +49,22 @@ namespace ns::numerical
 {
 namespace quaternion_implementation
 {
+template <typename>
+struct QuaternionTraits;
+
+template <typename T, bool JPL>
+struct QuaternionTraits<QuaternionHJ<T, JPL>> final
+{
+        using Type = T;
+        static constexpr bool GLOBAL_TO_LOCAL = JPL;
+};
+
+template <typename Quaternion>
+using Type = QuaternionTraits<Quaternion>::Type;
+
+template <typename Quaternion>
+inline constexpr bool GLOBAL_TO_LOCAL = QuaternionTraits<Quaternion>::GLOBAL_TO_LOCAL;
+
 template <typename T, bool JPL>
 [[nodiscard]] constexpr QuaternionHJ<T, JPL> multiply_hamilton(
         const QuaternionHJ<T, JPL>& a,
@@ -174,12 +190,18 @@ template <typename T>
         return rotate_vector(q, v);
 }
 
-template <typename T>
-[[nodiscard]] Matrix<3, 3, T> unit_quaternion_to_rotation_matrix(const Quaternion<T>& q)
+template <typename Quaternion>
+[[nodiscard]] Matrix<3, 3, quaternion_implementation::Type<Quaternion>> unit_quaternion_to_rotation_matrix(
+        const Quaternion& q)
 {
+        namespace impl = quaternion_implementation;
+
+        using T = impl::Type<Quaternion>;
+        static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
+
         ASSERT(q.is_unit());
 
-        const T w = q.w();
+        const T w = GLOBAL_TO_LOCAL ? -q.w() : q.w();
         const T x = q.x();
         const T y = q.y();
         const T z = q.z();
@@ -207,9 +229,15 @@ template <typename T>
         return res;
 }
 
-template <typename T>
-[[nodiscard]] Quaternion<T> rotation_matrix_to_unit_quaternion(const Matrix<3, 3, T>& m)
+template <typename Quaternion>
+[[nodiscard]] Quaternion rotation_matrix_to_unit_quaternion(
+        const Matrix<3, 3, quaternion_implementation::Type<Quaternion>>& m)
 {
+        namespace impl = quaternion_implementation;
+
+        using T = impl::Type<Quaternion>;
+        static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
+
         ASSERT(m.row(0).is_unit());
         ASSERT(m.row(1).is_unit());
         ASSERT(m.row(2).is_unit());
@@ -264,8 +292,8 @@ template <typename T>
                 }
         }
 
-        const Quaternion<T> q{
-                w,
+        const Quaternion q{
+                GLOBAL_TO_LOCAL ? -w : w,
                 {x, y, z}
         };
 
