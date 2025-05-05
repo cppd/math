@@ -51,6 +51,11 @@ public:
         {
         }
 
+        explicit constexpr QuaternionHJ(const QuaternionHJ<T, !JPL>& q)
+                : data_(q.w(), q.x(), q.y(), q.z())
+        {
+        }
+
         [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Vector<3, T>& axis, const T angle)
         {
                 return {std::cos(angle / 2), std::sin(angle / 2) * axis.normalized()};
