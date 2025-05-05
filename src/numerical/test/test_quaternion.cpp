@@ -37,14 +37,21 @@ namespace
 template <typename T, bool JPL>
 struct Test final
 {
+        static_assert(sizeof(QuaternionHJ<T, JPL>) == sizeof(QuaternionHJ<T, !JPL>));
+
         static constexpr QuaternionHJ<T, JPL> A = QuaternionHJ<T, JPL>(2, {3, 4, 5});
         static constexpr QuaternionHJ<T, JPL> B = QuaternionHJ<T, JPL>(11, {12, 13, 14});
 
         static_assert(A == QuaternionHJ<T, JPL>(2, {3, 4, 5}));
+        static_assert(A == QuaternionHJ<T, JPL>(QuaternionHJ<T, !JPL>(A)));
         static_assert(A.w() == 2);
         static_assert(A.x() == 3);
         static_assert(A.y() == 4);
         static_assert(A.z() == 5);
+        static_assert(QuaternionHJ<T, !JPL>(A).w() == 2);
+        static_assert(QuaternionHJ<T, !JPL>(A).x() == 3);
+        static_assert(QuaternionHJ<T, !JPL>(A).y() == 4);
+        static_assert(QuaternionHJ<T, !JPL>(A).z() == 5);
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
         static_assert(A.conjugate() == QuaternionHJ<T, JPL>(2, {-3, -4, -5}));
         static_assert(A * T{3} == QuaternionHJ<T, JPL>(6, {9, 12, 15}));
@@ -52,15 +59,16 @@ struct Test final
         static_assert(A / T{2} == QuaternionHJ<T, JPL>(1, {T{3} / 2, 2, T{5} / 2}));
         static_assert(A + B == QuaternionHJ<T, JPL>(13, {15, 17, 19}));
         static_assert(A - B == QuaternionHJ<T, JPL>(-9, {-9, -9, -9}));
-        static_assert(
-                A * B == (JPL ? QuaternionHJ<T, JPL>(-136, {66, 52, 92}) : QuaternionHJ<T, JPL>(-136, {48, 88, 74})));
-        static_assert(
-                A * Vector<3, T>(11, 12, 13)
-                == (JPL ? QuaternionHJ<T, JPL>(-146, {30, 8, 34}) : QuaternionHJ<T, JPL>(-146, {14, 40, 18})));
-        static_assert(
-                Vector<3, T>(11, 12, 13) * A
-                == (JPL ? QuaternionHJ<T, JPL>(-146, {14, 40, 18}) : QuaternionHJ<T, JPL>(-146, {30, 8, 34})));
+
+        static constexpr Vector<3, T> V = Vector<3, T>(11, 12, 13);
+
+        using Q = QuaternionHJ<T, JPL>;
+        static_assert(A * B == (JPL ? Q(-136, {66, 52, 92}) : Q(-136, {48, 88, 74})));
+        static_assert(B * A == (!JPL ? Q(-136, {66, 52, 92}) : Q(-136, {48, 88, 74})));
+        static_assert(A * V == (JPL ? Q(-146, {30, 8, 34}) : Q(-146, {14, 40, 18})));
+        static_assert(V * A == (!JPL ? Q(-146, {30, 8, 34}) : Q(-146, {14, 40, 18})));
         static_assert(multiply_vec(A, B) == (JPL ? Vector<3, T>(66, 52, 92) : Vector<3, T>(48, 88, 74)));
+        static_assert(multiply_vec(B, A) == (!JPL ? Vector<3, T>(66, 52, 92) : Vector<3, T>(48, 88, 74)));
 };
 
 #define TEMPLATE(T)                      \
