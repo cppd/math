@@ -191,7 +191,7 @@ template <typename T>
 }
 
 template <typename Quaternion>
-[[nodiscard]] Matrix<3, 3, quaternion_implementation::Type<Quaternion>> unit_quaternion_to_rotation_matrix(
+[[nodiscard]] Matrix<3, 3, quaternion_implementation::Type<Quaternion>> rotation_quaternion_to_matrix(
         const Quaternion& q)
 {
         namespace impl = quaternion_implementation;
@@ -230,7 +230,7 @@ template <typename Quaternion>
 }
 
 template <typename Quaternion>
-[[nodiscard]] Quaternion rotation_matrix_to_unit_quaternion(
+[[nodiscard]] Quaternion rotation_matrix_to_quaternion(
         const Matrix<3, 3, quaternion_implementation::Type<Quaternion>>& m)
 {
         namespace impl = quaternion_implementation;

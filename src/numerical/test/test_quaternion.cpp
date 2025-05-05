@@ -252,7 +252,7 @@ void test_random(const T precision)
                 for (int i = 0; i < 100; ++i)
                 {
                         const QuaternionHJ<T, JPL> q = random_rotation_quaternion<T, JPL>(pcg);
-                        const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q);
+                        const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(q);
                         const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
                         const Vector<3, T> r1 = rotate_vector(q, v);
                         const Vector<3, T> r2 = m * v;
@@ -265,8 +265,8 @@ void test_random(const T precision)
                 for (int i = 0; i < 100; ++i)
                 {
                         const QuaternionHJ<T, JPL> q1 = random_rotation_quaternion<T, JPL>(pcg);
-                        const Matrix<3, 3, T> m = unit_quaternion_to_rotation_matrix(q1);
-                        const QuaternionHJ<T, JPL> q2 = rotation_matrix_to_unit_quaternion<QuaternionHJ<T, JPL>>(m);
+                        const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(q1);
+                        const QuaternionHJ<T, JPL> q2 = rotation_matrix_to_quaternion<QuaternionHJ<T, JPL>>(m);
                         test_equal(q1, q2, precision);
                 }
         }
@@ -274,7 +274,7 @@ void test_random(const T precision)
         {
                 const auto m = [](const auto& q)
                 {
-                        return unit_quaternion_to_rotation_matrix(q);
+                        return rotation_quaternion_to_matrix(q);
                 };
 
                 PCG pcg;
