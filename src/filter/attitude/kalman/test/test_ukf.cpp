@@ -142,7 +142,7 @@ void test()
         LOG("Test attitude UKF");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
-        test_impl<long double>(0);
+        test_impl<long double>(1e-18);
         LOG("Test attitude UKF passed");
 }
 

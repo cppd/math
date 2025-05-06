@@ -186,7 +186,7 @@ void test()
         LOG("Test attitude EKF");
         test_impl<float>(1e-4);
         test_impl<double>(1e-13);
-        test_impl<long double>(0);
+        test_impl<long double>(1e-17);
         LOG("Test attitude EKF passed");
 }
 

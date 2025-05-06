@@ -62,7 +62,7 @@ public:
         {
                 if (q_)
                 {
-                        return q_->q();
+                        return numerical::Quaternion<T>(*q_);
                 }
                 return std::nullopt;
         }

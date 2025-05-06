@@ -57,11 +57,9 @@ Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc)
         const numerical::Vector<3, T> x = orthogonal(z).normalized();
         const numerical::Vector<3, T> y = cross(z, x).normalized();
 
-        const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        const numerical::Quaternion<T> q =
-                numerical::rotation_matrix_to_quaternion<numerical::Quaternion<T>>(rotation_matrix);
+        const numerical::Matrix<3, 3, T> local_to_global({x, y, z});
 
-        return Quaternion<T>(q);
+        return numerical::rotation_matrix_to_quaternion<Quaternion<T>>(local_to_global.transposed());
 }
 
 template <typename T>
@@ -71,11 +69,9 @@ Quaternion<T> initial_quaternion(const numerical::Vector<3, T>& acc, const numer
         const numerical::Vector<3, T> x = cross(mag, z).normalized();
         const numerical::Vector<3, T> y = cross(z, x).normalized();
 
-        const numerical::Matrix<3, 3, T> rotation_matrix({x, y, z});
-        const numerical::Quaternion<T> q =
-                numerical::rotation_matrix_to_quaternion<numerical::Quaternion<T>>(rotation_matrix);
+        const numerical::Matrix<3, 3, T> local_to_global({x, y, z});
 
-        return Quaternion<T>(q);
+        return numerical::rotation_matrix_to_quaternion<Quaternion<T>>(local_to_global.transposed());
 }
 
 #define TEMPLATE(T)                                                                \
