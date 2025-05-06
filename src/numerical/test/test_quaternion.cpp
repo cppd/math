@@ -224,6 +224,16 @@ void test_rotation(const T precision)
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
+        {
+                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>(-2, {5.2, -3.3, 4.4}).normalized();
+                const numerical::Vector<3, T> v = rotate_vector(q, {2.1, -3.2, 4.3});
+                const numerical::Vector<3, T> c =
+                        JPL ? numerical::Vector<3, T>(
+                                      5.0222059063468757101L, -2.42440854951868102712L, 1.4281775167237726246L)
+                            : numerical::Vector<3, T>(
+                                      5.03656387665198215136L, -0.711894273127752929284L, 2.69559471365638818612L);
+                test_equal(v, c, precision);
+        }
 }
 
 template <typename T, bool JPL>
