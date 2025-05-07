@@ -54,6 +54,8 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
 {
         ASSERT(q_);
 
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+
         numerical::Vector<3 * N, T> z;
         numerical::Vector<3 * N, T> hx;
         numerical::Matrix<3 * N, 3, T> h;
@@ -61,7 +63,7 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
 
         for (std::size_t i = 0; i < N; ++i)
         {
-                const Vector3 hx_i = global_to_local(*q_, data[i].reference);
+                const Vector3 hx_i = attitude * data[i].reference;
                 const Matrix3 h_i = cross_matrix<1>(hx_i);
                 const auto& m_i = data[i].measurement;
                 const Vector3 z_i = m_i ? *m_i : hx_i;

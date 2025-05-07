@@ -121,9 +121,12 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
         std::array<numerical::Vector<3 * N, T>, POINT_COUNT> sigmas_h;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
+                const numerical::Matrix<3, 3, T> attitude =
+                        numerical::rotation_quaternion_to_matrix(propagated_quaternions_[i]);
+
                 for (std::size_t j = 0; j < N; ++j)
                 {
-                        const Vector3 h = global_to_local(propagated_quaternions_[i], data[j].reference);
+                        const Vector3 h = attitude * data[j].reference;
                         const std::size_t offset = 3 * j;
                         numerical::set_block(sigmas_h[i], offset, h);
                 }
