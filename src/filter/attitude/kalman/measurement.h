@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -32,7 +33,7 @@ struct MagMeasurement
 
 template <typename T>
 [[nodiscard]] std::optional<MagMeasurement<T>> mag_measurement(
-        const numerical::Vector<3, T>& z_unit,
+        const numerical::Matrix<3, 3, T>& attitude,
         const numerical::Vector<3, T>& m_unit,
         T variance);
 }

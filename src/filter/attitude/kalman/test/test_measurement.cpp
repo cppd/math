@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/filter/attitude/kalman/init_utility.h>
 #include <src/filter/attitude/kalman/measurement.h>
+#include <src/numerical/matrix.h>
+#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
@@ -30,11 +33,13 @@ namespace
 template <typename T>
 void test_impl(const T precision)
 {
+        const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(initial_quaternion(z));
+
         {
-                const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3).normalized();
                 const numerical::Vector<3, T> m = numerical::Vector<3, T>(2, 1, -4).normalized();
                 const T variance = 0.1;
-                const auto mag = mag_measurement(z, m, variance);
+                const auto mag = mag_measurement(attitude, m, variance);
                 if (!mag)
                 {
                         error("No mag measurement");
@@ -45,10 +50,9 @@ void test_impl(const T precision)
                 test_equal(mag->variance, T{0.196000000000000010938L}, precision);
         }
         {
-                const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3).normalized();
                 const numerical::Vector<3, T> m = numerical::Vector<3, T>(1.1, -2.1, 3.1).normalized();
                 const T variance = 0.1;
-                const auto mag = mag_measurement(z, m, variance);
+                const auto mag = mag_measurement(attitude, m, variance);
                 if (mag)
                 {
                         error("Mag measurement");
