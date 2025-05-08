@@ -46,7 +46,7 @@ class EkfImu final
         struct Update final
         {
                 std::optional<Vector3> measurement;
-                Vector3 reference;
+                Vector3 reference_local;
                 T variance;
         };
 
