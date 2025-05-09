@@ -147,9 +147,12 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         std::array<numerical::Vector<3 * N, T>, POINT_COUNT> sigmas_h;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
+                const numerical::Matrix<3, 3, T> attitude =
+                        numerical::rotation_quaternion_to_matrix(propagated_quaternions_[i]);
+
                 for (std::size_t j = 0; j < N; ++j)
                 {
-                        const Vector3 h = global_to_local(propagated_quaternions_[i], data[j].reference);
+                        const Vector3 h = attitude * data[j].reference_global;
                         const std::size_t offset = 3 * j;
                         numerical::set_block(sigmas_h[i], offset, h);
                 }
@@ -220,12 +223,12 @@ bool UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
         update(std::array{
                 Update{
                        .measurement = mag->y,
-                       .reference = {0, 1, 0},
+                       .reference_global = {0, 1, 0},
                        .variance = mag->variance,
                        },
                 Update{
                        .measurement = a / a_norm,
-                       .reference = {0, 0, 1},
+                       .reference_global = {0, 0, 1},
                        .variance = a_variance,
                        }
         });

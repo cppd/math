@@ -126,7 +126,7 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
 
                 for (std::size_t j = 0; j < N; ++j)
                 {
-                        const Vector3 h = attitude * data[j].reference;
+                        const Vector3 h = attitude * data[j].reference_global;
                         const std::size_t offset = 3 * j;
                         numerical::set_block(sigmas_h[i], offset, h);
                 }
@@ -190,12 +190,12 @@ bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
         update(std::array{
                 Update{
                        .measurement = a / a_norm,
-                       .reference = {0, 0, 1},
+                       .reference_global = {0, 0, 1},
                        .variance = variance,
                        },
                 Update{
                        .measurement = std::nullopt,
-                       .reference = {0, 1, 0},
+                       .reference_global = {0, 1, 0},
                        .variance = variance_direction,
                        }
         });

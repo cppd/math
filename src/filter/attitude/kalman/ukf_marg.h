@@ -61,7 +61,7 @@ class UkfMarg final
         struct Update final
         {
                 Vector3 measurement;
-                Vector3 reference;
+                Vector3 reference_global;
                 T variance;
         };
 
