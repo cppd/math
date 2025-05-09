@@ -18,18 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/quaternion.h>
-#include <src/numerical/vector.h>
 
 namespace ns::filter::attitude::kalman
 {
 template <typename T>
 using Quaternion = numerical::QuaternionHJ<T, true>;
-
-template <typename T>
-[[nodiscard]] numerical::Vector<3, T> global_to_local(
-        const Quaternion<T>& q_unit,
-        const numerical::Vector<3, T>& global)
-{
-        return numerical::rotate_vector(q_unit, global);
-}
 }

@@ -30,14 +30,6 @@ template <typename T>
 void test_impl(const T precision)
 {
         {
-                const Quaternion<T> q = Quaternion<T>(-2, {5.2, -3.3, 4.4}).normalized();
-                const numerical::Vector<3, T> v = global_to_local(q, {2.1, -3.2, 4.3});
-                const numerical::Vector<3, T> c(
-                        5.0222059063468757101L, -2.42440854951868102756L, 1.4281775167237726246L);
-                test_equal(v, c, precision);
-        }
-
-        {
                 const Quaternion<T> q = Quaternion<T>::rotation_quaternion({1, 0, 0}, T{1} / 10);
                 const numerical::Vector<3, T> v(0, 1, 0);
                 const numerical::Vector<3, T> r(0, 0.995004165278025766135L, -0.0998334166468281523107L);
