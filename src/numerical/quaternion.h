@@ -216,17 +216,11 @@ template <typename Quaternion>
         const T zw = 2 * z * w;
         const T zz = 2 * z * z;
 
-        Matrix<3, 3, T> res;
-        res[0, 0] = 1 - yy - zz;
-        res[0, 1] = xy - zw;
-        res[0, 2] = xz + yw;
-        res[1, 0] = xy + zw;
-        res[1, 1] = 1 - xx - zz;
-        res[1, 2] = yz - xw;
-        res[2, 0] = xz - yw;
-        res[2, 1] = yz + xw;
-        res[2, 2] = 1 - xx - yy;
-        return res;
+        return {
+                {1 - yy - zz,     xy - zw,     xz + yw},
+                {    xy + zw, 1 - xx - zz,     yz - xw},
+                {    xz - yw,     yz + xw, 1 - xx - yy},
+        };
 }
 
 template <typename Quaternion>
