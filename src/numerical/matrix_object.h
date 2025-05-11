@@ -74,20 +74,16 @@ public:
         constexpr Matrix(const std::initializer_list<std::initializer_list<T>>& data)
         {
                 ASSERT(data.size() == ROWS);
-                std::size_t r = 0;
-                for (const auto& row : data)
+                const auto* const rows = data.begin();
+                for (std::size_t r = 0; r < ROWS; ++r)
                 {
-                        ASSERT(row.size() == COLUMNS);
-                        std::size_t c = 0;
-                        for (const auto& column : row)
+                        ASSERT(rows[r].size() == COLUMNS);
+                        const T* const row = rows[r].begin();
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
-                                rows_[r][c] = column;
-                                ++c;
+                                rows_[r][c] = row[c];
                         }
-                        ASSERT(c == COLUMNS);
-                        ++r;
                 }
-                ASSERT(r == ROWS);
         }
 
         explicit constexpr Matrix(const Vector<ROWS == 1 ? COLUMNS : ROWS, T>& data)
