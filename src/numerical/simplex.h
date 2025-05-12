@@ -531,17 +531,17 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         return ConstraintSolution::INFEASIBLE;
 }
+
+template <std::size_t N, std::size_t M, typename T>
+void solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b)
+{
+        simplex_algorithm_implementation::solve_constraints<true>(b, a);
+}
 }
 
 template <std::size_t N, std::size_t M, typename T>
-ConstraintSolution solve_constraints(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b)
+[[nodiscard]] ConstraintSolution solve_constraints(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b)
 {
         return simplex_algorithm_implementation::solve_constraints<false>(b, a);
-}
-
-template <std::size_t N, std::size_t M, typename T>
-ConstraintSolution solve_constraints_with_print(const std::array<Vector<N, T>, M>& a, const std::array<T, M>& b)
-{
-        return simplex_algorithm_implementation::solve_constraints<true>(b, a);
 }
 }

@@ -102,6 +102,7 @@ template <typename T>
 void test_feasible()
 {
         namespace n = numerical;
+        namespace simplex_impl = numerical::simplex_algorithm_implementation;
 
         LOG(std::string("SOLVE CONSTRAINTS, ") + type_name<T>());
 
@@ -112,7 +113,7 @@ void test_feasible()
                 const n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::FEASIBLE)
                 {
-                        n::solve_constraints_with_print(a, b);
+                        simplex_impl::solve_constraints_with_print(a, b);
                         LOG(n::constraint_solution_to_string(cs));
                         error("Not Feasible");
                 }
@@ -127,7 +128,7 @@ void test_feasible()
                 const n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::FEASIBLE)
                 {
-                        n::solve_constraints_with_print(a, b);
+                        simplex_impl::solve_constraints_with_print(a, b);
                         LOG(n::constraint_solution_to_string(cs));
                         error("Not Feasible");
                 }
@@ -142,7 +143,7 @@ void test_feasible()
                 const n::ConstraintSolution cs = n::solve_constraints(a, b);
                 if (cs != n::ConstraintSolution::INFEASIBLE)
                 {
-                        n::solve_constraints_with_print(a, b);
+                        simplex_impl::solve_constraints_with_print(a, b);
                         LOG(n::constraint_solution_to_string(cs));
                         error("Not Infeasible");
                 }
