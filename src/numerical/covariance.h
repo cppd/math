@@ -28,7 +28,7 @@ namespace ns::numerical
 namespace covariance_implementation
 {
 template <std::size_t N, typename T>
-Vector<N, T> average(const std::vector<Vector<N, T>>& data)
+[[nodiscard]] Vector<N, T> average(const std::vector<Vector<N, T>>& data)
 {
         Vector<N, T> res(0);
         for (const Vector<N, T>& p : data)
@@ -40,7 +40,7 @@ Vector<N, T> average(const std::vector<Vector<N, T>>& data)
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> covariance_matrix_simple(const std::vector<Vector<N, T>>& data)
+[[nodiscard]] Matrix<N, N, T> covariance_matrix_simple(const std::vector<Vector<N, T>>& data)
 {
         namespace impl = covariance_implementation;
 
@@ -69,7 +69,7 @@ Matrix<N, N, T> covariance_matrix_simple(const std::vector<Vector<N, T>>& data)
 }
 
 template <std::size_t N, typename T>
-Matrix<N, N, T> covariance_matrix_full(const std::vector<Vector<N, T>>& data)
+[[nodiscard]] Matrix<N, N, T> covariance_matrix_full(const std::vector<Vector<N, T>>& data)
 {
         Matrix<N, N, T> res = covariance_matrix_simple(data);
 

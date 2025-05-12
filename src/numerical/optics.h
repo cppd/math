@@ -35,7 +35,7 @@ The OpenGL® Shading Language.
 namespace ns::numerical
 {
 template <std::size_t N, typename T>
-Vector<N, T> reflect(const Vector<N, T>& v, const Vector<N, T>& normal)
+[[nodiscard]] Vector<N, T> reflect(const Vector<N, T>& v, const Vector<N, T>& normal)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -43,7 +43,7 @@ Vector<N, T> reflect(const Vector<N, T>& v, const Vector<N, T>& normal)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> reflect_vn(const Vector<N, T>& v, const Vector<N, T>& normal)
+[[nodiscard]] Vector<N, T> reflect_vn(const Vector<N, T>& v, const Vector<N, T>& normal)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -52,7 +52,7 @@ Vector<N, T> reflect_vn(const Vector<N, T>& v, const Vector<N, T>& normal)
 
 // The OpenGL® Shading Language, Geometric Functions, Description.
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
+[[nodiscard]] std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -69,7 +69,7 @@ std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& n
 
 // 3D Computer Graphics. A Mathematical Introduction with OpenGL.
 template <std::size_t N, typename T>
-std::optional<Vector<N, T>> refract2(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
+[[nodiscard]] std::optional<Vector<N, T>> refract2(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
 {
         static_assert(std::is_floating_point_v<T>);
 

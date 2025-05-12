@@ -44,7 +44,7 @@ namespace ns::numerical
 namespace normal_implementation
 {
 template <std::size_t N, typename T>
-Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& points)
+[[nodiscard]] Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& points)
 {
         const Matrix<N, N, T> covariance_matrix = covariance_matrix_simple(points);
 
@@ -65,7 +65,7 @@ Eigen<N, T> covariance_matrix_eigen_for_points(const std::vector<Vector<N, T>>& 
 }
 
 template <std::size_t N, typename T>
-std::size_t min_value_index(const Vector<N, T>& v)
+[[nodiscard]] std::size_t min_value_index(const Vector<N, T>& v)
 {
         static_assert(N > 0);
 
@@ -84,7 +84,7 @@ std::size_t min_value_index(const Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
+[[nodiscard]] Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
 {
         namespace impl = normal_implementation;
 

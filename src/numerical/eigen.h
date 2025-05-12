@@ -41,7 +41,7 @@ namespace ns::numerical
 namespace jacobi_method_implementation
 {
 template <std::size_t N, typename T>
-T threshold(const Matrix<N, N, T>& a)
+[[nodiscard]] T threshold(const Matrix<N, N, T>& a)
 {
         static_assert(N > 0);
         T sum = 0;
@@ -142,7 +142,7 @@ struct Eigen final
 };
 
 template <std::size_t N, typename T>
-Eigen<N, T> eigen_symmetric_upper_triangular(Matrix<N, N, T> a, const T& tolerance)
+[[nodiscard]] Eigen<N, T> eigen_symmetric_upper_triangular(Matrix<N, N, T> a, const T& tolerance)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = jacobi_method_implementation;

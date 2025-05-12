@@ -43,7 +43,7 @@ Wiley, 2014.
 namespace ns::numerical
 {
 template <std::size_t N, typename T>
-Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vectors)
+[[nodiscard]] Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vectors)
 {
         static_assert(N >= 5);
 
@@ -56,13 +56,13 @@ Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vector
 }
 
 template <typename T>
-Vector<2, T> orthogonal_complement(const std::array<Vector<2, T>, 1>& v)
+[[nodiscard]] Vector<2, T> orthogonal_complement(const std::array<Vector<2, T>, 1>& v)
 {
         return Vector<2, T>(v[0][1], -v[0][0]);
 }
 
 template <typename T>
-Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
+[[nodiscard]] Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
 {
         Vector<3, T> res;
         res[0] = v[0][1] * v[1][2] - v[0][2] * v[1][1];
@@ -72,7 +72,7 @@ Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
 }
 
 template <typename T>
-Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
+[[nodiscard]] Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
 {
         static_assert(!std::is_same_v<mpz_class, T>);
 
@@ -101,7 +101,7 @@ Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
         return res;
 }
 
-inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz_class>, 3>& v)
+[[nodiscard]] inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz_class>, 3>& v)
 {
         const auto add_mul = [](mpz_class* const res, const mpz_class& a, const mpz_class& b, const mpz_class& c,
                                 const mpz_class& d, const mpz_class& e)
@@ -155,7 +155,7 @@ inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz
 }
 
 template <std::size_t N, typename T, typename CalculationType = T>
-Vector<N, CalculationType> orthogonal_complement(
+[[nodiscard]] Vector<N, CalculationType> orthogonal_complement(
         const std::vector<Vector<N, T>>& points,
         const std::array<int, N>& indices)
 {
@@ -171,7 +171,7 @@ Vector<N, CalculationType> orthogonal_complement(
 }
 
 template <typename CalculationType, std::size_t N, typename T>
-Vector<N, CalculationType> orthogonal_complement(
+[[nodiscard]] Vector<N, CalculationType> orthogonal_complement(
         const std::vector<Vector<N, T>>& points,
         const std::array<int, N>& indices)
 {
@@ -183,7 +183,7 @@ Vector<N, CalculationType> orthogonal_complement(
 namespace complement_implementation
 {
 template <std::size_t N, typename T>
-std::size_t closest_axis(const Vector<N, T>& v)
+[[nodiscard]] std::size_t closest_axis(const Vector<N, T>& v)
 {
         static_assert(N > 0);
 
@@ -202,7 +202,7 @@ std::size_t closest_axis(const Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
+[[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
 
@@ -246,7 +246,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vector<N, T>& unit_vector)
+[[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
 
@@ -286,7 +286,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
 
 // orthonormal orthogonal complement
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector(const Vector<N, T>& unit_vector)
+[[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector(const Vector<N, T>& unit_vector)
 {
         ASSERT(unit_vector.is_unit());
 

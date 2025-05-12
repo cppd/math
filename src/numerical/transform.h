@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical::transform
 {
 template <typename T>
-Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
+[[nodiscard]] Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
 {
         const Vector<3, T> f = (center - eye).normalized();
         const Vector<3, T> s = cross(f, up).normalized();
@@ -46,7 +46,7 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
 // Source: X to the right, Y upward
 // Vulkan: X to the right [-1, 1], Y downward [-1, 1], Z [0, 1]
 template <typename T>
-constexpr Matrix<4, 4, T> ortho_vulkan(
+[[nodiscard]] constexpr Matrix<4, 4, T> ortho_vulkan(
         const std::type_identity_t<T>& left,
         const std::type_identity_t<T>& right,
         const std::type_identity_t<T>& bottom,
@@ -63,7 +63,7 @@ constexpr Matrix<4, 4, T> ortho_vulkan(
 }
 
 template <std::size_t N, typename T>
-constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
+[[nodiscard]] constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 {
         Matrix<N + 1, N + 1, T> res = IDENTITY_MATRIX<N + 1, T>;
         for (std::size_t i = 0; i < N; ++i)
@@ -74,13 +74,13 @@ constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 }
 
 template <typename T, typename... V>
-constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(const V&... v)
+[[nodiscard]] constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(const V&... v)
 {
         return scale(Vector<sizeof...(V), T>(v...));
 }
 
 template <std::size_t N, typename T>
-constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
+[[nodiscard]] constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 {
         Matrix<N + 1, N + 1, T> res = IDENTITY_MATRIX<N + 1, T>;
         for (std::size_t i = 0; i < N; ++i)
@@ -91,7 +91,7 @@ constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 }
 
 template <typename T, typename... V>
-constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
+[[nodiscard]] constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
 {
         return translate(Vector<sizeof...(V), T>(v...));
 }
@@ -119,7 +119,7 @@ public:
                 }
         }
 
-        Vector<N - 1, T> operator()(const Vector<N - 1, T>& v) const
+        [[nodiscard]] Vector<N - 1, T> operator()(const Vector<N - 1, T>& v) const
         {
                 Vector<N - 1, T> res;
                 for (std::size_t r = 0; r < N - 1; ++r)

@@ -41,7 +41,9 @@ namespace ns::numerical
 namespace solve_implementation
 {
 template <std::size_t N, typename T>
-constexpr Vector<N, T> solve_cofactor_expansion(const std::array<Vector<N, T>, N>& a, const Vector<N, T>& b)
+[[nodiscard]] constexpr Vector<N, T> solve_cofactor_expansion(
+        const std::array<Vector<N, T>, N>& a,
+        const Vector<N, T>& b)
 {
         // Cramer’s rule
 
@@ -88,7 +90,7 @@ constexpr Vector<N, T> solve_cofactor_expansion(const std::array<Vector<N, T>, N
 }
 
 template <std::size_t N, typename T>
-constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::array<Vector<N, T>, N>& a)
+[[nodiscard]] constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::array<Vector<N, T>, N>& a)
 {
         // Adjoint
 

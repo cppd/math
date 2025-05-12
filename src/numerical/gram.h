@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical
 {
 template <std::size_t N, std::size_t M, typename T>
-Matrix<M, M, T> gram_matrix(const std::array<Vector<N, T>, M>& vectors)
+[[nodiscard]] Matrix<M, M, T> gram_matrix(const std::array<Vector<N, T>, M>& vectors)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 

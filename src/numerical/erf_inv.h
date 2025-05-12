@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical
 {
 template <typename T>
-T erf_inv(const T arg)
+[[nodiscard]] T erf_inv(const T arg)
 {
         static_assert(std::is_floating_point_v<T>);
 

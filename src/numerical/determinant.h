@@ -31,7 +31,7 @@ namespace ns::numerical
 namespace determinant_implementation
 {
 template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
-constexpr T determinant_cofactor_expansion(
+[[nodiscard]] constexpr T determinant_cofactor_expansion(
         const std::array<Vector<N_H, T>, N_V>& vectors,
         const std::array<unsigned char, SIZE>& v_map,
         const std::array<unsigned char, SIZE>& h_map)
@@ -98,7 +98,7 @@ constexpr T determinant_cofactor_expansion(
 }
 
 template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
-constexpr T determinant(
+[[nodiscard]] constexpr T determinant(
         const std::array<Vector<N_H, T>, N_V>& vectors,
         const std::array<unsigned char, SIZE>& v_map,
         const std::array<unsigned char, SIZE>& h_map)
@@ -110,7 +110,7 @@ constexpr T determinant(
 }
 
 template <std::size_t N, typename T>
-constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const std::size_t excluded_column)
+[[nodiscard]] constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const std::size_t excluded_column)
 {
         static_assert(Signed<T>);
         static_assert(Integral<T> || FloatingPoint<T>);
@@ -136,7 +136,7 @@ constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const st
 }
 
 template <std::size_t N, typename T>
-constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
+[[nodiscard]] constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
 {
         static_assert(Signed<T>);
         static_assert(Integral<T> || FloatingPoint<T>);
