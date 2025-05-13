@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
+#include "quaternion.h"
 #include "vector.h"
 
 #include <src/com/error.h>
@@ -94,6 +95,13 @@ template <typename T, typename... V>
 [[nodiscard]] constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
 {
         return translate(Vector<sizeof...(V), T>(v...));
+}
+
+template <typename T>
+[[nodiscard]] Vector<3, T> rotate(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
+{
+        const auto q = Quaternion<T>::rotation_quaternion(axis, angle);
+        return rotate_vector(q, v);
 }
 
 template <std::size_t N, typename T>

@@ -297,14 +297,6 @@ void test_random(const T precision)
         }
 }
 
-template <typename T>
-void test_vector_rotation(const T precision)
-{
-        test_equal(
-                rotate_vector({-5, 6, 4}, T{2}, {3, -5, 2}),
-                {5.46996008744151012305L, 0.27754662586912375613L, -2.82886982950179797927L}, precision);
-}
-
 template <typename T, bool JPL>
 void test(const T precision)
 {
@@ -316,8 +308,6 @@ void test(const T precision)
 template <typename T>
 void test(const T precision)
 {
-        test_vector_rotation<T>(precision);
-
         test<T, false>(precision);
         test<T, true>(precision);
 }

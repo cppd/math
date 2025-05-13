@@ -183,13 +183,6 @@ template <typename T, bool JPL>
         return multiply_vec(q_unit * v, q_unit.conjugate());
 }
 
-template <typename T>
-[[nodiscard]] Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
-{
-        const auto q = QuaternionHJ<T, false>::rotation_quaternion(axis, angle);
-        return rotate_vector(q, v);
-}
-
 template <typename Quaternion>
 [[nodiscard]] Matrix<3, 3, quaternion_implementation::Type<Quaternion>> rotation_quaternion_to_matrix(
         const Quaternion& q)
