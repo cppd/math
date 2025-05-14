@@ -38,8 +38,14 @@ constexpr double SCALE_BASE = 1.1;
 constexpr double SCALE_EXP_MIN = -50;
 constexpr double SCALE_EXP_MAX = 100;
 
-constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME =
-        {.left = -1, .right = 1, .bottom = -1, .top = 1, .near = 1, .far = -1};
+constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME = {
+        .left = -1,
+        .right = 1,
+        .bottom = -1,
+        .top = 1,
+        .near = 1,
+        .far = -1,
+};
 
 numerical::Vector3d rotate_vector_degree(
         const numerical::Vector3d& axis,
@@ -90,7 +96,14 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
         const double near = 1;
         const double far = -1;
 
-        return {.left = left, .right = right, .bottom = bottom, .top = top, .near = near, .far = far};
+        return {
+                .left = left,
+                .right = right,
+                .bottom = bottom,
+                .top = top,
+                .near = near,
+                .far = far,
+        };
 }
 
 numerical::Matrix4d Camera::main_view_matrix() const
@@ -105,12 +118,14 @@ numerical::Matrix4d Camera::shadow_view_matrix() const
 
 gpu::renderer::CameraInfo Camera::renderer_camera_info() const
 {
-        return {.main_volume = main_volume(),
+        return {
+                .main_volume = main_volume(),
                 .shadow_volume = SHADOW_VOLUME,
                 .main_view_matrix = main_view_matrix(),
                 .shadow_view_matrix = shadow_view_matrix(),
                 .light_direction = light_direction_from_,
-                .camera_direction = camera_direction_from_};
+                .camera_direction = camera_direction_from_,
+        };
 }
 
 void Camera::reset_view()
@@ -189,15 +204,12 @@ info::Camera Camera::camera() const
 {
         const gpu::renderer::CameraInfo::Volume volume = main_volume();
 
-        const numerical::Vector4d volume_center = [&]
-        {
-                numerical::Vector4d res;
-                res[0] = (volume.right + volume.left) * 0.5;
-                res[1] = (volume.top + volume.bottom) * 0.5;
-                res[2] = (volume.far + volume.near) * 0.5;
-                res[3] = 1;
-                return res;
-        }();
+        const numerical::Vector4d volume_center = {
+                (volume.right + volume.left) / 2,
+                (volume.top + volume.bottom) / 2,
+                (volume.far + volume.near) / 2,
+                1,
+        };
 
         const numerical::Vector4d view_center = main_view_matrix().inversed() * volume_center;
 
