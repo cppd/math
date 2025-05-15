@@ -35,12 +35,16 @@ template <typename T>
         const Vector<3, T> s = cross(f, up).normalized();
         const Vector<3, T> u = cross(s, f).normalized();
 
-        Matrix<4, 4, T> res;
-        res.row(0) = {s[0], s[1], s[2], -dot(s, eye)};
-        res.row(1) = {u[0], u[1], u[2], -dot(u, eye)};
-        res.row(2) = {-f[0], -f[1], -f[2], dot(f, eye)};
-        res.row(3) = {0, 0, 0, 1};
-        return res;
+        const T se = dot(s, eye);
+        const T ue = dot(u, eye);
+        const T fe = dot(f, eye);
+
+        return {
+                { s[0],  s[1],  s[2], -se},
+                { u[0],  u[1],  u[2], -ue},
+                {-f[0], -f[1], -f[2],  fe},
+                {    0,     0,     0,   1},
+        };
 }
 
 // Right-handed coordinate systems
@@ -55,12 +59,16 @@ template <typename T>
         const std::type_identity_t<T>& near,
         const std::type_identity_t<T>& far)
 {
-        Matrix<4, 4, T> res;
-        res.row(0) = {2 / (right - left), 0, 0, -(right + left) / (right - left)};
-        res.row(1) = {0, 2 / (bottom - top), 0, -(bottom + top) / (bottom - top)};
-        res.row(2) = {0, 0, 1 / (far - near), -near / (far - near)};
-        res.row(3) = {0, 0, 0, 1};
-        return res;
+        const T w = right - left;
+        const T h = bottom - top;
+        const T d = far - near;
+
+        return {
+                {2 / w,     0,     0, -(right + left) / w},
+                {    0, 2 / h,     0, -(bottom + top) / h},
+                {    0,     0, 1 / d,           -near / d},
+                {    0,     0,     0,                   1},
+        };
 }
 
 template <std::size_t N, typename T>
