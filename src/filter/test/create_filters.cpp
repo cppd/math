@@ -167,23 +167,25 @@ TestFilter<2, T> create_acceleration(const AccelerationConfig<T>& config, const 
                 return oss.str();
         }();
 
-        static_assert(ORDER == 0 || ORDER == 1);
-        switch (ORDER)
+        if constexpr (ORDER == 0)
         {
-        case 0:
                 return {filters::acceleration::create_acceleration_0<T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.position_noise_model,
                                 config.angle_noise_model_0, config.angle_r_noise_model_0, config.fading_memory_alpha_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
-        case 1:
+        }
+        else if constexpr (ORDER == 1)
+        {
                 return {filters::acceleration::create_acceleration_1<T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.position_noise_model,
                                 config.angle_noise_model_1, config.angle_r_noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 0))};
-        default:
-                ASSERT(false);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
@@ -232,29 +234,33 @@ TestFilter<2, T> create_direction(const DirectionConfig<T>& config, const unsign
                 return oss.str();
         }();
 
-        static_assert(ORDER == 10 || ORDER == 11 || ORDER == 21);
-        switch (ORDER)
+        if constexpr (ORDER == 10)
         {
-        case 10:
                 return {filters::direction::create_direction_1_0<T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.position_noise_model_1_0,
                                 config.angle_noise_model_1_0, config.fading_memory_alpha_1_0),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 250))};
-        case 11:
+        }
+        else if constexpr (ORDER == 11)
+        {
                 return {filters::direction::create_direction_1_1<T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.position_noise_model_1_1,
                                 config.angle_noise_model_1_1, config.fading_memory_alpha_1_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 150))};
-        case 21:
+        }
+        else if constexpr (ORDER == 21)
+        {
                 return {filters::direction::create_direction_2_1<T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.position_noise_model_2_1,
                                 config.angle_noise_model_2_1, config.fading_memory_alpha_2_1),
                         view::Filter<2, T>(name, color::RGB8(0, 160 - 40 * i, 50))};
-        default:
-                ASSERT(false);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
@@ -301,21 +307,23 @@ TestFilter<2, T> create_speed(const SpeedConfig<T>& config, const unsigned i, co
                 return oss.str();
         }();
 
-        static_assert(ORDER_P == 1 || ORDER_P == 2);
-        switch (ORDER_P)
+        if constexpr (ORDER_P == 1)
         {
-        case 1:
                 return {filters::speed::create_speed_1<2, T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<2, T>(name, color::RGB8(0, 200 - 40 * i, 0))};
-        case 2:
+        }
+        else if constexpr (ORDER_P == 2)
+        {
                 return {filters::speed::create_speed_2<2, T>(
                                 config.measurement_queue_size, config.reset_dt, config.angle_estimation_variance,
                                 config.gate, config.init, alpha, config.noise_model_2, config.fading_memory_alpha_2),
                         view::Filter<2, T>(name, color::RGB8(0, 150 - 40 * i, 0))};
-        default:
-                ASSERT(false);
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
