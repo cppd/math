@@ -46,19 +46,24 @@ public:
         {
         }
 
+        constexpr QuaternionHJ(const Vector<3, T>& v, const T w)
+                : data_(v[0], v[1], v[2], w)
+        {
+        }
+
         constexpr QuaternionHJ(const T w, const Vector<3, T>& v)
-                : data_(w, v[0], v[1], v[2])
+                : QuaternionHJ(v, w)
         {
         }
 
         explicit constexpr QuaternionHJ(const QuaternionHJ<T, !JPL>& q)
-                : data_(q.w(), q.x(), q.y(), q.z())
+                : data_(q.x(), q.y(), q.z(), q.w())
         {
         }
 
         [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Vector<3, T>& axis, const T angle)
         {
-                return {std::cos(angle / 2), std::sin(angle / 2) * axis.normalized()};
+                return {std::sin(angle / 2) * axis.normalized(), std::cos(angle / 2)};
         }
 
         [[nodiscard]] std::size_t hash() const
@@ -71,49 +76,49 @@ public:
                 return {x(), y(), z()};
         }
 
-        [[nodiscard]] constexpr T w() const
-        {
-                return data_[0];
-        }
-
-        [[nodiscard]] constexpr T& w()
-        {
-                return data_[0];
-        }
-
         [[nodiscard]] constexpr T x() const
         {
-                return data_[1];
+                return data_[0];
         }
 
         [[nodiscard]] constexpr T& x()
         {
-                return data_[1];
+                return data_[0];
         }
 
         [[nodiscard]] constexpr T y() const
         {
-                return data_[2];
+                return data_[1];
         }
 
         [[nodiscard]] constexpr T& y()
         {
-                return data_[2];
+                return data_[1];
         }
 
         [[nodiscard]] constexpr T z() const
         {
-                return data_[3];
+                return data_[2];
         }
 
         [[nodiscard]] constexpr T& z()
+        {
+                return data_[2];
+        }
+
+        [[nodiscard]] constexpr T w() const
+        {
+                return data_[3];
+        }
+
+        [[nodiscard]] constexpr T& w()
         {
                 return data_[3];
         }
 
         [[nodiscard]] constexpr QuaternionHJ<T, JPL> conjugate() const
         {
-                return {w(), -vec()};
+                return {-vec(), w()};
         }
 
         [[nodiscard]] T norm() const
@@ -142,13 +147,7 @@ public:
         {
                 std::ostringstream oss;
                 oss.precision(Limits<T>::max_digits10());
-                oss << '(';
-                oss << a.data_[0];
-                oss << ", {";
-                oss << a.data_[1];
-                oss << ", " << a.data_[2];
-                oss << ", " << a.data_[3];
-                oss << "})";
+                oss << "({" << a.x() << ", " << a.y() << ", " << a.z() << "}, " << a.w() << ')';
                 return oss.str();
         }
 
