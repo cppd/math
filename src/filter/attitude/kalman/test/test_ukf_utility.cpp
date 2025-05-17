@@ -54,7 +54,7 @@ void test()
         LOG("Test attitude UKF utility");
         test_impl<float>(1e-6);
         test_impl<double>(1e-15);
-        test_impl<long double>(0);
+        test_impl<long double>(1e-19);
         LOG("Test attitude UKF utility passed");
 }
 

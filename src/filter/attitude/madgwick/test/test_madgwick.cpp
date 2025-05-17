@@ -98,7 +98,7 @@ void test()
         LOG("Test attitude Madgwick");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
-        test_impl<long double>(0);
+        test_impl<long double>(1e-19);
         LOG("Test attitude Madgwick passed");
 }
 

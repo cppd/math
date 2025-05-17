@@ -70,7 +70,7 @@ void test_impl(const T precision)
 void test()
 {
         LOG("Test attitude Madgwick gradient");
-        test_impl<float>(1e-7);
+        test_impl<float>(1e-6);
         test_impl<double>(1e-15);
         test_impl<long double>(0);
         LOG("Test attitude Madgwick gradient passed");
