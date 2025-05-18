@@ -284,8 +284,6 @@ template <typename Quaternion>
                 GLOBAL_TO_LOCAL ? -w : w
         };
 
-        const T norm = q.norm();
-
-        return q / ((q.w() < 0) ? -norm : norm);
+        return q.normalized();
 }
 }

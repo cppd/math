@@ -129,7 +129,7 @@ public:
         [[nodiscard]] QuaternionHJ<T, JPL> normalized() const
         {
                 const T norm = data_.norm();
-                const T n = (w() >= 0) ? norm : -norm;
+                const T n = (w() < 0) ? -norm : norm;
                 return QuaternionHJ<T, JPL>(data_ / n);
         }
 
