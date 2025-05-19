@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/optical_flow/shaders/downsample.h>
 #include <src/gpu/optical_flow/shaders/grayscale.h>
 #include <src/numerical/region.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 
 #include <vulkan/vulkan_core.h>
@@ -37,23 +36,21 @@ namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
-numerical::Vector2i grayscale_groups(
-        const numerical::Vector2i group_size,
-        const std::vector<numerical::Vector2i>& sizes)
+std::array<int, 2> grayscale_groups(const std::array<int, 2> group_size, const std::vector<std::array<int, 2>>& sizes)
 {
         return group_count(sizes[0], group_size);
 }
 
-std::vector<numerical::Vector2i> downsample_groups(
-        const numerical::Vector2i group_size,
-        const std::vector<numerical::Vector2i>& sizes)
+std::vector<std::array<int, 2>> downsample_groups(
+        const std::array<int, 2> group_size,
+        const std::vector<std::array<int, 2>>& sizes)
 {
         if (sizes.size() <= 1)
         {
                 return {};
         }
 
-        std::vector<numerical::Vector2i> res;
+        std::vector<std::array<int, 2>> res;
         res.reserve(sizes.size() - 1);
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
@@ -93,7 +90,7 @@ void ImagePyramid::create_buffers(
         const VkSampler sampler,
         const vulkan::ImageWithMemory& input,
         const numerical::Region<2, int>& rectangle,
-        const std::vector<numerical::Vector2i>& sizes,
+        const std::vector<std::array<int, 2>>& sizes,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
 {
         grayscale_groups_ = grayscale_groups(GROUP_SIZE, sizes);

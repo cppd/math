@@ -294,7 +294,4 @@ using Vector4d = Vector<4, double>;
 using Vector2f = Vector<2, float>;
 using Vector3f = Vector<3, float>;
 using Vector4f = Vector<4, float>;
-using Vector2i = Vector<2, int>;
-using Vector3i = Vector<3, int>;
-using Vector4i = Vector<4, int>;
 }

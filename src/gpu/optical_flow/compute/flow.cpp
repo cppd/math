@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/optical_flow/barriers.h>
 #include <src/gpu/optical_flow/option.h>
 #include <src/gpu/optical_flow/shaders/flow.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
@@ -52,12 +51,12 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
         return res;
 }
 
-std::vector<numerical::Vector2i> flow_groups(
-        const numerical::Vector2i group_size,
-        const std::vector<numerical::Vector2i>& sizes,
-        const numerical::Vector2i top_point_count)
+std::vector<std::array<int, 2>> flow_groups(
+        const std::array<int, 2> group_size,
+        const std::vector<std::array<int, 2>>& sizes,
+        const std::array<int, 2> top_point_count)
 {
-        std::vector<numerical::Vector2i> res;
+        std::vector<std::array<int, 2>> res;
         res.reserve(sizes.size());
 
         res.push_back(group_count(top_point_count, group_size));
@@ -80,9 +79,9 @@ Flow::Flow(const vulkan::Device* const device)
 void Flow::create_buffers(
         const VkSampler sampler,
         const std::uint32_t family_index,
-        const std::vector<numerical::Vector2i>& sizes,
-        const unsigned top_point_count_x,
-        const unsigned top_point_count_y,
+        const std::vector<std::array<int, 2>>& sizes,
+        const int top_point_count_x,
+        const int top_point_count_y,
         const vulkan::Buffer& top_points,
         const vulkan::Buffer& top_flow,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,

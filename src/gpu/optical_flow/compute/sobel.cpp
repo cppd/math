@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/optical_flow/barriers.h>
 #include <src/gpu/optical_flow/option.h>
 #include <src/gpu/optical_flow/shaders/sobel.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 
 #include <vulkan/vulkan_core.h>
@@ -35,13 +34,13 @@ namespace ns::gpu::optical_flow::compute
 {
 namespace
 {
-std::vector<numerical::Vector2i> sobel_groups(
-        const numerical::Vector2i group_size,
-        const std::vector<numerical::Vector2i>& sizes)
+std::vector<std::array<int, 2>> sobel_groups(
+        const std::array<int, 2> group_size,
+        const std::vector<std::array<int, 2>>& sizes)
 {
-        std::vector<numerical::Vector2i> res;
+        std::vector<std::array<int, 2>> res;
         res.reserve(sizes.size());
-        for (const numerical::Vector2i& size : sizes)
+        for (const std::array<int, 2>& size : sizes)
         {
                 res.push_back(group_count(size, group_size));
         }
@@ -79,7 +78,7 @@ Sobel::Sobel(const VkDevice device)
 }
 
 void Sobel::create_buffers(
-        const std::vector<numerical::Vector2i>& sizes,
+        const std::vector<std::array<int, 2>>& sizes,
         const std::vector<vulkan::ImageWithMemory>& dx,
         const std::vector<vulkan::ImageWithMemory>& dy,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)

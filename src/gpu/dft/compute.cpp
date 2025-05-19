@@ -53,7 +53,6 @@ There are errors in chapter 13 when calculating H2
 #include <src/com/error.h>
 #include <src/com/group_count.h>
 #include <src/numerical/region.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
@@ -68,6 +67,7 @@ There are errors in chapter 13 when calculating H2
 
 #include <vulkan/vulkan_core.h>
 
+#include <array>
 #include <complex>
 #include <cstddef>
 #include <cstdint>
@@ -79,7 +79,7 @@ namespace ns::gpu::dft
 {
 namespace
 {
-constexpr numerical::Vector2i GROUP_SIZE_2D = numerical::Vector2i(16, 16);
+constexpr std::array<int, 2> GROUP_SIZE_2D{16, 16};
 
 vulkan::physical_device::DeviceFunctionality device_functionality()
 {
@@ -96,7 +96,7 @@ class DftImage final : public ComputeImage
         CopyInputMemory copy_input_memory_;
         CopyOutputProgram copy_output_program_;
         CopyOutputMemory copy_output_memory_;
-        numerical::Vector2i copy_groups_ = numerical::Vector2i(0, 0);
+        std::array<int, 2> copy_groups_{0, 0};
 
         VkImage output_ = VK_NULL_HANDLE;
 

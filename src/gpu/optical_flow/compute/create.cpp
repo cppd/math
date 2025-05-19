@@ -49,7 +49,7 @@ FlowInfo flow_info(
         const vulkan::Buffer& top_points,
         const vulkan::Buffer& top_flow,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
-        const std::vector<numerical::Vector2i>& sizes,
+        const std::vector<std::array<int, 2>>& sizes,
         const int top_point_count_x,
         const int top_point_count_y)
 {
@@ -102,7 +102,7 @@ FlowInfo flow_info(
 
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
-        const std::vector<numerical::Vector2i>& sizes,
+        const std::vector<std::array<int, 2>>& sizes,
         const std::uint32_t family_index)
 {
         if (sizes.size() <= 1)
@@ -130,7 +130,7 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::uint32_t family_index,
         const VkSampler sampler,
-        const std::vector<numerical::Vector2i>& sizes,
+        const std::vector<std::array<int, 2>>& sizes,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
         const int top_point_count_x,
         const int top_point_count_y,

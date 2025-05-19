@@ -17,19 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vector.h>
-
+#include <array>
 #include <vector>
 
 namespace ns::gpu::optical_flow
 {
-std::vector<numerical::Vector2i> pyramid_sizes(int width, int height, int min_size);
+std::vector<std::array<int, 2>> pyramid_sizes(int width, int height, int min_size);
 
 struct TopLevelPoints final
 {
         int count_x;
         int count_y;
-        std::vector<numerical::Vector2i> points;
+        std::vector<std::array<int, 2>> points;
 };
 
 TopLevelPoints create_top_level_points(int width, int height, double distance_between_points_in_mm, double ppi);

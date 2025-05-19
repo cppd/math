@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <vulkan/vulkan_core.h>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 
@@ -50,5 +50,5 @@ std::unique_ptr<Dft> create_dft(
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue,
         vulkan::BufferMemoryType buffer_memory_type,
-        const numerical::Vector2i& group_size);
+        const std::array<int, 2>& group_size);
 }

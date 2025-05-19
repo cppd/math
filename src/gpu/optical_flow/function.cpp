@@ -17,25 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "function.h"
 
-#include <src/numerical/vector.h>
-
 // #include <src/com/log.h>
 // #include <src/com/print.h>
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 
+#include <array>
 #include <cstddef>
 #include <utility>
 #include <vector>
 
 namespace ns::gpu::optical_flow
 {
-std::vector<numerical::Vector2i> pyramid_sizes(int width, int height, const int min_size)
+std::vector<std::array<int, 2>> pyramid_sizes(int width, int height, const int min_size)
 {
-        std::vector<numerical::Vector2i> sizes;
+        std::vector<std::array<int, 2>> sizes;
 
-        sizes.emplace_back(width, height);
+        sizes.push_back({width, height});
 
         while (true)
         {
@@ -56,13 +55,13 @@ std::vector<numerical::Vector2i> pyramid_sizes(int width, int height, const int 
                         break;
                 }
 
-                sizes.emplace_back(new_width, new_height);
+                sizes.push_back({new_width, new_height});
 
                 width = new_width;
                 height = new_height;
         }
 
-        // for (const numerical::Vector2i& v : sizes)
+        // for (const std::array<int, 2>& v : sizes)
         // {
         //         LOG(to_string(v[0]) + " x " + to_string(v[1]));
         // }
@@ -98,13 +97,13 @@ TopLevelPoints create_top_level_points(
         const int count_y = (lh + size - 1) / size;
         const long long point_count = static_cast<long long>(count_x) * count_y;
 
-        std::vector<numerical::Vector2i> points(point_count);
+        std::vector<std::array<int, 2>> points(point_count);
         long long index = 0;
         for (int y = distance; y < height - distance; y += size)
         {
                 for (int x = distance; x < width - distance; x += size)
                 {
-                        points[index++] = numerical::Vector2i(x, y);
+                        points[index++] = {x, y};
                 }
         }
 

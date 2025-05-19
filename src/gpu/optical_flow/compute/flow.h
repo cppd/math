@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/gpu/optical_flow/shaders/flow.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
@@ -38,7 +37,7 @@ class Flow final
         FlowProgram flow_program_;
         std::vector<FlowDataBuffer> flow_buffer_;
         std::vector<FlowMemory> flow_memory_;
-        std::vector<numerical::Vector2i> flow_groups_;
+        std::vector<std::array<int, 2>> flow_groups_;
 
         std::vector<vulkan::BufferWithMemory> flow_buffers_;
 
@@ -48,9 +47,9 @@ public:
         void create_buffers(
                 VkSampler sampler,
                 std::uint32_t family_index,
-                const std::vector<numerical::Vector2i>& sizes,
-                unsigned top_point_count_x,
-                unsigned top_point_count_y,
+                const std::vector<std::array<int, 2>>& sizes,
+                int top_point_count_x,
+                int top_point_count_y,
                 const vulkan::Buffer& top_points,
                 const vulkan::Buffer& top_flow,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,

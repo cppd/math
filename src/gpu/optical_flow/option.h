@@ -18,11 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/exponent.h>
-#include <src/numerical/vector.h>
+
+#include <array>
 
 namespace ns::gpu::optical_flow
 {
-inline constexpr numerical::Vector2i GROUP_SIZE(16, 16);
+inline constexpr std::array<int, 2> GROUP_SIZE{16, 16};
 
 inline constexpr int BOTTOM_IMAGE_MINIMUM_SIZE = 16;
 

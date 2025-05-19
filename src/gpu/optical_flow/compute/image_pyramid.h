@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/optical_flow/shaders/downsample.h>
 #include <src/gpu/optical_flow/shaders/grayscale.h>
 #include <src/numerical/region.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 
 #include <vulkan/vulkan_core.h>
@@ -36,11 +35,11 @@ class ImagePyramid final
 
         GrayscaleProgram grayscale_program_;
         GrayscaleMemory grayscale_memory_;
-        numerical::Vector2i grayscale_groups_;
+        std::array<int, 2> grayscale_groups_;
 
         DownsampleProgram downsample_program_;
         std::vector<DownsampleMemory> downsample_memory_;
-        std::vector<numerical::Vector2i> downsample_groups_;
+        std::vector<std::array<int, 2>> downsample_groups_;
 
 public:
         explicit ImagePyramid(VkDevice device);
@@ -49,7 +48,7 @@ public:
                 VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const numerical::Region<2, int>& rectangle,
-                const std::vector<numerical::Vector2i>& sizes,
+                const std::vector<std::array<int, 2>>& sizes,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images);
 
         void delete_buffers();
