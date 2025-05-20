@@ -29,18 +29,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-namespace matrix_object_implementation
+namespace matrix_implementation
 {
 template <typename T>
-struct MatrixTypes;
+struct MatrixTraits;
 
-template <std::size_t ROWS, std::size_t COLUMNS, typename Type>
-struct MatrixTypes<Matrix<ROWS, COLUMNS, Type>> final
+template <std::size_t R, std::size_t C, typename T>
+struct MatrixTraits<Matrix<R, C, T>> final
 {
-        static constexpr std::size_t R = ROWS;
-        static constexpr std::size_t C = COLUMNS;
-        using T = Type;
+        using Type = T;
+        static constexpr std::size_t ROWS = R;
+        static constexpr std::size_t COLUMNS = C;
 };
+
+template <typename Matrix>
+using Type = MatrixTraits<Matrix>::Type;
+
+template <typename Matrix>
+inline constexpr std::size_t ROWS = MatrixTraits<Matrix>::ROWS;
+
+template <typename Matrix>
+inline constexpr std::size_t COLUMNS = MatrixTraits<Matrix>::COLUMNS;
 
 template <std::size_t N, typename T, std::size_t COLUMN>
 [[nodiscard]] constexpr Vector<N, T> make_vector(const T& v)
@@ -77,7 +86,7 @@ template <std::size_t R, std::size_t C, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr Matrix<N, N, T> make_diagonal_matrix(const Vector<N, T>& v)
 {
-        namespace impl = matrix_object_implementation;
+        namespace impl = matrix_implementation;
         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
@@ -89,7 +98,7 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr Matrix<N, N, T> make_diagonal_matrix(const T& v)
 {
-        namespace impl = matrix_object_implementation;
+        namespace impl = matrix_implementation;
         return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == N);
@@ -101,21 +110,21 @@ template <std::size_t N, typename T>
 template <typename... Matrices>
         requires (sizeof...(Matrices) > 1)
 [[nodiscard]] constexpr Matrix<
-        (matrix_object_implementation::MatrixTypes<Matrices>::R + ...),
-        (matrix_object_implementation::MatrixTypes<Matrices>::C + ...),
-        typename std::tuple_element_t<0, std::tuple<matrix_object_implementation::MatrixTypes<Matrices>...>>::T>
+        (matrix_implementation::ROWS<Matrices> + ...),
+        (matrix_implementation::COLUMNS<Matrices> + ...),
+        std::tuple_element_t<0, std::tuple<matrix_implementation::Type<Matrices>...>>>
         block_diagonal(const Matrices&... matrices)
 {
-        namespace impl = matrix_object_implementation;
+        namespace impl = matrix_implementation;
 
-        using T = std::tuple_element_t<0, std::tuple<impl::MatrixTypes<Matrices>...>>::T;
+        using T = std::tuple_element_t<0, std::tuple<impl::Type<Matrices>...>>;
 
-        static_assert(((impl::MatrixTypes<Matrices>::R > 0) && ...));
-        static_assert(((impl::MatrixTypes<Matrices>::C > 0) && ...));
-        static_assert(((std::is_same_v<T, typename impl::MatrixTypes<Matrices>::T>) && ...));
+        static_assert(((impl::ROWS<Matrices> > 0) && ...));
+        static_assert(((impl::COLUMNS<Matrices> > 0) && ...));
+        static_assert(((std::is_same_v<T, impl::Type<Matrices>>) && ...));
 
-        static constexpr std::size_t RESULT_R = (impl::MatrixTypes<Matrices>::R + ...);
-        static constexpr std::size_t RESULT_C = (impl::MatrixTypes<Matrices>::C + ...);
+        static constexpr std::size_t RESULT_R = (impl::ROWS<Matrices> + ...);
+        static constexpr std::size_t RESULT_C = (impl::COLUMNS<Matrices> + ...);
 
         Matrix<RESULT_R, RESULT_C, T> res;
         for (std::size_t r = 0; r < RESULT_R; ++r)
