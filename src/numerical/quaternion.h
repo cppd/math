@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "matrix.h"
+#include "quaternion_matrix.h" // IWYU pragma: export
 #include "quaternion_object.h" // IWYU pragma: export
 #include "vector.h"
 
@@ -49,22 +49,6 @@ namespace ns::numerical
 {
 namespace quaternion_implementation
 {
-template <typename>
-struct QuaternionTraits;
-
-template <typename T, bool JPL>
-struct QuaternionTraits<QuaternionHJ<T, JPL>> final
-{
-        using Type = T;
-        static constexpr bool GLOBAL_TO_LOCAL = JPL;
-};
-
-template <typename Quaternion>
-using Type = QuaternionTraits<Quaternion>::Type;
-
-template <typename Quaternion>
-inline constexpr bool GLOBAL_TO_LOCAL = QuaternionTraits<Quaternion>::GLOBAL_TO_LOCAL;
-
 template <typename T, bool JPL>
 [[nodiscard]] constexpr QuaternionHJ<T, JPL> multiply_hamilton(
         const QuaternionHJ<T, JPL>& a,
@@ -181,109 +165,5 @@ template <typename T, bool JPL>
         ASSERT(q_unit.is_unit());
 
         return multiply_vec(q_unit * v, q_unit.conjugate());
-}
-
-template <typename Quaternion>
-[[nodiscard]] Matrix<3, 3, quaternion_implementation::Type<Quaternion>> rotation_quaternion_to_matrix(
-        const Quaternion& q)
-{
-        namespace impl = quaternion_implementation;
-
-        using T = impl::Type<Quaternion>;
-        static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
-
-        ASSERT(q.is_unit());
-
-        const T x = q.x();
-        const T y = q.y();
-        const T z = q.z();
-        const T w = GLOBAL_TO_LOCAL ? -q.w() : q.w();
-
-        const T xw = 2 * x * w;
-        const T xx = 2 * x * x;
-        const T xy = 2 * x * y;
-        const T xz = 2 * x * z;
-        const T yw = 2 * y * w;
-        const T yy = 2 * y * y;
-        const T yz = 2 * y * z;
-        const T zw = 2 * z * w;
-        const T zz = 2 * z * z;
-
-        return {
-                {1 - yy - zz,     xy - zw,     xz + yw},
-                {    xy + zw, 1 - xx - zz,     yz - xw},
-                {    xz - yw,     yz + xw, 1 - xx - yy},
-        };
-}
-
-template <typename Quaternion>
-[[nodiscard]] Quaternion rotation_matrix_to_quaternion(
-        const Matrix<3, 3, quaternion_implementation::Type<Quaternion>>& m)
-{
-        namespace impl = quaternion_implementation;
-
-        using T = impl::Type<Quaternion>;
-        static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
-
-        ASSERT(m.row(0).is_unit());
-        ASSERT(m.row(1).is_unit());
-        ASSERT(m.row(2).is_unit());
-
-        const T m00 = m[0, 0];
-        const T m01 = m[0, 1];
-        const T m02 = m[0, 2];
-        const T m10 = m[1, 0];
-        const T m11 = m[1, 1];
-        const T m12 = m[1, 2];
-        const T m20 = m[2, 0];
-        const T m21 = m[2, 1];
-        const T m22 = m[2, 2];
-
-        T x;
-        T y;
-        T z;
-        T w;
-
-        if (m22 < 0)
-        {
-                if (m00 > m11)
-                {
-                        x = 1 + m00 - m11 - m22;
-                        y = m01 + m10;
-                        z = m20 + m02;
-                        w = m21 - m12;
-                }
-                else
-                {
-                        x = m01 + m10;
-                        y = 1 - m00 + m11 - m22;
-                        z = m12 + m21;
-                        w = m02 - m20;
-                }
-        }
-        else
-        {
-                if (m00 < -m11)
-                {
-                        x = m20 + m02;
-                        y = m12 + m21;
-                        z = 1 - m00 - m11 + m22;
-                        w = m10 - m01;
-                }
-                else
-                {
-                        x = m21 - m12;
-                        y = m02 - m20;
-                        z = m10 - m01;
-                        w = 1 + m00 + m11 + m22;
-                }
-        }
-
-        const Quaternion q{
-                {x, y, z},
-                GLOBAL_TO_LOCAL ? -w : w
-        };
-
-        return q.normalized();
 }
 }
