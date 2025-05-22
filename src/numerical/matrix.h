@@ -482,12 +482,6 @@ template <std::size_t N, typename T>
         return a + b;
 }
 
-template <std::size_t ROWS, std::size_t COLUMNS, typename T>
-[[nodiscard]] decltype(auto) is_finite(const Matrix<ROWS, COLUMNS, T>& m)
-{
-        return m.is_finite();
-}
-
 template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
         requires (!std::is_same_v<Dst, Src>)
 [[nodiscard]] Matrix<ROWS, COLUMNS, Dst> to_matrix(const Matrix<ROWS, COLUMNS, Src>& m)
