@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/type/concept.h>
+#include <src/com/type/limit.h>
 
 #include <algorithm>
 #include <array>
@@ -246,6 +247,49 @@ public:
                         res[i] = rows_[i][i];
                 }
                 return res;
+        }
+
+        [[nodiscard]] bool is_orthogonal() const
+        {
+                if (!(ROWS == COLUMNS))
+                {
+                        return false;
+                }
+
+                constexpr T MAX_COS{1e-5};
+
+                for (std::size_t i = 0; i < ROWS; ++i)
+                {
+                        if (!rows_[i].is_unit())
+                        {
+                                return false;
+                        }
+
+                        for (std::size_t j = i + 1; j < ROWS; ++j)
+                        {
+                                const T d = dot(rows_[i], rows_[j]);
+                                if (!(std::abs(d) <= MAX_COS))
+                                {
+                                        return false;
+                                }
+                        }
+                }
+
+                return true;
+        }
+
+        [[nodiscard]] bool is_rotation() const
+        {
+                if (!is_orthogonal())
+                {
+                        return false;
+                }
+
+                constexpr T E = 100 * Limits<T>::epsilon();
+                constexpr T MIN = 1 - E;
+                constexpr T MAX = 1 + E;
+                const T d = determinant();
+                return d > MIN && d < MAX;
         }
 
         [[nodiscard]] friend bool is_finite(const Matrix<ROWS, COLUMNS, T>& m)
