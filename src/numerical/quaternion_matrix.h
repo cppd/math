@@ -85,9 +85,7 @@ template <typename Quaternion>
         using T = impl::Type<Quaternion>;
         static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
 
-        ASSERT(m.row(0).is_unit());
-        ASSERT(m.row(1).is_unit());
-        ASSERT(m.row(2).is_unit());
+        ASSERT(m.is_rotation());
 
         const T m00 = m[0, 0];
         const T m01 = m[0, 1];
