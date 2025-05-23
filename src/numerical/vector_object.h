@@ -192,7 +192,7 @@ public:
                 return res;
         }
 
-        [[nodiscard]] T norm_squared() const
+        [[nodiscard]] constexpr T norm_squared() const
         {
                 T s = data_[0] * data_[0];
                 for (std::size_t i = 1; i < N; ++i)
@@ -241,7 +241,7 @@ public:
                 return res;
         }
 
-        [[nodiscard]] bool is_zero() const
+        [[nodiscard]] constexpr bool is_zero() const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -254,7 +254,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool is_unit() const
+        [[nodiscard]] constexpr bool is_unit() const
         {
                 static constexpr T D = 100 * Limits<T>::epsilon();
                 static constexpr T MIN = square(1 - D);
