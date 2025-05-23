@@ -52,6 +52,8 @@ struct Test final
         static_assert(QuaternionHJ<T, !JPL>(A).x() == 3);
         static_assert(QuaternionHJ<T, !JPL>(A).y() == 4);
         static_assert(QuaternionHJ<T, !JPL>(A).z() == 5);
+        static_assert(!A.is_unit());
+        static_assert(!B.is_unit());
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
         static_assert(A.conjugate() == QuaternionHJ<T, JPL>(2, {-3, -4, -5}));
         static_assert(A * T{3} == QuaternionHJ<T, JPL>(6, {9, 12, 15}));
@@ -59,6 +61,11 @@ struct Test final
         static_assert(A / T{2} == QuaternionHJ<T, JPL>(1, {T{3} / 2, 2, T{5} / 2}));
         static_assert(A + B == QuaternionHJ<T, JPL>(13, {15, 17, 19}));
         static_assert(A - B == QuaternionHJ<T, JPL>(-9, {-9, -9, -9}));
+
+        static_assert(QuaternionHJ<T, JPL>(1, {0, 0, 0}).is_unit());
+        static_assert(QuaternionHJ<T, JPL>(0, {1, 0, 0}).is_unit());
+        static_assert(QuaternionHJ<T, JPL>(0, {0, 1, 0}).is_unit());
+        static_assert(QuaternionHJ<T, JPL>(0, {0, 0, 1}).is_unit());
 
         static constexpr Vector<3, T> V = Vector<3, T>(11, 12, 13);
 
@@ -198,6 +205,19 @@ void test_constant(const T precision)
                         0.540302305868139717414L,
                         {0.383578074011068530816L, -0.479472592513835663554L, 0.57536711101660279621L}),
                 precision);
+
+        {
+                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>(2, {4, 3, 5});
+                if (q.is_unit())
+                {
+                        error(to_string(q) + " is unit");
+                }
+                const QuaternionHJ<T, JPL> qn = q.normalized();
+                if (!qn.is_unit())
+                {
+                        error(to_string(q) + " is not unit");
+                }
+        }
 }
 
 template <typename T, bool JPL>

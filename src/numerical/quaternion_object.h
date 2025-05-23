@@ -133,7 +133,7 @@ public:
                 return QuaternionHJ<T, JPL>(data_ / n);
         }
 
-        [[nodiscard]] bool is_unit() const
+        [[nodiscard]] constexpr bool is_unit() const
         {
                 return data_.is_unit();
         }
