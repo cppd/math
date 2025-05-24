@@ -109,7 +109,7 @@ bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = q_->rotation_matrix();
 
         update(std::array{
                 Update{

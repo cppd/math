@@ -34,7 +34,7 @@ template <typename T>
 void test_impl(const T precision)
 {
         const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3);
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(initial_quaternion(z));
+        const numerical::Matrix<3, 3, T> attitude = initial_quaternion(z).rotation_matrix();
 
         {
                 const numerical::Vector<3, T> m = numerical::Vector<3, T>(2, 1, -4).normalized();

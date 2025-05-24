@@ -18,39 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
-#include "quaternion_object.h"
 
 #include <src/com/error.h>
 
-namespace ns::numerical
+namespace ns::numerical::quaternion_object_implementation
 {
-namespace quaternion_matrix_implementation
+template <typename T, bool JPL, template <typename, bool> typename Quaternion>
+[[nodiscard]] constexpr Matrix<3, 3, T> rotation_quaternion_to_matrix(const Quaternion<T, JPL>& q)
 {
-template <typename>
-struct QuaternionTraits;
-
-template <typename T, bool JPL>
-struct QuaternionTraits<QuaternionHJ<T, JPL>> final
-{
-        using Type = T;
         static constexpr bool GLOBAL_TO_LOCAL = JPL;
-};
-
-template <typename Quaternion>
-using Type = QuaternionTraits<Quaternion>::Type;
-
-template <typename Quaternion>
-inline constexpr bool GLOBAL_TO_LOCAL = QuaternionTraits<Quaternion>::GLOBAL_TO_LOCAL;
-}
-
-template <typename Quaternion>
-[[nodiscard]] Matrix<3, 3, quaternion_matrix_implementation::Type<Quaternion>> rotation_quaternion_to_matrix(
-        const Quaternion& q)
-{
-        namespace impl = quaternion_matrix_implementation;
-
-        using T = impl::Type<Quaternion>;
-        static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
 
         ASSERT(q.is_unit());
 
@@ -76,14 +52,10 @@ template <typename Quaternion>
         };
 }
 
-template <typename Quaternion>
-[[nodiscard]] Quaternion rotation_matrix_to_quaternion(
-        const Matrix<3, 3, quaternion_matrix_implementation::Type<Quaternion>>& m)
+template <typename T, bool JPL, template <typename, bool> typename Quaternion>
+[[nodiscard]] Quaternion<T, JPL> rotation_matrix_to_quaternion(const Matrix<3, 3, T>& m)
 {
-        namespace impl = quaternion_matrix_implementation;
-
-        using T = impl::Type<Quaternion>;
-        static constexpr bool GLOBAL_TO_LOCAL = impl::GLOBAL_TO_LOCAL<Quaternion>;
+        static constexpr bool GLOBAL_TO_LOCAL = JPL;
 
         ASSERT(m.is_rotation());
 
@@ -137,7 +109,7 @@ template <typename Quaternion>
                 }
         }
 
-        const Quaternion q{
+        const Quaternion<T, JPL> q{
                 {x, y, z},
                 GLOBAL_TO_LOCAL ? -w : w
         };

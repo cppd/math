@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "quaternion_matrix.h" // IWYU pragma: export
 #include "quaternion_object.h" // IWYU pragma: export
 #include "vector.h"
 

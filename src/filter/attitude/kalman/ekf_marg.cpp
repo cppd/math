@@ -118,7 +118,7 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = q_->rotation_matrix();
 
         update(std::array{
                 Update{
@@ -151,7 +151,7 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = q_->rotation_matrix();
 
         const auto& mag = mag_measurement(attitude, m / m_norm, variance);
         if (!mag)
@@ -196,7 +196,7 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = q_->rotation_matrix();
 
         const auto& mag = mag_measurement(attitude, m / m_norm, m_variance);
         if (!mag)

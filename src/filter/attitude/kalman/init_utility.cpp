@@ -61,9 +61,7 @@ Quaternion<T> make_quaternion(
                 z_axis_local,
         });
 
-        const Quaternion<T> q = numerical::rotation_matrix_to_quaternion<Quaternion<T>>(local_to_global);
-
-        return q.conjugate();
+        return Quaternion<T>(local_to_global).conjugate();
 }
 }
 
