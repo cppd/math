@@ -34,6 +34,8 @@ namespace ns::numerical
 template <typename T, bool JPL>
 class QuaternionHJ final
 {
+        friend class QuaternionHJ<T, !JPL>;
+
         static_assert(std::is_floating_point_v<T>);
 
         Vector<4, T> data_;
@@ -59,7 +61,7 @@ public:
         }
 
         explicit constexpr QuaternionHJ(const QuaternionHJ<T, !JPL>& q)
-                : data_(q.x(), q.y(), q.z(), q.w())
+                : data_(q.data_)
         {
         }
 
@@ -71,7 +73,10 @@ public:
 
         [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Vector<3, T>& axis, const T angle)
         {
-                return {std::sin(angle / 2) * axis.normalized(), std::cos(angle / 2)};
+                return {
+                        std::sin(angle / 2) * axis.normalized(),
+                        std::cos(angle / 2),
+                };
         }
 
         [[nodiscard]] Matrix<3, 3, T> rotation_matrix() const
