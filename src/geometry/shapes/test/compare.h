@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 
@@ -33,7 +32,7 @@ template <typename T>
 {
         static_assert(std::is_floating_point_v<T>);
 
-        if (!(is_finite(v1) && is_finite(v2) && (v1 > 0) && (v2 > 0)))
+        if (!(std::isfinite(v1) && std::isfinite(v2) && (v1 > 0) && (v2 > 0)))
         {
                 return false;
         }
@@ -48,7 +47,7 @@ void compare(S&& name, const T v1, const T v2, const T precision)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        if (is_finite(v1) && is_finite(v2)
+        if (std::isfinite(v1) && std::isfinite(v2)
             && ((v1 == v2) || (std::abs(v1 - v2) / std::max(std::abs(v1), std::abs(v2)) < precision)))
         {
                 return;

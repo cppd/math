@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "type/limit.h"
-
 #include <cmath>
 #include <type_traits>
 
@@ -36,17 +34,6 @@ template <typename T>
                 }
         }
         return v < 0 ? -v : v;
-}
-
-template <typename T>
-        requires std::is_floating_point_v<T>
-[[nodiscard]] constexpr bool is_finite(const T& v)
-{
-        if (std::is_constant_evaluated())
-        {
-                return v >= Limits<T>::lowest() && v <= Limits<T>::max();
-        }
-        return std::isfinite(v);
 }
 
 template <typename I, typename T>

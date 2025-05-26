@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "samples/xyz_samples.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
 #include <src/numerical/vector.h>
 
 #include <algorithm>
@@ -43,9 +42,9 @@ class RGB final : public Samples<RGB<T>, 3, T>
 
         static constexpr numerical::Vector<3, T> make_rgb(T red, T green, T blue)
         {
-                ASSERT(is_finite(red));
-                ASSERT(is_finite(green));
-                ASSERT(is_finite(blue));
+                ASSERT(std::isfinite(red));
+                ASSERT(std::isfinite(green));
+                ASSERT(std::isfinite(blue));
 
                 red = std::max(T{0}, red);
                 green = std::max(T{0}, green);
@@ -64,7 +63,7 @@ public:
         explicit constexpr RGB(const std::type_identity_t<T> v)
                 : Base(std::max(T{0}, v))
         {
-                ASSERT(is_finite(v));
+                ASSERT(std::isfinite(v));
         }
 
         constexpr RGB(
@@ -343,7 +342,7 @@ public:
         explicit constexpr SpectrumSamples(const std::type_identity_t<T> v)
                 : Base(std::max(T{0}, v))
         {
-                ASSERT(is_finite(v));
+                ASSERT(std::isfinite(v));
         }
 
         explicit constexpr SpectrumSamples(const numerical::Vector<1 * N, std::type_identity_t<T>>& samples)

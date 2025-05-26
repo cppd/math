@@ -53,7 +53,7 @@ void update_nees(const Filter& filter, const TrueData<N, T>& true_data, Nees<T>&
 {
         nees.position.add(true_data.position - filter.position(), filter.position_p());
 
-        if (const T speed_p = filter.speed_p(); is_finite(speed_p))
+        if (const T speed_p = filter.speed_p(); std::isfinite(speed_p))
         {
                 nees.speed.add_1(true_data.speed - filter.speed(), speed_p);
         }

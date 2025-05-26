@@ -17,12 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/math.h>
 
+#include <limits>
+
 namespace ns
 {
 namespace
 {
 template <typename I, typename T>
-struct Test final
+struct TestCeilFloor final
 {
         static_assert(integral_floor<I, T>(-2) == -2);
         static_assert(integral_floor<I, T>(-1.5) == -2);
@@ -47,12 +49,12 @@ struct Test final
         static_assert(integral_ceil<I, T>(2) == 2);
 };
 
-template struct Test<int, float>;
-template struct Test<int, double>;
-template struct Test<int, long double>;
-template struct Test<long long, float>;
-template struct Test<long long, double>;
-template struct Test<long long, long double>;
+template struct TestCeilFloor<int, float>;
+template struct TestCeilFloor<int, double>;
+template struct TestCeilFloor<int, long double>;
+template struct TestCeilFloor<long long, float>;
+template struct TestCeilFloor<long long, double>;
+template struct TestCeilFloor<long long, long double>;
 
 //
 
@@ -72,5 +74,26 @@ struct TestRoundUp final
 
 template struct TestRoundUp<unsigned>;
 template struct TestRoundUp<unsigned long long>;
+
+//
+
+static_assert(absolute(2) == 2);
+static_assert(absolute(-2) == 2);
+static_assert(absolute(2u) == 2);
+static_assert(absolute(0) == 0);
+
+template <typename T>
+struct TestAbsoluteFloatingPoint final
+{
+        static_assert(absolute(T{2}) == T{2});
+        static_assert(absolute(T{-2}) == T{2});
+        static_assert(absolute(T{0}) == T{0});
+        static_assert(absolute(std::numeric_limits<T>::infinity()) == std::numeric_limits<T>::infinity());
+        static_assert(absolute(-std::numeric_limits<T>::infinity()) == std::numeric_limits<T>::infinity());
+};
+
+template struct TestAbsoluteFloatingPoint<float>;
+template struct TestAbsoluteFloatingPoint<double>;
+template struct TestAbsoluteFloatingPoint<long double>;
 }
 }
