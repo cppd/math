@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <type_traits>
@@ -270,6 +271,20 @@ template <typename Dst, std::size_t N, typename Src>
 [[nodiscard]] decltype(auto) to_vector(std::vector<Vector<N, Src>>&& v)
 {
         return std::move(v);
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] constexpr bool is_finite(const Vector<N, T>& v)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (std::isfinite(v[i]))
+                {
+                        continue;
+                }
+                return false;
+        }
+        return true;
 }
 
 template <typename T>

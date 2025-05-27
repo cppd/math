@@ -336,20 +336,6 @@ public:
                 return segment<N - M, M>();
         }
 
-        [[nodiscard]] friend bool is_finite(const Vector<N, T>& v)
-                requires (std::is_floating_point_v<T>)
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (std::isfinite(v[i]))
-                        {
-                                continue;
-                        }
-                        return false;
-                }
-                return true;
-        }
-
         [[nodiscard]] friend constexpr Vector<N, T> interpolation(
                 const Vector<N, T>& a,
                 const Vector<N, T>& b,
