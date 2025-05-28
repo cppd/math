@@ -27,10 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <initializer_list>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 namespace ns::numerical
@@ -290,20 +290,6 @@ public:
                 constexpr T MAX = 1 + E;
                 const T d = determinant();
                 return d > MIN && d < MAX;
-        }
-
-        [[nodiscard]] friend bool is_finite(const Matrix<ROWS, COLUMNS, T>& m)
-                requires (std::is_floating_point_v<T>)
-        {
-                for (std::size_t i = 0; i < ROWS; ++i)
-                {
-                        if (is_finite(m.row(i)))
-                        {
-                                continue;
-                        }
-                        return false;
-                }
-                return true;
         }
 
         [[nodiscard]] friend std::string to_string(const Matrix<ROWS, COLUMNS, T>& m)

@@ -511,6 +511,20 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
         return std::move(m);
 }
 
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] bool is_finite(const Matrix<ROWS, COLUMNS, T>& m)
+{
+        for (std::size_t i = 0; i < ROWS; ++i)
+        {
+                if (is_finite(m.row(i)))
+                {
+                        continue;
+                }
+                return false;
+        }
+        return true;
+}
+
 template <std::size_t N, typename T>
 inline constexpr Matrix<N, N, T> IDENTITY_MATRIX = make_diagonal_matrix<N, T>(1);
 
