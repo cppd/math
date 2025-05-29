@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <random>
 #include <type_traits>
 
@@ -37,13 +38,17 @@ namespace
 template <typename T, bool JPL>
 struct Test final
 {
-        static_assert(sizeof(QuaternionHJ<T, JPL>) == sizeof(QuaternionHJ<T, !JPL>));
+        using Quaternion = QuaternionHJ<T, JPL>;
 
-        static constexpr QuaternionHJ<T, JPL> A = QuaternionHJ<T, JPL>(2, {3, 4, 5});
-        static constexpr QuaternionHJ<T, JPL> B = QuaternionHJ<T, JPL>(11, {12, 13, 14});
+        static constexpr Quaternion A = Quaternion(2, {3, 4, 5});
+        static constexpr Quaternion B = Quaternion(11, {12, 13, 14});
+        static constexpr Vector<3, T> V = Vector<3, T>(11, 12, 13);
+        static constexpr T INF = std::numeric_limits<T>::infinity();
 
-        static_assert(A == QuaternionHJ<T, JPL>(2, {3, 4, 5}));
-        static_assert(A == QuaternionHJ<T, JPL>(QuaternionHJ<T, !JPL>(A)));
+        static_assert(sizeof(Quaternion) == sizeof(QuaternionHJ<T, !JPL>));
+
+        static_assert(A == Quaternion(2, {3, 4, 5}));
+        static_assert(A == Quaternion(QuaternionHJ<T, !JPL>(A)));
         static_assert(A.w() == 2);
         static_assert(A.x() == 3);
         static_assert(A.y() == 4);
@@ -54,28 +59,33 @@ struct Test final
         static_assert(QuaternionHJ<T, !JPL>(A).z() == 5);
         static_assert(!A.is_unit());
         static_assert(!B.is_unit());
+        static_assert(is_finite(A));
+        static_assert(is_finite(B));
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
-        static_assert(A.conjugate() == QuaternionHJ<T, JPL>(2, {-3, -4, -5}));
-        static_assert(A * T{3} == QuaternionHJ<T, JPL>(6, {9, 12, 15}));
-        static_assert(T{3} * A == QuaternionHJ<T, JPL>(6, {9, 12, 15}));
-        static_assert(A / T{2} == QuaternionHJ<T, JPL>(1, {T{3} / 2, 2, T{5} / 2}));
-        static_assert(A + B == QuaternionHJ<T, JPL>(13, {15, 17, 19}));
-        static_assert(A - B == QuaternionHJ<T, JPL>(-9, {-9, -9, -9}));
+        static_assert(A.conjugate() == Quaternion(2, {-3, -4, -5}));
+        static_assert(A * T{3} == Quaternion(6, {9, 12, 15}));
+        static_assert(T{3} * A == Quaternion(6, {9, 12, 15}));
+        static_assert(A / T{2} == Quaternion(1, {T{3} / 2, 2, T{5} / 2}));
+        static_assert(A + B == Quaternion(13, {15, 17, 19}));
+        static_assert(A - B == Quaternion(-9, {-9, -9, -9}));
 
-        static_assert(QuaternionHJ<T, JPL>(1, {0, 0, 0}).is_unit());
-        static_assert(QuaternionHJ<T, JPL>(0, {1, 0, 0}).is_unit());
-        static_assert(QuaternionHJ<T, JPL>(0, {0, 1, 0}).is_unit());
-        static_assert(QuaternionHJ<T, JPL>(0, {0, 0, 1}).is_unit());
+        static_assert(Quaternion(1, {0, 0, 0}).is_unit());
+        static_assert(Quaternion(0, {1, 0, 0}).is_unit());
+        static_assert(Quaternion(0, {0, 1, 0}).is_unit());
+        static_assert(Quaternion(0, {0, 0, 1}).is_unit());
 
-        static constexpr Vector<3, T> V = Vector<3, T>(11, 12, 13);
-
-        using Q = QuaternionHJ<T, JPL>;
-        static_assert(A * B == (JPL ? Q(-136, {66, 52, 92}) : Q(-136, {48, 88, 74})));
-        static_assert(B * A == (!JPL ? Q(-136, {66, 52, 92}) : Q(-136, {48, 88, 74})));
-        static_assert(A * V == (JPL ? Q(-146, {30, 8, 34}) : Q(-146, {14, 40, 18})));
-        static_assert(V * A == (!JPL ? Q(-146, {30, 8, 34}) : Q(-146, {14, 40, 18})));
+        static_assert(A * B == (JPL ? Quaternion(-136, {66, 52, 92}) : Quaternion(-136, {48, 88, 74})));
+        static_assert(B * A == (!JPL ? Quaternion(-136, {66, 52, 92}) : Quaternion(-136, {48, 88, 74})));
+        static_assert(A * V == (JPL ? Quaternion(-146, {30, 8, 34}) : Quaternion(-146, {14, 40, 18})));
+        static_assert(V * A == (!JPL ? Quaternion(-146, {30, 8, 34}) : Quaternion(-146, {14, 40, 18})));
         static_assert(multiply_vec(A, B) == (JPL ? Vector<3, T>(66, 52, 92) : Vector<3, T>(48, 88, 74)));
         static_assert(multiply_vec(B, A) == (!JPL ? Vector<3, T>(66, 52, 92) : Vector<3, T>(48, 88, 74)));
+
+        static_assert(!is_finite(Quaternion(-INF, {-INF, -INF, -INF})));
+        static_assert(!is_finite(Quaternion(INF, {1, 1, 1})));
+        static_assert(!is_finite(Quaternion(1, {INF, 1, 1})));
+        static_assert(!is_finite(Quaternion(1, {1, INF, 1})));
+        static_assert(!is_finite(Quaternion(1, {1, 1, INF})));
 };
 
 #define TEMPLATE(T)                      \

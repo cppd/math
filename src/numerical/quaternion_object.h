@@ -151,14 +151,19 @@ public:
                 return QuaternionHJ<T, JPL>(data_ / n);
         }
 
+        [[nodiscard]] QuaternionHJ<T, JPL> inversed() const
+        {
+                return conjugate() / data_.norm_squared();
+        }
+
         [[nodiscard]] constexpr bool is_unit() const
         {
                 return data_.is_unit();
         }
 
-        [[nodiscard]] QuaternionHJ<T, JPL> inversed() const
+        [[nodiscard]] friend constexpr bool is_finite(const QuaternionHJ<T, JPL>& a)
         {
-                return conjugate() / data_.norm_squared();
+                return is_finite(a.data_);
         }
 
         [[nodiscard]] friend std::string to_string(const QuaternionHJ<T, JPL>& a)
