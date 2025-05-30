@@ -17,13 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "matrix.h"
-
 #include <src/com/error.h>
 
-namespace ns::numerical::quaternion_object_implementation
+#include <cstddef>
+
+namespace ns::numerical
 {
-template <typename T, bool JPL, template <typename, bool> typename Quaternion>
+template <
+        typename T,
+        bool JPL,
+        template <std::size_t, std::size_t, typename> typename Matrix,
+        template <typename, bool> typename Quaternion>
 [[nodiscard]] constexpr Matrix<3, 3, T> rotation_quaternion_to_matrix(const Quaternion<T, JPL>& q)
 {
         static constexpr bool GLOBAL_TO_LOCAL = JPL;
@@ -52,7 +56,11 @@ template <typename T, bool JPL, template <typename, bool> typename Quaternion>
         };
 }
 
-template <typename T, bool JPL, template <typename, bool> typename Quaternion>
+template <
+        typename T,
+        bool JPL,
+        template <std::size_t, std::size_t, typename> typename Matrix,
+        template <typename, bool> typename Quaternion>
 [[nodiscard]] Quaternion<T, JPL> rotation_matrix_to_quaternion(const Matrix<3, 3, T>& m)
 {
         static constexpr bool GLOBAL_TO_LOCAL = JPL;

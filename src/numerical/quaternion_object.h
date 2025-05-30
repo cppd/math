@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
-#include "quaternion_matrix.h"
+#include "rotation.h"
 #include "vector.h"
 
 #include <src/com/type/limit.h>
@@ -66,8 +66,7 @@ public:
         }
 
         explicit QuaternionHJ(const Matrix<3, 3, T>& rotation_matrix)
-                : QuaternionHJ(quaternion_object_implementation::rotation_matrix_to_quaternion<T, JPL, QuaternionHJ>(
-                          rotation_matrix))
+                : QuaternionHJ(rotation_matrix_to_quaternion<T, JPL, Matrix, QuaternionHJ>(rotation_matrix))
         {
         }
 
@@ -81,7 +80,7 @@ public:
 
         [[nodiscard]] Matrix<3, 3, T> rotation_matrix() const
         {
-                return quaternion_object_implementation::rotation_quaternion_to_matrix(*this);
+                return rotation_quaternion_to_matrix<T, JPL, Matrix, QuaternionHJ>(*this);
         }
 
         [[nodiscard]] std::size_t hash() const
