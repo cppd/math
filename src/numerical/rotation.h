@@ -19,10 +19,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cmath>
 #include <cstddef>
 
 namespace ns::numerical
 {
+template <
+        typename T,
+        bool JPL,
+        template <std::size_t, typename> typename Vector,
+        template <typename, bool> typename Quaternion>
+[[nodiscard]] Quaternion<T, JPL> rotation_vector_to_quaternion(const Vector<3, T>& v)
+{
+        const T norm = v.norm();
+
+        if (norm > 0)
+        {
+                return {
+                        (std::sin(norm / 2) / norm) * v,
+                        std::cos(norm / 2),
+                };
+        }
+
+        return {
+                {0, 0, 0},
+                1,
+        };
+}
+
 template <
         typename T,
         bool JPL,

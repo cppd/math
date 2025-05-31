@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/transform.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <algorithm>
@@ -74,9 +75,12 @@ void test_equal(const T& a, const T& b, const P precision)
 template <typename T>
 void test(const T precision)
 {
+        const Vector<3, T> axis = Vector<3, T>(-5, 6, 4).normalized();
+        const T angle = 2;
+
         test_equal(
-                transform::rotate({-5, 6, 4}, T{2}, {3, -5, 2}),
-                {5.46996008744151012305L, 0.27754662586912375613L, -2.82886982950179797927L}, precision);
+                transform::rotate(angle * axis, {3, -5, 2}),
+                {5.46996008744151012392L, 0.277546625869123755968L, -2.82886982950179797906L}, precision);
 }
 
 void test_quaternion()

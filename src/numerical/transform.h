@@ -106,10 +106,9 @@ template <typename T, typename... V>
 }
 
 template <typename T>
-[[nodiscard]] Vector<3, T> rotate(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
+[[nodiscard]] Vector<3, T> rotate(const Vector<3, T>& rotation_vector, const Vector<3, T>& v)
 {
-        const auto q = Quaternion<T>::rotation_quaternion(axis, angle);
-        return rotate_vector(q, v);
+        return rotate_vector(Quaternion<T>(rotation_vector), v);
 }
 
 template <std::size_t N, typename T>

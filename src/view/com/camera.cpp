@@ -48,11 +48,11 @@ constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME = {
 };
 
 numerical::Vector3d rotate_vector_degree(
-        const numerical::Vector3d& axis,
+        const numerical::Vector3d& unit_axis,
         const double angle_degrees,
         const numerical::Vector3d& v)
 {
-        return numerical::transform::rotate(axis, degrees_to_radians(angle_degrees), v);
+        return numerical::transform::rotate(degrees_to_radians(angle_degrees) * unit_axis, v);
 }
 
 double default_scale(const int width, const int height)

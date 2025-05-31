@@ -40,7 +40,7 @@ class QuaternionHJ final
 
         Vector<4, T> data_;
 
-        explicit constexpr QuaternionHJ(const Vector<4, T>& v)
+        explicit constexpr QuaternionHJ(const auto& v)
                 : data_(v)
         {
         }
@@ -65,17 +65,14 @@ public:
         {
         }
 
-        explicit QuaternionHJ(const Matrix<3, 3, T>& rotation_matrix)
-                : QuaternionHJ(rotation_matrix_to_quaternion<T, JPL, Matrix, QuaternionHJ>(rotation_matrix))
+        explicit QuaternionHJ(const Vector<3, T>& rotation_vector)
+                : QuaternionHJ(rotation_vector_to_quaternion<T, JPL, Vector, QuaternionHJ>(rotation_vector))
         {
         }
 
-        [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Vector<3, T>& axis, const T angle)
+        explicit QuaternionHJ(const Matrix<3, 3, T>& rotation_matrix)
+                : QuaternionHJ(rotation_matrix_to_quaternion<T, JPL, Matrix, QuaternionHJ>(rotation_matrix))
         {
-                return {
-                        std::sin(angle / 2) * axis.normalized(),
-                        std::cos(angle / 2),
-                };
         }
 
         [[nodiscard]] Matrix<3, 3, T> rotation_matrix() const
