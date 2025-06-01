@@ -59,6 +59,8 @@ struct Test final
         static_assert(QuaternionHJ<T, !JPL>(A).z() == 5);
         static_assert(!A.is_unit());
         static_assert(!B.is_unit());
+        static_assert(!A.is_normalized());
+        static_assert(!B.is_normalized());
         static_assert(is_finite(A));
         static_assert(is_finite(B));
         static_assert(A.vec() == Vector<3, T>(3, 4, 5));
@@ -73,6 +75,14 @@ struct Test final
         static_assert(Quaternion(0, {1, 0, 0}).is_unit());
         static_assert(Quaternion(0, {0, 1, 0}).is_unit());
         static_assert(Quaternion(0, {0, 0, 1}).is_unit());
+
+        static_assert(Quaternion(1, {0, 0, 0}).is_normalized());
+        static_assert(Quaternion(0, {1, 0, 0}).is_normalized());
+        static_assert(Quaternion(0, {0, 1, 0}).is_normalized());
+        static_assert(Quaternion(0, {0, 0, 1}).is_normalized());
+
+        static_assert(Quaternion(-1, {0, 0, 0}).is_unit());
+        static_assert(!Quaternion(-1, {0, 0, 0}).is_normalized());
 
         static_assert(A * B == (JPL ? Quaternion(-136, {66, 52, 92}) : Quaternion(-136, {48, 88, 74})));
         static_assert(B * A == (!JPL ? Quaternion(-136, {66, 52, 92}) : Quaternion(-136, {48, 88, 74})));

@@ -157,6 +157,11 @@ public:
                 return data_.is_unit();
         }
 
+        [[nodiscard]] constexpr bool is_normalized() const
+        {
+                return (w() >= 0) && is_unit();
+        }
+
         [[nodiscard]] friend constexpr bool is_finite(const QuaternionHJ<T, JPL>& a)
         {
                 return is_finite(a.data_);
