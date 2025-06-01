@@ -35,16 +35,16 @@ template <
 
         if (norm > 0)
         {
-                return {
-                        (std::sin(norm / 2) / norm) * v,
-                        std::cos(norm / 2),
-                };
+                const T sin = std::sin(norm / 2);
+                const T cos = std::cos(norm / 2);
+                if (cos < 0)
+                {
+                        return {(-sin / norm) * v, -cos};
+                }
+                return {(sin / norm) * v, cos};
         }
 
-        return {
-                {0, 0, 0},
-                1,
-        };
+        return {Vector<3, T>(0, 0, 0), 1};
 }
 
 template <
