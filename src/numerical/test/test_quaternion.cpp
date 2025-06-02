@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -226,16 +227,23 @@ void test_constant(const T precision)
                         {0.383578074011068530816L, -0.479472592513835663554L, 0.57536711101660279621L}),
                 precision);
 
+        test_equal(
+                QuaternionHJ<T, JPL>((T{1.1L} * PI<T>)*Vector<3, T>(-4, 5, -3).normalized()),
+                QuaternionHJ<T, JPL>(
+                        0.156434465040230869204L,
+                        {0.558720898666968221263L, -0.698401123333710276565L, 0.419040674000226165934L}),
+                precision);
+
         {
                 const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>(2, {4, 3, 5});
-                if (q.is_unit())
+                if (q.is_unit() || q.is_normalized())
                 {
-                        error(to_string(q) + " is unit");
+                        error(to_string(q) + " is unit or normalized");
                 }
                 const QuaternionHJ<T, JPL> qn = q.normalized();
-                if (!qn.is_unit())
+                if (!qn.is_unit() || !qn.is_normalized())
                 {
-                        error(to_string(q) + " is not unit");
+                        error(to_string(q) + " is not unit or not normalized");
                 }
         }
 }
