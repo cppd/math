@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/constant.h>
-#include <src/filter/attitude/kalman/matrix.h>
+#include <src/filter/attitude/kalman/matrices.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -186,13 +186,13 @@ void test_impl(const T precision)
 
 void test()
 {
-        LOG("Test attitude Kalman matrix");
+        LOG("Test attitude Kalman matrices");
         test_impl<float>(1e-5);
         test_impl<double>(1e-14);
         test_impl<long double>(0);
-        LOG("Test attitude Kalman matrix passed");
+        LOG("Test attitude Kalman matrices passed");
 }
 
-TEST_SMALL("Attitude Kalman Matrix", test)
+TEST_SMALL("Attitude Kalman Matrices", test)
 }
 }

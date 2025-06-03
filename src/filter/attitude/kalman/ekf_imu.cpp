@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cross_matrix.h"
 #include "ekf_utility.h"
 #include "integrator.h"
-#include "matrix.h"
+#include "matrices.h"
 #include "quaternion.h"
 
 #include <src/com/error.h>
