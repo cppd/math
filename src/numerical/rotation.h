@@ -49,6 +49,51 @@ template <
 
 template <
         typename T,
+        bool GLOBAL_TO_LOCAL,
+        template <std::size_t, typename> typename Vector,
+        template <std::size_t, std::size_t, typename> typename Matrix>
+[[nodiscard]] Matrix<3, 3, T> rotation_vector_to_matrix(const Vector<3, T>& v)
+{
+        const T norm = v.norm();
+
+        if (norm == 0)
+        {
+                return {
+                        {1, 0, 0},
+                        {0, 1, 0},
+                        {0, 0, 1},
+                };
+        }
+
+        const T s = std::sin(GLOBAL_TO_LOCAL ? -norm : norm);
+        const T c = 1 - std::cos(norm);
+
+        const Vector<3, T> vn = v / norm;
+
+        const T v0 = s * vn[0];
+        const T v1 = s * vn[1];
+        const T v2 = s * vn[2];
+
+        const T c_v0 = c * vn[0];
+        const T c_v1 = c * vn[1];
+        const T c_v2 = c * vn[2];
+
+        const T v00 = c_v0 * vn[0];
+        const T v01 = c_v0 * vn[1];
+        const T v02 = c_v0 * vn[2];
+        const T v11 = c_v1 * vn[1];
+        const T v12 = c_v1 * vn[2];
+        const T v22 = c_v2 * vn[2];
+
+        return {
+                {1 - v11 - v22,      v01 - v2,      v02 + v1},
+                {     v01 + v2, 1 - v00 - v22,      v12 - v0},
+                {     v02 - v1,      v12 + v0, 1 - v00 - v11},
+        };
+}
+
+template <
+        typename T,
         bool JPL,
         template <std::size_t, std::size_t, typename> typename Matrix,
         template <typename, bool> typename Quaternion>
