@@ -65,14 +65,14 @@ public:
         {
         }
 
-        explicit QuaternionHJ(const Vector<3, T>& rotation_vector)
-                : QuaternionHJ(rotation_vector_to_quaternion<T, JPL, Vector, QuaternionHJ>(rotation_vector))
+        [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Vector<3, T>& rotation_vector)
         {
+                return rotation_vector_to_quaternion<T, JPL, Vector, QuaternionHJ>(rotation_vector);
         }
 
-        explicit QuaternionHJ(const Matrix<3, 3, T>& rotation_matrix)
-                : QuaternionHJ(rotation_matrix_to_quaternion<T, JPL, Matrix, QuaternionHJ>(rotation_matrix))
+        [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Matrix<3, 3, T>& rotation_matrix)
         {
+                return rotation_matrix_to_quaternion<T, JPL, Matrix, QuaternionHJ>(rotation_matrix);
         }
 
         [[nodiscard]] Matrix<3, 3, T> rotation_matrix() const
