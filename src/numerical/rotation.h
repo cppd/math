@@ -29,22 +29,21 @@ template <
         bool JPL,
         template <std::size_t, typename> typename Vector,
         template <typename, bool> typename Quaternion>
-[[nodiscard]] Quaternion<T, JPL> rotation_vector_to_quaternion(const Vector<3, T>& v)
+[[nodiscard]] Quaternion<T, JPL> rotation_vector_to_quaternion(const T angle, const Vector<3, T>& axis)
 {
-        const T norm = v.norm();
-
-        if (norm > 0)
+        const T sin = std::sin(angle / 2);
+        const T cos = std::cos(angle / 2);
+        if (cos < 0)
         {
-                const T sin = std::sin(norm / 2);
-                const T cos = std::cos(norm / 2);
-                if (cos < 0)
-                {
-                        return {(-sin / norm) * v, -cos};
-                }
-                return {(sin / norm) * v, cos};
+                return {
+                        -sin * axis.normalized(),
+                        -cos,
+                };
         }
-
-        return {Vector<3, T>(0, 0, 0), 1};
+        return {
+                sin * axis.normalized(),
+                cos,
+        };
 }
 
 template <
@@ -52,23 +51,12 @@ template <
         bool GLOBAL_TO_LOCAL,
         template <std::size_t, typename> typename Vector,
         template <std::size_t, std::size_t, typename> typename Matrix>
-[[nodiscard]] Matrix<3, 3, T> rotation_vector_to_matrix(const Vector<3, T>& v)
+[[nodiscard]] Matrix<3, 3, T> rotation_vector_to_matrix(const T angle, const Vector<3, T>& axis)
 {
-        const T norm = v.norm();
+        const T s = std::sin(GLOBAL_TO_LOCAL ? -angle : angle);
+        const T c = 1 - std::cos(angle);
 
-        if (norm == 0)
-        {
-                return {
-                        {1, 0, 0},
-                        {0, 1, 0},
-                        {0, 0, 1},
-                };
-        }
-
-        const T s = std::sin(GLOBAL_TO_LOCAL ? -norm : norm);
-        const T c = 1 - std::cos(norm);
-
-        const Vector<3, T> vn = v / norm;
+        const Vector<3, T> vn = axis.normalized();
 
         const T v0 = s * vn[0];
         const T v1 = s * vn[1];

@@ -221,14 +221,14 @@ void test_constant(const T precision)
                 precision);
 
         test_equal(
-                QuaternionHJ<T, JPL>::rotation_quaternion(T{2} * Vector<3, T>(4, -5, 6).normalized()),
+                QuaternionHJ<T, JPL>::rotation_quaternion(2, Vector<3, T>(4, -5, 6)),
                 QuaternionHJ<T, JPL>(
                         0.540302305868139717414L,
                         {0.383578074011068530816L, -0.479472592513835663554L, 0.57536711101660279621L}),
                 precision);
 
         test_equal(
-                QuaternionHJ<T, JPL>::rotation_quaternion((T{1.1L} * PI<T>)*Vector<3, T>(-4, 5, -3).normalized()),
+                QuaternionHJ<T, JPL>::rotation_quaternion(T{1.1L} * PI<T>, Vector<3, T>(-4, 5, -3)),
                 QuaternionHJ<T, JPL>(
                         0.156434465040230869204L,
                         {0.558720898666968221263L, -0.698401123333710276565L, 0.419040674000226165934L}),
@@ -252,21 +252,21 @@ template <typename T, bool JPL>
 void test_rotation(const T precision)
 {
         {
-                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>::rotation_quaternion({T{1} / 10, 0, 0});
+                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>::rotation_quaternion(T{1} / 10, {1, 0, 0});
                 const Vector<3, T> v(0, 1, 0);
                 const Vector<3, T> r(0, 0.995004165278025766135L, (JPL ? -1 : 1) * 0.0998334166468281523107L);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>::rotation_quaternion({0, T{1} / 10, 0});
+                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>::rotation_quaternion(T{1} / 10, {0, 1, 0});
                 const Vector<3, T> v(1, 0, 0);
                 const Vector<3, T> r(0.995004165278025766135L, 0, (JPL ? -1 : 1) * -0.0998334166468281523107L);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>::rotation_quaternion({0, 0, T{1} / 10});
+                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>::rotation_quaternion(T{1} / 10, {0, 0, 1});
                 const Vector<3, T> v(1, 0, 0);
                 const Vector<3, T> r(0.995004165278025766135L, (JPL ? -1 : 1) * 0.0998334166468281523107L, 0);
                 test_equal(rotate_vector(q, v), r, precision);

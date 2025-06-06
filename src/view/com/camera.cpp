@@ -52,7 +52,7 @@ numerical::Vector3d rotate_vector_degree(
         const double angle_degrees,
         const numerical::Vector3d& v)
 {
-        return numerical::transform::rotate(degrees_to_radians(angle_degrees) * unit_axis, v);
+        return numerical::transform::rotate(degrees_to_radians(angle_degrees), unit_axis, v);
 }
 
 double default_scale(const int width, const int height)
