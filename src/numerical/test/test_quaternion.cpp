@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <limits>
 #include <random>
+#include <tuple>
 #include <type_traits>
 
 namespace ns::numerical
@@ -185,6 +186,15 @@ void test_equal(const T& a, const T& b, const P precision)
         }
 }
 
+template <typename T>
+void test_normalized(const T& v)
+{
+        if (!(v.is_unit() && v.is_normalized()))
+        {
+                error(to_string(v) + " is not normalized");
+        }
+}
+
 template <typename T, bool JPL>
 QuaternionHJ<T, JPL> random_rotation_quaternion(PCG& pcg)
 {
@@ -194,6 +204,15 @@ QuaternionHJ<T, JPL> random_rotation_quaternion(PCG& pcg)
                 {urd(pcg), urd(pcg), urd(pcg)}
         };
         return q.normalized();
+}
+
+template <typename T>
+std::tuple<T, Vector<3, T>> random_rotation_vector(PCG& pcg)
+{
+        std::uniform_real_distribution<T> urd(-10, 10);
+        std::uniform_real_distribution<T> urd_angle(-3 * PI<T>, 3 * PI<T>);
+        const Vector<3, T> v(urd(pcg), urd(pcg), urd(pcg));
+        return {urd_angle(pcg), v.normalized()};
 }
 
 template <typename T, bool JPL>
@@ -340,6 +359,22 @@ void test_random(const T precision)
                         const QuaternionHJ<T, JPL> q1 = random_rotation_quaternion<T, JPL>(pcg);
                         const QuaternionHJ<T, JPL> q2 = random_rotation_quaternion<T, JPL>(pcg);
                         test_equal(m(q1 * q2), m(q1) * m(q2), precision);
+                }
+        }
+
+        {
+                PCG pcg;
+                for (int i = 0; i < 100; ++i)
+                {
+                        const auto [angle, axis] = random_rotation_vector<T>(pcg);
+                        const QuaternionHJ<T, JPL> q1 = QuaternionHJ<T, JPL>::rotation_quaternion(angle, axis);
+                        const QuaternionHJ<T, JPL> q2 =
+                                rotation_vector_to_quaternion<T, JPL, Vector, QuaternionHJ>(angle, axis);
+                        test_normalized(q1);
+                        test_normalized(q2);
+                        const Matrix<3, 3, T> m = rotation_vector_to_matrix<T, JPL, Vector, Matrix>(angle, axis);
+                        test_equal(q1, q2, precision);
+                        test_equal(q1.rotation_matrix(), m, precision);
                 }
         }
 }
