@@ -17,40 +17,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "matrix.h"
+#include "vector.h"
+
 #include <src/com/error.h>
 
 #include <cmath>
-#include <cstddef>
 
 namespace ns::numerical
 {
-template <
-        typename T,
-        bool JPL,
-        template <std::size_t, typename> typename Vector,
-        template <typename, bool> typename Quaternion>
+template <bool JPL, template <typename, bool> typename Quaternion, typename T>
 [[nodiscard]] Quaternion<T, JPL> rotation_vector_to_quaternion(const T angle, const Vector<3, T>& axis)
 {
-        const T sin = std::sin(angle / 2);
-        const T cos = std::cos(angle / 2);
+        T sin = std::sin(angle / 2);
+        T cos = std::cos(angle / 2);
+
         if (cos < 0)
         {
-                return {
-                        -sin * axis.normalized(),
-                        -cos,
-                };
+                sin = -sin;
+                cos = -cos;
         }
+
         return {
                 sin * axis.normalized(),
                 cos,
         };
 }
 
-template <
-        typename T,
-        bool GLOBAL_TO_LOCAL,
-        template <std::size_t, typename> typename Vector,
-        template <std::size_t, std::size_t, typename> typename Matrix>
+template <bool GLOBAL_TO_LOCAL, typename T>
 [[nodiscard]] Matrix<3, 3, T> rotation_vector_to_matrix(const T angle, const Vector<3, T>& axis)
 {
         const T s = std::sin(GLOBAL_TO_LOCAL ? -angle : angle);
@@ -80,11 +74,7 @@ template <
         };
 }
 
-template <
-        typename T,
-        bool JPL,
-        template <std::size_t, std::size_t, typename> typename Matrix,
-        template <typename, bool> typename Quaternion>
+template <bool JPL, template <typename, bool> typename Quaternion, typename T>
 [[nodiscard]] constexpr Matrix<3, 3, T> rotation_quaternion_to_matrix(const Quaternion<T, JPL>& q)
 {
         static constexpr bool GLOBAL_TO_LOCAL = JPL;
@@ -113,11 +103,7 @@ template <
         };
 }
 
-template <
-        typename T,
-        bool JPL,
-        template <std::size_t, std::size_t, typename> typename Matrix,
-        template <typename, bool> typename Quaternion>
+template <bool JPL, template <typename, bool> typename Quaternion, typename T>
 [[nodiscard]] Quaternion<T, JPL> rotation_matrix_to_quaternion(const Matrix<3, 3, T>& m)
 {
         static constexpr bool GLOBAL_TO_LOCAL = JPL;
