@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/constant.h>
-#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
@@ -59,6 +59,19 @@ std::vector<std::tuple<T, Vector<3, T>>> random_rotation_vectors(const int count
         return res;
 }
 
+template <typename T, bool JPL>
+std::vector<QuaternionHJ<T, JPL>> random_rotation_quaternions(const int count, PCG& pcg)
+{
+        std::uniform_real_distribution<T> urd(-10, 10);
+        std::vector<QuaternionHJ<T, JPL>> res;
+        res.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                res.push_back(QuaternionHJ<T, JPL>({urd(pcg), urd(pcg), urd(pcg)}, urd(pcg)).normalized());
+        }
+        return res;
+}
+
 template <typename T>
 std::vector<Vector<3, T>> random_vectors(const int count, PCG& pcg)
 {
@@ -71,27 +84,22 @@ std::vector<Vector<3, T>> random_vectors(const int count, PCG& pcg)
         return res;
 }
 
-template <int COUNT, typename T, typename F>
-long long test(
-        const std::vector<std::tuple<T, Vector<3, T>>>& rotation_vectors,
-        const std::vector<Vector<3, T>>& vectors,
-        const F& f)
+template <int COUNT, std::size_t DATA_SIZE, typename F>
+long long test(const F& f)
 {
-        ASSERT(rotation_vectors.size() == vectors.size());
-        const std::size_t size = rotation_vectors.size();
         const Clock::time_point start_time = Clock::now();
         for (int c = 0; c < COUNT; ++c)
         {
-                for (std::size_t i = 0; i < size; ++i)
+                for (std::size_t i = 0; i < DATA_SIZE; ++i)
                 {
-                        do_not_optimize(f(rotation_vectors[i], vectors[i]));
+                        f(i);
                 }
         }
-        return std::llround(COUNT * (size / duration_from(start_time)));
+        return std::llround(COUNT * (DATA_SIZE / duration_from(start_time)));
 }
 
 template <typename T, int COUNT, bool JPL>
-void test_rotation_performance()
+void test_rotation_vector_performance()
 {
         constexpr int DATA_SIZE = 10'000;
 
@@ -101,26 +109,95 @@ void test_rotation_performance()
         const std::vector<Vector<3, T>> data_v = random_vectors<T>(DATA_SIZE, engine);
 
         std::ostringstream oss;
-        oss << "Rotations <" << type_name<T>() << ", " << (JPL ? " JPL" : "!JPL") << ">:";
+        oss << "Rotation vectors <" << type_name<T>() << ", " << (JPL ? " JPL" : "!JPL") << ">:";
 
         {
-                const auto p = test<COUNT>(
-                        data_rv, data_v,
-                        [&](const std::tuple<T, Vector<3, T>>& rv, const Vector<3, T>& v)
+                const auto p = test<COUNT, DATA_SIZE>(
+                        [&](const std::size_t i)
                         {
-                                const auto q = rotation_vector_to_quaternion<JPL, QuaternionHJ>(
-                                        std::get<0>(rv), std::get<1>(rv));
-                                return rotate_vector(q, v);
+                                const QuaternionHJ<T, JPL> rq = rotation_vector_to_quaternion<JPL, QuaternionHJ>(
+                                        std::get<0>(data_rv[i]), std::get<1>(data_rv[i]));
+                                do_not_optimize(rotate_vector(rq, data_v[i]));
                         });
                 oss << " quaternion = " << to_string_digit_groups(p) << " o/s";
         }
         {
-                const auto p = test<COUNT>(
-                        data_rv, data_v,
-                        [&](const std::tuple<T, Vector<3, T>>& rv, const Vector<3, T>& v)
+                const auto p = test<COUNT, DATA_SIZE>(
+                        [&](const std::size_t i)
                         {
-                                const auto m = rotation_vector_to_matrix<JPL>(std::get<0>(rv), std::get<1>(rv));
-                                return m * v;
+                                const auto rm = rotation_vector_to_matrix<JPL>(
+                                        std::get<0>(data_rv[i]), std::get<1>(data_rv[i]));
+                                do_not_optimize(rm * data_v[i]);
+                        });
+                oss << ", matrix = " << to_string_digit_groups(p) << " o/s";
+        }
+
+        LOG(oss.str());
+}
+
+template <typename T, int COUNT, bool JPL>
+void test_rotation_quaternion_performance()
+{
+        constexpr int DATA_SIZE = 10'000;
+
+        PCG engine;
+
+        const std::vector<QuaternionHJ<T, JPL>> data_rq = random_rotation_quaternions<T, JPL>(DATA_SIZE, engine);
+        const std::vector<Vector<3, T>> data_v = random_vectors<T>(DATA_SIZE, engine);
+
+        std::ostringstream oss;
+        oss << "Rotation quaternions <" << type_name<T>() << ", " << (JPL ? " JPL" : "!JPL") << ">:";
+
+        {
+                const auto p = test<COUNT, DATA_SIZE>(
+                        [&](const std::size_t i)
+                        {
+                                do_not_optimize(rotate_vector(data_rq[i], data_v[i]));
+                        });
+                oss << " quaternion = " << to_string_digit_groups(p) << " o/s";
+        }
+        {
+                const auto p = test<COUNT, DATA_SIZE>(
+                        [&](const std::size_t i)
+                        {
+                                do_not_optimize(data_rq[i].rotation_matrix() * data_v[i]);
+                        });
+                oss << ", matrix = " << to_string_digit_groups(p) << " o/s";
+        }
+
+        LOG(oss.str());
+}
+
+template <typename T, int COUNT, bool JPL>
+void test_rotation_quaternion_2_performance()
+{
+        constexpr int DATA_SIZE = 10'000;
+
+        PCG engine;
+
+        const std::vector<QuaternionHJ<T, JPL>> data_rq = random_rotation_quaternions<T, JPL>(DATA_SIZE, engine);
+        const std::vector<Vector<3, T>> data_v = random_vectors<T>(2 * DATA_SIZE, engine);
+
+        std::ostringstream oss;
+        oss << "Rotation quaternions 2 <" << type_name<T>() << ", " << (JPL ? " JPL" : "!JPL") << ">:";
+
+        {
+                const auto p = test<COUNT, DATA_SIZE>(
+                        [&](const std::size_t i)
+                        {
+                                const QuaternionHJ<T, JPL>& rq = data_rq[i];
+                                do_not_optimize(rotate_vector(rq, data_v[2 * i]));
+                                do_not_optimize(rotate_vector(rq, data_v[2 * i + 1]));
+                        });
+                oss << " quaternion = " << to_string_digit_groups(p) << " o/s";
+        }
+        {
+                const auto p = test<COUNT, DATA_SIZE>(
+                        [&](const std::size_t i)
+                        {
+                                const Matrix<3, 3, T> m = data_rq[i].rotation_matrix();
+                                do_not_optimize(m * data_v[2 * i]);
+                                do_not_optimize(m * data_v[2 * i + 1]);
                         });
                 oss << ", matrix = " << to_string_digit_groups(p) << " o/s";
         }
@@ -129,17 +206,39 @@ void test_rotation_performance()
 }
 
 template <typename T, int COUNT>
-void test_rotation_performance()
+void test_rotation_vector_performance()
 {
-        test_rotation_performance<T, COUNT, false>();
-        test_rotation_performance<T, COUNT, true>();
+        test_rotation_vector_performance<T, COUNT, false>();
+        test_rotation_vector_performance<T, COUNT, true>();
+}
+
+template <typename T, int COUNT>
+void test_rotation_quaternion_performance()
+{
+        test_rotation_quaternion_performance<T, COUNT, false>();
+        test_rotation_quaternion_performance<T, COUNT, true>();
+}
+
+template <typename T, int COUNT>
+void test_rotation_quaternion_2_performance()
+{
+        test_rotation_quaternion_2_performance<T, COUNT, false>();
+        test_rotation_quaternion_2_performance<T, COUNT, true>();
 }
 
 void test_performance()
 {
-        test_rotation_performance<float, 5000>();
-        test_rotation_performance<double, 5000>();
-        test_rotation_performance<long double, 1000>();
+        test_rotation_vector_performance<float, 5000>();
+        test_rotation_vector_performance<double, 5000>();
+        test_rotation_vector_performance<long double, 1000>();
+        LOG("---");
+        test_rotation_quaternion_performance<float, 10000>();
+        test_rotation_quaternion_performance<double, 10000>();
+        test_rotation_quaternion_performance<long double, 2000>();
+        LOG("---");
+        test_rotation_quaternion_2_performance<float, 10000>();
+        test_rotation_quaternion_2_performance<double, 10000>();
+        test_rotation_quaternion_2_performance<long double, 2000>();
 }
 
 TEST_PERFORMANCE("Rotation", test_performance)
