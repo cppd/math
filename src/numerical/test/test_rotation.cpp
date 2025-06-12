@@ -195,15 +195,19 @@ void test_performance()
 {
         test_rotation_vector_performance<float, 5000>();
         test_rotation_vector_performance<double, 5000>();
-        test_rotation_vector_performance<long double, 1000>();
+        test_rotation_vector_performance<long double, 500>();
         LOG("---");
-        test_rotation_quaternion_performance<float, 10000, 1>();
-        test_rotation_quaternion_performance<double, 10000, 1>();
+        test_rotation_quaternion_performance<float, 10'000, 1>();
+        test_rotation_quaternion_performance<double, 10'000, 1>();
         test_rotation_quaternion_performance<long double, 2000, 1>();
         LOG("---");
-        test_rotation_quaternion_performance<float, 10000, 2>();
-        test_rotation_quaternion_performance<double, 10000, 2>();
-        test_rotation_quaternion_performance<long double, 2000, 2>();
+        test_rotation_quaternion_performance<float, 5000, 2>();
+        test_rotation_quaternion_performance<double, 5000, 2>();
+        test_rotation_quaternion_performance<long double, 1000, 2>();
+        LOG("---");
+        test_rotation_quaternion_performance<float, 5000, 3>();
+        test_rotation_quaternion_performance<double, 5000, 3>();
+        test_rotation_quaternion_performance<long double, 1000, 3>();
 }
 
 TEST_PERFORMANCE("Rotation", test_performance)
