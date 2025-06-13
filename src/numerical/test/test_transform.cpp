@@ -80,7 +80,7 @@ void test(const T precision)
 
         test_equal(
                 transform::rotate(angle, axis, {3, -5, 2}),
-                {5.46996008744151012348L, 0.277546625869123756076L, -2.82886982950179798014L}, precision);
+                {5.46996008744151012305L, 0.277546625869123755968L, -2.82886982950179798036L}, precision);
 }
 
 void test_quaternion()

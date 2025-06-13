@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
-#include "quaternion.h"
+#include "rotation.h"
 #include "vector.h"
 
 #include <src/com/error.h>
@@ -108,7 +108,8 @@ template <typename T, typename... V>
 template <typename T>
 [[nodiscard]] Vector<3, T> rotate(const T angle, const Vector<3, T>& axis, const Vector<3, T>& v)
 {
-        return rotate_vector(Quaternion<T>::rotation_quaternion(angle, axis), v);
+        constexpr bool GLOBAL_TO_LOCAL = false;
+        return rotation_vector_to_matrix<GLOBAL_TO_LOCAL>(angle, axis) * v;
 }
 
 template <std::size_t N, typename T>
