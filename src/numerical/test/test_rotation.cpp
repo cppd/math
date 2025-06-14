@@ -98,10 +98,11 @@ long long test(const F& f)
         return std::llround(COUNT * (DATA_SIZE / duration_from(start_time)));
 }
 
-template <typename T, bool JPL, int COUNT>
+template <typename T, bool JPL>
 void test_rotation_vector_performance()
 {
-        constexpr int DATA_SIZE = 10'000;
+        constexpr int COUNT = std::is_same_v<T, long double> ? 50'000 : 500'000;
+        constexpr int DATA_SIZE = 100;
 
         PCG engine;
 
@@ -135,10 +136,11 @@ void test_rotation_vector_performance()
         LOG(oss.str());
 }
 
-template <typename T, bool JPL, int COUNT, int ROTATION_COUNT>
+template <typename T, bool JPL, int ROTATION_COUNT>
 void test_rotation_quaternion_performance()
 {
-        constexpr int DATA_SIZE = 10'000;
+        constexpr int COUNT = std::is_same_v<T, long double> ? 50'000 : 500'000;
+        constexpr int DATA_SIZE = 100;
 
         PCG engine;
 
@@ -177,37 +179,37 @@ void test_rotation_quaternion_performance()
         LOG(oss.str());
 }
 
-template <typename T, int COUNT>
+template <typename T>
 void test_rotation_vector_performance()
 {
-        test_rotation_vector_performance<T, false, COUNT>();
-        test_rotation_vector_performance<T, true, COUNT>();
+        test_rotation_vector_performance<T, false>();
+        test_rotation_vector_performance<T, true>();
 }
 
-template <typename T, int COUNT, int ROTATION_COUNT>
+template <typename T, int ROTATION_COUNT>
 void test_rotation_quaternion_performance()
 {
-        test_rotation_quaternion_performance<T, false, COUNT, ROTATION_COUNT>();
-        test_rotation_quaternion_performance<T, true, COUNT, ROTATION_COUNT>();
+        test_rotation_quaternion_performance<T, false, ROTATION_COUNT>();
+        test_rotation_quaternion_performance<T, true, ROTATION_COUNT>();
 }
 
 void test_performance()
 {
-        test_rotation_vector_performance<float, 5000>();
-        test_rotation_vector_performance<double, 5000>();
-        test_rotation_vector_performance<long double, 500>();
+        test_rotation_vector_performance<float>();
+        test_rotation_vector_performance<double>();
+        test_rotation_vector_performance<long double>();
         LOG("---");
-        test_rotation_quaternion_performance<float, 10'000, 1>();
-        test_rotation_quaternion_performance<double, 10'000, 1>();
-        test_rotation_quaternion_performance<long double, 2000, 1>();
+        test_rotation_quaternion_performance<float, 1>();
+        test_rotation_quaternion_performance<double, 1>();
+        test_rotation_quaternion_performance<long double, 1>();
         LOG("---");
-        test_rotation_quaternion_performance<float, 5000, 2>();
-        test_rotation_quaternion_performance<double, 5000, 2>();
-        test_rotation_quaternion_performance<long double, 1000, 2>();
+        test_rotation_quaternion_performance<float, 2>();
+        test_rotation_quaternion_performance<double, 2>();
+        test_rotation_quaternion_performance<long double, 2>();
         LOG("---");
-        test_rotation_quaternion_performance<float, 5000, 3>();
-        test_rotation_quaternion_performance<double, 5000, 3>();
-        test_rotation_quaternion_performance<long double, 1000, 3>();
+        test_rotation_quaternion_performance<float, 3>();
+        test_rotation_quaternion_performance<double, 3>();
+        test_rotation_quaternion_performance<long double, 3>();
 }
 
 TEST_PERFORMANCE("Rotation", test_performance)
