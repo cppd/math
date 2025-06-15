@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/numerical/quaternion.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
@@ -63,6 +63,19 @@ bool equal(const T& a, const T& b, const P precision)
         return true;
 }
 
+template <std::size_t R, std::size_t C, typename T>
+bool equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T precision)
+{
+        for (std::size_t r = 0; r < R; ++r)
+        {
+                if (!equal(a.row(r), b.row(r), precision))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
 template <typename T, typename P>
 void test_equal(const T& a, const T& b, const P precision)
 {
@@ -75,12 +88,34 @@ void test_equal(const T& a, const T& b, const P precision)
 template <typename T>
 void test(const T precision)
 {
-        const Vector<3, T> axis = Vector<3, T>(-5, 6, 4).normalized();
-        const T angle = 2;
+        {
+                const Matrix<4, 4, T> m{
+                        {2,  0, 0, 0},
+                        {0, -3, 0, 0},
+                        {0,  0, 4, 0},
+                        {0,  0, 0, 1}
+                };
 
-        test_equal(
-                transform::rotate(angle, axis, {3, -5, 2}),
-                {5.46996008744151012305L, 0.277546625869123755968L, -2.82886982950179798036L}, precision);
+                test_equal(transform::scale<T>(2, -3, 4), m, /*precision=*/T{0});
+        }
+        {
+                const Matrix<4, 4, T> m{
+                        {1, 0, 0, -3},
+                        {0, 1, 0,  4},
+                        {0, 0, 1, -2},
+                        {0, 0, 0,  1}
+                };
+
+                test_equal(transform::translate<T>(-3, 4, -2), m, /*precision=*/T{0});
+        }
+        {
+                const Vector<3, T> axis = Vector<3, T>(-5, 6, 4).normalized();
+                const T angle = 2;
+
+                test_equal(
+                        transform::rotate(angle, axis, {3, -5, 2}),
+                        {5.46996008744151012305L, 0.277546625869123755968L, -2.82886982950179798036L}, precision);
+        }
 }
 
 void test_quaternion()
