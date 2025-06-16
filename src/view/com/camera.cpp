@@ -47,6 +47,19 @@ constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME = {
         .far = -1,
 };
 
+numerical::Matrix4d make_view_matrix(
+        const numerical::Vector3d& right,
+        const numerical::Vector3d& up,
+        const numerical::Vector3d& direction)
+{
+        return {
+                {     right[0],      right[1],      right[2], 0},
+                {        up[0],         up[1],         up[2], 0},
+                {-direction[0], -direction[1], -direction[2], 0},
+                {            0,             0,             0, 1},
+        };
+}
+
 numerical::Vector3d rotate_vector_degree(
         const numerical::Vector3d& unit_axis,
         const double angle_degrees,
@@ -74,15 +87,12 @@ Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
 void Camera::set_vectors(const numerical::Vector3d& right, const numerical::Vector3d& up)
 {
         camera_up_ = up.normalized();
+        camera_direction_ = cross(up, right).normalized();
+        camera_right_ = cross(camera_direction_, camera_up_);
 
-        camera_direction_from_ = cross(up, right).normalized();
-
-        camera_right_ = cross(camera_direction_from_, camera_up_);
-
-        const numerical::Vector3d light_right = rotate_vector_degree(camera_up_, -45, camera_right_);
-        light_up_ = rotate_vector_degree(light_right, -45, camera_up_);
-
-        light_direction_from_ = cross(light_up_, light_right).normalized();
+        light_right_ = rotate_vector_degree(camera_up_, -45, camera_right_);
+        light_up_ = rotate_vector_degree(light_right_, -45, camera_up_);
+        light_direction_ = cross(light_up_, light_right_);
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
@@ -108,12 +118,12 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 
 numerical::Matrix4d Camera::main_view_matrix() const
 {
-        return numerical::transform::look_at<double>(numerical::Vector3d(0, 0, 0), camera_direction_from_, camera_up_);
+        return make_view_matrix(camera_right_, camera_up_, camera_direction_);
 }
 
 numerical::Matrix4d Camera::shadow_view_matrix() const
 {
-        return numerical::transform::look_at(numerical::Vector3d(0, 0, 0), light_direction_from_, light_up_);
+        return make_view_matrix(light_right_, light_up_, light_direction_);
 }
 
 gpu::renderer::CameraInfo Camera::renderer_camera_info() const
@@ -123,8 +133,8 @@ gpu::renderer::CameraInfo Camera::renderer_camera_info() const
                 .shadow_volume = SHADOW_VOLUME,
                 .main_view_matrix = main_view_matrix(),
                 .shadow_view_matrix = shadow_view_matrix(),
-                .light_direction = light_direction_from_,
-                .camera_direction = camera_direction_from_,
+                .light_direction = light_direction_,
+                .camera_direction = camera_direction_,
         };
 }
 
@@ -215,8 +225,8 @@ info::Camera Camera::camera() const
 
         return {
                 .up = camera_up_,
-                .forward = camera_direction_from_,
-                .lighting = light_direction_from_,
+                .forward = camera_direction_,
+                .lighting = light_direction_,
                 .view_center = numerical::Vector3d(view_center[0], view_center[1], view_center[2]),
                 .view_width = volume.right - volume.left,
                 .width = width_,

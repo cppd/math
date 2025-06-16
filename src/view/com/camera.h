@@ -32,10 +32,11 @@ class Camera final
 
         numerical::Vector3d camera_right_{0};
         numerical::Vector3d camera_up_{0};
-        numerical::Vector3d camera_direction_from_{0};
+        numerical::Vector3d camera_direction_{0};
 
+        numerical::Vector3d light_right_{0};
         numerical::Vector3d light_up_{0};
-        numerical::Vector3d light_direction_from_{0};
+        numerical::Vector3d light_direction_{0};
 
         numerical::Vector2d window_center_{0};
 
