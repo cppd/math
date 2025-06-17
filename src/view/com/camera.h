@@ -34,9 +34,10 @@ class Camera final
         numerical::Vector3d camera_up_{0};
         numerical::Vector3d camera_direction_{0};
 
-        numerical::Vector3d light_right_{0};
-        numerical::Vector3d light_up_{0};
         numerical::Vector3d light_direction_{0};
+
+        numerical::Matrix4d main_view_matrix_{numerical::ZERO_MATRIX};
+        numerical::Matrix4d shadow_view_matrix_{numerical::ZERO_MATRIX};
 
         numerical::Vector2d window_center_{0};
 
@@ -49,9 +50,6 @@ class Camera final
         void set_vectors(const numerical::Vector3d& right, const numerical::Vector3d& up);
 
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
-        [[nodiscard]] numerical::Matrix4d main_view_matrix() const;
-        [[nodiscard]] numerical::Matrix4d shadow_view_matrix() const;
-
         [[nodiscard]] gpu::renderer::CameraInfo renderer_camera_info() const;
 
 public:

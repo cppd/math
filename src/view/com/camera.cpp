@@ -90,9 +90,12 @@ void Camera::set_vectors(const numerical::Vector3d& right, const numerical::Vect
         camera_direction_ = cross(up, right).normalized();
         camera_right_ = cross(camera_direction_, camera_up_);
 
-        light_right_ = rotate_vector_degree(camera_up_, -45, camera_right_);
-        light_up_ = rotate_vector_degree(light_right_, -45, camera_up_);
-        light_direction_ = cross(light_up_, light_right_);
+        const numerical::Vector3d light_right = rotate_vector_degree(camera_up_, -45, camera_right_);
+        const numerical::Vector3d light_up = rotate_vector_degree(light_right, -45, camera_up_);
+        light_direction_ = cross(light_up, light_right);
+
+        main_view_matrix_ = make_view_matrix(camera_right_, camera_up_, camera_direction_);
+        shadow_view_matrix_ = make_view_matrix(light_right, light_up, light_direction_);
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
@@ -116,23 +119,13 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
         };
 }
 
-numerical::Matrix4d Camera::main_view_matrix() const
-{
-        return make_view_matrix(camera_right_, camera_up_, camera_direction_);
-}
-
-numerical::Matrix4d Camera::shadow_view_matrix() const
-{
-        return make_view_matrix(light_right_, light_up_, light_direction_);
-}
-
 gpu::renderer::CameraInfo Camera::renderer_camera_info() const
 {
         return {
                 .main_volume = main_volume(),
                 .shadow_volume = SHADOW_VOLUME,
-                .main_view_matrix = main_view_matrix(),
-                .shadow_view_matrix = shadow_view_matrix(),
+                .main_view_matrix = main_view_matrix_,
+                .shadow_view_matrix = shadow_view_matrix_,
                 .light_direction = light_direction_,
                 .camera_direction = camera_direction_,
         };
@@ -221,7 +214,7 @@ info::Camera Camera::camera() const
                 1,
         };
 
-        const numerical::Vector4d view_center = main_view_matrix().inversed() * volume_center;
+        const numerical::Vector4d view_center = main_view_matrix_.inversed() * volume_center;
 
         return {
                 .up = camera_up_,
@@ -236,6 +229,6 @@ info::Camera Camera::camera() const
 
 numerical::Matrix4d Camera::view_matrix() const
 {
-        return main_view_matrix();
+        return main_view_matrix_;
 }
 }
