@@ -79,7 +79,7 @@ double default_scale(const int width, const int height)
 }
 
 Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
-        : set_camera_(std::move(set_camera))
+        : set_renderer_camera_(std::move(set_camera))
 {
         reset_view();
 }
@@ -119,16 +119,16 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
         };
 }
 
-gpu::renderer::CameraInfo Camera::renderer_camera_info() const
+void Camera::set_renderer_camera() const
 {
-        return {
+        set_renderer_camera_({
                 .main_volume = main_volume(),
                 .shadow_volume = SHADOW_VOLUME,
                 .main_view_matrix = main_view_matrix_,
                 .shadow_view_matrix = shadow_view_matrix_,
                 .light_direction = light_direction_,
                 .camera_direction = camera_direction_,
-        };
+        });
 }
 
 void Camera::reset_view()
@@ -144,7 +144,7 @@ void Camera::reset_view()
         window_center_ = WINDOW_CENTER;
         default_scale_ = default_scale(width_, height_);
 
-        set_camera_(renderer_camera_info());
+        set_renderer_camera();
 }
 
 void Camera::scale(const double x, const double y, const double delta)
@@ -176,7 +176,7 @@ void Camera::scale(const double x, const double y, const double delta)
         // center += mouse_global * (scale_delta - 1)
         window_center_ += mouse_global * (scale_delta - 1);
 
-        set_camera_(renderer_camera_info());
+        set_renderer_camera();
 }
 
 void Camera::rotate(const double around_up_axis, const double around_right_axis)
@@ -185,14 +185,14 @@ void Camera::rotate(const double around_up_axis, const double around_right_axis)
         const numerical::Vector3d up = rotate_vector_degree(camera_right_, around_right_axis, camera_up_);
         set_vectors(right, up);
 
-        set_camera_(renderer_camera_info());
+        set_renderer_camera();
 }
 
 void Camera::move(const numerical::Vector2d& delta)
 {
         window_center_ += delta;
 
-        set_camera_(renderer_camera_info());
+        set_renderer_camera();
 }
 
 void Camera::resize(const int width, const int height)
@@ -200,7 +200,7 @@ void Camera::resize(const int width, const int height)
         width_ = width;
         height_ = height;
 
-        set_camera_(renderer_camera_info());
+        set_renderer_camera();
 }
 
 info::Camera Camera::camera() const

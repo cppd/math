@@ -28,7 +28,7 @@ namespace ns::view::com
 {
 class Camera final
 {
-        std::function<void(const gpu::renderer::CameraInfo&)> set_camera_;
+        std::function<void(const gpu::renderer::CameraInfo&)> set_renderer_camera_;
 
         numerical::Vector3d camera_right_{0};
         numerical::Vector3d camera_up_{0};
@@ -49,8 +49,9 @@ class Camera final
 
         void set_vectors(const numerical::Vector3d& right, const numerical::Vector3d& up);
 
+        void set_renderer_camera() const;
+
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
-        [[nodiscard]] gpu::renderer::CameraInfo renderer_camera_info() const;
 
 public:
         explicit Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera);
