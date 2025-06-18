@@ -47,7 +47,7 @@ class Camera final
         double scale_exponent_{0};
         double default_scale_{0};
 
-        void set_vectors(const numerical::Vector3d& right, const numerical::Vector3d& up);
+        void set_rotation(const numerical::Vector3d& right, const numerical::Vector3d& up);
 
         void set_renderer_camera() const;
 

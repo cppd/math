@@ -84,7 +84,7 @@ Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
         reset_view();
 }
 
-void Camera::set_vectors(const numerical::Vector3d& right, const numerical::Vector3d& up)
+void Camera::set_rotation(const numerical::Vector3d& right, const numerical::Vector3d& up)
 {
         camera_up_ = up.normalized();
         camera_direction_ = cross(up, right).normalized();
@@ -138,7 +138,7 @@ void Camera::reset_view()
         constexpr double SCALE{1};
         constexpr numerical::Vector2d WINDOW_CENTER{0, 0};
 
-        set_vectors(RIGHT, UP);
+        set_rotation(RIGHT, UP);
 
         scale_exponent_ = std::log(SCALE) / std::log(SCALE_BASE);
         window_center_ = WINDOW_CENTER;
@@ -182,8 +182,9 @@ void Camera::scale(const double x, const double y, const double delta)
 void Camera::rotate(const double around_up_axis, const double around_right_axis)
 {
         const numerical::Vector3d right = rotate_vector_degree(camera_up_, around_up_axis, camera_right_);
-        const numerical::Vector3d up = rotate_vector_degree(camera_right_, around_right_axis, camera_up_);
-        set_vectors(right, up);
+        const numerical::Vector3d up = rotate_vector_degree(right, around_right_axis, camera_up_);
+
+        set_rotation(right, up);
 
         set_renderer_camera();
 }
