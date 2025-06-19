@@ -60,6 +60,17 @@ numerical::Matrix4d make_view_matrix(
         };
 }
 
+numerical::Matrix4d quaternion_to_view_matrix(const numerical::QuaternionHJ<double, true>& q)
+{
+        const numerical::Matrix3d m = q.rotation_matrix();
+        return {
+                {m[0, 0], m[0, 1], m[0, 2], 0},
+                {m[1, 0], m[1, 1], m[1, 2], 0},
+                {m[2, 0], m[2, 1], m[2, 2], 0},
+                {0, 0, 0, 1},
+        };
+}
+
 numerical::Vector3d rotate_vector_degree(
         const numerical::Vector3d& unit_axis,
         const double angle_degrees,
@@ -81,6 +92,10 @@ double default_scale(const int width, const int height)
 Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
         : set_renderer_camera_(std::move(set_camera))
 {
+        light_matrix_ = quaternion_to_view_matrix(
+                numerical::QuaternionHJ<double, true>::rotation_quaternion(degrees_to_radians(-45.0), {1, 0, 0})
+                * numerical::QuaternionHJ<double, true>::rotation_quaternion(degrees_to_radians(-45.0), {0, 1, 0}));
+
         reset_view();
 }
 
@@ -90,12 +105,10 @@ void Camera::set_rotation(const numerical::Vector3d& right, const numerical::Vec
         camera_direction_ = cross(up, right).normalized();
         camera_right_ = cross(camera_direction_, camera_up_);
 
-        const numerical::Vector3d light_right = rotate_vector_degree(camera_up_, -45, camera_right_);
-        const numerical::Vector3d light_up = rotate_vector_degree(light_right, -45, camera_up_);
-        light_direction_ = cross(light_up, light_right);
-
         main_view_matrix_ = make_view_matrix(camera_right_, camera_up_, camera_direction_);
-        shadow_view_matrix_ = make_view_matrix(light_right, light_up, light_direction_);
+        shadow_view_matrix_ = light_matrix_ * main_view_matrix_;
+
+        light_direction_ = -shadow_view_matrix_.row(2).head<3>();
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
