@@ -89,19 +89,27 @@ Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
         reset_view();
 }
 
+numerical::Vector3d Camera::camera_direction() const
+{
+        return -main_view_matrix_.row(2).head<3>();
+}
+
+numerical::Vector3d Camera::light_direction() const
+{
+        return -shadow_view_matrix_.row(2).head<3>();
+}
+
 void Camera::set_rotation(const numerical::Vector3d& right, const numerical::Vector3d& up)
 {
+        const numerical::Vector3d camera_direction = cross(up, right).normalized();
         camera_up_ = up.normalized();
-        camera_direction_ = cross(up, right).normalized();
-        camera_right_ = cross(camera_direction_, camera_up_);
+        camera_right_ = cross(camera_direction, camera_up_);
 
-        const numerical::Matrix3d main_matrix({camera_right_, camera_up_, -camera_direction_});
+        const numerical::Matrix3d main_matrix({camera_right_, camera_up_, -camera_direction});
         const numerical::Matrix3d shadow_matrix = light_matrix_ * main_matrix;
 
         main_view_matrix_ = rotation_to_view(main_matrix);
         shadow_view_matrix_ = rotation_to_view(shadow_matrix);
-
-        light_direction_ = -shadow_matrix.row(2);
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
@@ -132,8 +140,8 @@ void Camera::set_renderer_camera() const
                 .shadow_volume = SHADOW_VOLUME,
                 .main_view_matrix = main_view_matrix_,
                 .shadow_view_matrix = shadow_view_matrix_,
-                .light_direction = light_direction_,
-                .camera_direction = camera_direction_,
+                .light_direction = light_direction(),
+                .camera_direction = camera_direction(),
         });
 }
 
@@ -225,8 +233,8 @@ info::Camera Camera::camera() const
 
         return {
                 .up = camera_up_,
-                .forward = camera_direction_,
-                .lighting = light_direction_,
+                .forward = camera_direction(),
+                .lighting = light_direction(),
                 .view_center = numerical::Vector3d(view_center[0], view_center[1], view_center[2]),
                 .view_width = volume.right - volume.left,
                 .width = width_,

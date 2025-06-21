@@ -34,9 +34,6 @@ class Camera final
 
         numerical::Vector3d camera_right_{0};
         numerical::Vector3d camera_up_{0};
-        numerical::Vector3d camera_direction_{0};
-
-        numerical::Vector3d light_direction_{0};
 
         numerical::Matrix4d main_view_matrix_{numerical::ZERO_MATRIX};
         numerical::Matrix4d shadow_view_matrix_{numerical::ZERO_MATRIX};
@@ -54,6 +51,9 @@ class Camera final
         void set_renderer_camera() const;
 
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
+
+        [[nodiscard]] numerical::Vector3d camera_direction() const;
+        [[nodiscard]] numerical::Vector3d light_direction() const;
 
 public:
         explicit Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera);
