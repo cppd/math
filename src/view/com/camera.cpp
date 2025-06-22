@@ -89,6 +89,16 @@ Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
         reset_view();
 }
 
+numerical::Vector3d Camera::camera_right() const
+{
+        return main_view_matrix_.row(0).head<3>();
+}
+
+numerical::Vector3d Camera::camera_up() const
+{
+        return main_view_matrix_.row(1).head<3>();
+}
+
 numerical::Vector3d Camera::camera_direction() const
 {
         return -main_view_matrix_.row(2).head<3>();
@@ -101,11 +111,11 @@ numerical::Vector3d Camera::light_direction() const
 
 void Camera::set_rotation(const numerical::Vector3d& right, const numerical::Vector3d& up)
 {
-        const numerical::Vector3d camera_direction = cross(up, right).normalized();
-        camera_up_ = up.normalized();
-        camera_right_ = cross(camera_direction, camera_up_);
+        const numerical::Vector3d y = up.normalized();
+        const numerical::Vector3d z = cross(right, y).normalized();
+        const numerical::Vector3d x = cross(y, z);
 
-        const numerical::Matrix3d main_matrix({camera_right_, camera_up_, -camera_direction});
+        const numerical::Matrix3d main_matrix({x, y, z});
         const numerical::Matrix3d shadow_matrix = light_matrix_ * main_matrix;
 
         main_view_matrix_ = rotation_to_view(main_matrix);
@@ -195,8 +205,8 @@ void Camera::scale(const double x, const double y, const double delta)
 
 void Camera::rotate(const double around_up_axis, const double around_right_axis)
 {
-        const numerical::Vector3d right = rotate_vector_degree(camera_up_, around_up_axis, camera_right_);
-        const numerical::Vector3d up = rotate_vector_degree(right, around_right_axis, camera_up_);
+        const numerical::Vector3d right = rotate_vector_degree(camera_up(), around_up_axis, camera_right());
+        const numerical::Vector3d up = rotate_vector_degree(right, around_right_axis, camera_up());
 
         set_rotation(right, up);
 
@@ -232,7 +242,7 @@ info::Camera Camera::camera() const
         const numerical::Vector4d view_center = main_view_matrix_.inversed() * volume_center;
 
         return {
-                .up = camera_up_,
+                .up = camera_up(),
                 .forward = camera_direction(),
                 .lighting = light_direction(),
                 .view_center = numerical::Vector3d(view_center[0], view_center[1], view_center[2]),
