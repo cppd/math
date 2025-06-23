@@ -174,8 +174,11 @@ class RendererView final
                         world_to_shadow_matrix_ = TEXTURE_MATRIX * shadow_vp_matrix_;
                 }
 
-                drawing_buffer_->set_direction_to_light(-to_vector<float>(c.light_direction));
-                drawing_buffer_->set_direction_to_camera(-to_vector<float>(c.camera_direction));
+                const numerical::Vector3d direction_to_camera = c.main_view_matrix.row(2).head<3>();
+                const numerical::Vector3d direction_to_light = c.shadow_view_matrix.row(2).head<3>();
+
+                drawing_buffer_->set_direction_to_camera(to_vector<float>(direction_to_camera));
+                drawing_buffer_->set_direction_to_light(to_vector<float>(direction_to_light));
 
                 events_->view_matrices_changed();
         }

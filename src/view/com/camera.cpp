@@ -150,8 +150,6 @@ void Camera::set_renderer_camera() const
                 .shadow_volume = SHADOW_VOLUME,
                 .main_view_matrix = main_view_matrix_,
                 .shadow_view_matrix = shadow_view_matrix_,
-                .light_direction = light_direction(),
-                .camera_direction = camera_direction(),
         });
 }
 
