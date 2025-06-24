@@ -84,42 +84,39 @@ Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
                         degrees_to_radians(angle_degrees), axis);
         };
 
-        light_matrix_ = (rotation(-45.0, {1, 0, 0}) * rotation(-45.0, {0, 1, 0})).rotation_matrix();
+        light_rotation_matrix_ = (rotation(-45.0, {1, 0, 0}) * rotation(-45.0, {0, 1, 0})).rotation_matrix();
 
         reset_view();
 }
 
 numerical::Vector3d Camera::camera_right() const
 {
-        return main_view_matrix_.row(0).head<3>();
+        return main_rotation_matrix_.row(0);
 }
 
 numerical::Vector3d Camera::camera_up() const
 {
-        return main_view_matrix_.row(1).head<3>();
+        return main_rotation_matrix_.row(1);
 }
 
 numerical::Vector3d Camera::camera_direction() const
 {
-        return -main_view_matrix_.row(2).head<3>();
+        return -main_rotation_matrix_.row(2);
 }
 
 numerical::Vector3d Camera::light_direction() const
 {
-        return -shadow_view_matrix_.row(2).head<3>();
+        return -shadow_rotation_matrix_.row(2);
 }
 
 void Camera::set_rotation(const numerical::Vector3d& right, const numerical::Vector3d& up)
 {
         const numerical::Vector3d y = up.normalized();
         const numerical::Vector3d z = cross(right, y).normalized();
-        const numerical::Vector3d x = cross(y, z);
+        const numerical::Vector3d x = cross(y, z).normalized();
 
-        const numerical::Matrix3d main_matrix({x, y, z});
-        const numerical::Matrix3d shadow_matrix = light_matrix_ * main_matrix;
-
-        main_view_matrix_ = rotation_to_view(main_matrix);
-        shadow_view_matrix_ = rotation_to_view(shadow_matrix);
+        main_rotation_matrix_ = numerical::Matrix3d({x, y, z});
+        shadow_rotation_matrix_ = light_rotation_matrix_ * main_rotation_matrix_;
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
@@ -148,8 +145,8 @@ void Camera::set_renderer_camera() const
         set_renderer_camera_({
                 .main_volume = main_volume(),
                 .shadow_volume = SHADOW_VOLUME,
-                .main_view_matrix = main_view_matrix_,
-                .shadow_view_matrix = shadow_view_matrix_,
+                .main_view_matrix = rotation_to_view(main_rotation_matrix_),
+                .shadow_view_matrix = rotation_to_view(shadow_rotation_matrix_),
         });
 }
 
@@ -230,20 +227,17 @@ info::Camera Camera::camera() const
 {
         const gpu::renderer::CameraInfo::Volume volume = main_volume();
 
-        const numerical::Vector4d volume_center = {
+        const numerical::Vector3d volume_center = {
                 (volume.right + volume.left) / 2,
                 (volume.top + volume.bottom) / 2,
                 (volume.far + volume.near) / 2,
-                1,
         };
-
-        const numerical::Vector4d view_center = main_view_matrix_.inversed() * volume_center;
 
         return {
                 .up = camera_up(),
                 .forward = camera_direction(),
                 .lighting = light_direction(),
-                .view_center = numerical::Vector3d(view_center[0], view_center[1], view_center[2]),
+                .view_center = main_rotation_matrix_.transposed() * volume_center,
                 .view_width = volume.right - volume.left,
                 .width = width_,
                 .height = height_,
@@ -252,6 +246,6 @@ info::Camera Camera::camera() const
 
 numerical::Matrix4d Camera::view_matrix() const
 {
-        return main_view_matrix_;
+        return rotation_to_view(main_rotation_matrix_);
 }
 }

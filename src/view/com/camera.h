@@ -28,12 +28,12 @@ namespace ns::view::com
 {
 class Camera final
 {
-        numerical::Matrix3d light_matrix_;
+        numerical::Matrix3d light_rotation_matrix_;
 
         std::function<void(const gpu::renderer::CameraInfo&)> set_renderer_camera_;
 
-        numerical::Matrix4d main_view_matrix_{numerical::ZERO_MATRIX};
-        numerical::Matrix4d shadow_view_matrix_{numerical::ZERO_MATRIX};
+        numerical::Matrix3d main_rotation_matrix_{numerical::ZERO_MATRIX};
+        numerical::Matrix3d shadow_rotation_matrix_{numerical::ZERO_MATRIX};
 
         numerical::Vector2d window_center_{0};
 
