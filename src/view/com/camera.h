@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/gpu/renderer/event.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 #include <src/view/event.h>
 
@@ -28,12 +29,12 @@ namespace ns::view::com
 {
 class Camera final
 {
-        numerical::Matrix3d light_rotation_matrix_;
+        const numerical::QuaternionHJ<double, true> lighting_quaternion_;
+        const std::function<void(const gpu::renderer::CameraInfo&)> set_renderer_camera_;
 
-        std::function<void(const gpu::renderer::CameraInfo&)> set_renderer_camera_;
-
-        numerical::Matrix3d main_rotation_matrix_{numerical::ZERO_MATRIX};
-        numerical::Matrix3d shadow_rotation_matrix_{numerical::ZERO_MATRIX};
+        numerical::QuaternionHJ<double, true> quaternion_;
+        numerical::Matrix3d main_rotation_matrix_;
+        numerical::Matrix3d shadow_rotation_matrix_;
 
         numerical::Vector2d window_center_{0};
 
@@ -43,7 +44,7 @@ class Camera final
         double scale_exponent_{0};
         double default_scale_{0};
 
-        void set_rotation(const numerical::Vector3d& right, const numerical::Vector3d& up);
+        void set_rotation(const numerical::QuaternionHJ<double, true>& quaternion);
 
         void set_renderer_camera() const;
 
