@@ -43,8 +43,8 @@ struct CameraInfo final
 
         Volume main_volume;
         Volume shadow_volume;
-        numerical::Matrix4d main_view_matrix;
-        numerical::Matrix4d shadow_view_matrix;
+        numerical::Matrix3d main_rotation;
+        numerical::Matrix3d shadow_rotation;
 };
 
 namespace command

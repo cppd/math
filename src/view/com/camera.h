@@ -65,6 +65,6 @@ public:
         void resize(int width, int height);
 
         [[nodiscard]] info::Camera camera() const;
-        [[nodiscard]] numerical::Matrix4d view_matrix() const;
+        [[nodiscard]] numerical::Vector4d camera_plane() const;
 };
 }

@@ -46,16 +46,6 @@ constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME = {
         .far = -1,
 };
 
-numerical::Matrix4d rotation_to_view(const numerical::Matrix3d& m)
-{
-        return {
-                {m[0, 0], m[0, 1], m[0, 2], 0},
-                {m[1, 0], m[1, 1], m[1, 2], 0},
-                {m[2, 0], m[2, 1], m[2, 2], 0},
-                {0, 0, 0, 1},
-        };
-}
-
 double default_scale(const int width, const int height)
 {
         if (width > 0 && height > 0)
@@ -134,8 +124,8 @@ void Camera::set_renderer_camera() const
         set_renderer_camera_({
                 .main_volume = main_volume(),
                 .shadow_volume = SHADOW_VOLUME,
-                .main_view_matrix = rotation_to_view(main_rotation_matrix_),
-                .shadow_view_matrix = rotation_to_view(shadow_rotation_matrix_),
+                .main_rotation = main_rotation_matrix_,
+                .shadow_rotation = shadow_rotation_matrix_,
         });
 }
 
@@ -234,8 +224,11 @@ info::Camera Camera::camera() const
         };
 }
 
-numerical::Matrix4d Camera::view_matrix() const
+numerical::Vector4d Camera::camera_plane() const
 {
-        return rotation_to_view(main_rotation_matrix_);
+        // z = 0
+        // (0, 0, 1, 0) * view matrix
+        const numerical::Vector3d d = main_rotation_matrix_.row(2);
+        return {d[0], d[1], d[2], 0};
 }
 }

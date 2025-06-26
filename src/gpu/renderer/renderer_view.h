@@ -66,6 +66,16 @@ class RendererView final
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
         }
 
+        [[nodiscard]] static numerical::Matrix4d camera_rotation_to_view(const numerical::Matrix3d& m)
+        {
+                return {
+                        {m[0, 0], m[0, 1], m[0, 2], 0},
+                        {m[1, 0], m[1, 1], m[1, 2], 0},
+                        {m[2, 0], m[2, 1], m[2, 2], 0},
+                        {0, 0, 0, 1},
+                };
+        }
+
         void cmd(const command::SetLightingColor& v)
         {
                 drawing_buffer_->set_lighting_color(v.color.rgb32().max_n(0));
@@ -159,7 +169,7 @@ class RendererView final
         {
                 const CameraInfo& c = *v.info;
 
-                vp_matrix_ = camera_volume_to_projection(c.main_volume) * c.main_view_matrix;
+                vp_matrix_ = camera_volume_to_projection(c.main_volume) * camera_rotation_to_view(c.main_rotation);
                 drawing_buffer_->set_matrix(vp_matrix_);
 
                 if (shadow_mapping_)
@@ -170,12 +180,13 @@ class RendererView final
                                 numerical::transform::scale<double>(0.5, 0.5, 1)
                                 * numerical::transform::translate<double>(1, 1, 0);
 
-                        shadow_vp_matrix_ = camera_volume_to_projection(c.shadow_volume) * c.shadow_view_matrix;
+                        shadow_vp_matrix_ = camera_volume_to_projection(c.shadow_volume)
+                                            * camera_rotation_to_view(c.shadow_rotation);
                         world_to_shadow_matrix_ = TEXTURE_MATRIX * shadow_vp_matrix_;
                 }
 
-                const numerical::Vector3d direction_to_camera = c.main_view_matrix.row(2).head<3>();
-                const numerical::Vector3d direction_to_light = c.shadow_view_matrix.row(2).head<3>();
+                const numerical::Vector3d direction_to_camera = c.main_rotation.row(2);
+                const numerical::Vector3d direction_to_light = c.shadow_rotation.row(2);
 
                 drawing_buffer_->set_direction_to_camera(to_vector<float>(direction_to_camera));
                 drawing_buffer_->set_direction_to_light(to_vector<float>(direction_to_light));

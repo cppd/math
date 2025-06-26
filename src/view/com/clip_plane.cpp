@@ -34,13 +34,11 @@ namespace ns::view::com
 {
 namespace
 {
-numerical::Vector4d clip_plane_equation(const numerical::Matrix4d& view_matrix, const double position)
+numerical::Vector4d clip_plane_equation(const numerical::Vector4d& camera_plane, const double position)
 {
         ASSERT(position >= 0 && position <= 1);
 
-        // -z = 0 or (0, 0, -1, 0).
-        // (0, 0, -1, 0) * view matrix.
-        numerical::Vector4d plane = -view_matrix.row(2);
+        numerical::Vector4d plane = -camera_plane;
 
         const numerical::Vector3d n(plane[0], plane[1], plane[2]);
         const double d = n.norm_1();
@@ -75,7 +73,7 @@ void ClipPlane::exec(const ClipPlaneCommand& command)
 
 void ClipPlane::set_position(const double position)
 {
-        if (!view_matrix_)
+        if (!camera_plane_)
         {
                 error("Clip plane is not set");
         }
@@ -86,12 +84,12 @@ void ClipPlane::set_position(const double position)
         }
 
         position_ = position;
-        set_clip_plane_(clip_plane_equation(*view_matrix_, position_));
+        set_clip_plane_(clip_plane_equation(*camera_plane_, position_));
 }
 
 void ClipPlane::cmd(const command::ClipPlaneHide&)
 {
-        view_matrix_.reset();
+        camera_plane_.reset();
         set_clip_plane_(std::nullopt);
 }
 
@@ -102,22 +100,22 @@ void ClipPlane::cmd(const command::ClipPlaneSetPosition& v)
 
 void ClipPlane::cmd(const command::ClipPlaneShow& v)
 {
-        view_matrix_ = camera_->view_matrix();
+        camera_plane_ = camera_->camera_plane();
         set_position(v.position);
 }
 
 std::optional<numerical::Vector4d> ClipPlane::equation() const
 {
-        if (!view_matrix_)
+        if (!camera_plane_)
         {
                 return std::nullopt;
         }
-        return clip_plane_equation(*view_matrix_, position_);
+        return clip_plane_equation(*camera_plane_, position_);
 }
 
 [[nodiscard]] std::optional<double> ClipPlane::position() const
 {
-        if (!view_matrix_)
+        if (!camera_plane_)
         {
                 return std::nullopt;
         }
