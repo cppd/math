@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "camera.h"
 
-#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 #include <src/view/event.h>
 
@@ -31,7 +30,7 @@ namespace ns::view::com
 class ClipPlane final
 {
         const Camera* camera_;
-        std::optional<numerical::Vector4d> camera_plane_;
+        std::optional<numerical::Vector4d> plane_;
         double position_;
         std::function<void(const std::optional<numerical::Vector4d>&)> set_clip_plane_;
 

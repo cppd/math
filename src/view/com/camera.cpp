@@ -226,9 +226,7 @@ info::Camera Camera::camera() const
 
 numerical::Vector4d Camera::camera_plane() const
 {
-        // z = 0
-        // (0, 0, 1, 0) * view matrix
-        const numerical::Vector3d d = main_rotation_matrix_.row(2);
+        const numerical::Vector3d d = -camera_direction();
         return {d[0], d[1], d[2], 0};
 }
 }
