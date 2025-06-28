@@ -33,6 +33,9 @@ namespace ns::view::com
 {
 namespace
 {
+constexpr double NEAR = 1;
+constexpr double FAR = -1;
+
 constexpr double SCALE_BASE = 1.1;
 constexpr double SCALE_EXP_MIN = -50;
 constexpr double SCALE_EXP_MAX = 100;
@@ -106,8 +109,8 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
         const double right = scale * (window_center_[0] + 0.5 * width_);
         const double bottom = scale * (window_center_[1] - 0.5 * height_);
         const double top = scale * (window_center_[1] + 0.5 * height_);
-        const double near = 1;
-        const double far = -1;
+        const double near = NEAR;
+        const double far = FAR;
 
         return {
                 .left = left,
@@ -224,9 +227,12 @@ info::Camera Camera::camera() const
         };
 }
 
-numerical::Vector4d Camera::camera_plane() const
+Camera::Plane Camera::plane() const
 {
-        const numerical::Vector3d d = -camera_direction();
-        return {d[0], d[1], d[2], 0};
+        return {
+                .normal = -camera_direction(),
+                .near = NEAR,
+                .far = FAR,
+        };
 }
 }

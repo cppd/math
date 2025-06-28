@@ -65,6 +65,14 @@ public:
         void resize(int width, int height);
 
         [[nodiscard]] info::Camera camera() const;
-        [[nodiscard]] numerical::Vector4d camera_plane() const;
+
+        struct Plane final
+        {
+                numerical::Vector3d normal;
+                double near;
+                double far;
+        };
+
+        [[nodiscard]] Plane plane() const;
 };
 }

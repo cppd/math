@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/view/event.h>
 
+#include <cmath>
 #include <functional>
 #include <optional>
 #include <utility>
@@ -33,15 +34,21 @@ namespace ns::view::com
 {
 namespace
 {
-numerical::Vector4d clip_plane_equation(const numerical::Vector4d& plane, const double position)
+template <typename T>
+numerical::Vector4d clip_plane_equation(const T& camera_plane, const double position)
 {
+        ASSERT(camera_plane.normal.is_unit());
+        ASSERT(camera_plane.near > camera_plane.far);
         ASSERT(position >= 0 && position <= 1);
 
+        // camera plane: n * x = d
+        // clip plane: -n * x = -d
+        // -n * x + d = 0
         return {
-                plane[0],
-                plane[1],
-                plane[2],
-                plane[3] + 2 * position - 1,
+                -camera_plane.normal[0],
+                -camera_plane.normal[1],
+                -camera_plane.normal[2],
+                std::lerp(camera_plane.far, camera_plane.near, position),
         };
 }
 }
@@ -66,7 +73,7 @@ void ClipPlane::exec(const ClipPlaneCommand& command)
 
 void ClipPlane::set_position(const double position)
 {
-        if (!plane_)
+        if (!camera_plane_)
         {
                 error("Clip plane is not set");
         }
@@ -77,12 +84,12 @@ void ClipPlane::set_position(const double position)
         }
 
         position_ = position;
-        set_clip_plane_(clip_plane_equation(*plane_, position_));
+        set_clip_plane_(clip_plane_equation(*camera_plane_, position_));
 }
 
 void ClipPlane::cmd(const command::ClipPlaneHide&)
 {
-        plane_.reset();
+        camera_plane_.reset();
         set_clip_plane_(std::nullopt);
 }
 
@@ -93,23 +100,22 @@ void ClipPlane::cmd(const command::ClipPlaneSetPosition& v)
 
 void ClipPlane::cmd(const command::ClipPlaneShow& v)
 {
-        plane_ = -camera_->camera_plane();
-        ASSERT(numerical::Vector3d((*plane_)[0], (*plane_)[1], (*plane_)[2]).is_unit());
+        camera_plane_ = camera_->plane();
         set_position(v.position);
 }
 
 std::optional<numerical::Vector4d> ClipPlane::equation() const
 {
-        if (!plane_)
+        if (!camera_plane_)
         {
                 return std::nullopt;
         }
-        return clip_plane_equation(*plane_, position_);
+        return clip_plane_equation(*camera_plane_, position_);
 }
 
 [[nodiscard]] std::optional<double> ClipPlane::position() const
 {
-        if (!plane_)
+        if (!camera_plane_)
         {
                 return std::nullopt;
         }
