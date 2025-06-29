@@ -134,10 +134,7 @@ void Camera::set_renderer_camera() const
 
 void Camera::reset_view()
 {
-        constexpr numerical::QuaternionHJ<double, true> QUATERNION{
-                {0, 0, 0},
-                1
-        };
+        constexpr numerical::QuaternionHJ<double, true> QUATERNION{numerical::IDENTITY_QUATERNION};
         constexpr double SCALE{1};
         constexpr numerical::Vector2d WINDOW_CENTER{0, 0};
 
