@@ -31,6 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
+struct IdentityQuaternion final
+{
+};
+
+inline constexpr IdentityQuaternion IDENTITY_QUATERNION;
+
 template <typename T, bool JPL>
 class QuaternionHJ final
 {
@@ -47,6 +53,11 @@ class QuaternionHJ final
 
 public:
         constexpr QuaternionHJ()
+        {
+        }
+
+        explicit constexpr QuaternionHJ(IdentityQuaternion)
+                : QuaternionHJ({0, 0, 0}, 1)
         {
         }
 
