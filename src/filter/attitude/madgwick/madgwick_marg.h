@@ -27,10 +27,7 @@ class MadgwickMarg final
 {
         using Vector3 = numerical::Vector<3, T>;
 
-        numerical::Quaternion<T> q_{
-                1,
-                {0, 0, 0}
-        };
+        numerical::Quaternion<T> q_{numerical::IDENTITY_QUATERNION};
         T b_x_{1};
         T b_z_{0};
         Vector3 wb_{0, 0, 0};
