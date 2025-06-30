@@ -42,7 +42,7 @@ class Camera final
         int height_{-1};
 
         double scale_exponent_{0};
-        double default_scale_{0};
+        double scale_default_{0};
 
         void set_rotation(const numerical::QuaternionHJ<double, true>& quaternion);
 
@@ -50,7 +50,6 @@ class Camera final
 
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
 
-        [[nodiscard]] numerical::Vector3d camera_right() const;
         [[nodiscard]] numerical::Vector3d camera_up() const;
         [[nodiscard]] numerical::Vector3d camera_direction() const;
         [[nodiscard]] numerical::Vector3d light_direction() const;

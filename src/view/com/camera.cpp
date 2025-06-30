@@ -74,11 +74,6 @@ Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
         reset_view();
 }
 
-numerical::Vector3d Camera::camera_right() const
-{
-        return main_rotation_matrix_.row(0);
-}
-
 numerical::Vector3d Camera::camera_up() const
 {
         return main_rotation_matrix_.row(1);
@@ -103,22 +98,20 @@ void Camera::set_rotation(const numerical::QuaternionHJ<double, true>& quaternio
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 {
-        const double scale = default_scale_ / std::pow(SCALE_BASE, scale_exponent_);
+        const double scale = scale_default_ / std::pow(SCALE_BASE, scale_exponent_);
 
         const double left = scale * (window_center_[0] - 0.5 * width_);
         const double right = scale * (window_center_[0] + 0.5 * width_);
         const double bottom = scale * (window_center_[1] - 0.5 * height_);
         const double top = scale * (window_center_[1] + 0.5 * height_);
-        const double near = NEAR;
-        const double far = FAR;
 
         return {
                 .left = left,
                 .right = right,
                 .bottom = bottom,
                 .top = top,
-                .near = near,
-                .far = far,
+                .near = NEAR,
+                .far = FAR,
         };
 }
 
@@ -142,7 +135,7 @@ void Camera::reset_view()
 
         scale_exponent_ = std::log(SCALE) / std::log(SCALE_BASE);
         window_center_ = WINDOW_CENTER;
-        default_scale_ = default_scale(width_, height_);
+        scale_default_ = default_scale(width_, height_);
 
         set_renderer_camera();
 }
