@@ -29,7 +29,8 @@ namespace ns::view::com
 {
 class ClipPlane final
 {
-        const Camera* camera_;
+        const Camera* const camera_;
+
         std::optional<Camera::Plane> camera_plane_;
         double position_;
         std::function<void(const std::optional<numerical::Vector4d>&)> set_clip_plane_;

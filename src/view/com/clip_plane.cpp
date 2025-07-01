@@ -34,8 +34,7 @@ namespace ns::view::com
 {
 namespace
 {
-template <typename T>
-numerical::Vector4d clip_plane_equation(const T& camera_plane, const double position)
+numerical::Vector4d clip_plane_equation(const Camera::Plane& camera_plane, const double position)
 {
         ASSERT(camera_plane.normal.is_unit());
         ASSERT(camera_plane.near > camera_plane.far);
