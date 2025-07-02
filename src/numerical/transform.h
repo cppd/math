@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
-#include "rotation.h"
 #include "vector.h"
 
 #include <src/com/error.h>
@@ -28,24 +27,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical::transform
 {
-template <typename T>
-[[nodiscard]] Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
-{
-        const Vector<3, T> f = (center - eye).normalized();
-        const Vector<3, T> s = cross(f, up).normalized();
-        const Vector<3, T> u = cross(s, f).normalized();
-
-        const T se = dot(s, eye);
-        const T ue = dot(u, eye);
-        const T fe = dot(f, eye);
-
-        return {
-                { s[0],  s[1],  s[2], -se},
-                { u[0],  u[1],  u[2], -ue},
-                {-f[0], -f[1], -f[2],  fe},
-                {    0,     0,     0,   1},
-        };
-}
+// template <typename T>
+// [[nodiscard]] Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, const Vector<3, T>& up)
+// {
+//         const Vector<3, T> f = (center - eye).normalized();
+//         const Vector<3, T> s = cross(f, up).normalized();
+//         const Vector<3, T> u = cross(s, f).normalized();
+//
+//         const T se = dot(s, eye);
+//         const T ue = dot(u, eye);
+//         const T fe = dot(f, eye);
+//
+//         return {
+//                 { s[0],  s[1],  s[2], -se},
+//                 { u[0],  u[1],  u[2], -ue},
+//                 {-f[0], -f[1], -f[2],  fe},
+//                 {    0,     0,     0,   1},
+//         };
+// }
 
 // Right-handed coordinate systems
 // Source: X to the right, Y upward
@@ -103,13 +102,6 @@ template <typename T, typename... V>
 [[nodiscard]] constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
 {
         return translate(Vector<sizeof...(V), T>(v...));
-}
-
-template <typename T>
-[[nodiscard]] Vector<3, T> rotate(const T angle, const Vector<3, T>& axis, const Vector<3, T>& v)
-{
-        constexpr bool GLOBAL_TO_LOCAL = false;
-        return rotation_vector_to_matrix<GLOBAL_TO_LOCAL>(angle, axis) * v;
 }
 
 template <std::size_t N, typename T>

@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
-#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <algorithm>
@@ -96,7 +95,7 @@ void test(const T precision)
                         {0,  0, 0, 1}
                 };
 
-                test_equal(transform::scale<T>(2, -3, 4), m, /*precision=*/T{0});
+                test_equal(transform::scale<T>(2, -3, 4), m, precision);
         }
         {
                 const Matrix<4, 4, T> m{
@@ -106,23 +105,15 @@ void test(const T precision)
                         {0, 0, 0,  1}
                 };
 
-                test_equal(transform::translate<T>(-3, 4, -2), m, /*precision=*/T{0});
-        }
-        {
-                const Vector<3, T> axis = Vector<3, T>(-5, 6, 4).normalized();
-                const T angle = 2;
-
-                test_equal(
-                        transform::rotate(angle, axis, {3, -5, 2}),
-                        {5.46996008744151012305L, 0.277546625869123755968L, -2.82886982950179798036L}, precision);
+                test_equal(transform::translate<T>(-3, 4, -2), m, precision);
         }
 }
 
 void test_quaternion()
 {
         LOG("Test transform");
-        test<float>(1e-6);
-        test<double>(1e-15);
+        test<float>(0);
+        test<double>(0);
         test<long double>(0);
         LOG("Test transform passed");
 }
