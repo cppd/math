@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <cstddef>
-#include <type_traits>
 
 namespace ns::numerical::transform
 {
@@ -45,30 +44,6 @@ namespace ns::numerical::transform
 //                 {    0,     0,     0,   1},
 //         };
 // }
-
-// Right-handed coordinate systems
-// Source: X to the right, Y upward
-// Vulkan: X to the right [-1, 1], Y downward [-1, 1], Z [0, 1]
-template <typename T>
-[[nodiscard]] constexpr Matrix<4, 4, T> ortho_vulkan(
-        const std::type_identity_t<T>& left,
-        const std::type_identity_t<T>& right,
-        const std::type_identity_t<T>& bottom,
-        const std::type_identity_t<T>& top,
-        const std::type_identity_t<T>& near,
-        const std::type_identity_t<T>& far)
-{
-        const T w = right - left;
-        const T h = bottom - top;
-        const T d = far - near;
-
-        return {
-                {2 / w,     0,     0, -(right + left) / w},
-                {    0, 2 / h,     0, -(bottom + top) / h},
-                {    0,     0, 1 / d,           -near / d},
-                {    0,     0,     0,                   1},
-        };
-}
 
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)

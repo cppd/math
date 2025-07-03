@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
+#include <src/gpu/com/projection.h>
 #include <src/gpu/render_buffers.h>
 #include <src/numerical/region.h>
-#include <src/numerical/transform.h>
 #include <src/text/text_data.h>
 #include <src/text/vertices.h>
 #include <src/vulkan/buffers.h>
@@ -159,7 +159,7 @@ class Impl final : public View
                 const double top = 0;
                 const double near = 1;
                 const double far = -1;
-                buffer_.set_matrix(numerical::transform::ortho_vulkan<double>(left, right, bottom, top, near, far));
+                buffer_.set_matrix(com::orthographic_projection(left, right, bottom, top, near, far));
         }
 
         void delete_buffers() override
