@@ -19,11 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/matrix.h>
 
-namespace ns::gpu::com
+namespace ns::vulkan
 {
 // Right-handed coordinate systems
-// Source: X to the right, Y upward
-// Vulkan: X to the right [-1, 1], Y downward [-1, 1], Z [0, 1]
+// X to the right [-1, 1], Y downward [-1, 1], Z [0, 1]
 [[nodiscard]] constexpr numerical::Matrix4d orthographic_projection(
         const double left,
         const double right,

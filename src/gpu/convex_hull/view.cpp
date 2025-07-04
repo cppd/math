@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
-#include <src/gpu/com/projection.h>
 #include <src/gpu/render_buffers.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
@@ -37,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/physical_device/functionality.h>
+#include <src/vulkan/projection.h>
 #include <src/vulkan/queue.h>
 
 #include <vulkan/vulkan_core.h>
@@ -159,7 +159,7 @@ class Impl final : public View
                 const double top = 0;
                 const double near = 1;
                 const double far = -1;
-                const numerical::Matrix4d p = com::orthographic_projection(left, right, bottom, top, near, far);
+                const numerical::Matrix4d p = vulkan::orthographic_projection(left, right, bottom, top, near, far);
                 const numerical::Matrix4d t = numerical::transform::translate<double>(0.5, 0.5, 0);
                 data_buffer_.set_matrix(p * t);
 

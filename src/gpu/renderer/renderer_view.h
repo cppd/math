@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/drawing.h"
 
 #include <src/com/error.h>
-#include <src/gpu/com/projection.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vector.h>
+#include <src/vulkan/projection.h>
 
 #include <optional>
 #include <variant>
@@ -63,7 +63,7 @@ class RendererView final
 
         [[nodiscard]] static numerical::Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
         {
-                return com::orthographic_projection(
+                return vulkan::orthographic_projection(
                         volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
         }
 
