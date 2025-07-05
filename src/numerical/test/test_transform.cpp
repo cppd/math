@@ -107,6 +107,18 @@ void test(const T precision)
 
                 test_equal(transform::translate<T>(-3, 4, -2), m, precision);
         }
+        {
+                const Matrix<4, 4, T> m{
+                        { 1,  -2,  3,  -4},
+                        {-5,   6, -7,   8},
+                        { 9, -10, 11, -12},
+                        { 0,   0,  0,   1}
+                };
+
+                const transform::MatrixVectorMultiplier multiplier(m);
+
+                test_equal(multiplier({-3, 4, -2}), {-21, 61, -101}, precision);
+        }
 }
 
 void test_quaternion()
