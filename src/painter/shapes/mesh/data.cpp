@@ -94,7 +94,7 @@ void write_vertices_and_normals(
         const numerical::Matrix<N + 1, N + 1, T> mesh_matrix = numerical::to_matrix<T>(mesh_object.matrix());
 
         {
-                const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
+                const numerical::transform::MatrixVectorMultiplier multiplier(mesh_matrix);
                 for (const auto& v : mesh.vertices)
                 {
                         data->mesh.vertices.push_back(multiplier(to_vector<T>(v)));

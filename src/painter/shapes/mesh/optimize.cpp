@@ -67,7 +67,7 @@ template <std::size_t N, typename T, typename MeshType>
         const numerical::Matrix<N + 1, N + 1, T>& mesh_matrix,
         const geometry::spatial::Hyperplane<N, T>& clip_plane)
 {
-        const numerical::transform::MatrixVectorMultiplier<N + 1, T> multiplier(mesh_matrix);
+        const numerical::transform::MatrixVectorMultiplier multiplier(mesh_matrix);
 
         std::vector<typename model::mesh::Mesh<N>::Facet> res;
         for (const typename model::mesh::Mesh<N>::Facet& facet : facets)
