@@ -58,17 +58,17 @@ double default_scale(const int width, const int height)
         return 1;
 }
 
-numerical::QuaternionHJ<double, true> rotation_up_right(const double around_up_axis, const double around_right_axis)
+template <typename Quaternion>
+Quaternion rotation_up_right(const double around_up_axis, const double around_right_axis)
 {
-        return numerical::QuaternionHJ<double, true>::rotation_quaternion(
-                       degrees_to_radians(around_right_axis), {1, 0, 0})
-               * numerical::QuaternionHJ<double, true>::rotation_quaternion(
-                       degrees_to_radians(around_up_axis), {0, 1, 0});
-};
+        const auto right = Quaternion::rotation_quaternion(degrees_to_radians(around_right_axis), {1, 0, 0});
+        const auto up = Quaternion::rotation_quaternion(degrees_to_radians(around_up_axis), {0, 1, 0});
+        return right * up;
+}
 }
 
 Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera)
-        : lighting_quaternion_(rotation_up_right(-45, -45)),
+        : lighting_quaternion_(rotation_up_right<Quaternion>(-45, -45)),
           set_renderer_camera_(std::move(set_camera))
 {
         reset_view();
@@ -89,7 +89,7 @@ numerical::Vector3d Camera::light_direction() const
         return -shadow_rotation_matrix_.row(2);
 }
 
-void Camera::set_rotation(const numerical::QuaternionHJ<double, true>& quaternion)
+void Camera::set_rotation(const Quaternion& quaternion)
 {
         quaternion_ = quaternion.normalized();
         main_rotation_matrix_ = quaternion_.rotation_matrix();
@@ -127,7 +127,7 @@ void Camera::set_renderer_camera() const
 
 void Camera::reset_view()
 {
-        constexpr numerical::QuaternionHJ<double, true> QUATERNION{numerical::IDENTITY_QUATERNION};
+        constexpr Quaternion QUATERNION{numerical::IDENTITY_QUATERNION};
         constexpr double SCALE{1};
         constexpr numerical::Vector2d WINDOW_CENTER{0, 0};
 
@@ -174,7 +174,7 @@ void Camera::scale(const double x, const double y, const double delta)
 
 void Camera::rotate(const double around_up_axis, const double around_right_axis)
 {
-        const auto rotation = rotation_up_right(around_up_axis, around_right_axis);
+        const auto rotation = rotation_up_right<Quaternion>(around_up_axis, around_right_axis);
 
         set_rotation(rotation * quaternion_);
 

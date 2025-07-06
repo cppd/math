@@ -29,10 +29,12 @@ namespace ns::view::com
 {
 class Camera final
 {
-        const numerical::QuaternionHJ<double, true> lighting_quaternion_;
+        using Quaternion = numerical::QuaternionHJ<double, true>;
+
+        const Quaternion lighting_quaternion_;
         const std::function<void(const gpu::renderer::CameraInfo&)> set_renderer_camera_;
 
-        numerical::QuaternionHJ<double, true> quaternion_;
+        Quaternion quaternion_;
         numerical::Matrix3d main_rotation_matrix_;
         numerical::Matrix3d shadow_rotation_matrix_;
 
@@ -44,7 +46,7 @@ class Camera final
         double scale_exponent_{0};
         double scale_default_{0};
 
-        void set_rotation(const numerical::QuaternionHJ<double, true>& quaternion);
+        void set_rotation(const Quaternion& quaternion);
         void set_renderer_camera() const;
 
         [[nodiscard]] gpu::renderer::CameraInfo::Volume main_volume() const;
