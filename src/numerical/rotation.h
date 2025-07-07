@@ -52,25 +52,29 @@ template <bool GLOBAL_TO_LOCAL, typename T>
 
         const Vector<3, T> vn = axis.normalized();
 
-        const T v0 = s * vn[0];
-        const T v1 = s * vn[1];
-        const T v2 = s * vn[2];
+        const T v0 = vn[0];
+        const T v1 = vn[1];
+        const T v2 = vn[2];
 
-        const T c_v0 = c * vn[0];
-        const T c_v1 = c * vn[1];
-        const T c_v2 = c * vn[2];
+        const T s0 = s * v0;
+        const T s1 = s * v1;
+        const T s2 = s * v2;
 
-        const T v00 = c_v0 * vn[0];
-        const T v01 = c_v0 * vn[1];
-        const T v02 = c_v0 * vn[2];
-        const T v11 = c_v1 * vn[1];
-        const T v12 = c_v1 * vn[2];
-        const T v22 = c_v2 * vn[2];
+        const T c0 = c * v0;
+        const T c1 = c * v1;
+        const T c2 = c * v2;
+
+        const T c00 = c0 * v0;
+        const T c01 = c0 * v1;
+        const T c02 = c0 * v2;
+        const T c11 = c1 * v1;
+        const T c12 = c1 * v2;
+        const T c22 = c2 * v2;
 
         return {
-                {1 - v11 - v22,      v01 - v2,      v02 + v1},
-                {     v01 + v2, 1 - v00 - v22,      v12 - v0},
-                {     v02 - v1,      v12 + v0, 1 - v00 - v11},
+                {1 - c11 - c22,      c01 - s2,      c02 + s1},
+                {     c01 + s2, 1 - c00 - c22,      c12 - s0},
+                {     c02 - s1,      c12 + s0, 1 - c00 - c11},
         };
 }
 
