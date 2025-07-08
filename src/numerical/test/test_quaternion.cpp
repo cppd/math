@@ -368,7 +368,8 @@ void test_random(const T precision)
                 {
                         const auto [angle, axis] = random_rotation_vector<T>(pcg);
                         const QuaternionHJ<T, JPL> q1 = QuaternionHJ<T, JPL>::rotation_quaternion(angle, axis);
-                        const QuaternionHJ<T, JPL> q2 = rotation_vector_to_quaternion<JPL, QuaternionHJ>(angle, axis);
+                        const QuaternionHJ<T, JPL> q2 =
+                                rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(angle, axis);
                         const Matrix<3, 3, T> m = rotation_vector_to_matrix<JPL>(angle, axis);
                         test_normalized(q1);
                         test_normalized(q2);

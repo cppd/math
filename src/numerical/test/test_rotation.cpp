@@ -116,7 +116,7 @@ void test_rotation_vector_performance()
                 const auto p = test<COUNT, DATA_SIZE>(
                         [&](const std::size_t i)
                         {
-                                const QuaternionHJ<T, JPL> rq = rotation_vector_to_quaternion<JPL, QuaternionHJ>(
+                                const QuaternionHJ<T, JPL> rq = rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(
                                         std::get<0>(data_rv[i]), std::get<1>(data_rv[i]));
                                 do_not_optimize(rotate_vector(rq, data_v[i]));
                         });
