@@ -76,11 +76,6 @@ public:
         {
         }
 
-        [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const T angle, const Vector<3, T>& axis)
-        {
-                return rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(angle, axis);
-        }
-
         [[nodiscard]] static QuaternionHJ<T, JPL> rotation_quaternion(const Matrix<3, 3, T>& rotation_matrix)
         {
                 return rotation_matrix_to_quaternion<QuaternionHJ<T, JPL>>(rotation_matrix);

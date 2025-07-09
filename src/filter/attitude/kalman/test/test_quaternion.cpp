@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/quaternion.h>
+#include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
@@ -30,19 +31,19 @@ template <typename T>
 void test_impl(const T precision)
 {
         {
-                const Quaternion<T> q = Quaternion<T>::rotation_quaternion(T{1} / 10, {1, 0, 0});
+                const Quaternion<T> q = numerical::rotation_vector_to_quaternion<Quaternion<T>>(T{1} / 10, {1, 0, 0});
                 const numerical::Vector<3, T> v(0, 1, 0);
                 const numerical::Vector<3, T> r(0, 0.995004165278025766135L, -0.0998334166468281523107L);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const Quaternion<T> q = Quaternion<T>::rotation_quaternion(T{1} / 10, {0, 1, 0});
+                const Quaternion<T> q = numerical::rotation_vector_to_quaternion<Quaternion<T>>(T{1} / 10, {0, 1, 0});
                 const numerical::Vector<3, T> v(1, 0, 0);
                 const numerical::Vector<3, T> r(0.995004165278025766135L, 0, 0.0998334166468281523107L);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const Quaternion<T> q = Quaternion<T>::rotation_quaternion(T{1} / 10, {0, 0, 1});
+                const Quaternion<T> q = numerical::rotation_vector_to_quaternion<Quaternion<T>>(T{1} / 10, {0, 0, 1});
                 const numerical::Vector<3, T> v(1, 0, 0);
                 const numerical::Vector<3, T> r(0.995004165278025766135L, -0.0998334166468281523107L, 0);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);

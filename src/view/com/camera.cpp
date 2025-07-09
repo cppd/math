@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/renderer/event.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
+#include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
 #include <src/view/event.h>
 
@@ -61,8 +62,12 @@ double default_scale(const int width, const int height)
 template <typename Quaternion>
 Quaternion rotation_up_right(const double around_up_axis, const double around_right_axis)
 {
-        const auto right = Quaternion::rotation_quaternion(degrees_to_radians(around_right_axis), {1, 0, 0});
-        const auto up = Quaternion::rotation_quaternion(degrees_to_radians(around_up_axis), {0, 1, 0});
+        const double right_radians = degrees_to_radians(around_right_axis);
+        const double up_radians = degrees_to_radians(around_up_axis);
+
+        const auto right = numerical::rotation_vector_to_quaternion<Quaternion>(right_radians, {1, 0, 0});
+        const auto up = numerical::rotation_vector_to_quaternion<Quaternion>(up_radians, {0, 1, 0});
+
         return right * up;
 }
 }
