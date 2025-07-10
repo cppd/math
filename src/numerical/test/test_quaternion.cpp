@@ -219,48 +219,50 @@ std::tuple<T, Vector<3, T>> random_rotation_vector(PCG& pcg)
 template <typename T, bool JPL>
 void test_constant(const T precision)
 {
+        using Quaternion = QuaternionHJ<T, JPL>;
+
         test_equal(
-                QuaternionHJ<T, JPL>(2, {4, 3, 5}).normalized(),
-                QuaternionHJ<T, JPL>(
+                Quaternion(2, {4, 3, 5}).normalized(),
+                Quaternion(
                         0.272165526975908677584L,
                         {0.544331053951817355168L, 0.408248290463863016363L, 0.680413817439771693974L}),
                 precision);
 
         test_equal(
-                QuaternionHJ<T, JPL>(-2, {4, 3, 5}).normalized(),
-                QuaternionHJ<T, JPL>(
+                Quaternion(-2, {4, 3, 5}).normalized(),
+                Quaternion(
                         0.272165526975908677584L,
                         {-0.544331053951817355168L, -0.408248290463863016363L, -0.680413817439771693974L}),
                 precision);
 
         test_equal(
-                QuaternionHJ<T, JPL>(3, {-7, 2, -8}).inversed(),
-                QuaternionHJ<T, JPL>(
+                Quaternion(3, {-7, 2, -8}).inversed(),
+                Quaternion(
                         0.0238095238095238095235L,
                         {0.0555555555555555555548L, -0.0158730158730158730157L, 0.0634920634920634920626L}),
                 precision);
 
         test_equal(
-                rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(2, Vector<3, T>(4, -5, 6)),
-                QuaternionHJ<T, JPL>(
+                rotation_vector_to_quaternion<Quaternion>(2, Vector<3, T>(4, -5, 6)),
+                Quaternion(
                         0.540302305868139717414L,
                         {0.383578074011068530816L, -0.479472592513835663554L, 0.57536711101660279621L}),
                 precision);
 
         test_equal(
-                rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(T{1.1L} * PI<T>, Vector<3, T>(-4, 5, -3)),
-                QuaternionHJ<T, JPL>(
+                rotation_vector_to_quaternion<Quaternion>(T{1.1L} * PI<T>, Vector<3, T>(-4, 5, -3)),
+                Quaternion(
                         0.156434465040230869204L,
                         {0.558720898666968221263L, -0.698401123333710276565L, 0.419040674000226165934L}),
                 precision);
 
         {
-                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>(2, {4, 3, 5});
+                const Quaternion q = Quaternion(2, {4, 3, 5});
                 if (q.is_unit() || q.is_normalized())
                 {
                         error(to_string(q) + " is unit or normalized");
                 }
-                const QuaternionHJ<T, JPL> qn = q.normalized();
+                const Quaternion qn = q.normalized();
                 if (!qn.is_unit() || !qn.is_normalized())
                 {
                         error(to_string(q) + " is not unit or not normalized");
@@ -271,38 +273,35 @@ void test_constant(const T precision)
 template <typename T, bool JPL>
 void test_rotation(const T precision)
 {
+        using Quaternion = QuaternionHJ<T, JPL>;
+
         {
-                const QuaternionHJ<T, JPL> q =
-                        rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(T{1} / 10, {1, 0, 0});
+                const Quaternion q = rotation_vector_to_quaternion<Quaternion>(T{1} / 10, {1, 0, 0});
                 const Vector<3, T> v(0, 1, 0);
                 const Vector<3, T> r(0, 0.995004165278025766135L, (JPL ? -1 : 1) * 0.0998334166468281523107L);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const QuaternionHJ<T, JPL> q =
-                        rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(T{1} / 10, {0, 1, 0});
+                const Quaternion q = rotation_vector_to_quaternion<Quaternion>(T{1} / 10, {0, 1, 0});
                 const Vector<3, T> v(1, 0, 0);
                 const Vector<3, T> r(0.995004165278025766135L, 0, (JPL ? -1 : 1) * -0.0998334166468281523107L);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const QuaternionHJ<T, JPL> q =
-                        rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(T{1} / 10, {0, 0, 1});
+                const Quaternion q = rotation_vector_to_quaternion<Quaternion>(T{1} / 10, {0, 0, 1});
                 const Vector<3, T> v(1, 0, 0);
                 const Vector<3, T> r(0.995004165278025766135L, (JPL ? -1 : 1) * 0.0998334166468281523107L, 0);
                 test_equal(rotate_vector(q, v), r, precision);
                 test_equal((q * v * q.conjugate()).vec(), r, precision);
         }
         {
-                const QuaternionHJ<T, JPL> q = QuaternionHJ<T, JPL>(-2, {5.2, -3.3, 4.4}).normalized();
-                const numerical::Vector<3, T> v = rotate_vector(q, {2.1, -3.2, 4.3});
-                const numerical::Vector<3, T> c =
-                        JPL ? numerical::Vector<3, T>(
-                                      5.0222059063468757101L, -2.42440854951868102712L, 1.4281775167237726246L)
-                            : numerical::Vector<3, T>(
-                                      5.03656387665198215136L, -0.711894273127752929284L, 2.69559471365638818612L);
+                const Quaternion q = Quaternion(-2, {5.2, -3.3, 4.4}).normalized();
+                const Vector<3, T> v = rotate_vector(q, {2.1, -3.2, 4.3});
+                const Vector<3, T> c =
+                        JPL ? Vector<3, T>(5.0222059063468757101L, -2.42440854951868102712L, 1.4281775167237726246L)
+                            : Vector<3, T>(5.03656387665198215136L, -0.711894273127752929284L, 2.69559471365638818612L);
                 test_equal(v, c, precision);
         }
 }
@@ -310,16 +309,18 @@ void test_rotation(const T precision)
 template <typename T, bool JPL>
 void test_random(const T precision)
 {
+        using Quaternion = QuaternionHJ<T, JPL>;
+
         {
                 PCG pcg;
                 std::uniform_real_distribution<T> urd(-100, 100);
                 for (int i = 0; i < 100; ++i)
                 {
-                        const QuaternionHJ<T, JPL> q = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q = random_rotation_quaternion<T, JPL>(pcg);
                         const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
                         const Vector<3, T> r1 = rotate_vector(q, v);
-                        const QuaternionHJ<T, JPL> q1 = q * v * q.conjugate();
-                        const QuaternionHJ<T, JPL> q2 = q * QuaternionHJ<T, JPL>(0, v) * q.conjugate();
+                        const Quaternion q1 = q * v * q.conjugate();
+                        const Quaternion q2 = q * Quaternion(0, v) * q.conjugate();
                         test_equal(r1, q1.vec(), precision);
                         test_equal(r1, q2.vec(), precision);
                         test_equal(T{0}, q1.w(), precision);
@@ -332,7 +333,7 @@ void test_random(const T precision)
                 std::uniform_real_distribution<T> urd(-100, 100);
                 for (int i = 0; i < 100; ++i)
                 {
-                        const QuaternionHJ<T, JPL> q = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q = random_rotation_quaternion<T, JPL>(pcg);
                         const Matrix<3, 3, T> m = q.rotation_matrix();
                         const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
                         const Vector<3, T> r1 = rotate_vector(q, v);
@@ -345,9 +346,9 @@ void test_random(const T precision)
                 PCG pcg;
                 for (int i = 0; i < 100; ++i)
                 {
-                        const QuaternionHJ<T, JPL> q1 = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q1 = random_rotation_quaternion<T, JPL>(pcg);
                         const Matrix<3, 3, T> m = q1.rotation_matrix();
-                        const QuaternionHJ<T, JPL> q2 = rotation_matrix_to_quaternion<QuaternionHJ<T, JPL>>(m);
+                        const Quaternion q2 = rotation_matrix_to_quaternion<Quaternion>(m);
                         test_equal(q1, q2, precision);
                 }
         }
@@ -361,8 +362,8 @@ void test_random(const T precision)
                 PCG pcg;
                 for (int i = 0; i < 100; ++i)
                 {
-                        const QuaternionHJ<T, JPL> q1 = random_rotation_quaternion<T, JPL>(pcg);
-                        const QuaternionHJ<T, JPL> q2 = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q1 = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q2 = random_rotation_quaternion<T, JPL>(pcg);
                         test_equal(m(q1 * q2), m(q1) * m(q2), precision);
                 }
         }
@@ -372,7 +373,7 @@ void test_random(const T precision)
                 for (int i = 0; i < 100; ++i)
                 {
                         const auto [angle, axis] = random_rotation_vector<T>(pcg);
-                        const QuaternionHJ<T, JPL> q = rotation_vector_to_quaternion<QuaternionHJ<T, JPL>>(angle, axis);
+                        const Quaternion q = rotation_vector_to_quaternion<Quaternion>(angle, axis);
                         const Matrix<3, 3, T> m = rotation_vector_to_matrix<JPL>(angle, axis);
                         test_normalized(q);
                         test_equal(q.rotation_matrix(), m, precision);
