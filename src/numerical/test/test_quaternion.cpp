@@ -346,7 +346,8 @@ void test_random(const T precision)
                 for (int i = 0; i < 100; ++i)
                 {
                         const QuaternionHJ<T, JPL> q1 = random_rotation_quaternion<T, JPL>(pcg);
-                        const QuaternionHJ<T, JPL> q2 = QuaternionHJ<T, JPL>::rotation_quaternion(q1.rotation_matrix());
+                        const Matrix<3, 3, T> m = q1.rotation_matrix();
+                        const QuaternionHJ<T, JPL> q2 = rotation_matrix_to_quaternion<QuaternionHJ<T, JPL>>(m);
                         test_equal(q1, q2, precision);
                 }
         }
