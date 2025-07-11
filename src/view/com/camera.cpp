@@ -97,8 +97,8 @@ numerical::Vector3d Camera::light_direction() const
 void Camera::set_rotation(const Quaternion& quaternion)
 {
         quaternion_ = quaternion.normalized();
-        main_rotation_matrix_ = quaternion_.rotation_matrix();
-        shadow_rotation_matrix_ = (lighting_quaternion_ * quaternion_).rotation_matrix();
+        main_rotation_matrix_ = numerical::rotation_quaternion_to_matrix(quaternion_);
+        shadow_rotation_matrix_ = numerical::rotation_quaternion_to_matrix(lighting_quaternion_ * quaternion_);
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const

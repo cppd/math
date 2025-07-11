@@ -196,6 +196,15 @@ void test_normalized(const T& v)
         }
 }
 
+template <typename T>
+void test_rotation(const T& v)
+{
+        if (!v.is_rotation())
+        {
+                error(to_string(v) + " is not rotation");
+        }
+}
+
 template <typename T, bool JPL>
 QuaternionHJ<T, JPL> random_rotation_quaternion(PCG& pcg)
 {
@@ -334,7 +343,7 @@ void test_random(const T precision)
                 for (int i = 0; i < 100; ++i)
                 {
                         const Quaternion q = random_rotation_quaternion<T, JPL>(pcg);
-                        const Matrix<3, 3, T> m = q.rotation_matrix();
+                        const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(q);
                         const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
                         const Vector<3, T> r1 = rotate_vector(q, v);
                         const Vector<3, T> r2 = m * v;
@@ -347,7 +356,7 @@ void test_random(const T precision)
                 for (int i = 0; i < 100; ++i)
                 {
                         const Quaternion q1 = random_rotation_quaternion<T, JPL>(pcg);
-                        const Matrix<3, 3, T> m = q1.rotation_matrix();
+                        const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(q1);
                         const Quaternion q2 = rotation_matrix_to_quaternion<Quaternion>(m);
                         test_equal(q1, q2, precision);
                 }
@@ -356,7 +365,7 @@ void test_random(const T precision)
         {
                 const auto m = [](const auto& q)
                 {
-                        return q.rotation_matrix();
+                        return rotation_quaternion_to_matrix(q);
                 };
 
                 PCG pcg;
@@ -376,7 +385,8 @@ void test_random(const T precision)
                         const Quaternion q = rotation_vector_to_quaternion<Quaternion>(angle, axis);
                         const Matrix<3, 3, T> m = rotation_vector_to_matrix<JPL>(angle, axis);
                         test_normalized(q);
-                        test_equal(q.rotation_matrix(), m, precision);
+                        test_rotation(m);
+                        test_equal(rotation_quaternion_to_matrix(q), m, precision);
                 }
         }
 }

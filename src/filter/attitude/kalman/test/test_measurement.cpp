@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/init_utility.h>
 #include <src/filter/attitude/kalman/measurement.h>
+#include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/matrix.h>
-#include <src/numerical/quaternion.h>
+#include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
@@ -34,7 +35,8 @@ template <typename T>
 void test_impl(const T precision)
 {
         const numerical::Vector<3, T> z = numerical::Vector<3, T>(1, -2, 3);
-        const numerical::Matrix<3, 3, T> attitude = initial_quaternion(z).rotation_matrix();
+        const Quaternion<T> q = initial_quaternion(z);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q);
 
         {
                 const numerical::Vector<3, T> m = numerical::Vector<3, T>(2, 1, -4).normalized();

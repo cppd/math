@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
+#include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
 
 #include <array>
@@ -109,7 +110,7 @@ bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = q_->rotation_matrix();
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
 
         update(std::array{
                 Update{

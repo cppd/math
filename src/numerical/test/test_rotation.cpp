@@ -167,7 +167,7 @@ void test_rotation_quaternion_performance()
                 const auto p = test<COUNT, DATA_SIZE>(
                         [&](const std::size_t i)
                         {
-                                const Matrix<3, 3, T> m = data_rq[i].rotation_matrix();
+                                const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(data_rq[i]);
                                 for (int r = 0; r < ROTATION_COUNT; ++r)
                                 {
                                         do_not_optimize(m * data_v[ROTATION_COUNT * i + r]);

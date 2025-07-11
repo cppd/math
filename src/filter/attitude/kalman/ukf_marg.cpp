@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf_transform.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
 
 #include <array>
@@ -147,7 +148,8 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         std::array<numerical::Vector<3 * N, T>, POINT_COUNT> sigmas_h;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
-                const numerical::Matrix<3, 3, T> attitude = propagated_quaternions_[i].rotation_matrix();
+                const numerical::Matrix<3, 3, T> attitude =
+                        numerical::rotation_quaternion_to_matrix(propagated_quaternions_[i]);
 
                 for (std::size_t j = 0; j < N; ++j)
                 {
@@ -211,7 +213,7 @@ bool UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = q_->rotation_matrix();
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
 
         const auto& mag = mag_measurement(attitude, m / m_norm, m_variance);
         if (!mag)

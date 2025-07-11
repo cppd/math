@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
+#include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
 
 #include <cmath>
