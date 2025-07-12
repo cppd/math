@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
+#include "quaternion.h"
 #include "vector.h"
 
 #include <src/com/error.h>
@@ -31,23 +32,23 @@ namespace rotation_implementation
 template <typename T>
 struct QuaternionTraits;
 
-template <typename Type, bool P_JPL, template <typename, bool> typename Quaternion>
-struct QuaternionTraits<Quaternion<Type, P_JPL>> final
+template <typename Type, bool P_JPL>
+struct QuaternionTraits<QuaternionHJ<Type, P_JPL>> final
 {
         static constexpr bool JPL = P_JPL;
         using T = Type;
 };
 
 template <typename Quaternion>
-using QuaternionT = QuaternionTraits<Quaternion>::T;
+using QuaternionType = QuaternionTraits<Quaternion>::T;
 }
 
 template <typename Quaternion>
 [[nodiscard]] Quaternion rotation_vector_to_quaternion(
-        const rotation_implementation::QuaternionT<Quaternion> angle,
-        const Vector<3, rotation_implementation::QuaternionT<Quaternion>>& axis)
+        const rotation_implementation::QuaternionType<Quaternion> angle,
+        const Vector<3, rotation_implementation::QuaternionType<Quaternion>>& axis)
 {
-        using T = rotation_implementation::QuaternionT<Quaternion>;
+        using T = rotation_implementation::QuaternionType<Quaternion>;
 
         T sin = std::sin(angle / 2);
         T cos = std::cos(angle / 2);
@@ -98,8 +99,8 @@ template <bool GLOBAL_TO_LOCAL, typename T>
         };
 }
 
-template <bool JPL, template <typename, bool> typename Quaternion, typename T>
-[[nodiscard]] constexpr Matrix<3, 3, T> rotation_quaternion_to_matrix(const Quaternion<T, JPL>& q)
+template <bool JPL, typename T>
+[[nodiscard]] constexpr Matrix<3, 3, T> rotation_quaternion_to_matrix(const QuaternionHJ<T, JPL>& q)
 {
         static constexpr bool GLOBAL_TO_LOCAL = JPL;
 
@@ -129,9 +130,9 @@ template <bool JPL, template <typename, bool> typename Quaternion, typename T>
 
 template <typename Quaternion>
 [[nodiscard]] Quaternion rotation_matrix_to_quaternion(
-        const Matrix<3, 3, rotation_implementation::QuaternionT<Quaternion>>& m)
+        const Matrix<3, 3, rotation_implementation::QuaternionType<Quaternion>>& m)
 {
-        using T = rotation_implementation::QuaternionT<Quaternion>;
+        using T = rotation_implementation::QuaternionType<Quaternion>;
         static constexpr bool JPL = rotation_implementation::QuaternionTraits<Quaternion>::JPL;
 
         static constexpr bool GLOBAL_TO_LOCAL = JPL;
