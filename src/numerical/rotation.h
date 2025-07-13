@@ -27,28 +27,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-namespace rotation_implementation
-{
-template <typename T>
-struct QuaternionTraits;
-
-template <typename Type, bool P_JPL>
-struct QuaternionTraits<QuaternionHJ<Type, P_JPL>> final
-{
-        static constexpr bool JPL = P_JPL;
-        using T = Type;
-};
-
-template <typename Quaternion>
-using QuaternionType = QuaternionTraits<Quaternion>::T;
-}
-
 template <typename Quaternion>
 [[nodiscard]] Quaternion rotation_vector_to_quaternion(
-        const rotation_implementation::QuaternionType<Quaternion> angle,
-        const Vector<3, rotation_implementation::QuaternionType<Quaternion>>& axis)
+        const QuaternionType<Quaternion> angle,
+        const Vector<3, QuaternionType<Quaternion>>& axis)
 {
-        using T = rotation_implementation::QuaternionType<Quaternion>;
+        using T = QuaternionType<Quaternion>;
 
         T sin = std::sin(angle / 2);
         T cos = std::cos(angle / 2);
@@ -129,13 +113,10 @@ template <bool JPL, typename T>
 }
 
 template <typename Quaternion>
-[[nodiscard]] Quaternion rotation_matrix_to_quaternion(
-        const Matrix<3, 3, rotation_implementation::QuaternionType<Quaternion>>& m)
+[[nodiscard]] Quaternion rotation_matrix_to_quaternion(const Matrix<3, 3, QuaternionType<Quaternion>>& m)
 {
-        using T = rotation_implementation::QuaternionType<Quaternion>;
-        static constexpr bool JPL = rotation_implementation::QuaternionTraits<Quaternion>::JPL;
-
-        static constexpr bool GLOBAL_TO_LOCAL = JPL;
+        using T = QuaternionType<Quaternion>;
+        static constexpr bool GLOBAL_TO_LOCAL = QuaternionTraits<Quaternion>::JPL;
 
         ASSERT(m.is_rotation());
 

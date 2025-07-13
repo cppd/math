@@ -205,11 +205,11 @@ void test_rotation(const T& v)
         }
 }
 
-template <typename T, bool JPL>
-QuaternionHJ<T, JPL> random_rotation_quaternion(PCG& pcg)
+template <typename Quaternion>
+Quaternion random_rotation_quaternion(PCG& pcg)
 {
-        std::uniform_real_distribution<T> urd(-10, 10);
-        const QuaternionHJ<T, JPL> q{
+        std::uniform_real_distribution<QuaternionType<Quaternion>> urd(-10, 10);
+        const Quaternion q{
                 std::abs(urd(pcg)),
                 {urd(pcg), urd(pcg), urd(pcg)}
         };
@@ -325,7 +325,7 @@ void test_random(const T precision)
                 std::uniform_real_distribution<T> urd(-100, 100);
                 for (int i = 0; i < 100; ++i)
                 {
-                        const Quaternion q = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q = random_rotation_quaternion<Quaternion>(pcg);
                         const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
                         const Vector<3, T> r1 = rotate_vector(q, v);
                         const Quaternion q1 = q * v * q.conjugate();
@@ -342,7 +342,7 @@ void test_random(const T precision)
                 std::uniform_real_distribution<T> urd(-100, 100);
                 for (int i = 0; i < 100; ++i)
                 {
-                        const Quaternion q = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q = random_rotation_quaternion<Quaternion>(pcg);
                         const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(q);
                         const Vector<3, T> v{urd(pcg), urd(pcg), urd(pcg)};
                         const Vector<3, T> r1 = rotate_vector(q, v);
@@ -355,7 +355,7 @@ void test_random(const T precision)
                 PCG pcg;
                 for (int i = 0; i < 100; ++i)
                 {
-                        const Quaternion q1 = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q1 = random_rotation_quaternion<Quaternion>(pcg);
                         const Matrix<3, 3, T> m = rotation_quaternion_to_matrix(q1);
                         const Quaternion q2 = rotation_matrix_to_quaternion<Quaternion>(m);
                         test_equal(q1, q2, precision);
@@ -371,8 +371,8 @@ void test_random(const T precision)
                 PCG pcg;
                 for (int i = 0; i < 100; ++i)
                 {
-                        const Quaternion q1 = random_rotation_quaternion<T, JPL>(pcg);
-                        const Quaternion q2 = random_rotation_quaternion<T, JPL>(pcg);
+                        const Quaternion q1 = random_rotation_quaternion<Quaternion>(pcg);
+                        const Quaternion q2 = random_rotation_quaternion<Quaternion>(pcg);
                         test_equal(m(q1 * q2), m(q1) * m(q2), precision);
                 }
         }

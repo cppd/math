@@ -165,4 +165,19 @@ template <typename T, bool JPL>
 
         return multiply_vec(q_unit * v, q_unit.conjugate());
 }
+
+//
+
+template <typename T>
+struct QuaternionTraits;
+
+template <typename Type, bool P_JPL>
+struct QuaternionTraits<QuaternionHJ<Type, P_JPL>> final
+{
+        static constexpr bool JPL = P_JPL;
+        using T = Type;
+};
+
+template <typename Quaternion>
+using QuaternionType = QuaternionTraits<Quaternion>::T;
 }
