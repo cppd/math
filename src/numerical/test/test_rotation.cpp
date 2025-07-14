@@ -59,15 +59,16 @@ std::vector<std::tuple<T, Vector<3, T>>> random_rotation_vectors(const int count
         return res;
 }
 
-template <typename T, bool JPL>
-std::vector<QuaternionHJ<T, JPL>> random_rotation_quaternions(const int count, PCG& pcg)
+template <typename Quaternion>
+std::vector<Quaternion> random_rotation_quaternions(const int count, PCG& pcg)
 {
-        std::uniform_real_distribution<T> urd(-10, 10);
-        std::vector<QuaternionHJ<T, JPL>> res;
+        std::uniform_real_distribution<QuaternionType<Quaternion>> urd(-10, 10);
+        std::vector<Quaternion> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                res.push_back(QuaternionHJ<T, JPL>({urd(pcg), urd(pcg), urd(pcg)}, urd(pcg)).normalized());
+                const Quaternion q({urd(pcg), urd(pcg), urd(pcg)}, urd(pcg));
+                res.push_back(q.normalized());
         }
         return res;
 }
@@ -144,7 +145,8 @@ void test_rotation_quaternion_performance()
 
         PCG engine;
 
-        const std::vector<QuaternionHJ<T, JPL>> data_rq = random_rotation_quaternions<T, JPL>(DATA_SIZE, engine);
+        const std::vector<QuaternionHJ<T, JPL>> data_rq =
+                random_rotation_quaternions<QuaternionHJ<T, JPL>>(DATA_SIZE, engine);
         const std::vector<Vector<3, T>> data_v = random_vectors<T>(ROTATION_COUNT * DATA_SIZE, engine);
 
         std::ostringstream oss;
