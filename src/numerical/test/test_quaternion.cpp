@@ -387,6 +387,7 @@ void test_random(const T precision)
                         test_normalized(q);
                         test_rotation(m);
                         test_equal(rotation_quaternion_to_matrix(q), m, precision);
+                        test_equal(q, rotation_matrix_to_quaternion<Quaternion>(m), precision);
                 }
         }
 }
