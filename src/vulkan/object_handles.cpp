@@ -31,6 +31,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
+#define MOVE_1(p0)                         \
+        do                                 \
+        {                                  \
+                p0 = from->p0;             \
+                from->p0 = VK_NULL_HANDLE; \
+        } while (false)
+
+#define MOVE_2(p0, p1)                     \
+        do                                 \
+        {                                  \
+                p0 = from->p0;             \
+                p1 = from->p1;             \
+                from->p0 = VK_NULL_HANDLE; \
+                from->p1 = VK_NULL_HANDLE; \
+        } while (false)
+
+#define MOVE_3(p0, p1, p2)                 \
+        do                                 \
+        {                                  \
+                p0 = from->p0;             \
+                p1 = from->p1;             \
+                p2 = from->p2;             \
+                from->p0 = VK_NULL_HANDLE; \
+                from->p1 = VK_NULL_HANDLE; \
+                from->p2 = VK_NULL_HANDLE; \
+        } while (false)
+
 namespace ns::vulkan::handle
 {
 void Instance::destroy() noexcept
@@ -43,8 +70,7 @@ void Instance::destroy() noexcept
 
 void Instance::move(Instance* const from) noexcept
 {
-        instance_ = from->instance_;
-        from->instance_ = VK_NULL_HANDLE;
+        MOVE_1(instance_);
 }
 
 Instance::Instance(const VkInstanceCreateInfo& create_info)
@@ -65,10 +91,7 @@ void DebugUtilsMessengerEXT::destroy() noexcept
 
 void DebugUtilsMessengerEXT::move(DebugUtilsMessengerEXT* const from) noexcept
 {
-        instance_ = from->instance_;
-        messenger_ = from->messenger_;
-        from->instance_ = VK_NULL_HANDLE;
-        from->messenger_ = VK_NULL_HANDLE;
+        MOVE_2(instance_, messenger_);
 }
 
 DebugUtilsMessengerEXT::DebugUtilsMessengerEXT(
@@ -91,8 +114,7 @@ void Device::destroy() noexcept
 
 void Device::move(Device* const from) noexcept
 {
-        device_ = from->device_;
-        from->device_ = VK_NULL_HANDLE;
+        MOVE_1(device_);
 }
 
 Device::Device(const VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
@@ -113,10 +135,7 @@ void SurfaceKHR::destroy() noexcept
 
 void SurfaceKHR::move(SurfaceKHR* const from) noexcept
 {
-        instance_ = from->instance_;
-        surface_ = from->surface_;
-        from->instance_ = VK_NULL_HANDLE;
-        from->surface_ = VK_NULL_HANDLE;
+        MOVE_2(instance_, surface_);
 }
 
 SurfaceKHR::SurfaceKHR(const VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
@@ -146,10 +165,7 @@ void SwapchainKHR::destroy() noexcept
 
 void SwapchainKHR::move(SwapchainKHR* const from) noexcept
 {
-        device_ = from->device_;
-        swapchain_ = from->swapchain_;
-        from->device_ = VK_NULL_HANDLE;
-        from->swapchain_ = VK_NULL_HANDLE;
+        MOVE_2(device_, swapchain_);
 }
 
 SwapchainKHR::SwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
@@ -171,10 +187,7 @@ void ShaderModule::destroy() noexcept
 
 void ShaderModule::move(ShaderModule* const from) noexcept
 {
-        device_ = from->device_;
-        shader_module_ = from->shader_module_;
-        from->device_ = VK_NULL_HANDLE;
-        from->shader_module_ = VK_NULL_HANDLE;
+        MOVE_2(device_, shader_module_);
 }
 
 ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t> code)
@@ -207,10 +220,7 @@ void RenderPass::destroy() noexcept
 
 void RenderPass::move(RenderPass* const from) noexcept
 {
-        device_ = from->device_;
-        render_pass_ = from->render_pass_;
-        from->device_ = VK_NULL_HANDLE;
-        from->render_pass_ = VK_NULL_HANDLE;
+        MOVE_2(device_, render_pass_);
 }
 
 RenderPass::RenderPass(const VkDevice device, const VkRenderPassCreateInfo& create_info)
@@ -232,10 +242,7 @@ void PipelineLayout::destroy() noexcept
 
 void PipelineLayout::move(PipelineLayout* const from) noexcept
 {
-        device_ = from->device_;
-        pipeline_layout_ = from->pipeline_layout_;
-        from->device_ = VK_NULL_HANDLE;
-        from->pipeline_layout_ = VK_NULL_HANDLE;
+        MOVE_2(device_, pipeline_layout_);
 }
 
 PipelineLayout::PipelineLayout(const VkDevice device, const VkPipelineLayoutCreateInfo& create_info)
@@ -257,10 +264,7 @@ void Pipeline::destroy() noexcept
 
 void Pipeline::move(Pipeline* const from) noexcept
 {
-        device_ = from->device_;
-        pipeline_ = from->pipeline_;
-        from->device_ = VK_NULL_HANDLE;
-        from->pipeline_ = VK_NULL_HANDLE;
+        MOVE_2(device_, pipeline_);
 }
 
 Pipeline::Pipeline(const VkDevice device, const VkGraphicsPipelineCreateInfo& create_info)
@@ -302,10 +306,7 @@ void Framebuffer::destroy() noexcept
 
 void Framebuffer::move(Framebuffer* const from) noexcept
 {
-        device_ = from->device_;
-        framebuffer_ = from->framebuffer_;
-        from->device_ = VK_NULL_HANDLE;
-        from->framebuffer_ = VK_NULL_HANDLE;
+        MOVE_2(device_, framebuffer_);
 }
 
 Framebuffer::Framebuffer(const VkDevice device, const VkFramebufferCreateInfo& create_info)
@@ -327,10 +328,7 @@ void CommandPool::destroy() noexcept
 
 void CommandPool::move(CommandPool* const from) noexcept
 {
-        device_ = from->device_;
-        command_pool_ = from->command_pool_;
-        from->device_ = VK_NULL_HANDLE;
-        from->command_pool_ = VK_NULL_HANDLE;
+        MOVE_2(device_, command_pool_);
 }
 
 CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
@@ -352,10 +350,7 @@ void Semaphore::destroy() noexcept
 
 void Semaphore::move(Semaphore* const from) noexcept
 {
-        device_ = from->device_;
-        semaphore_ = from->semaphore_;
-        from->device_ = VK_NULL_HANDLE;
-        from->semaphore_ = VK_NULL_HANDLE;
+        MOVE_2(device_, semaphore_);
 }
 
 Semaphore::Semaphore(const VkDevice device)
@@ -379,10 +374,7 @@ void Fence::destroy() noexcept
 
 void Fence::move(Fence* const from) noexcept
 {
-        device_ = from->device_;
-        fence_ = from->fence_;
-        from->device_ = VK_NULL_HANDLE;
-        from->fence_ = VK_NULL_HANDLE;
+        MOVE_2(device_, fence_);
 }
 
 Fence::Fence(const VkDevice device, const bool signaled)
@@ -410,10 +402,7 @@ void Buffer::destroy() noexcept
 
 void Buffer::move(Buffer* const from) noexcept
 {
-        device_ = from->device_;
-        buffer_ = from->buffer_;
-        from->device_ = VK_NULL_HANDLE;
-        from->buffer_ = VK_NULL_HANDLE;
+        MOVE_2(device_, buffer_);
 }
 
 Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
@@ -435,10 +424,7 @@ void DeviceMemory::destroy() noexcept
 
 void DeviceMemory::move(DeviceMemory* const from) noexcept
 {
-        device_ = from->device_;
-        device_memory_ = from->device_memory_;
-        from->device_ = VK_NULL_HANDLE;
-        from->device_memory_ = VK_NULL_HANDLE;
+        MOVE_2(device_, device_memory_);
 }
 
 DeviceMemory::DeviceMemory(const VkDevice device, const VkMemoryAllocateInfo& allocate_info)
@@ -461,12 +447,7 @@ void CommandBuffer::destroy() noexcept
 
 void CommandBuffer::move(CommandBuffer* const from) noexcept
 {
-        device_ = from->device_;
-        command_pool_ = from->command_pool_;
-        command_buffer_ = from->command_buffer_;
-        from->device_ = VK_NULL_HANDLE;
-        from->command_pool_ = VK_NULL_HANDLE;
-        from->command_buffer_ = VK_NULL_HANDLE;
+        MOVE_3(device_, command_pool_, command_buffer_);
 }
 
 CommandBuffer::CommandBuffer(const VkDevice device, const VkCommandPool command_pool)
@@ -529,10 +510,7 @@ void DescriptorSetLayout::destroy() noexcept
 
 void DescriptorSetLayout::move(DescriptorSetLayout* const from) noexcept
 {
-        device_ = from->device_;
-        descriptor_set_layout_ = from->descriptor_set_layout_;
-        from->device_ = VK_NULL_HANDLE;
-        from->descriptor_set_layout_ = VK_NULL_HANDLE;
+        MOVE_2(device_, descriptor_set_layout_);
 }
 
 DescriptorSetLayout::DescriptorSetLayout(const VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info)
@@ -554,10 +532,7 @@ void DescriptorPool::destroy() noexcept
 
 void DescriptorPool::move(DescriptorPool* const from) noexcept
 {
-        device_ = from->device_;
-        descriptor_pool_ = from->descriptor_pool_;
-        from->device_ = VK_NULL_HANDLE;
-        from->descriptor_pool_ = VK_NULL_HANDLE;
+        MOVE_2(device_, descriptor_pool_);
 }
 
 DescriptorPool::DescriptorPool(const VkDevice device, const VkDescriptorPoolCreateInfo& create_info)
@@ -580,12 +555,7 @@ void DescriptorSet::destroy() noexcept
 
 void DescriptorSet::move(DescriptorSet* const from) noexcept
 {
-        device_ = from->device_;
-        descriptor_pool_ = from->descriptor_pool_;
-        descriptor_set_ = from->descriptor_set_;
-        from->device_ = VK_NULL_HANDLE;
-        from->descriptor_pool_ = VK_NULL_HANDLE;
-        from->descriptor_set_ = VK_NULL_HANDLE;
+        MOVE_3(device_, descriptor_pool_, descriptor_set_);
 }
 
 DescriptorSet::DescriptorSet(
@@ -669,10 +639,7 @@ void Image::destroy() noexcept
 
 void Image::move(Image* const from) noexcept
 {
-        device_ = from->device_;
-        image_ = from->image_;
-        from->device_ = VK_NULL_HANDLE;
-        from->image_ = VK_NULL_HANDLE;
+        MOVE_2(device_, image_);
 }
 
 Image::Image(const VkDevice device, const VkImageCreateInfo& create_info)
@@ -694,10 +661,7 @@ void ImageView::destroy() noexcept
 
 void ImageView::move(ImageView* const from) noexcept
 {
-        device_ = from->device_;
-        image_view_ = from->image_view_;
-        from->device_ = VK_NULL_HANDLE;
-        from->image_view_ = VK_NULL_HANDLE;
+        MOVE_2(device_, image_view_);
 }
 
 ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_info)
@@ -719,10 +683,7 @@ void Sampler::destroy() noexcept
 
 void Sampler::move(Sampler* const from) noexcept
 {
-        device_ = from->device_;
-        sampler_ = from->sampler_;
-        from->device_ = VK_NULL_HANDLE;
-        from->sampler_ = VK_NULL_HANDLE;
+        MOVE_2(device_, sampler_);
 }
 
 Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info)
@@ -744,10 +705,7 @@ void AccelerationStructureKHR::destroy() noexcept
 
 void AccelerationStructureKHR::move(AccelerationStructureKHR* const from) noexcept
 {
-        device_ = from->device_;
-        acceleration_structure_ = from->acceleration_structure_;
-        from->device_ = VK_NULL_HANDLE;
-        from->acceleration_structure_ = VK_NULL_HANDLE;
+        MOVE_2(device_, acceleration_structure_);
 }
 
 AccelerationStructureKHR::AccelerationStructureKHR(
