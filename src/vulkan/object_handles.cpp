@@ -476,11 +476,8 @@ void CommandBuffers::destroy() noexcept
 
 void CommandBuffers::move(CommandBuffers* const from) noexcept
 {
-        device_ = from->device_;
-        command_pool_ = from->command_pool_;
+        MOVE_2(device_, command_pool_);
         command_buffers_ = std::move(from->command_buffers_);
-        from->device_ = VK_NULL_HANDLE;
-        from->command_pool_ = VK_NULL_HANDLE;
         from->command_buffers_ = {};
 }
 
@@ -592,11 +589,8 @@ void DescriptorSets::destroy() noexcept
 
 void DescriptorSets::move(DescriptorSets* const from) noexcept
 {
-        device_ = from->device_;
-        descriptor_pool_ = from->descriptor_pool_;
+        MOVE_2(device_, descriptor_pool_);
         descriptor_sets_ = std::move(from->descriptor_sets_);
-        from->device_ = VK_NULL_HANDLE;
-        from->descriptor_pool_ = VK_NULL_HANDLE;
         from->descriptor_sets_ = {};
 }
 
