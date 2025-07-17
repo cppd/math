@@ -29,14 +29,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::core
 {
+namespace smooth_implementation
+{
+template <std::size_t N, typename T>
+void smooth(
+        const numerical::Matrix<N, N, T>& predict_f_next,
+        const numerical::Vector<N, T>& predict_x_next,
+        const numerical::Matrix<N, N, T>& predict_p_next,
+        const numerical::Vector<N, T>& x_next,
+        const numerical::Matrix<N, N, T>& p_next,
+        numerical::Vector<N, T>& x,
+        numerical::Matrix<N, N, T>& p)
+{
+        const numerical::Matrix<N, N, T> k = p * predict_f_next.transposed() * predict_p_next.inversed();
+
+        x = x + k * (x_next - predict_x_next);
+        p = p + k * (p_next - predict_p_next) * k.transposed();
+
+        check_x_p("Smooth", x, p);
+}
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] std::tuple<std::vector<numerical::Vector<N, T>>, std::vector<numerical::Matrix<N, N, T>>> smooth(
         const std::vector<numerical::Matrix<N, N, T>>& predict_f,
-        const std::vector<numerical::Vector<N, T>> predict_x,
+        const std::vector<numerical::Vector<N, T>>& predict_x,
         const std::vector<numerical::Matrix<N, N, T>>& predict_p,
         std::vector<numerical::Vector<N, T>> x,
         std::vector<numerical::Matrix<N, N, T>> p)
 {
+        namespace impl = smooth_implementation;
+
         ASSERT(x.size() == p.size());
         ASSERT(x.size() == predict_f.size());
         ASSERT(x.size() == predict_x.size());
@@ -49,12 +72,7 @@ template <std::size_t N, typename T>
 
         for (auto i = std::ssize(x) - 2; i >= 0; --i)
         {
-                const numerical::Matrix<N, N, T> k = p[i] * predict_f[i + 1].transposed() * predict_p[i + 1].inversed();
-
-                x[i] = x[i] + k * (x[i + 1] - predict_x[i + 1]);
-                p[i] = p[i] + k * (p[i + 1] - predict_p[i + 1]) * k.transposed();
-
-                check_x_p("Smooth", x[i], p[i]);
+                impl::smooth(predict_f[i + 1], predict_x[i + 1], predict_p[i + 1], x[i + 1], p[i + 1], x[i], p[i]);
         }
 
         return {std::move(x), std::move(p)};
