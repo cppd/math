@@ -66,11 +66,6 @@ template <std::size_t N, typename T>
         ASSERT(x.size() == predict_x.size());
         ASSERT(x.size() == predict_p.size());
 
-        if (x.size() <= 1)
-        {
-                return {x, p};
-        }
-
         for (auto i = std::ssize(x) - 2; i >= 0; --i)
         {
                 impl::smooth(predict_f[i + 1], predict_x[i + 1], predict_p[i + 1], x[i + 1], p[i + 1], x[i], p[i]);
