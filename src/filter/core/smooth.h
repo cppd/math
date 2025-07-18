@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <cstddef>
+#include <deque>
 #include <tuple>
 #include <vector>
 
@@ -76,5 +77,42 @@ template <std::size_t N, typename T>
         }
 
         return {std::move(x), std::move(p)};
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> smooth(
+        const std::deque<numerical::Matrix<N, N, T>>& predict_f,
+        const std::deque<numerical::Vector<N, T>>& predict_x,
+        const std::deque<numerical::Matrix<N, N, T>>& predict_p,
+        const std::deque<numerical::Vector<N, T>>& x,
+        const std::deque<numerical::Matrix<N, N, T>>& p)
+{
+        namespace impl = smooth_implementation;
+
+        ASSERT(x.size() == p.size());
+        ASSERT(x.size() == predict_f.size());
+        ASSERT(x.size() == predict_x.size());
+        ASSERT(x.size() == predict_p.size());
+
+        if (x.empty())
+        {
+                error("No data for smoothing");
+        }
+
+        numerical::Vector<N, T> x_s = x.back();
+        numerical::Matrix<N, N, T> p_s = p.back();
+
+        for (auto i = std::ssize(x) - 2; i >= 0; --i)
+        {
+                const auto x_next = x_s;
+                const auto p_next = p_s;
+
+                x_s = x[i];
+                p_s = p[i];
+
+                impl::smooth(predict_f[i + 1], predict_x[i + 1], predict_p[i + 1], x_next, p_next, x_s, p_s);
+        }
+
+        return {x_s, p_s};
 }
 }
