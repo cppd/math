@@ -17,38 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "point.h"
+#include "time_update_info.h"
 
-#include <src/color/rgb8.h>
-#include <src/filter/core/test/measurements.h>
+#include "view/point.h"
 
-#include <string>
-#include <string_view>
-#include <utility>
 #include <vector>
 
-namespace ns::filter::core::test::view
+namespace ns::filter::core::test
 {
 template <typename T>
-struct Filter final
-{
-        std::string name;
-        color::RGB8 color;
-        std::vector<Point<T>> points;
-
-        Filter(std::string name, color::RGB8 color, std::vector<Point<T>> points)
-                : name(std::move(name)),
-                  color(color),
-                  points(std::move(points))
-        {
-        }
-};
+std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& result);
 
 template <typename T>
-void write(
-        std::string_view file_name,
-        std::string_view annotation,
-        const std::vector<Measurements<T>>& measurements,
-        T interval,
-        const std::vector<Filter<T>>& filters);
+std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result);
 }

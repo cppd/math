@@ -17,38 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "point.h"
-
-#include <src/color/rgb8.h>
-#include <src/filter/core/test/measurements.h>
-
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
-
 namespace ns::filter::core::test::view
 {
 template <typename T>
-struct Filter final
+struct Point final
 {
-        std::string name;
-        color::RGB8 color;
-        std::vector<Point<T>> points;
-
-        Filter(std::string name, color::RGB8 color, std::vector<Point<T>> points)
-                : name(std::move(name)),
-                  color(color),
-                  points(std::move(points))
-        {
-        }
+        T time;
+        T x;
+        T x_stddev;
+        T v;
+        T v_stddev;
 };
-
-template <typename T>
-void write(
-        std::string_view file_name,
-        std::string_view annotation,
-        const std::vector<Measurements<T>>& measurements,
-        T interval,
-        const std::vector<Filter<T>>& filters);
 }

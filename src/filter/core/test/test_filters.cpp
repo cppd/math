@@ -17,12 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "distribution.h"
 #include "measurements.h"
+#include "time_update_info.h"
+#include "view_points.h"
 
 #include "filters/filter.h"
 #include "filters/filter_info.h"
 #include "filters/filters.h"
 #include "filters/noise_model.h"
 #include "simulator/speed.h"
+#include "view/point.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -31,14 +34,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/filter/core/consistency.h>
-#include <src/filter/core/smooth.h>
-#include <src/numerical/matrix.h>
-#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -53,13 +52,6 @@ namespace
 {
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
-
-template <typename T>
-struct TimeUpdateInfo final
-{
-        T time;
-        filters::UpdateInfo<T> info;
-};
 
 template <typename T>
 struct TestResult final
@@ -85,84 +77,6 @@ void compare(const T a, const T b, const T precision)
                 error(to_string(a) + " is not equal to " + to_string(b) + "; absolute " + to_string(abs)
                       + "; required precision " + to_string(precision));
         }
-}
-
-template <typename T>
-std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& result)
-{
-        std::vector<view::Point<T>> res;
-        res.reserve(result.size());
-        for (const TimeUpdateInfo<T>& r : result)
-        {
-                res.push_back(
-                        {.time = r.time,
-                         .x = r.info.x,
-                         .x_stddev = r.info.x_stddev,
-                         .v = r.info.v,
-                         .v_stddev = r.info.v_stddev});
-        }
-        return res;
-}
-
-template <typename T>
-std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result)
-{
-        if (result.empty())
-        {
-                return {};
-        }
-
-        std::vector<numerical::Matrix<2, 2, T>> predict_f;
-        std::vector<numerical::Vector<2, T>> predict_x;
-        std::vector<numerical::Matrix<2, 2, T>> predict_p;
-
-        std::vector<numerical::Vector<2, T>> x;
-        std::vector<numerical::Matrix<2, 2, T>> p;
-
-        ASSERT(!result[0].info.predict_f);
-        ASSERT(!result[0].info.predict_x);
-        ASSERT(!result[0].info.predict_p);
-        predict_f.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
-        predict_x.push_back(numerical::Vector<2, T>(0));
-        predict_p.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
-
-        x.push_back(result[0].info.update_x);
-        p.push_back(result[0].info.update_p);
-
-        for (std::size_t i = 1; i < result.size(); ++i)
-        {
-                const auto& p_f = result[i].info.predict_f;
-                const auto& p_x = result[i].info.predict_x;
-                const auto& p_p = result[i].info.predict_p;
-
-                if (!(p_f && p_x && p_p))
-                {
-                        return {};
-                }
-
-                predict_f.push_back(*p_f);
-                predict_x.push_back(*p_x);
-                predict_p.push_back(*p_p);
-
-                x.push_back(result[i].info.update_x);
-                p.push_back(result[i].info.update_p);
-        }
-
-        std::tie(x, p) = smooth(predict_f, predict_x, predict_p, x, p);
-
-        std::vector<view::Point<T>> res;
-        res.reserve(result.size());
-        for (std::size_t i = 0; i < result.size(); ++i)
-        {
-                res.push_back({
-                        .time = result[i].time,
-                        .x = x[i][0],
-                        .x_stddev = std::sqrt(p[i][0, 0]),
-                        .v = x[i][1],
-                        .v_stddev = std::sqrt(p[i][1, 1]),
-                });
-        }
-        return res;
 }
 
 template <typename T>

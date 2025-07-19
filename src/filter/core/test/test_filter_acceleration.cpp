@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "measurements.h"
+#include "time_update_info.h"
+#include "view_points.h"
 
 #include "filters/filter.h"
 #include "filters/filter_info.h"
@@ -23,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filters/noise_model.h"
 #include "simulator/acceleration.h"
 #include "simulator/measurements.h"
+#include "view/point.h"
 #include "view/write.h"
 
 #include <src/color/rgb8.h>
@@ -140,7 +143,8 @@ std::vector<view::Point<T>> test_filter(
         filter->reset();
         correction->reset();
 
-        std::vector<view::Point<T>> res;
+        std::vector<TimeUpdateInfo<T>> result;
+
         for (Measurements<T> m : measurements)
         {
                 correction->correct(&m);
@@ -150,15 +154,10 @@ std::vector<view::Point<T>> test_filter(
                 {
                         continue;
                 }
-
-                res.push_back(
-                        {.time = m.time,
-                         .x = update->x,
-                         .x_stddev = update->x_stddev,
-                         .v = update->v,
-                         .v_stddev = update->v_stddev});
+                result.push_back({.time = m.time, .info = *update});
         }
-        return res;
+
+        return view_points(result);
 }
 
 template <typename T>
