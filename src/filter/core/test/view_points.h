@@ -30,4 +30,7 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& re
 
 template <typename T>
 std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result);
+
+template <typename T>
+std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result, unsigned lag);
 }
