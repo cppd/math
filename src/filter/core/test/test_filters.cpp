@@ -50,6 +50,8 @@ namespace ns::filter::core::test
 {
 namespace
 {
+constexpr unsigned SMOOTH_LAG = 10;
+
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
 
@@ -143,6 +145,7 @@ void test_impl(
         result_x.distribution.check(expected_distribution);
 
         const std::vector<view::Point<T>> smooth_view_points_x = smooth_view_points(result_x.result);
+        const std::vector<view::Point<T>> smooth_view_points_x_lag = smooth_view_points(result_x.result, SMOOTH_LAG);
 
         //
 
@@ -160,15 +163,20 @@ void test_impl(
         }
 
         const std::vector<view::Point<T>> smooth_view_points_xv = smooth_view_points(result_xv.result);
+        const std::vector<view::Point<T>> smooth_view_points_xv_lag = smooth_view_points(result_xv.result, SMOOTH_LAG);
 
         //
 
         view::write(
                 name, annotation, measurements, DATA_CONNECT_INTERVAL<T>,
-                {view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
-                 view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result)),
-                 view::Filter<T>("Smooth Position", color::RGB8(0, 170, 0), smooth_view_points_x),
-                 view::Filter<T>("Smooth Speed", color::RGB8(0, 200, 0), smooth_view_points_xv)});
+                {
+                        view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
+                        view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result)),
+                        view::Filter<T>("Smooth Position", color::RGB8(0, 170, 0), smooth_view_points_x),
+                        view::Filter<T>("Smooth Speed", color::RGB8(0, 200, 0), smooth_view_points_xv),
+                        view::Filter<T>("Smooth Lag Position", color::RGB8(200, 0, 255), smooth_view_points_x_lag),
+                        view::Filter<T>("Smooth Lag Speed", color::RGB8(250, 0, 255), smooth_view_points_xv_lag),
+                });
 }
 
 template <typename T>
