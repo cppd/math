@@ -178,6 +178,7 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
                 }
         };
 
+        update(filters->positions_0);
         update(filters->positions_1);
         update(filters->positions_2);
 
@@ -195,6 +196,7 @@ void smooth_positions(Filters<T>* const filters)
                 }
         };
 
+        s(filters->positions_0);
         s(filters->positions_1);
         s(filters->positions_2);
 }

@@ -363,7 +363,7 @@ Filters<T> create_filters()
 
         res.position_variance = create_position_variance<2, T>(position_variance);
 
-        res.positions_0 = create_positions<2, T, 0>(position);
+        // res.positions_0 = create_positions<2, T, 0>(position);
         res.positions_1 = create_positions<2, T, 1>(position);
         res.positions_2 = create_positions<2, T, 2>(position);
 
