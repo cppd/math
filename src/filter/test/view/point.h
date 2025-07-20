@@ -24,9 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test::view
 {
 template <std::size_t N, typename T>
-struct TimePoint final
+struct Point final
 {
         T time;
-        numerical::Vector<N, T> point;
+
+        numerical::Vector<N, T> position;
+        numerical::Vector<N, T> position_p;
+
+        T speed;
+        T speed_p;
 };
 }

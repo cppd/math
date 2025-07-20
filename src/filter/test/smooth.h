@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "view/write.h"
+#include "view/point.h"
 
 #include <src/filter/filters/filter.h>
 
@@ -27,8 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T, std::size_t ORDER>
-void smooth(
+[[nodiscard]] std::vector<view::Point<2, T>> smooth(
         const filters::FilterPosition<2, T, ORDER>& filter,
-        const std::vector<filters::UpdateDetails<N, T>>& details,
-        view::Filter<2, T>* data);
+        const std::vector<filters::UpdateDetails<N, T>>& details);
 }

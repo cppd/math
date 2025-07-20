@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "time_point.h"
+#include "point.h"
 
 #include <src/color/rgb8.h>
 #include <src/filter/filters/measurement.h>
@@ -35,10 +35,7 @@ struct Filter final
 {
         std::string name;
         color::RGB8 color;
-        std::vector<TimePoint<1, T>> speed;
-        std::vector<TimePoint<1, T>> speed_p;
-        std::vector<TimePoint<N, T>> position;
-        std::vector<TimePoint<N, T>> position_p;
+        std::vector<Point<N, T>> points;
 
         Filter(std::string name, color::RGB8 color)
                 : name(std::move(name)),

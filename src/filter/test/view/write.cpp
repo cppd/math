@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "write.h"
 
 #include "converters.h"
+#include "point.h"
 
 #include <src/color/rgb8.h>
 #include <src/com/print.h>
@@ -366,23 +367,18 @@ void write_to_file(
 
         for (const Filter<N, T>& filter : filters)
         {
-                write_filter_speed(
-                        file, filter.name, filter.color, convert_speed(optional_value(filter.speed, interval)));
+                const std::vector<std::optional<Point<N, T>>> optional_values = optional_value(filter.points, interval);
 
-                write_filter_speed_p(
-                        file, filter.name, filter.color, convert_speed_p(optional_value(filter.speed_p, interval)));
+                write_filter_speed(file, filter.name, filter.color, convert_speed(optional_values));
+
+                write_filter_speed_p(file, filter.name, filter.color, convert_speed_p(optional_values));
 
                 write_filter_position(
-                        file, filter.name, filter.color,
-                        add_offset(convert_position(optional_value(filter.position, interval)), OFFSET<N, T>));
+                        file, filter.name, filter.color, add_offset(convert_position(optional_values), OFFSET<N, T>));
 
-                write_filter_position_p(
-                        file, filter.name, "X", filter.color,
-                        convert_position_p<0>(optional_value(filter.position_p, interval)));
+                write_filter_position_p(file, filter.name, "X", filter.color, convert_position_p<0>(optional_values));
 
-                write_filter_position_p(
-                        file, filter.name, "Y", filter.color,
-                        convert_position_p<1>(optional_value(filter.position_p, interval)));
+                write_filter_position_p(file, filter.name, "Y", filter.color, convert_position_p<1>(optional_values));
         }
 }
 

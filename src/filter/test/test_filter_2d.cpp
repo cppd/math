@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/filters/measurement.h>
-#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <cstddef>
@@ -46,10 +45,13 @@ void add_info(const T time, const auto& update_info, view::Filter<N, T>* const f
                 return;
         }
 
-        filter_info->position.push_back({.time = time, .point = update_info->position});
-        filter_info->position_p.push_back({.time = time, .point = update_info->position_p});
-        filter_info->speed.push_back({.time = time, .point = numerical::Vector<1, T>(update_info->speed)});
-        filter_info->speed_p.push_back({.time = time, .point = numerical::Vector<1, T>(update_info->speed_p)});
+        filter_info->points.push_back({
+                .time = time,
+                .position = update_info->position,
+                .position_p = update_info->position_p,
+                .speed = update_info->speed,
+                .speed_p = update_info->speed_p,
+        });
 }
 
 template <typename T>
@@ -192,7 +194,7 @@ void smooth_positions(Filters<T>* const filters)
         {
                 for (auto& f : filters_positions)
                 {
-                        smooth(*f.filter, f.details, &f.data_smooth);
+                        f.data_smooth.points = smooth(*f.filter, f.details);
                 }
         };
 

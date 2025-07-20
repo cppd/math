@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "time_point.h"
+#include "point.h"
 
 #include <src/com/angle.h>
 #include <src/com/conversion.h>
@@ -219,12 +219,12 @@ std::vector<std::optional<numerical::Vector<2, T>>> acceleration_measurements(
 }
 
 template <std::size_t N, typename T>
-std::vector<std::optional<TimePoint<N, T>>> optional_value(const std::vector<TimePoint<N, T>>& points, const T interval)
+std::vector<std::optional<Point<N, T>>> optional_value(const std::vector<Point<N, T>>& points, const T interval)
 {
-        std::vector<std::optional<TimePoint<N, T>>> res;
+        std::vector<std::optional<Point<N, T>>> res;
         res.reserve(points.size());
         std::optional<T> last_time;
-        for (const TimePoint<N, T>& p : points)
+        for (const Point<N, T>& p : points)
         {
                 ASSERT(!last_time || *last_time < p.time);
                 if (last_time && p.time > *last_time + interval)
@@ -239,15 +239,15 @@ std::vector<std::optional<TimePoint<N, T>>> optional_value(const std::vector<Tim
 
 template <std::size_t N, typename T>
 std::vector<std::optional<numerical::Vector<N, T>>> convert_position(
-        const std::vector<std::optional<TimePoint<N, T>>>& position)
+        const std::vector<std::optional<Point<N, T>>>& points)
 {
         std::vector<std::optional<numerical::Vector<N, T>>> res;
-        res.reserve(position.size());
-        for (const std::optional<TimePoint<N, T>>& p : position)
+        res.reserve(points.size());
+        for (const std::optional<Point<N, T>>& p : points)
         {
                 if (p)
                 {
-                        res.push_back(p->point);
+                        res.push_back(p->position);
                 }
                 else
                 {
@@ -257,20 +257,19 @@ std::vector<std::optional<numerical::Vector<N, T>>> convert_position(
         return res;
 }
 
-template <typename T>
-std::vector<std::optional<numerical::Vector<2, T>>> convert_speed(
-        const std::vector<std::optional<TimePoint<1, T>>>& speed)
+template <std::size_t N, typename T>
+std::vector<std::optional<numerical::Vector<2, T>>> convert_speed(const std::vector<std::optional<Point<N, T>>>& points)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<numerical::Vector<2, T>>> res;
-        res.reserve(speed.size());
-        for (const std::optional<TimePoint<1, T>>& s : speed)
+        res.reserve(points.size());
+        for (const std::optional<Point<N, T>>& p : points)
         {
-                if (s)
+                if (p)
                 {
                         res.push_back({
-                                {impl::time_unit(s->time), mps_to_kph(s->point[0])}
+                                {impl::time_unit(p->time), mps_to_kph(p->speed)}
                         });
                 }
                 else
@@ -281,23 +280,23 @@ std::vector<std::optional<numerical::Vector<2, T>>> convert_speed(
         return res;
 }
 
-template <typename T>
+template <std::size_t N, typename T>
 std::vector<std::optional<numerical::Vector<2, T>>> convert_speed_p(
-        const std::vector<std::optional<TimePoint<1, T>>>& speed_p)
+        const std::vector<std::optional<Point<N, T>>>& points)
 {
         namespace impl = converters_implementation;
 
         std::vector<std::optional<numerical::Vector<2, T>>> res;
-        res.reserve(speed_p.size());
-        for (const std::optional<TimePoint<1, T>>& s : speed_p)
+        res.reserve(points.size());
+        for (const std::optional<Point<N, T>>& p : points)
         {
-                if (s)
+                if (p)
                 {
-                        const T sd = std::sqrt(s->point[0]);
+                        const T sd = std::sqrt(p->speed_p);
                         if (!std::isnan(sd))
                         {
                                 res.push_back({
-                                        {impl::time_unit(s->time), mps_to_kph(sd)}
+                                        {impl::time_unit(p->time), mps_to_kph(sd)}
                                 });
                                 continue;
                         }
@@ -309,19 +308,19 @@ std::vector<std::optional<numerical::Vector<2, T>>> convert_speed_p(
 
 template <std::size_t INDEX, std::size_t N, typename T>
 std::vector<std::optional<numerical::Vector<2, T>>> convert_position_p(
-        const std::vector<std::optional<TimePoint<N, T>>>& position_p)
+        const std::vector<std::optional<Point<N, T>>>& points)
 {
         static_assert(INDEX < N);
 
         namespace impl = converters_implementation;
 
         std::vector<std::optional<numerical::Vector<2, T>>> res;
-        res.reserve(position_p.size());
-        for (const std::optional<TimePoint<N, T>>& p : position_p)
+        res.reserve(points.size());
+        for (const std::optional<Point<N, T>>& p : points)
         {
                 if (p)
                 {
-                        const T sd = std::sqrt(p->point[INDEX]);
+                        const T sd = std::sqrt(p->position_p[INDEX]);
                         if (!std::isnan(sd))
                         {
                                 res.push_back({
