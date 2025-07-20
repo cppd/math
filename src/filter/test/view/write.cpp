@@ -197,7 +197,7 @@ void write_measurement_position(
         file << R"(, "line_color":"#000000")";
         file << R"(, "line_width":0.25)";
         file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":2)";
+        file << R"(, "marker_size":3)";
         file << "}\n";
         for (const auto& v : measurement_position)
         {
@@ -299,7 +299,7 @@ void write_filter_position(
         file << R"(, "line_color":)" << color_to_string(color);
         file << R"(, "line_width":0.5)";
         file << R"(, "line_dash":None)";
-        file << R"(, "marker_size":2)";
+        file << R"(, "marker_size":3)";
         file << "}\n";
         for (const auto& v : position)
         {
