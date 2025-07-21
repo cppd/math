@@ -34,6 +34,8 @@ namespace ns::filter::test
 {
 namespace
 {
+constexpr unsigned SMOOTH_LAG = 5;
+
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
 
@@ -75,6 +77,7 @@ void write_file(
                 for (const auto& p : v)
                 {
                         view_filters.push_back(p.data_smooth);
+                        view_filters.push_back(p.data_smooth_lag);
                 }
         };
 
@@ -195,6 +198,7 @@ void smooth_positions(Filters<T>* const filters)
                 for (auto& f : filters_positions)
                 {
                         f.data_smooth.points = smooth(*f.filter, f.details);
+                        f.data_smooth_lag.points = smooth(*f.filter, f.details, SMOOTH_LAG);
                 }
         };
 

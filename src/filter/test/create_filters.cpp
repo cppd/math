@@ -103,6 +103,7 @@ TestFilterPosition<N, T, ORDER> create_position(const PositionConfig<T>& config,
         }();
 
         const auto name_smooth = name + " Smooth";
+        const auto name_smooth_lag = name + " Smooth Lag";
 
         if constexpr (ORDER == 0)
         {
@@ -118,7 +119,8 @@ TestFilterPosition<N, T, ORDER> create_position(const PositionConfig<T>& config,
                                 config.reset_dt, config.linear_dt, config.gate_1, config.init, theta,
                                 config.noise_model_1, config.fading_memory_alpha_1),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 200)),
-                        view::Filter<N, T>(name_smooth, color::RGB8(0, 160 - 40 * i, 200))};
+                        view::Filter<N, T>(name_smooth, color::RGB8(0, 160 - 40 * i, 200)),
+                        view::Filter<N, T>(name_smooth_lag, color::RGB8(0, 160 - 40 * i, 255))};
         }
         else if constexpr (ORDER == 2)
         {
@@ -126,7 +128,8 @@ TestFilterPosition<N, T, ORDER> create_position(const PositionConfig<T>& config,
                                 config.reset_dt, config.linear_dt, config.gate_2, config.init, theta,
                                 config.noise_model_2, config.fading_memory_alpha_2),
                         view::Filter<N, T>(name, color::RGB8(160 - 40 * i, 0, 0)),
-                        view::Filter<N, T>(name_smooth, color::RGB8(0, 160 - 40 * i, 0))};
+                        view::Filter<N, T>(name_smooth, color::RGB8(0, 160 - 40 * i, 0)),
+                        view::Filter<N, T>(name_smooth_lag, color::RGB8(0, 190 - 40 * i, 0))};
         }
         else
         {
