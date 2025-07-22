@@ -36,17 +36,17 @@ struct TestFilterPosition final
         view::Filter<N, T> data;
 
         std::vector<filters::UpdateDetails<N * (1 + ORDER), T>> details;
-        view::Filter<N, T> data_smooth;
+        view::Filter<N, T> data_smooth_all;
         view::Filter<N, T> data_smooth_lag;
 
         TestFilterPosition(
                 std::unique_ptr<filters::FilterPosition<N, T, ORDER>>&& filter,
                 view::Filter<N, T> data,
-                view::Filter<N, T> data_smooth,
+                view::Filter<N, T> data_smooth_all,
                 view::Filter<N, T> data_smooth_lag)
                 : filter(std::move(filter)),
                   data(std::move(data)),
-                  data_smooth(std::move(data_smooth)),
+                  data_smooth_all(std::move(data_smooth_all)),
                   data_smooth_lag(std::move(data_smooth_lag))
         {
         }
