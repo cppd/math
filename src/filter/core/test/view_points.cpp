@@ -93,7 +93,7 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& re
 }
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result)
+std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& result)
 {
         if (result.empty())
         {
@@ -140,7 +140,7 @@ std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<
 }
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result, const unsigned lag)
+std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& result, const unsigned lag)
 {
         const unsigned count = lag + 1;
 
@@ -203,10 +203,10 @@ std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<
         return res;
 }
 
-#define INSTANTIATION(T)                                                                                \
-        template std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>&);        \
-        template std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>&); \
-        template std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>&, unsigned);
+#define INSTANTIATION(T)                                                                                    \
+        template std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>&);            \
+        template std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>&); \
+        template std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>&, unsigned);
 
 INSTANTIATION(float)
 INSTANTIATION(double)

@@ -29,8 +29,8 @@ template <typename T>
 std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& result);
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result);
+std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& result);
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points(const std::vector<TimeUpdateInfo<T>>& result, unsigned lag);
+std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& result, unsigned lag);
 }

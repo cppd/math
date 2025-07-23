@@ -144,8 +144,10 @@ void test_impl(
 
         result_x.distribution.check(expected_distribution);
 
-        const std::vector<view::Point<T>> smooth_view_points_x = smooth_view_points(result_x.result);
-        const std::vector<view::Point<T>> smooth_view_points_x_lag = smooth_view_points(result_x.result, SMOOTH_LAG);
+        const std::vector<view::Point<T>> smooth_view_points_x_all = smooth_view_points_all(result_x.result);
+
+        const std::vector<view::Point<T>> smooth_view_points_x_lag =
+                smooth_view_points_lag(result_x.result, SMOOTH_LAG);
 
         //
 
@@ -162,8 +164,10 @@ void test_impl(
                 error("NEES XV; " + result_xv.nees.check_string());
         }
 
-        const std::vector<view::Point<T>> smooth_view_points_xv = smooth_view_points(result_xv.result);
-        const std::vector<view::Point<T>> smooth_view_points_xv_lag = smooth_view_points(result_xv.result, SMOOTH_LAG);
+        const std::vector<view::Point<T>> smooth_view_points_xv_all = smooth_view_points_all(result_xv.result);
+
+        const std::vector<view::Point<T>> smooth_view_points_xv_lag =
+                smooth_view_points_lag(result_xv.result, SMOOTH_LAG);
 
         //
 
@@ -172,8 +176,8 @@ void test_impl(
                 {
                         view::Filter<T>("Position", color::RGB8(128, 0, 0), view_points(result_x.result)),
                         view::Filter<T>("Speed", color::RGB8(0, 128, 0), view_points(result_xv.result)),
-                        view::Filter<T>("Smooth Position", color::RGB8(0, 170, 0), smooth_view_points_x),
-                        view::Filter<T>("Smooth Speed", color::RGB8(0, 200, 0), smooth_view_points_xv),
+                        view::Filter<T>("Smooth All Position", color::RGB8(0, 170, 0), smooth_view_points_x_all),
+                        view::Filter<T>("Smooth All Speed", color::RGB8(0, 200, 0), smooth_view_points_xv_all),
                         view::Filter<T>("Smooth Lag Position", color::RGB8(200, 0, 255), smooth_view_points_x_lag),
                         view::Filter<T>("Smooth Lag Speed", color::RGB8(250, 0, 255), smooth_view_points_xv_lag),
                 });
