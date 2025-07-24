@@ -154,6 +154,13 @@ UpdateInfoPosition<N, T, ORDER> Position<N, T, ORDER, F>::update_info(
 
         return [&]<std::size_t U>(const numerical::Vector<U, T>& update_x, const numerical::Matrix<U, U, T>& update_p)
         {
+                const UpdateInfo<N, T> info{
+                        .position = filter_->position(),
+                        .position_p = filter_->position_p().diagonal(),
+                        .speed = speed,
+                        .speed_p = speed_p,
+                };
+
                 const UpdateDetails<U, T> details{
                         .time = time,
                         .predict_f = predict_f,
@@ -164,10 +171,7 @@ UpdateInfoPosition<N, T, ORDER> Position<N, T, ORDER, F>::update_info(
                 };
 
                 return UpdateInfoPosition<N, T, ORDER>{
-                        .position = filter_->position(),
-                        .position_p = filter_->position_p().diagonal(),
-                        .speed = speed,
-                        .speed_p = speed_p,
+                        .info = info,
                         .details = details,
                 };
         }(filter_->x(), filter_->p());

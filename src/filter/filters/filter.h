@@ -30,6 +30,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::filters
 {
 template <std::size_t N, typename T>
+struct UpdateInfo final
+{
+        numerical::Vector<N, T> position;
+        numerical::Vector<N, T> position_p;
+        T speed;
+        T speed_p;
+};
+
+template <std::size_t N, typename T>
 struct UpdateDetails final
 {
         T time;
@@ -45,11 +54,7 @@ struct UpdateDetails final
 template <std::size_t N, typename T, std::size_t ORDER>
 struct UpdateInfoPosition final
 {
-        numerical::Vector<N, T> position;
-        numerical::Vector<N, T> position_p;
-        T speed;
-        T speed_p;
-
+        UpdateInfo<N, T> info;
         UpdateDetails<N * (1 + ORDER), T> details;
 };
 
@@ -82,15 +87,6 @@ public:
         [[nodiscard]] virtual T x_to_speed(const numerical::Vector<D, T>& x) const = 0;
         [[nodiscard]] virtual T xp_to_speed_p(const numerical::Vector<D, T>& x, const numerical::Matrix<D, D, T>& p)
                 const = 0;
-};
-
-template <std::size_t N, typename T>
-struct UpdateInfo final
-{
-        numerical::Vector<N, T> position;
-        numerical::Vector<N, T> position_p;
-        T speed;
-        T speed_p;
 };
 
 template <std::size_t N, typename T>

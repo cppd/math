@@ -175,11 +175,18 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
                 for (auto& f : filters_positions)
                 {
                         const auto& update_info = f.filter->update(m);
-                        add_info(m.time, update_info, &f.data);
-                        if (update_info)
+                        if (!update_info)
                         {
-                                f.details.push_back(update_info->details);
+                                continue;
                         }
+                        f.data.points.push_back({
+                                .time = m.time,
+                                .position = update_info->info.position,
+                                .position_p = update_info->info.position_p,
+                                .speed = update_info->info.speed,
+                                .speed_p = update_info->info.speed_p,
+                        });
+                        f.details.push_back(update_info->details);
                 }
         };
 
