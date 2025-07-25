@@ -40,20 +40,15 @@ template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
 
 template <std::size_t N, typename T>
-void add_info(const T time, const auto& update_info, view::Filter<N, T>* const filter_info)
+view::Point<N, T> view_point(const T time, const filters::UpdateInfo<N, T>& info)
 {
-        if (!update_info)
-        {
-                return;
-        }
-
-        filter_info->points.push_back({
+        return {
                 .time = time,
-                .position = update_info->position,
-                .position_p = update_info->position_p,
-                .speed = update_info->speed,
-                .speed_p = update_info->speed_p,
-        });
+                .position = info.position,
+                .position_p = info.position_p,
+                .speed = info.speed,
+                .speed_p = info.speed_p,
+        };
 }
 
 template <typename T>
@@ -148,23 +143,22 @@ void update_filters(const filters::Measurements<2, T>& m, Filters<T>* const filt
 {
         const auto& position_estimation = *filters->position_estimation;
 
-        for (auto& f : filters->accelerations)
+        const auto update = [&](auto& container)
         {
-                const auto& update_info = f.filter->update(m, position_estimation);
-                add_info(m.time, update_info, &f.data);
-        }
+                for (auto& f : container)
+                {
+                        const auto& info = f.filter->update(m, position_estimation);
+                        if (!info)
+                        {
+                                continue;
+                        }
+                        f.data.points.push_back(view_point(m.time, *info));
+                }
+        };
 
-        for (auto& f : filters->directions)
-        {
-                const auto& update_info = f.filter->update(m, position_estimation);
-                add_info(m.time, update_info, &f.data);
-        }
-
-        for (auto& f : filters->speeds)
-        {
-                const auto& update_info = f.filter->update(m, position_estimation);
-                add_info(m.time, update_info, &f.data);
-        }
+        update(filters->accelerations);
+        update(filters->directions);
+        update(filters->speeds);
 }
 
 template <typename T>
@@ -174,19 +168,13 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
         {
                 for (auto& f : filters_positions)
                 {
-                        const auto& update_info = f.filter->update(m);
-                        if (!update_info)
+                        const auto& info = f.filter->update(m);
+                        if (!info)
                         {
                                 continue;
                         }
-                        f.data.points.push_back({
-                                .time = m.time,
-                                .position = update_info->info.position,
-                                .position_p = update_info->info.position_p,
-                                .speed = update_info->info.speed,
-                                .speed_p = update_info->info.speed_p,
-                        });
-                        f.details.push_back(update_info->details);
+                        f.data.points.push_back(view_point(m.time, info->info));
+                        f.details.push_back(info->details);
                 }
         };
 
