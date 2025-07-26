@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "smooth.h"
 
+#include "time_update_details.h"
+
 #include "view/point.h"
 
 #include <src/com/error.h>
@@ -46,11 +48,11 @@ struct Data
 };
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-void init(const filters::UpdateDetails<N, T>& details, Data<N, T, Container>& data)
+void init(const TimeUpdateDetails<N, T>& details, Data<N, T, Container>& data)
 {
-        ASSERT(!details.predict_f);
-        ASSERT(!details.predict_x);
-        ASSERT(!details.predict_p);
+        ASSERT(!details.details.predict_f);
+        ASSERT(!details.details.predict_x);
+        ASSERT(!details.details.predict_p);
 
         data.predict_f.clear();
         data.predict_x.clear();
@@ -62,23 +64,23 @@ void init(const filters::UpdateDetails<N, T>& details, Data<N, T, Container>& da
         data.predict_f.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
         data.predict_x.push_back(numerical::Vector<N, T>(0));
         data.predict_p.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
-        data.x.push_back(details.update_x);
-        data.p.push_back(details.update_p);
+        data.x.push_back(details.details.update_x);
+        data.p.push_back(details.details.update_p);
         data.time.push_back(details.time);
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-void add(const filters::UpdateDetails<N, T>& details, Data<N, T, Container>& data)
+void add(const TimeUpdateDetails<N, T>& details, Data<N, T, Container>& data)
 {
-        ASSERT(details.predict_f);
-        ASSERT(details.predict_x);
-        ASSERT(details.predict_p);
+        ASSERT(details.details.predict_f);
+        ASSERT(details.details.predict_x);
+        ASSERT(details.details.predict_p);
 
-        data.predict_f.push_back(*details.predict_f);
-        data.predict_x.push_back(*details.predict_x);
-        data.predict_p.push_back(*details.predict_p);
-        data.x.push_back(details.update_x);
-        data.p.push_back(details.update_p);
+        data.predict_f.push_back(*details.details.predict_f);
+        data.predict_x.push_back(*details.details.predict_x);
+        data.predict_p.push_back(*details.details.predict_p);
+        data.x.push_back(details.details.update_x);
+        data.p.push_back(details.details.update_p);
         data.time.push_back(details.time);
 }
 
@@ -148,7 +150,7 @@ void write_smooth(
 template <std::size_t N, typename T, std::size_t ORDER>
 std::vector<view::Point<2, T>> smooth(
         const filters::FilterPosition<2, T, ORDER>& filter,
-        const std::vector<filters::UpdateDetails<N, T>>& details)
+        const std::vector<TimeUpdateDetails<N, T>>& details)
 {
         static_assert(N >= 2);
         static_assert((N % 2) == 0);
@@ -166,9 +168,9 @@ std::vector<view::Point<2, T>> smooth(
 
         for (std::size_t i = 1; i < details.size(); ++i)
         {
-                const auto& p_f = details[i].predict_f;
-                const auto& p_x = details[i].predict_x;
-                const auto& p_p = details[i].predict_p;
+                const auto& p_f = details[i].details.predict_f;
+                const auto& p_x = details[i].details.predict_x;
+                const auto& p_p = details[i].details.predict_p;
 
                 if (!(p_f && p_x && p_p))
                 {
@@ -188,7 +190,7 @@ std::vector<view::Point<2, T>> smooth(
 template <std::size_t N, typename T, std::size_t ORDER>
 std::vector<view::Point<2, T>> smooth(
         const filters::FilterPosition<2, T, ORDER>& filter,
-        const std::vector<filters::UpdateDetails<N, T>>& details,
+        const std::vector<TimeUpdateDetails<N, T>>& details,
         const unsigned lag)
 {
         static_assert(N >= 2);
@@ -209,9 +211,9 @@ std::vector<view::Point<2, T>> smooth(
 
         for (std::size_t i = 1; i < details.size(); ++i)
         {
-                const auto& p_f = details[i].predict_f;
-                const auto& p_x = details[i].predict_x;
-                const auto& p_p = details[i].predict_p;
+                const auto& p_f = details[i].details.predict_f;
+                const auto& p_x = details[i].details.predict_x;
+                const auto& p_p = details[i].details.predict_p;
 
                 if (!(p_f && p_x && p_p))
                 {
@@ -235,19 +237,19 @@ std::vector<view::Point<2, T>> smooth(
         return res;
 }
 
-#define TEMPLATE(T)                                                                                                   \
-        template std::vector<view::Point<2, T>> smooth(                                                               \
-                const filters::FilterPosition<2, T, 0>&, const std::vector<filters::UpdateDetails<2, T>>&);           \
-        template std::vector<view::Point<2, T>> smooth(                                                               \
-                const filters::FilterPosition<2, T, 1>&, const std::vector<filters::UpdateDetails<4, T>>&);           \
-        template std::vector<view::Point<2, T>> smooth(                                                               \
-                const filters::FilterPosition<2, T, 2>&, const std::vector<filters::UpdateDetails<6, T>>&);           \
-        template std::vector<view::Point<2, T>> smooth(                                                               \
-                const filters::FilterPosition<2, T, 0>&, const std::vector<filters::UpdateDetails<2, T>>&, unsigned); \
-        template std::vector<view::Point<2, T>> smooth(                                                               \
-                const filters::FilterPosition<2, T, 1>&, const std::vector<filters::UpdateDetails<4, T>>&, unsigned); \
-        template std::vector<view::Point<2, T>> smooth(                                                               \
-                const filters::FilterPosition<2, T, 2>&, const std::vector<filters::UpdateDetails<6, T>>&, unsigned);
+#define TEMPLATE(T)                                                                                              \
+        template std::vector<view::Point<2, T>> smooth(                                                          \
+                const filters::FilterPosition<2, T, 0>&, const std::vector<TimeUpdateDetails<2, T>>&);           \
+        template std::vector<view::Point<2, T>> smooth(                                                          \
+                const filters::FilterPosition<2, T, 1>&, const std::vector<TimeUpdateDetails<4, T>>&);           \
+        template std::vector<view::Point<2, T>> smooth(                                                          \
+                const filters::FilterPosition<2, T, 2>&, const std::vector<TimeUpdateDetails<6, T>>&);           \
+        template std::vector<view::Point<2, T>> smooth(                                                          \
+                const filters::FilterPosition<2, T, 0>&, const std::vector<TimeUpdateDetails<2, T>>&, unsigned); \
+        template std::vector<view::Point<2, T>> smooth(                                                          \
+                const filters::FilterPosition<2, T, 1>&, const std::vector<TimeUpdateDetails<4, T>>&, unsigned); \
+        template std::vector<view::Point<2, T>> smooth(                                                          \
+                const filters::FilterPosition<2, T, 2>&, const std::vector<TimeUpdateDetails<6, T>>&, unsigned);
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 

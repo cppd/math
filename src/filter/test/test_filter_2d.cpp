@@ -22,7 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view/write.h"
 
 #include <src/com/log.h>
+#include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
+#include <src/filter/test/view/point.h>
 #include <src/test/test.h>
 
 #include <cstddef>
@@ -174,7 +176,7 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
                                 continue;
                         }
                         f.data.points.push_back(view_point(m.time, info->info));
-                        f.details.push_back(info->details);
+                        f.details.push_back({.time = m.time, .details = info->details});
                 }
         };
 

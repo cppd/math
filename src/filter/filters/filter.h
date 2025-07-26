@@ -41,8 +41,6 @@ struct UpdateInfo final
 template <std::size_t N, typename T>
 struct UpdateDetails final
 {
-        T time;
-
         std::optional<numerical::Matrix<N, N, T>> predict_f;
         std::optional<numerical::Vector<N, T>> predict_x;
         std::optional<numerical::Matrix<N, N, T>> predict_p;

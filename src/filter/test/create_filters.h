@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "time_update_details.h"
+
 #include "view/write.h"
 
 #include <src/filter/filters/estimation/position_estimation.h>
@@ -35,7 +37,7 @@ struct TestFilterPosition final
         std::unique_ptr<filters::FilterPosition<N, T, ORDER>> filter;
         view::Filter<N, T> data;
 
-        std::vector<filters::UpdateDetails<N * (1 + ORDER), T>> details;
+        std::vector<TimeUpdateDetails<N * (1 + ORDER), T>> details;
         view::Filter<N, T> data_smooth_all;
         view::Filter<N, T> data_smooth_lag;
 

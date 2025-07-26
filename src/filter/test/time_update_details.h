@@ -17,25 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "time_update_details.h"
-
-#include "view/point.h"
-
 #include <src/filter/filters/filter.h>
 
 #include <cstddef>
-#include <vector>
 
 namespace ns::filter::test
 {
-template <std::size_t N, typename T, std::size_t ORDER>
-[[nodiscard]] std::vector<view::Point<2, T>> smooth(
-        const filters::FilterPosition<2, T, ORDER>& filter,
-        const std::vector<TimeUpdateDetails<N, T>>& details);
-
-template <std::size_t N, typename T, std::size_t ORDER>
-[[nodiscard]] std::vector<view::Point<2, T>> smooth(
-        const filters::FilterPosition<2, T, ORDER>& filter,
-        const std::vector<TimeUpdateDetails<N, T>>& details,
-        unsigned lag);
+template <std::size_t N, typename T>
+struct TimeUpdateDetails final
+{
+        T time;
+        filters::UpdateDetails<N, T> details;
+};
 }
