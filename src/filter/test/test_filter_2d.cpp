@@ -194,8 +194,8 @@ void smooth_positions(Filters<T>* const filters)
         {
                 for (auto& f : filters_positions)
                 {
-                        f.data_smooth_all.points = smooth(*f.filter, f.details);
-                        f.data_smooth_lag.points = smooth(*f.filter, f.details, SMOOTH_LAG);
+                        f.data_smooth_all.points = smooth_all(*f.filter, f.details);
+                        f.data_smooth_lag.points = smooth_lag(*f.filter, f.details, SMOOTH_LAG);
                 }
         };
 

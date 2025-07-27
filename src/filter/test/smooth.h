@@ -29,12 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::test
 {
 template <std::size_t N, typename T, std::size_t ORDER>
-[[nodiscard]] std::vector<view::Point<2, T>> smooth(
+[[nodiscard]] std::vector<view::Point<2, T>> smooth_all(
         const filters::FilterPosition<2, T, ORDER>& filter,
         const std::vector<TimeUpdateDetails<N, T>>& details);
 
 template <std::size_t N, typename T, std::size_t ORDER>
-[[nodiscard]] std::vector<view::Point<2, T>> smooth(
+[[nodiscard]] std::vector<view::Point<2, T>> smooth_lag(
         const filters::FilterPosition<2, T, ORDER>& filter,
         const std::vector<TimeUpdateDetails<N, T>>& details,
         unsigned lag);
