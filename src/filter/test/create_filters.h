@@ -35,21 +35,20 @@ template <std::size_t N, typename T, std::size_t ORDER>
 struct TestFilterPosition final
 {
         std::unique_ptr<filters::FilterPosition<N, T, ORDER>> filter;
-        view::Filter<N, T> data;
-
-        std::vector<TimeUpdateDetails<N * (1 + ORDER), T>> details;
-        view::Filter<N, T> data_smooth_all;
-        view::Filter<N, T> data_smooth_lag;
+        view::Filter<N, T> view_filter;
+        view::Filter<N, T> view_filter_smooth_all;
+        view::Filter<N, T> view_filter_smooth_lag;
+        std::vector<TimeUpdateDetails<N * (1 + ORDER), T>> update_details;
 
         TestFilterPosition(
                 std::unique_ptr<filters::FilterPosition<N, T, ORDER>>&& filter,
-                view::Filter<N, T> data,
-                view::Filter<N, T> data_smooth_all,
-                view::Filter<N, T> data_smooth_lag)
+                view::Filter<N, T> view_filter,
+                view::Filter<N, T> view_filter_smooth_all,
+                view::Filter<N, T> view_filter_smooth_lag)
                 : filter(std::move(filter)),
-                  data(std::move(data)),
-                  data_smooth_all(std::move(data_smooth_all)),
-                  data_smooth_lag(std::move(data_smooth_lag))
+                  view_filter(std::move(view_filter)),
+                  view_filter_smooth_all(std::move(view_filter_smooth_all)),
+                  view_filter_smooth_lag(std::move(view_filter_smooth_lag))
         {
         }
 };
@@ -58,11 +57,11 @@ template <std::size_t N, typename T>
 struct TestFilter final
 {
         std::unique_ptr<filters::Filter<N, T>> filter;
-        view::Filter<N, T> data;
+        view::Filter<N, T> view_filter;
 
-        TestFilter(std::unique_ptr<filters::Filter<N, T>>&& filter, view::Filter<N, T> data)
+        TestFilter(std::unique_ptr<filters::Filter<N, T>>&& filter, view::Filter<N, T> view_filter)
                 : filter(std::move(filter)),
-                  data(std::move(data))
+                  view_filter(std::move(view_filter))
         {
         }
 };

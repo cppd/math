@@ -65,7 +65,7 @@ void write_file(
         {
                 for (const auto& p : v)
                 {
-                        view_filters.push_back(p.data);
+                        view_filters.push_back(p.view_filter);
                 }
         };
 
@@ -73,8 +73,8 @@ void write_file(
         {
                 for (const auto& p : v)
                 {
-                        view_filters.push_back(p.data_smooth_all);
-                        view_filters.push_back(p.data_smooth_lag);
+                        view_filters.push_back(p.view_filter_smooth_all);
+                        view_filters.push_back(p.view_filter_smooth_lag);
                 }
         };
 
@@ -121,7 +121,7 @@ void write_log(const Filters<T>& filters)
                         if (const std::string& s = p.filter->consistency_string(); !s.empty())
                         {
                                 LOG("---");
-                                LOG(add_line_beginning(s, p.data.name + separator));
+                                LOG(add_line_beginning(s, p.view_filter.name + separator));
                         }
                 }
         };
@@ -154,7 +154,7 @@ void update_filters(const filters::Measurements<2, T>& m, Filters<T>* const filt
                         {
                                 continue;
                         }
-                        f.data.points.push_back(view_point(m.time, *info));
+                        f.view_filter.points.push_back(view_point(m.time, *info));
                 }
         };
 
@@ -175,8 +175,8 @@ void update_positions(const filters::Measurements<2, T>& m, Filters<T>* const fi
                         {
                                 continue;
                         }
-                        f.data.points.push_back(view_point(m.time, info->info));
-                        f.details.push_back({.time = m.time, .details = info->details});
+                        f.view_filter.points.push_back(view_point(m.time, info->info));
+                        f.update_details.push_back({.time = m.time, .details = info->details});
                 }
         };
 
@@ -194,8 +194,8 @@ void smooth_positions(Filters<T>* const filters)
         {
                 for (auto& f : filters_positions)
                 {
-                        f.data_smooth_all.points = smooth_all(*f.filter, f.details);
-                        f.data_smooth_lag.points = smooth_lag(*f.filter, f.details, SMOOTH_LAG);
+                        f.view_filter_smooth_all.points = smooth_all(*f.filter, f.update_details);
+                        f.view_filter_smooth_lag.points = smooth_lag(*f.filter, f.update_details, SMOOTH_LAG);
                 }
         };
 
