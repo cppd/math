@@ -34,32 +34,67 @@ namespace ns::filter::core::test
 {
 namespace
 {
-template <typename T, template <typename... Ts> typename Container>
-void init(
-        const std::vector<TimeUpdateInfo<T>>& result,
-        Container<numerical::Matrix<2, 2, T>>& predict_f,
-        Container<numerical::Vector<2, T>>& predict_x,
-        Container<numerical::Matrix<2, 2, T>>& predict_p,
-        Container<numerical::Vector<2, T>>& x,
-        Container<numerical::Matrix<2, 2, T>>& p)
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
+struct Data
 {
-        ASSERT(!result.empty());
+        Container<numerical::Matrix<N, N, T>> predict_f;
+        Container<numerical::Vector<N, T>> predict_x;
+        Container<numerical::Matrix<N, N, T>> predict_p;
+        Container<numerical::Vector<N, T>> x;
+        Container<numerical::Matrix<N, N, T>> p;
+        Container<T> time;
+};
 
-        ASSERT(predict_f.empty());
-        ASSERT(predict_x.empty());
-        ASSERT(predict_p.empty());
-        ASSERT(x.empty());
-        ASSERT(p.empty());
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
+void init(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
+{
+        ASSERT(!info.info.predict_f);
+        ASSERT(!info.info.predict_x);
+        ASSERT(!info.info.predict_p);
 
-        ASSERT(!result[0].info.predict_f);
-        ASSERT(!result[0].info.predict_x);
-        ASSERT(!result[0].info.predict_p);
-        predict_f.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
-        predict_x.push_back(numerical::Vector<2, T>(0));
-        predict_p.push_back(numerical::Matrix<2, 2, T>(numerical::ZERO_MATRIX));
+        data.predict_f.clear();
+        data.predict_x.clear();
+        data.predict_p.clear();
+        data.x.clear();
+        data.p.clear();
 
-        x.push_back(result[0].info.update_x);
-        p.push_back(result[0].info.update_p);
+        data.predict_f.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
+        data.predict_x.push_back(numerical::Vector<N, T>(0));
+        data.predict_p.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
+        data.x.push_back(info.info.update_x);
+        data.p.push_back(info.info.update_p);
+}
+
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
+void add(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
+{
+        ASSERT(info.info.predict_f);
+        ASSERT(info.info.predict_x);
+        ASSERT(info.info.predict_p);
+
+        data.predict_f.push_back(*info.info.predict_f);
+        data.predict_x.push_back(*info.info.predict_x);
+        data.predict_p.push_back(*info.info.predict_p);
+        data.x.push_back(info.info.update_x);
+        data.p.push_back(info.info.update_p);
+}
+
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
+void correct_size(const unsigned max_size, Data<N, T, Container>& data)
+{
+        ASSERT(data.x.size() == data.p.size());
+        ASSERT(data.x.size() == data.predict_f.size());
+        ASSERT(data.x.size() == data.predict_x.size());
+        ASSERT(data.x.size() == data.predict_p.size());
+
+        while (data.x.size() > max_size)
+        {
+                data.predict_f.pop_front();
+                data.predict_x.pop_front();
+                data.predict_p.pop_front();
+                data.x.pop_front();
+                data.p.pop_front();
+        }
 }
 
 template <typename T>
@@ -100,14 +135,9 @@ std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateI
                 return {};
         }
 
-        std::vector<numerical::Matrix<2, 2, T>> predict_f;
-        std::vector<numerical::Vector<2, T>> predict_x;
-        std::vector<numerical::Matrix<2, 2, T>> predict_p;
+        Data<2, T, std::vector> data;
 
-        std::vector<numerical::Vector<2, T>> x;
-        std::vector<numerical::Matrix<2, 2, T>> p;
-
-        init(result, predict_f, predict_x, predict_p, x, p);
+        init(result[0], data);
 
         for (std::size_t i = 1; i < result.size(); ++i)
         {
@@ -120,15 +150,10 @@ std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateI
                         return {};
                 }
 
-                predict_f.push_back(*p_f);
-                predict_x.push_back(*p_x);
-                predict_p.push_back(*p_p);
-
-                x.push_back(result[i].info.update_x);
-                p.push_back(result[i].info.update_p);
+                add(result[i], data);
         }
 
-        std::tie(x, p) = smooth(predict_f, predict_x, predict_p, x, p);
+        const auto [x, p] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         std::vector<view::Point<T>> res;
         res.reserve(result.size());
@@ -152,14 +177,9 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
         std::vector<view::Point<T>> res;
         res.reserve(result.size());
 
-        std::deque<numerical::Matrix<2, 2, T>> predict_f;
-        std::deque<numerical::Vector<2, T>> predict_x;
-        std::deque<numerical::Matrix<2, 2, T>> predict_p;
+        Data<2, T, std::deque> data;
 
-        std::deque<numerical::Vector<2, T>> x;
-        std::deque<numerical::Matrix<2, 2, T>> p;
-
-        init(result, predict_f, predict_x, predict_p, x, p);
+        init(result[0], data);
 
         for (std::size_t i = 1; i < result.size(); ++i)
         {
@@ -172,29 +192,15 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
                         return {};
                 }
 
-                while (x.size() >= count)
-                {
-                        predict_f.pop_front();
-                        predict_x.pop_front();
-                        predict_p.pop_front();
+                correct_size(count - 1, data);
+                add(result[i], data);
 
-                        x.pop_front();
-                        p.pop_front();
-                }
-
-                predict_f.push_back(*p_f);
-                predict_x.push_back(*p_x);
-                predict_p.push_back(*p_p);
-
-                x.push_back(result[i].info.update_x);
-                p.push_back(result[i].info.update_p);
-
-                if (x.size() < count)
+                if (data.x.size() < count)
                 {
                         continue;
                 }
 
-                const auto [xs, ps] = smooth(predict_f, predict_x, predict_p, x, p);
+                const auto [xs, ps] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
                 ASSERT(i >= lag);
                 res.push_back(make_point(result[i - lag].time, xs, ps));
