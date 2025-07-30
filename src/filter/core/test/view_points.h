@@ -26,11 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::core::test
 {
 template <typename T>
-std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& result);
+std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& info);
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& result);
+std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& info);
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& result, unsigned lag);
+std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& info, unsigned lag);
 }

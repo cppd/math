@@ -66,7 +66,7 @@ void init(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-void add(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
+void push(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
 {
         ASSERT(info.info.predict_f);
         ASSERT(info.info.predict_x);
@@ -80,21 +80,25 @@ void add(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-void correct_size(const unsigned max_size, Data<N, T, Container>& data)
+void pop(Data<N, T, Container>& data)
 {
-        ASSERT(data.x.size() == data.p.size());
-        ASSERT(data.x.size() == data.predict_f.size());
-        ASSERT(data.x.size() == data.predict_x.size());
-        ASSERT(data.x.size() == data.predict_p.size());
+        ASSERT(!data.predict_f.empty());
+        ASSERT(!data.predict_x.empty());
+        ASSERT(!data.predict_p.empty());
+        ASSERT(!data.x.empty());
+        ASSERT(!data.p.empty());
 
-        while (data.x.size() > max_size)
-        {
-                data.predict_f.pop_front();
-                data.predict_x.pop_front();
-                data.predict_p.pop_front();
-                data.x.pop_front();
-                data.p.pop_front();
-        }
+        data.predict_f.pop_front();
+        data.predict_x.pop_front();
+        data.predict_p.pop_front();
+        data.x.pop_front();
+        data.p.pop_front();
+}
+
+template <typename T>
+std::vector<T> to_vector(const std::deque<T>& d)
+{
+        return {d.cbegin(), d.cend()};
 }
 
 template <typename T>
@@ -111,11 +115,11 @@ view::Point<T> make_point(const T time, const numerical::Vector<2, T>& x, const 
 }
 
 template <typename T>
-std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& result)
+std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& info)
 {
         std::vector<view::Point<T>> res;
-        res.reserve(result.size());
-        for (const TimeUpdateInfo<T>& r : result)
+        res.reserve(info.size());
+        for (const TimeUpdateInfo<T>& r : info)
         {
                 res.push_back(
                         {.time = r.time,
@@ -128,74 +132,71 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& re
 }
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& result)
+std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& info)
 {
-        if (result.empty())
+        if (info.empty())
         {
                 return {};
         }
 
         Data<2, T, std::vector> data;
 
-        init(result[0], data);
+        init(info[0], data);
 
-        for (std::size_t i = 1; i < result.size(); ++i)
+        for (std::size_t i = 1; i < info.size(); ++i)
         {
-                const auto& p_f = result[i].info.predict_f;
-                const auto& p_x = result[i].info.predict_x;
-                const auto& p_p = result[i].info.predict_p;
+                const auto& p_f = info[i].info.predict_f;
+                const auto& p_x = info[i].info.predict_x;
+                const auto& p_p = info[i].info.predict_p;
 
                 if (!(p_f && p_x && p_p))
                 {
                         return {};
                 }
 
-                add(result[i], data);
+                push(info[i], data);
         }
 
         const auto [x, p] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         std::vector<view::Point<T>> res;
-        res.reserve(result.size());
-        for (std::size_t i = 0; i < result.size(); ++i)
+        res.reserve(info.size());
+        for (std::size_t i = 0; i < info.size(); ++i)
         {
-                res.push_back(make_point(result[i].time, x[i], p[i]));
+                res.push_back(make_point(info[i].time, x[i], p[i]));
         }
         return res;
 }
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& result, const unsigned lag)
+std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& info, const unsigned lag)
 {
-        const unsigned count = lag + 1;
-
-        if (result.size() < count)
+        if (info.empty())
         {
                 return {};
         }
 
         std::vector<view::Point<T>> res;
-        res.reserve(result.size());
+        res.reserve(info.size());
 
         Data<2, T, std::deque> data;
 
-        init(result[0], data);
+        init(info[0], data);
 
-        for (std::size_t i = 1; i < result.size(); ++i)
+        for (std::size_t i = 1; i < info.size(); ++i)
         {
-                const auto& p_f = result[i].info.predict_f;
-                const auto& p_x = result[i].info.predict_x;
-                const auto& p_p = result[i].info.predict_p;
+                const auto& p_f = info[i].info.predict_f;
+                const auto& p_x = info[i].info.predict_x;
+                const auto& p_p = info[i].info.predict_p;
 
                 if (!(p_f && p_x && p_p))
                 {
                         return {};
                 }
 
-                correct_size(count - 1, data);
-                add(result[i], data);
+                push(info[i], data);
 
-                if (data.x.size() < count)
+                if (data.x.size() < lag + 1)
                 {
                         continue;
                 }
@@ -203,8 +204,22 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
                 const auto [xs, ps] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
                 ASSERT(i >= lag);
-                res.push_back(make_point(result[i - lag].time, xs, ps));
+                res.push_back(make_point(info[i - lag].time, xs, ps));
+
+                pop(data);
         }
+
+        const auto [x, p] = smooth(
+                to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
+                to_vector(data.p));
+
+        ASSERT(info.size() >= x.size());
+        for (std::size_t i = info.size() - x.size(), j = 0; i < info.size(); ++i, ++j)
+        {
+                res.push_back(make_point(info[i].time, x[j], p[j]));
+        }
+
+        ASSERT(res.size() == info.size());
 
         return res;
 }
