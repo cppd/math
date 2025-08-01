@@ -57,12 +57,14 @@ void init(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
         data.predict_p.clear();
         data.x.clear();
         data.p.clear();
+        data.time.clear();
 
         data.predict_f.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
         data.predict_x.push_back(numerical::Vector<N, T>(0));
         data.predict_p.push_back(numerical::Matrix<N, N, T>(numerical::ZERO_MATRIX));
         data.x.push_back(info.info.update_x);
         data.p.push_back(info.info.update_p);
+        data.time.push_back(info.time);
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
@@ -77,6 +79,7 @@ void push(const TimeUpdateInfo<T>& info, Data<N, T, Container>& data)
         data.predict_p.push_back(*info.info.predict_p);
         data.x.push_back(info.info.update_x);
         data.p.push_back(info.info.update_p);
+        data.time.push_back(info.time);
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
@@ -87,12 +90,14 @@ void pop(Data<N, T, Container>& data)
         ASSERT(!data.predict_p.empty());
         ASSERT(!data.x.empty());
         ASSERT(!data.p.empty());
+        ASSERT(!data.time.empty());
 
         data.predict_f.pop_front();
         data.predict_x.pop_front();
         data.predict_p.pop_front();
         data.x.pop_front();
         data.p.pop_front();
+        data.time.pop_front();
 }
 
 template <typename T>
@@ -142,6 +147,20 @@ bool check_predict(const std::vector<TimeUpdateInfo<T>>& info)
         }
         return true;
 }
+
+template <typename T>
+void write_smooth(const Data<2, T, std::vector>& data, std::vector<view::Point<T>>& res)
+{
+        const auto [x, p] = core::smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+
+        ASSERT(x.size() == p.size());
+        ASSERT(x.size() == data.time.size());
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                res.push_back(make_point(data.time[i], x[i], p[i]));
+        }
+}
 }
 
 template <typename T>
@@ -169,27 +188,30 @@ std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateI
                 return {};
         }
 
-        if (!check_predict(info))
-        {
-                return {};
-        }
+        std::vector<view::Point<T>> res;
 
         Data<2, T, std::vector> data;
 
         init(info[0], data);
+
         for (std::size_t i = 1; i < info.size(); ++i)
         {
+                const auto& p_f = info[i].info.predict_f;
+                const auto& p_x = info[i].info.predict_x;
+                const auto& p_p = info[i].info.predict_p;
+
+                if (!(p_f && p_x && p_p))
+                {
+                        write_smooth(data, res);
+                        init(info[i], data);
+                        continue;
+                }
+
                 push(info[i], data);
         }
 
-        const auto [x, p] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+        write_smooth(data, res);
 
-        std::vector<view::Point<T>> res;
-        res.reserve(info.size());
-        for (std::size_t i = 0; i < info.size(); ++i)
-        {
-                res.push_back(make_point(info[i].time, x[i], p[i]));
-        }
         return res;
 }
 
