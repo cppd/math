@@ -133,28 +133,27 @@ std::vector<view::Point<T>> copy_x_p(const std::vector<TimeUpdateInfo<T>>& info)
 }
 
 template <typename T>
-bool check_predict(const std::vector<TimeUpdateInfo<T>>& info)
-{
-        for (std::size_t i = 1; i < info.size(); ++i)
-        {
-                const auto& p_f = info[i].info.predict_f;
-                const auto& p_x = info[i].info.predict_x;
-                const auto& p_p = info[i].info.predict_p;
-                if (!(p_f && p_x && p_p))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-template <typename T>
 void write_smooth(const Data<2, T, std::vector>& data, std::vector<view::Point<T>>& res)
 {
         const auto [x, p] = core::smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         ASSERT(x.size() == p.size());
         ASSERT(x.size() == data.time.size());
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                res.push_back(make_point(data.time[i], x[i], p[i]));
+        }
+}
+
+template <typename T>
+void write_smooth(const Data<2, T, std::deque>& data, std::vector<view::Point<T>>& res)
+{
+        const auto [x, p] = smooth(
+                to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
+                to_vector(data.p));
+
+        ASSERT(data.x.size() == x.size());
 
         for (std::size_t i = 0; i < x.size(); ++i)
         {
@@ -189,6 +188,7 @@ std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateI
         }
 
         std::vector<view::Point<T>> res;
+        res.reserve(info.size());
 
         Data<2, T, std::vector> data;
 
@@ -223,11 +223,6 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
                 return {};
         }
 
-        if (!check_predict(info))
-        {
-                return {};
-        }
-
         if (lag == 0)
         {
                 return copy_x_p(info);
@@ -242,6 +237,17 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
 
         for (std::size_t i = 1; i < info.size(); ++i)
         {
+                const auto& p_f = info[i].info.predict_f;
+                const auto& p_x = info[i].info.predict_x;
+                const auto& p_p = info[i].info.predict_p;
+
+                if (!(p_f && p_x && p_p))
+                {
+                        write_smooth(data, res);
+                        init(info[i], data);
+                        continue;
+                }
+
                 push(info[i], data);
 
                 if (data.x.size() < lag + 1)
@@ -251,24 +257,14 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
 
                 const auto [xs, ps] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
-                ASSERT(i >= lag);
-                res.push_back(make_point(info[i - lag].time, xs, ps));
+                res.push_back(make_point(data.time.front(), xs, ps));
 
                 pop(data);
         }
 
-        const auto [x, p] = smooth(
-                to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
-                to_vector(data.p));
-
-        ASSERT(info.size() >= x.size());
-        for (std::size_t i = info.size() - x.size(), j = 0; i < info.size(); ++i, ++j)
-        {
-                res.push_back(make_point(info[i].time, x[j], p[j]));
-        }
+        write_smooth(data, res);
 
         ASSERT(res.size() == info.size());
-
         return res;
 }
 
