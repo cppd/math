@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "utils.h"
+
 #include <src/com/error.h>
 
 #include <cstddef>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 namespace ns::statistics
@@ -29,19 +29,6 @@ namespace ns::statistics
 template <typename T>
 class MovingAverage final
 {
-        [[nodiscard]] static auto to_data_type(const std::size_t size)
-        {
-                if constexpr (requires { std::declval<T>().data(); })
-                {
-                        using Value = std::remove_pointer_t<decltype(std::declval<T>().data())>;
-                        return static_cast<std::remove_cvref_t<Value>>(size);
-                }
-                else
-                {
-                        return static_cast<T>(size);
-                }
-        }
-
         std::size_t window_size_;
         std::vector<T> data_;
         std::size_t n_ = -1;
@@ -60,11 +47,13 @@ public:
 
         void push(const T& value)
         {
+                using DataType = utils::TypeTraits<T>::DataType;
+
                 if (data_.size() < window_size_)
                 {
                         data_.push_back(value);
                         ++n_;
-                        mean_ += (value - mean_) / to_data_type(data_.size());
+                        mean_ += (value - mean_) / static_cast<DataType>(data_.size());
                         return;
                 }
 
@@ -72,7 +61,7 @@ public:
                 const T old_value = data_[n_];
                 data_[n_] = value;
 
-                mean_ += (value - old_value) / to_data_type(window_size_);
+                mean_ += (value - old_value) / static_cast<DataType>(window_size_);
         }
 
         [[nodiscard]] std::size_t size() const

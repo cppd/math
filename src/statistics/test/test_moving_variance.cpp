@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/numerical/vector.h>
 #include <src/statistics/moving_variance.h>
+#include <src/statistics/utils.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -33,21 +34,75 @@ namespace ns::statistics::test
 namespace
 {
 template <typename T>
-        requires (std::is_floating_point_v<T>)
-[[nodiscard]] T sqrt(const T a)
+void check_empty(const MovingVariance<T>& variance)
 {
-        return std::sqrt(a);
+        if (variance.has_mean())
+        {
+                error("Variance has mean");
+        }
+
+        if (variance.has_variance_n())
+        {
+                error("Variance has variance n");
+        }
+
+        if (variance.has_variance())
+        {
+                error("Variance has variance");
+        }
+
+        if (!(variance.size() == 0))
+        {
+                error("Variance is not empty");
+        }
 }
 
-template <std::size_t N, typename T>
-[[nodiscard]] numerical::Vector<N, T> sqrt(const numerical::Vector<N, T>& a)
+template <typename T>
+void check_one(const MovingVariance<T>& variance)
 {
-        numerical::Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
+        if (!variance.has_mean())
         {
-                res[i] = std::sqrt(a[i]);
+                error("Variance has no mean");
         }
-        return res;
+
+        if (!variance.has_variance_n())
+        {
+                error("Variance has no variance n");
+        }
+
+        if (variance.has_variance())
+        {
+                error("Variance has variance");
+        }
+
+        if (!(variance.size() == 1))
+        {
+                error("Variance data size " + to_string(variance.size()) + " is not equal to 1");
+        }
+}
+
+template <typename T>
+void check_two(const MovingVariance<T>& variance)
+{
+        if (!variance.has_mean())
+        {
+                error("Variance has no mean");
+        }
+
+        if (!variance.has_variance_n())
+        {
+                error("Variance has no variance n");
+        }
+
+        if (!variance.has_variance())
+        {
+                error("Variance has no variance");
+        }
+
+        if (!(variance.size() >= 2))
+        {
+                error("Variance data size " + to_string(variance.size()) + " is not greater than or equal to 2");
+        }
 }
 
 template <typename T>
@@ -62,37 +117,11 @@ void test(const T& precision)
 
         MovingVariance<T> variance(WINDOW_SIZE);
 
-        if (variance.has_variance())
-        {
-                error("Variance is not empty");
-        }
-
-        if (variance.has_variance_n())
-        {
-                error("Variance is not empty");
-        }
-
-        if (!(variance.size() == 0))
-        {
-                error("Variance is not empty");
-        }
+        check_empty(variance);
 
         variance.push(T{1});
 
-        if (variance.has_variance())
-        {
-                error("Variance has variance");
-        }
-
-        if (!variance.has_variance_n())
-        {
-                error("Variance is empty");
-        }
-
-        if (!(variance.size() == 1))
-        {
-                error("Variance data size " + to_string(variance.size()) + " is not equal to 1");
-        }
+        check_one(variance);
 
         cmp(T{1}, variance.mean());
         cmp(T{0}, variance.variance_n());
@@ -119,16 +148,13 @@ void test(const T& precision)
         {
                 variance.push(d.value);
 
-                if (!(variance.has_variance() && variance.has_variance_n()))
-                {
-                        error("Variance is empty");
-                }
+                check_two(variance);
 
                 cmp(d.mean, variance.mean());
                 cmp(d.variance, variance.variance());
                 cmp(d.variance_n, variance.variance_n());
-                cmp(sqrt(d.variance), variance.standard_deviation());
-                cmp(sqrt(d.variance_n), variance.standard_deviation_n());
+                cmp(utils::sqrt(d.variance), variance.standard_deviation());
+                cmp(utils::sqrt(d.variance_n), variance.standard_deviation_n());
         }
 
         if (!(variance.size() == 3))

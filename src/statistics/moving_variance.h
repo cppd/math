@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "utils.h"
+
 #include <src/com/error.h>
 
 #include <cmath>
 #include <cstddef>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 namespace ns::statistics
@@ -30,37 +30,7 @@ namespace ns::statistics
 template <typename T>
 class MovingVariance final
 {
-        static constexpr bool VECTOR = requires { std::declval<T>()[0]; };
-
-        static auto to_data_type(const std::size_t size)
-        {
-                if constexpr (VECTOR)
-                {
-                        using DataType = std::remove_cvref_t<decltype(std::declval<T>()[0])>;
-                        return static_cast<DataType>(size);
-                }
-                else
-                {
-                        return static_cast<T>(size);
-                }
-        }
-
-        static auto sqrt(const T& data)
-        {
-                if constexpr (VECTOR)
-                {
-                        T res;
-                        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
-                        {
-                                res[i] = std::sqrt(data[i]);
-                        }
-                        return res;
-                }
-                else
-                {
-                        return std::sqrt(data);
-                }
-        }
+        using DataType = utils::TypeTraits<T>::DataType;
 
         std::size_t window_size_;
         std::vector<T> data_;
@@ -88,7 +58,7 @@ public:
                         data_.push_back(value);
                         ++n_;
                         const T delta = value - mean_;
-                        mean_ += delta / to_data_type(data_.size());
+                        mean_ += delta / static_cast<DataType>(data_.size());
                         sum_ += delta * (value - mean_);
                         return;
                 }
@@ -99,13 +69,18 @@ public:
 
                 const T old_mean = mean_;
                 const T delta = value - old_value;
-                mean_ += delta / to_data_type(window_size_);
+                mean_ += delta / static_cast<DataType>(window_size_);
                 sum_ += delta * (value + old_value - mean_ - old_mean);
         }
 
         [[nodiscard]] std::size_t size() const
         {
                 return data_.size();
+        }
+
+        [[nodiscard]] bool has_mean() const
+        {
+                return !data_.empty();
         }
 
         [[nodiscard]] bool has_variance_n() const
@@ -120,30 +95,30 @@ public:
 
         [[nodiscard]] T mean() const
         {
-                ASSERT(!data_.empty());
+                ASSERT(has_mean());
                 return mean_;
         }
 
         [[nodiscard]] T variance_n() const
         {
-                ASSERT(!data_.empty());
-                return sum_ / to_data_type(data_.size());
+                ASSERT(has_variance_n());
+                return sum_ / static_cast<DataType>(data_.size());
         }
 
         [[nodiscard]] T variance() const
         {
-                ASSERT(data_.size() >= 2);
-                return sum_ / to_data_type(data_.size() - 1);
+                ASSERT(has_variance());
+                return sum_ / static_cast<DataType>(data_.size() - 1);
         }
 
         [[nodiscard]] T standard_deviation_n() const
         {
-                return sqrt(variance_n());
+                return utils::sqrt(variance_n());
         }
 
         [[nodiscard]] T standard_deviation() const
         {
-                return sqrt(variance());
+                return utils::sqrt(variance());
         }
 };
 }
