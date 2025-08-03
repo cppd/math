@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "measurements.h"
-#include "time_update_info.h"
-#include "view_points.h"
 
 #include "filters/filter.h"
 #include "filters/filter_info.h"
@@ -143,7 +141,7 @@ std::vector<view::Point<T>> test_filter(
         filter->reset();
         correction->reset();
 
-        std::vector<TimeUpdateInfo<T>> result;
+        std::vector<view::Point<T>> res;
 
         for (Measurements<T> m : measurements)
         {
@@ -154,10 +152,17 @@ std::vector<view::Point<T>> test_filter(
                 {
                         continue;
                 }
-                result.push_back({.time = m.time, .info = *update});
+
+                res.push_back({
+                        .time = m.time,
+                        .x = update->x,
+                        .x_stddev = update->x_stddev,
+                        .v = update->v,
+                        .v_stddev = update->v_stddev,
+                });
         }
 
-        return view_points(result);
+        return res;
 }
 
 template <typename T>

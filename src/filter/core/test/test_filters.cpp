@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "distribution.h"
 #include "measurements.h"
+#include "smooth.h"
 #include "time_update_info.h"
-#include "view_points.h"
 
 #include "filters/filter.h"
 #include "filters/filter_info.h"
@@ -50,7 +50,7 @@ namespace ns::filter::core::test
 {
 namespace
 {
-constexpr unsigned SMOOTH_LAG = 10;
+constexpr unsigned SMOOTH_LAG = 5;
 
 template <typename T>
 constexpr T DATA_CONNECT_INTERVAL = 10;
@@ -115,6 +115,23 @@ TestResult<T> test_filter(filters::Filter<T>* const filter, const std::vector<Me
 }
 
 template <typename T>
+std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& info)
+{
+        std::vector<view::Point<T>> res;
+        res.reserve(info.size());
+        for (const TimeUpdateInfo<T>& r : info)
+        {
+                res.push_back(
+                        {.time = r.time,
+                         .x = r.info.x,
+                         .x_stddev = r.info.x_stddev,
+                         .v = r.info.v,
+                         .v_stddev = r.info.v_stddev});
+        }
+        return res;
+}
+
+template <typename T>
 void test_impl(
         const std::string_view name,
         const std::string_view annotation,
@@ -144,10 +161,8 @@ void test_impl(
 
         result_x.distribution.check(expected_distribution);
 
-        const std::vector<view::Point<T>> smooth_view_points_x_all = smooth_view_points_all(result_x.result);
-
-        const std::vector<view::Point<T>> smooth_view_points_x_lag =
-                smooth_view_points_lag(result_x.result, SMOOTH_LAG);
+        const std::vector<view::Point<T>> smooth_view_points_x_all = smooth_all(result_x.result);
+        const std::vector<view::Point<T>> smooth_view_points_x_lag = smooth_lag(result_x.result, SMOOTH_LAG);
 
         //
 
@@ -164,10 +179,8 @@ void test_impl(
                 error("NEES XV; " + result_xv.nees.check_string());
         }
 
-        const std::vector<view::Point<T>> smooth_view_points_xv_all = smooth_view_points_all(result_xv.result);
-
-        const std::vector<view::Point<T>> smooth_view_points_xv_lag =
-                smooth_view_points_lag(result_xv.result, SMOOTH_LAG);
+        const std::vector<view::Point<T>> smooth_view_points_xv_all = smooth_all(result_xv.result);
+        const std::vector<view::Point<T>> smooth_view_points_xv_lag = smooth_lag(result_xv.result, SMOOTH_LAG);
 
         //
 

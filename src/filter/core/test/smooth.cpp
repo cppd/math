@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "view_points.h"
+#include "smooth.h"
 
 #include "time_update_info.h"
 
@@ -163,24 +163,7 @@ void write_smooth(const Data<2, T, std::deque>& data, std::vector<view::Point<T>
 }
 
 template <typename T>
-std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& info)
-{
-        std::vector<view::Point<T>> res;
-        res.reserve(info.size());
-        for (const TimeUpdateInfo<T>& r : info)
-        {
-                res.push_back(
-                        {.time = r.time,
-                         .x = r.info.x,
-                         .x_stddev = r.info.x_stddev,
-                         .v = r.info.v,
-                         .v_stddev = r.info.v_stddev});
-        }
-        return res;
-}
-
-template <typename T>
-std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>& info)
+std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>& info)
 {
         if (info.empty())
         {
@@ -216,7 +199,7 @@ std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateI
 }
 
 template <typename T>
-std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>& info, const unsigned lag)
+std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& info, const unsigned lag)
 {
         if (info.empty())
         {
@@ -268,10 +251,9 @@ std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateI
         return res;
 }
 
-#define INSTANTIATION(T)                                                                                    \
-        template std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>&);            \
-        template std::vector<view::Point<T>> smooth_view_points_all(const std::vector<TimeUpdateInfo<T>>&); \
-        template std::vector<view::Point<T>> smooth_view_points_lag(const std::vector<TimeUpdateInfo<T>>&, unsigned);
+#define INSTANTIATION(T)                                                                        \
+        template std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>&); \
+        template std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>&, unsigned);
 
 INSTANTIATION(float)
 INSTANTIATION(double)
