@@ -41,11 +41,6 @@ void check_empty(const MovingVariance<T>& variance)
                 error("Variance has mean");
         }
 
-        if (variance.has_variance_n())
-        {
-                error("Variance has variance n");
-        }
-
         if (variance.has_variance())
         {
                 error("Variance has variance");
@@ -65,14 +60,9 @@ void check_one(const MovingVariance<T>& variance)
                 error("Variance has no mean");
         }
 
-        if (!variance.has_variance_n())
+        if (!variance.has_variance())
         {
-                error("Variance has no variance n");
-        }
-
-        if (variance.has_variance())
-        {
-                error("Variance has variance");
+                error("Variance has no variance");
         }
 
         if (!(variance.size() == 1))
@@ -87,11 +77,6 @@ void check_two(const MovingVariance<T>& variance)
         if (!variance.has_mean())
         {
                 error("Variance has no mean");
-        }
-
-        if (!variance.has_variance_n())
-        {
-                error("Variance has no variance n");
         }
 
         if (!variance.has_variance())
@@ -124,24 +109,23 @@ void test(const T& precision)
         check_one(variance);
 
         cmp(T{1}, variance.mean());
-        cmp(T{0}, variance.variance_n());
+        cmp(T{0}, variance.variance());
 
         struct Data final
         {
                 T value;
                 T mean;
                 T variance;
-                T variance_n;
         };
 
         constexpr std::array DATA = std::to_array<Data>({
-                { T{2},  T{3} / T{2},   T{1} / T{2},   T{1} / T{4}},
-                {T{-2},  T{1} / T{3},  T{13} / T{3},  T{26} / T{9}},
-                {T{10}, T{10} / T{3}, T{112} / T{3}, T{224} / T{9}},
-                { T{3}, T{11} / T{3}, T{109} / T{3}, T{218} / T{9}},
-                {T{-8},  T{5} / T{3}, T{247} / T{3}, T{494} / T{9}},
-                { T{1}, T{-4} / T{3}, T{103} / T{3}, T{206} / T{9}},
-                { T{9},  T{2} / T{3}, T{217} / T{3}, T{434} / T{9}}
+                { T{2},  T{3} / T{2},   T{1} / T{4}},
+                {T{-2},  T{1} / T{3},  T{26} / T{9}},
+                {T{10}, T{10} / T{3}, T{224} / T{9}},
+                { T{3}, T{11} / T{3}, T{218} / T{9}},
+                {T{-8},  T{5} / T{3}, T{494} / T{9}},
+                { T{1}, T{-4} / T{3}, T{206} / T{9}},
+                { T{9},  T{2} / T{3}, T{434} / T{9}}
         });
 
         for (const Data& d : DATA)
@@ -152,9 +136,7 @@ void test(const T& precision)
 
                 cmp(d.mean, variance.mean());
                 cmp(d.variance, variance.variance());
-                cmp(d.variance_n, variance.variance_n());
                 cmp(utils::sqrt(d.variance), variance.standard_deviation());
-                cmp(utils::sqrt(d.variance_n), variance.standard_deviation_n());
         }
 
         if (!(variance.size() == 3))

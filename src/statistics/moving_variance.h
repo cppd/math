@@ -83,14 +83,9 @@ public:
                 return !data_.empty();
         }
 
-        [[nodiscard]] bool has_variance_n() const
-        {
-                return !data_.empty();
-        }
-
         [[nodiscard]] bool has_variance() const
         {
-                return data_.size() >= 2;
+                return !data_.empty();
         }
 
         [[nodiscard]] T mean() const
@@ -99,21 +94,10 @@ public:
                 return mean_;
         }
 
-        [[nodiscard]] T variance_n() const
-        {
-                ASSERT(has_variance_n());
-                return sum_ / static_cast<DataType>(data_.size());
-        }
-
         [[nodiscard]] T variance() const
         {
                 ASSERT(has_variance());
-                return sum_ / static_cast<DataType>(data_.size() - 1);
-        }
-
-        [[nodiscard]] T standard_deviation_n() const
-        {
-                return utils::sqrt(variance_n());
+                return sum_ / static_cast<DataType>(data_.size());
         }
 
         [[nodiscard]] T standard_deviation() const
