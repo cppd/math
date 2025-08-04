@@ -70,7 +70,7 @@ void init(const TimeUpdateDetails<N, T>& details, Data<N, T, Container>& data)
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-void add(const TimeUpdateDetails<N, T>& details, Data<N, T, Container>& data)
+void push(const TimeUpdateDetails<N, T>& details, Data<N, T, Container>& data)
 {
         ASSERT(details.details.predict_f);
         ASSERT(details.details.predict_x);
@@ -85,23 +85,21 @@ void add(const TimeUpdateDetails<N, T>& details, Data<N, T, Container>& data)
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-void correct_size(Data<N, T, Container>& data, const unsigned max_size)
+void pop(Data<N, T, Container>& data)
 {
-        ASSERT(data.x.size() == data.p.size());
-        ASSERT(data.x.size() == data.predict_f.size());
-        ASSERT(data.x.size() == data.predict_p.size());
-        ASSERT(data.x.size() == data.predict_x.size());
-        ASSERT(data.x.size() == data.time.size());
+        ASSERT(!data.predict_f.empty());
+        ASSERT(!data.predict_x.empty());
+        ASSERT(!data.predict_p.empty());
+        ASSERT(!data.x.empty());
+        ASSERT(!data.p.empty());
+        ASSERT(!data.time.empty());
 
-        while (data.x.size() > max_size)
-        {
-                data.predict_f.pop_front();
-                data.predict_x.pop_front();
-                data.predict_p.pop_front();
-                data.x.pop_front();
-                data.p.pop_front();
-                data.time.pop_front();
-        }
+        data.predict_f.pop_front();
+        data.predict_x.pop_front();
+        data.predict_p.pop_front();
+        data.x.pop_front();
+        data.p.pop_front();
+        data.time.pop_front();
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
@@ -127,6 +125,23 @@ view::Point<2, T> make_point(
                 .speed = speed,
                 .speed_p = speed_p,
         };
+}
+
+template <std::size_t N, typename T, std::size_t ORDER>
+std::vector<view::Point<2, T>> copy_x_p(
+        const std::vector<TimeUpdateDetails<N, T>>& details,
+        const filters::FilterPosition<2, T, ORDER>& filter)
+{
+        std::vector<view::Point<2, T>> res;
+        res.reserve(details.size());
+
+        for (std::size_t i = 0; i < details.size(); ++i)
+        {
+                res.push_back(
+                        make_point(details[i].time, details[i].details.update_x, details[i].details.update_p, filter));
+        }
+
+        return res;
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
@@ -161,6 +176,7 @@ std::vector<view::Point<2, T>> smooth_all(
         }
 
         std::vector<view::Point<2, T>> res;
+        res.reserve(details.size());
 
         Data<N, T, std::vector> data;
 
@@ -179,7 +195,7 @@ std::vector<view::Point<2, T>> smooth_all(
                         continue;
                 }
 
-                add(details[i], data);
+                push(details[i], data);
         }
 
         write_smooth(filter, data, res);
@@ -196,11 +212,14 @@ std::vector<view::Point<2, T>> smooth_lag(
         static_assert(N >= 2);
         static_assert((N % 2) == 0);
 
-        const unsigned count = lag + 1;
-
-        if (details.size() < count)
+        if (details.empty())
         {
                 return {};
+        }
+
+        if (lag == 0)
+        {
+                return copy_x_p(details, filter);
         }
 
         std::vector<view::Point<2, T>> res;
@@ -221,10 +240,9 @@ std::vector<view::Point<2, T>> smooth_lag(
                         continue;
                 }
 
-                correct_size(data, count - 1);
-                add(details[i], data);
+                push(details[i], data);
 
-                if (data.x.size() < count)
+                if (data.x.size() < lag + 1)
                 {
                         continue;
                 }
@@ -232,6 +250,8 @@ std::vector<view::Point<2, T>> smooth_lag(
                 const auto [x, p] = core::smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
                 res.push_back(make_point(data.time.front(), x, p, filter));
+
+                pop(data);
         }
 
         return res;
