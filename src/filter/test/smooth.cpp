@@ -102,6 +102,12 @@ void pop(Data<N, T, Container>& data)
         data.time.pop_front();
 }
 
+template <typename T>
+std::vector<T> to_vector(const std::deque<T>& d)
+{
+        return {d.cbegin(), d.cend()};
+}
+
 template <std::size_t N, typename T, std::size_t ORDER>
 view::Point<2, T> make_point(
         const T time,
@@ -154,6 +160,25 @@ void write_smooth(
 
         ASSERT(x.size() == p.size());
         ASSERT(x.size() == data.time.size());
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                points.push_back(make_point(data.time[i], x[i], p[i], filter));
+        }
+}
+
+template <std::size_t N, typename T, std::size_t ORDER>
+void write_smooth(
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        const Data<N, T, std::deque>& data,
+        std::vector<view::Point<2, T>>& points)
+{
+        const auto [x, p] = core::smooth(
+                to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
+                to_vector(data.p));
+
+        ASSERT(data.x.size() == x.size());
+        ASSERT(data.x.size() == p.size());
 
         for (std::size_t i = 0; i < x.size(); ++i)
         {
@@ -236,6 +261,7 @@ std::vector<view::Point<2, T>> smooth_lag(
 
                 if (!(p_f && p_x && p_p))
                 {
+                        write_smooth(filter, data, res);
                         init(details[i], data);
                         continue;
                 }
@@ -254,22 +280,23 @@ std::vector<view::Point<2, T>> smooth_lag(
                 pop(data);
         }
 
+        write_smooth(filter, data, res);
+
+        ASSERT(res.size() == details.size());
         return res;
 }
 
-#define TEMPLATE(T)                                                                                              \
-        template std::vector<view::Point<2, T>> smooth_all(                                                      \
-                const filters::FilterPosition<2, T, 0>&, const std::vector<TimeUpdateDetails<2, T>>&);           \
-        template std::vector<view::Point<2, T>> smooth_all(                                                      \
-                const filters::FilterPosition<2, T, 1>&, const std::vector<TimeUpdateDetails<4, T>>&);           \
-        template std::vector<view::Point<2, T>> smooth_all(                                                      \
-                const filters::FilterPosition<2, T, 2>&, const std::vector<TimeUpdateDetails<6, T>>&);           \
-        template std::vector<view::Point<2, T>> smooth_lag(                                                      \
-                const filters::FilterPosition<2, T, 0>&, const std::vector<TimeUpdateDetails<2, T>>&, unsigned); \
-        template std::vector<view::Point<2, T>> smooth_lag(                                                      \
-                const filters::FilterPosition<2, T, 1>&, const std::vector<TimeUpdateDetails<4, T>>&, unsigned); \
-        template std::vector<view::Point<2, T>> smooth_lag(                                                      \
-                const filters::FilterPosition<2, T, 2>&, const std::vector<TimeUpdateDetails<6, T>>&, unsigned);
+#define TEMPLATE_N(T, ORDER, N)                                                                                \
+        template std::vector<view::Point<2, T>> smooth_all(                                                    \
+                const filters::FilterPosition<2, T, (ORDER)>&, const std::vector<TimeUpdateDetails<(N), T>>&); \
+        template std::vector<view::Point<2, T>> smooth_lag(                                                    \
+                const filters::FilterPosition<2, T, (ORDER)>&, const std::vector<TimeUpdateDetails<(N), T>>&,  \
+                unsigned);
+
+#define TEMPLATE(T)         \
+        TEMPLATE_N(T, 0, 2) \
+        TEMPLATE_N(T, 1, 4) \
+        TEMPLATE_N(T, 2, 6)
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
 
