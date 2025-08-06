@@ -165,6 +165,34 @@ public:
                 }
         }
 
+        constexpr Matrix<ROWS, COLUMNS, T>& operator+=(const Matrix<ROWS, COLUMNS, T>& m) &
+        {
+                for (std::size_t r = 0; r < ROWS; ++r)
+                {
+                        Vector<COLUMNS, T>& this_row = rows_[r];
+                        const Vector<COLUMNS, T>& m_row = m.rows_[r];
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
+                        {
+                                this_row[c] += m_row[c];
+                        }
+                }
+                return *this;
+        }
+
+        constexpr Matrix<ROWS, COLUMNS, T>& operator-=(const Matrix<ROWS, COLUMNS, T>& m) &
+        {
+                for (std::size_t r = 0; r < ROWS; ++r)
+                {
+                        Vector<COLUMNS, T>& this_row = rows_[r];
+                        const Vector<COLUMNS, T>& m_row = m.rows_[r];
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
+                        {
+                                this_row[c] -= m_row[c];
+                        }
+                }
+                return *this;
+        }
+
         [[nodiscard]] constexpr Vector<ROWS == 1 ? COLUMNS : ROWS, T> to_vector() const
                 requires (ROWS == 1 || COLUMNS == 1)
         {
