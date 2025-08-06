@@ -44,8 +44,8 @@ void smooth(
 {
         const numerical::Matrix<N, N, T> k = p * predict_f_next.transposed() * predict_p_next.inversed();
 
-        x = x + k * (x_next - predict_x_next);
-        p = p + k * (p_next - predict_p_next) * k.transposed();
+        x += k * (x_next - predict_x_next);
+        p += k * (p_next - predict_p_next) * k.transposed();
 
         check_x_p("Smooth", x, p);
 }
