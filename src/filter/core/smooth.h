@@ -52,7 +52,7 @@ void smooth(
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] std::tuple<std::vector<numerical::Vector<N, T>>, std::vector<numerical::Matrix<N, N, T>>> smooth(
+[[nodiscard]] std::tuple<std::vector<numerical::Vector<N, T>>, std::vector<numerical::Matrix<N, N, T>>> smooth_all(
         const std::vector<numerical::Matrix<N, N, T>>& predict_f,
         const std::vector<numerical::Vector<N, T>>& predict_x,
         const std::vector<numerical::Matrix<N, N, T>>& predict_p,
@@ -75,7 +75,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> smooth(
+[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> smooth_lag(
         const std::deque<numerical::Matrix<N, N, T>>& predict_f,
         const std::deque<numerical::Vector<N, T>>& predict_x,
         const std::deque<numerical::Matrix<N, N, T>>& predict_p,

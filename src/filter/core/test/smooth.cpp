@@ -135,7 +135,7 @@ std::vector<view::Point<T>> copy_x_p(const std::vector<TimeUpdateInfo<T>>& info)
 template <typename T>
 void write_smooth(const Data<2, T, std::vector>& data, std::vector<view::Point<T>>& res)
 {
-        const auto [x, p] = core::smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+        const auto [x, p] = core::smooth_all(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         ASSERT(x.size() == p.size());
         ASSERT(x.size() == data.time.size());
@@ -149,7 +149,7 @@ void write_smooth(const Data<2, T, std::vector>& data, std::vector<view::Point<T
 template <typename T>
 void write_smooth(const Data<2, T, std::deque>& data, std::vector<view::Point<T>>& res)
 {
-        const auto [x, p] = smooth(
+        const auto [x, p] = core::smooth_all(
                 to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
                 to_vector(data.p));
 
@@ -238,7 +238,7 @@ std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& inf
                         continue;
                 }
 
-                const auto [xs, ps] = smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+                const auto [xs, ps] = core::smooth_lag(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
                 res.push_back(make_point(data.time.front(), xs, ps));
 

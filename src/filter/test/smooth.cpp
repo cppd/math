@@ -156,7 +156,7 @@ void write_smooth(
         const Data<N, T, std::vector>& data,
         std::vector<view::Point<2, T>>& points)
 {
-        const auto [x, p] = core::smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+        const auto [x, p] = core::smooth_all(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         ASSERT(x.size() == p.size());
         ASSERT(x.size() == data.time.size());
@@ -173,7 +173,7 @@ void write_smooth(
         const Data<N, T, std::deque>& data,
         std::vector<view::Point<2, T>>& points)
 {
-        const auto [x, p] = core::smooth(
+        const auto [x, p] = core::smooth_all(
                 to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
                 to_vector(data.p));
 
@@ -273,7 +273,7 @@ std::vector<view::Point<2, T>> smooth_lag(
                         continue;
                 }
 
-                const auto [x, p] = core::smooth(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+                const auto [x, p] = core::smooth_lag(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
                 res.push_back(make_point(data.time.front(), x, p, filter));
 
