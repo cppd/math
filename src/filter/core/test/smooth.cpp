@@ -101,12 +101,6 @@ void pop(Data<N, T, Container>& data)
 }
 
 template <typename T>
-std::vector<T> to_vector(const std::deque<T>& d)
-{
-        return {d.cbegin(), d.cend()};
-}
-
-template <typename T>
 view::Point<T> make_point(const T time, const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p)
 {
         return {
@@ -149,9 +143,7 @@ void write_smooth(const Data<2, T, std::vector>& data, std::vector<view::Point<T
 template <typename T>
 void write_smooth(const Data<2, T, std::deque>& data, std::vector<view::Point<T>>& res)
 {
-        const auto [x, p] = core::smooth_all(
-                to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
-                to_vector(data.p));
+        const auto [x, p] = core::smooth_all(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         ASSERT(data.x.size() == x.size());
 
