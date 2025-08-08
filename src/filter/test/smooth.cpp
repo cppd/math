@@ -102,12 +102,6 @@ void pop(Data<N, T, Container>& data)
         data.time.pop_front();
 }
 
-template <typename T>
-std::vector<T> to_vector(const std::deque<T>& d)
-{
-        return {d.cbegin(), d.cend()};
-}
-
 template <std::size_t N, typename T, std::size_t ORDER>
 view::Point<2, T> make_point(
         const T time,
@@ -173,9 +167,7 @@ void write_smooth(
         const Data<N, T, std::deque>& data,
         std::vector<view::Point<2, T>>& points)
 {
-        const auto [x, p] = core::smooth_all(
-                to_vector(data.predict_f), to_vector(data.predict_x), to_vector(data.predict_p), to_vector(data.x),
-                to_vector(data.p));
+        const auto [x, p] = core::smooth_all(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
         ASSERT(data.x.size() == x.size());
         ASSERT(data.x.size() == p.size());
