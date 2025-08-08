@@ -51,13 +51,13 @@ void smooth(
 }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
 [[nodiscard]] std::tuple<std::vector<numerical::Vector<N, T>>, std::vector<numerical::Matrix<N, N, T>>> smooth_all(
-        const std::vector<numerical::Matrix<N, N, T>>& predict_f,
-        const std::vector<numerical::Vector<N, T>>& predict_x,
-        const std::vector<numerical::Matrix<N, N, T>>& predict_p,
-        std::vector<numerical::Vector<N, T>> x,
-        std::vector<numerical::Matrix<N, N, T>> p)
+        const Container<numerical::Matrix<N, N, T>>& predict_f,
+        const Container<numerical::Vector<N, T>>& predict_x,
+        const Container<numerical::Matrix<N, N, T>>& predict_p,
+        const Container<numerical::Vector<N, T>>& x,
+        const Container<numerical::Matrix<N, N, T>>& p)
 {
         namespace impl = smooth_implementation;
 
@@ -66,12 +66,16 @@ template <std::size_t N, typename T>
         ASSERT(x.size() == predict_x.size());
         ASSERT(x.size() == predict_p.size());
 
+        std::vector<numerical::Vector<N, T>> x_r{x.cbegin(), x.cend()};
+        std::vector<numerical::Matrix<N, N, T>> p_r{p.cbegin(), p.cend()};
+
         for (auto i = std::ssize(x) - 2; i >= 0; --i)
         {
-                impl::smooth(predict_f[i + 1], predict_x[i + 1], predict_p[i + 1], x[i + 1], p[i + 1], x[i], p[i]);
+                impl::smooth(
+                        predict_f[i + 1], predict_x[i + 1], predict_p[i + 1], x_r[i + 1], p_r[i + 1], x_r[i], p_r[i]);
         }
 
-        return {std::move(x), std::move(p)};
+        return {std::move(x_r), std::move(p_r)};
 }
 
 template <std::size_t N, typename T>
