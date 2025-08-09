@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <cstddef>
-#include <deque>
 #include <tuple>
 #include <vector>
 
@@ -78,13 +77,13 @@ template <std::size_t N, typename T, template <typename... Ts> typename Containe
         return {std::move(x_r), std::move(p_r)};
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
 [[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> smooth_lag(
-        const std::deque<numerical::Matrix<N, N, T>>& predict_f,
-        const std::deque<numerical::Vector<N, T>>& predict_x,
-        const std::deque<numerical::Matrix<N, N, T>>& predict_p,
-        const std::deque<numerical::Vector<N, T>>& x,
-        const std::deque<numerical::Matrix<N, N, T>>& p)
+        const Container<numerical::Matrix<N, N, T>>& predict_f,
+        const Container<numerical::Vector<N, T>>& predict_x,
+        const Container<numerical::Matrix<N, N, T>>& predict_p,
+        const Container<numerical::Vector<N, T>>& x,
+        const Container<numerical::Matrix<N, N, T>>& p)
 {
         namespace impl = smooth_implementation;
 
