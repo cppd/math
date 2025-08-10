@@ -230,7 +230,8 @@ std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& inf
                         continue;
                 }
 
-                const auto [xs, ps] = core::smooth_lag(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
+                const auto [xs, ps] =
+                        core::smooth_first(data.predict_f, data.predict_x, data.predict_p, data.x, data.p);
 
                 res.push_back(make_point(data.time.front(), xs, ps));
 

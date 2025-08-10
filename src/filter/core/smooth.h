@@ -78,7 +78,7 @@ template <std::size_t N, typename T, template <typename... Ts> typename Containe
 }
 
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
-[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> smooth_lag(
+[[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> smooth_first(
         const Container<numerical::Matrix<N, N, T>>& predict_f,
         const Container<numerical::Vector<N, T>>& predict_x,
         const Container<numerical::Matrix<N, N, T>>& predict_p,
