@@ -31,6 +31,22 @@ namespace ns::filter::core
 {
 namespace smooth_implementation
 {
+template <std::size_t N, typename T, template <typename... Ts> typename Container>
+void check_size(
+        const Container<numerical::Matrix<N, N, T>>& predict_f,
+        const Container<numerical::Vector<N, T>>& predict_x,
+        const Container<numerical::Matrix<N, N, T>>& predict_p,
+        const Container<numerical::Vector<N, T>>& x,
+        const Container<numerical::Matrix<N, N, T>>& p)
+{
+        const std::size_t s = predict_f.size();
+
+        if (!(s == predict_x.size() && s == predict_p.size() && s == x.size() && s == p.size()))
+        {
+                error("Container sizes are not equal");
+        }
+}
+
 template <std::size_t N, typename T>
 void smooth(
         const numerical::Matrix<N, N, T>& predict_f_next,
@@ -60,10 +76,7 @@ template <std::size_t N, typename T, template <typename... Ts> typename Containe
 {
         namespace impl = smooth_implementation;
 
-        ASSERT(x.size() == p.size());
-        ASSERT(x.size() == predict_f.size());
-        ASSERT(x.size() == predict_x.size());
-        ASSERT(x.size() == predict_p.size());
+        impl::check_size(predict_f, predict_x, predict_p, x, p);
 
         std::vector<numerical::Vector<N, T>> x_r{x.cbegin(), x.cend()};
         std::vector<numerical::Matrix<N, N, T>> p_r{p.cbegin(), p.cend()};
@@ -87,10 +100,7 @@ template <std::size_t N, typename T, template <typename... Ts> typename Containe
 {
         namespace impl = smooth_implementation;
 
-        ASSERT(x.size() == p.size());
-        ASSERT(x.size() == predict_f.size());
-        ASSERT(x.size() == predict_x.size());
-        ASSERT(x.size() == predict_p.size());
+        impl::check_size(predict_f, predict_x, predict_p, x, p);
 
         if (x.empty())
         {
