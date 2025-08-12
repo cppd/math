@@ -105,10 +105,10 @@ view::Point<T> make_point(const T time, const numerical::Vector<2, T>& x, const 
 {
         return {
                 .time = time,
-                .x = x[0],
-                .x_stddev = std::sqrt(p[0, 0]),
-                .v = x[1],
-                .v_stddev = std::sqrt(p[1, 1]),
+                .position = x[0],
+                .position_stddev = std::sqrt(p[0, 0]),
+                .speed = x[1],
+                .speed_stddev = std::sqrt(p[1, 1]),
         };
 }
 

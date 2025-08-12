@@ -23,9 +23,9 @@ template <typename T>
 struct Point final
 {
         T time;
-        T x;
-        T x_stddev;
-        T v;
-        T v_stddev;
+        T position;
+        T position_stddev;
+        T speed;
+        T speed_stddev;
 };
 }

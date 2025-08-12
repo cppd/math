@@ -155,10 +155,10 @@ std::vector<view::Point<T>> test_filter(
 
                 res.push_back({
                         .time = m.time,
-                        .x = update->x,
-                        .x_stddev = update->x_stddev,
-                        .v = update->v,
-                        .v_stddev = update->v_stddev,
+                        .position = update->position,
+                        .position_stddev = update->position_stddev,
+                        .speed = update->speed,
+                        .speed_stddev = update->speed_stddev,
                 });
         }
 

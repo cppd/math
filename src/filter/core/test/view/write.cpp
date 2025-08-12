@@ -238,7 +238,7 @@ void write_filter_position(std::ofstream& file, const Filter<T>& filter, const T
                         file << "(None, None)\n";
                 }
                 last_time = f.time;
-                file << "(" << f.time << ", " << f.x << ")\n";
+                file << "(" << f.time << ", " << f.position << ")\n";
         }
 }
 
@@ -269,7 +269,7 @@ void write_filter_position_sigma(
                 }
                 last_time = f.time;
                 const T true_x = measurements_at_time(time_map, f.time).true_x;
-                file << "(" << f.time << ", " << true_x << ", " << f.x_stddev << ")\n";
+                file << "(" << f.time << ", " << true_x << ", " << f.position_stddev << ")\n";
         }
 }
 
@@ -294,7 +294,7 @@ void write_filter_speed(std::ofstream& file, const Filter<T>& filter, const T in
                         file << "(None, None)\n";
                 }
                 last_time = f.time;
-                file << "(" << f.time << ", " << to_kph(f.v) << ")\n";
+                file << "(" << f.time << ", " << to_kph(f.speed) << ")\n";
         }
 }
 

@@ -29,10 +29,10 @@ namespace ns::filter::core::test::filters
 template <typename T>
 struct UpdateInfo final
 {
-        T x;
-        T x_stddev;
-        T v;
-        T v_stddev;
+        T position;
+        T position_stddev;
+        T speed;
+        T speed_stddev;
 
         std::optional<numerical::Matrix<2, 2, T>> predict_f;
         std::optional<numerical::Vector<2, T>> predict_x;

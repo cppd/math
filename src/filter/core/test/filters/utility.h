@@ -72,10 +72,10 @@ template <typename Filter>
         const Filter& filter)
 {
         return {
-                .x = filter.position(),
-                .x_stddev = std::sqrt(filter.position_p()),
-                .v = filter.speed(),
-                .v_stddev = std::sqrt(filter.speed_p()),
+                .position = filter.position(),
+                .position_stddev = std::sqrt(filter.position_p()),
+                .speed = filter.speed(),
+                .speed_stddev = std::sqrt(filter.speed_p()),
                 .predict_f = predict.f,
                 .predict_x = predict.x,
                 .predict_p = predict.p,

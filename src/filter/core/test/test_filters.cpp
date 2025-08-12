@@ -108,7 +108,7 @@ TestResult<T> test_filter(filters::Filter<T>* const filter, const std::vector<Me
                         continue;
                 }
                 result.push_back({.time = m.time, .info = *update});
-                distribution.add(update->x - m.true_x, update->x_stddev);
+                distribution.add(update->position - m.true_x, update->position_stddev);
         }
 
         return {.result = result, .distribution = distribution, .nees = filter->nees()};
@@ -123,10 +123,10 @@ std::vector<view::Point<T>> view_points(const std::vector<TimeUpdateInfo<T>>& in
         {
                 res.push_back(
                         {.time = r.time,
-                         .x = r.info.x,
-                         .x_stddev = r.info.x_stddev,
-                         .v = r.info.v,
-                         .v_stddev = r.info.v_stddev});
+                         .position = r.info.position,
+                         .position_stddev = r.info.position_stddev,
+                         .speed = r.info.speed,
+                         .speed_stddev = r.info.speed_stddev});
         }
         return res;
 }
@@ -150,8 +150,8 @@ void test_impl(
 
         {
                 const auto& info = result_x.result.back().info;
-                compare(info.x_stddev, expected_stddev_x, precision_x);
-                compare(measurements.back().true_x, info.x, stddev_count * info.x_stddev);
+                compare(info.position_stddev, expected_stddev_x, precision_x);
+                compare(measurements.back().true_x, info.position, stddev_count * info.position_stddev);
         }
 
         if (const auto average = result_x.nees.average(); !(average > min_max_nees_x[0] && average < min_max_nees_x[1]))
@@ -170,8 +170,8 @@ void test_impl(
 
         {
                 const auto& info = result_xv.result.back().info;
-                compare(info.x_stddev, expected_stddev_xv, precision_xv);
-                compare(measurements.back().true_x, info.x, stddev_count * info.x_stddev);
+                compare(info.position_stddev, expected_stddev_xv, precision_xv);
+                compare(measurements.back().true_x, info.position, stddev_count * info.position_stddev);
         }
 
         if (const T average = result_xv.nees.average(); !(average > min_max_nees_xv[0] && average < min_max_nees_xv[1]))
