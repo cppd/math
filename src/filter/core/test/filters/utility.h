@@ -35,23 +35,24 @@ bool filter_update(
         const std::optional<typename Filter::Type> gate)
 {
         ASSERT(filter);
-        ASSERT(m.x || m.v);
+        ASSERT(m.position || m.speed);
 
-        if (m.x)
+        if (m.position)
         {
-                if (m.v)
+                if (m.speed)
                 {
-                        filter->update_position_speed(m.x->value, m.x->variance, m.v->value, m.v->variance, gate);
+                        filter->update_position_speed(
+                                m.position->value, m.position->variance, m.speed->value, m.speed->variance, gate);
                         return true;
                 }
 
-                filter->update_position(m.x->value, m.x->variance, gate);
+                filter->update_position(m.position->value, m.position->variance, gate);
                 return true;
         }
 
-        if (m.v)
+        if (m.speed)
         {
-                filter->update_speed(m.v->value, m.v->variance, gate);
+                filter->update_speed(m.speed->value, m.speed->variance, gate);
                 return true;
         }
 

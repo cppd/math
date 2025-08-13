@@ -32,9 +32,9 @@ template <typename T>
 struct Measurements final
 {
         T time;
-        T true_x;
-        T true_v;
-        std::optional<Measurement<T>> x;
-        std::optional<Measurement<T>> v;
+        T true_position;
+        T true_speed;
+        std::optional<Measurement<T>> position;
+        std::optional<Measurement<T>> speed;
 };
 }

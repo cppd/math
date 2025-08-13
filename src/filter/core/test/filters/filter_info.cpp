@@ -59,7 +59,7 @@ class Impl final : public Filter<T>
 
         [[nodiscard]] bool init_update(const Measurements<T>& m)
         {
-                if (!m.x)
+                if (!m.position)
                 {
                         return false;
                 }
@@ -73,14 +73,14 @@ class Impl final : public Filter<T>
                 };
                 filter_->reset(x, i);
 
-                if (m.v)
+                if (m.speed)
                 {
                         filter_update(filter_.get(), m, gate_);
                 }
                 else
                 {
                         Measurements<T> mv = m;
-                        mv.v = {.value = init_v_, .variance = init_v_variance_};
+                        mv.speed = {.value = init_v_, .variance = init_v_variance_};
                         filter_update(filter_.get(), mv, gate_);
                 }
                 return true;
@@ -88,7 +88,7 @@ class Impl final : public Filter<T>
 
         [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<T>& m) override
         {
-                if (!(m.x || m.v))
+                if (!(m.position || m.speed))
                 {
                         return std::nullopt;
                 }
@@ -115,7 +115,7 @@ class Impl final : public Filter<T>
                 }
 
                 nees_.add(
-                        numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
+                        numerical::Vector<2, T>(m.true_position, m.true_speed) - filter_->position_speed(),
                         filter_->position_speed_p());
 
                 return make_update_info(predict, *filter_);

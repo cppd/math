@@ -41,18 +41,18 @@ namespace
 template <typename T>
 numerical::Vector<2, T> init_x(const Measurements<T>& m, const T init_v)
 {
-        ASSERT(m.x);
-        const T x = m.x->value;
-        const T v = m.v ? m.v->value : init_v;
+        ASSERT(m.position);
+        const T x = m.position->value;
+        const T v = m.speed ? m.speed->value : init_v;
         return {x, v};
 }
 
 template <typename T>
 numerical::Vector<2, T> init_variance(const Measurements<T>& m, const T init_v_variance)
 {
-        ASSERT(m.x);
-        const T x_variance = m.x->variance;
-        const T v_variance = m.v ? m.v->variance : init_v_variance;
+        ASSERT(m.position);
+        const T x_variance = m.position->variance;
+        const T v_variance = m.speed ? m.speed->variance : init_v_variance;
         return {x_variance, v_variance};
 }
 
@@ -127,14 +127,14 @@ class Impl final : public Filter<typename F::Type>
 
         [[nodiscard]] std::optional<UpdateInfo<T>> update(const Measurements<T>& m) override
         {
-                if (!(m.x || m.v))
+                if (!(m.position || m.speed))
                 {
                         return std::nullopt;
                 }
 
                 if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
                 {
-                        if (!m.x)
+                        if (!m.position)
                         {
                                 return std::nullopt;
                         }
@@ -155,7 +155,7 @@ class Impl final : public Filter<typename F::Type>
                 }
 
                 nees_.add(
-                        numerical::Vector<2, T>(m.true_x, m.true_v) - filter_->position_speed(),
+                        numerical::Vector<2, T>(m.true_position, m.true_speed) - filter_->position_speed(),
                         filter_->position_speed_p());
 
                 return make_update_info(predict, *filter_);

@@ -90,7 +90,7 @@ void write_track_position(std::ofstream& file, const std::vector<Measurements<T>
         file << "}\n";
         for (const Measurements<T>& m : measurements)
         {
-                file << "(" << m.time << ", " << m.true_x << ")\n";
+                file << "(" << m.time << ", " << m.true_position << ")\n";
         }
 }
 
@@ -107,7 +107,7 @@ void write_track_speed(std::ofstream& file, const std::vector<Measurements<T>>& 
         file << "}\n";
         for (const Measurements<T>& m : measurements)
         {
-                file << "(" << m.time << ", " << to_kph(m.true_v) << ")\n";
+                file << "(" << m.time << ", " << to_kph(m.true_speed) << ")\n";
         }
 }
 
@@ -134,7 +134,7 @@ void write_measurement_position(std::ofstream& file, const std::vector<Measureme
         for (const Measurements<T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
-                if (!m.x)
+                if (!m.position)
                 {
                         continue;
                 }
@@ -143,7 +143,7 @@ void write_measurement_position(std::ofstream& file, const std::vector<Measureme
                         file << "(None, None)\n";
                 }
                 last_time = m.time;
-                file << "(" << m.time << ", " << m.x->value << ")\n";
+                file << "(" << m.time << ", " << m.position->value << ")\n";
         }
 }
 
@@ -167,7 +167,7 @@ void write_measurement_position_sigma(
         for (const Measurements<T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
-                if (!m.x)
+                if (!m.position)
                 {
                         continue;
                 }
@@ -176,7 +176,7 @@ void write_measurement_position_sigma(
                         file << "(None, None, None)\n";
                 }
                 last_time = m.time;
-                file << "(" << m.time << ", " << m.true_x << ", " << std::sqrt(m.x->variance) << ")\n";
+                file << "(" << m.time << ", " << m.true_position << ", " << std::sqrt(m.position->variance) << ")\n";
         }
 }
 
@@ -196,7 +196,7 @@ void write_measurement_speed(std::ofstream& file, const std::vector<Measurements
         for (const Measurements<T>& m : measurements)
         {
                 ASSERT(!last_time || *last_time < m.time);
-                if (!m.v)
+                if (!m.speed)
                 {
                         continue;
                 }
@@ -205,7 +205,7 @@ void write_measurement_speed(std::ofstream& file, const std::vector<Measurements
                         file << "(None, None)\n";
                 }
                 last_time = m.time;
-                file << "(" << m.time << ", " << to_kph(m.v->value) << ")\n";
+                file << "(" << m.time << ", " << to_kph(m.speed->value) << ")\n";
         }
 }
 
@@ -268,7 +268,7 @@ void write_filter_position_sigma(
                         file << "(None, None, None)\n";
                 }
                 last_time = f.time;
-                const T true_x = measurements_at_time(time_map, f.time).true_x;
+                const T true_x = measurements_at_time(time_map, f.time).true_position;
                 file << "(" << f.time << ", " << true_x << ", " << f.position_stddev << ")\n";
         }
 }

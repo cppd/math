@@ -68,7 +68,7 @@ std::vector<Measurements<T>> reset_position_measurements(
         {
                 if (iter->time < next_time)
                 {
-                        iter->x.reset();
+                        iter->position.reset();
                 }
                 else
                 {
@@ -77,7 +77,7 @@ std::vector<Measurements<T>> reset_position_measurements(
 
                 if (iter->time >= config.reset_min_time && iter->time < config.reset_max_time)
                 {
-                        iter->x.reset();
+                        iter->position.reset();
                 }
         }
 
@@ -101,31 +101,31 @@ std::vector<Measurements<T>> add_bad_measurements(
 
         const auto x = [&](Measurements<T>& m)
         {
-                if (!m.x)
+                if (!m.position)
                 {
                         return;
                 }
                 if (m.time >= config.reset_max_time && count_after_reset < COUNT_AFTER_RESET)
                 {
                         ++count_after_reset;
-                        m.x->value += random_sign(X_AFTER_RESET, engine);
+                        m.position->value += random_sign(X_AFTER_RESET, engine);
                 }
                 else if (std::bernoulli_distribution(PROBABILITY)(engine))
                 {
-                        m.x->value += random_sign(X, engine);
+                        m.position->value += random_sign(X, engine);
                 }
         };
 
         const auto v = [&](Measurements<T>& m)
         {
-                if (!m.v)
+                if (!m.speed)
                 {
                         return;
                 }
-                m.v->value *= config.speed_factor;
+                m.speed->value *= config.speed_factor;
                 if (std::bernoulli_distribution(PROBABILITY)(engine))
                 {
-                        m.v->value += V;
+                        m.speed->value += V;
                 }
         };
 
@@ -152,7 +152,7 @@ class VarianceCorrectionImpl final : public VarianceCorrection<T>
 
         void correct(Measurements<T>* const m) override
         {
-                if (!m->x)
+                if (!m->position)
                 {
                         return;
                 }
@@ -170,7 +170,7 @@ class VarianceCorrectionImpl final : public VarianceCorrection<T>
                 last_time_ = m->time;
                 last_k_ = res;
 
-                m->x->variance *= square(res);
+                m->position->variance *= square(res);
         }
 
 public:

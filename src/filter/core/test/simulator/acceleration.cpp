@@ -143,10 +143,10 @@ std::vector<Measurements<T>> simulate(const T length, AccelerationSimulator<T>* 
         {
                 res.push_back(
                         {.time = simulator->time(),
-                         .true_x = simulator->x(),
-                         .true_v = simulator->v(),
-                         .x = simulator->measurement_x(),
-                         .v = simulator->measurement_v()});
+                         .true_position = simulator->x(),
+                         .true_speed = simulator->v(),
+                         .position = simulator->measurement_x(),
+                         .speed = simulator->measurement_v()});
 
                 simulator->move();
         }

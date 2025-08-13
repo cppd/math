@@ -127,7 +127,7 @@ std::vector<Measurements<T>> reset_v(const std::vector<Measurements<T>>& measure
         std::vector<Measurements<T>> res(measurements);
         for (Measurements<T>& m : res)
         {
-                m.v.reset();
+                m.speed.reset();
         }
         return res;
 }

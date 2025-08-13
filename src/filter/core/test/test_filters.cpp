@@ -87,7 +87,7 @@ std::vector<Measurements<T>> reset_v(const std::vector<Measurements<T>>& measure
         std::vector<Measurements<T>> res(measurements);
         for (Measurements<T>& m : res)
         {
-                m.v.reset();
+                m.speed.reset();
         }
         return res;
 }
@@ -108,7 +108,7 @@ TestResult<T> test_filter(filters::Filter<T>* const filter, const std::vector<Me
                         continue;
                 }
                 result.push_back({.time = m.time, .info = *update});
-                distribution.add(update->position - m.true_x, update->position_stddev);
+                distribution.add(update->position - m.true_position, update->position_stddev);
         }
 
         return {.result = result, .distribution = distribution, .nees = filter->nees()};
@@ -151,7 +151,7 @@ void test_impl(
         {
                 const auto& info = result_x.result.back().info;
                 compare(info.position_stddev, expected_stddev_x, precision_x);
-                compare(measurements.back().true_x, info.position, stddev_count * info.position_stddev);
+                compare(measurements.back().true_position, info.position, stddev_count * info.position_stddev);
         }
 
         if (const auto average = result_x.nees.average(); !(average > min_max_nees_x[0] && average < min_max_nees_x[1]))
@@ -171,7 +171,7 @@ void test_impl(
         {
                 const auto& info = result_xv.result.back().info;
                 compare(info.position_stddev, expected_stddev_xv, precision_xv);
-                compare(measurements.back().true_x, info.position, stddev_count * info.position_stddev);
+                compare(measurements.back().true_position, info.position, stddev_count * info.position_stddev);
         }
 
         if (const T average = result_xv.nees.average(); !(average > min_max_nees_xv[0] && average < min_max_nees_xv[1]))
