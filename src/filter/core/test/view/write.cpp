@@ -268,8 +268,8 @@ void write_filter_position_sigma(
                         file << "(None, None, None)\n";
                 }
                 last_time = f.time;
-                const T true_x = measurements_at_time(time_map, f.time).true_position;
-                file << "(" << f.time << ", " << true_x << ", " << f.position_stddev << ")\n";
+                const T true_position = measurements_at_time(time_map, f.time).true_position;
+                file << "(" << f.time << ", " << true_position << ", " << f.position_stddev << ")\n";
         }
 }
 
