@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "point.h"
 
 #include <src/color/rgb8.h>
+#include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
@@ -42,12 +43,6 @@ namespace ns::filter::core::test::view
 namespace
 {
 constexpr std::string_view SIGMA = "&#x03c3;";
-
-template <typename T>
-T to_kph(const T speed)
-{
-        return 3.6 * speed;
-}
 
 std::string color_to_string(const color::RGB8 color)
 {
@@ -107,7 +102,7 @@ void write_track_speed(std::ofstream& file, const std::vector<Measurements<T>>& 
         file << "}\n";
         for (const Measurements<T>& m : measurements)
         {
-                file << "(" << m.time << ", " << to_kph(m.true_speed) << ")\n";
+                file << "(" << m.time << ", " << mps_to_kph(m.true_speed) << ")\n";
         }
 }
 
@@ -205,7 +200,7 @@ void write_measurement_speed(std::ofstream& file, const std::vector<Measurements
                         file << "(None, None)\n";
                 }
                 last_time = m.time;
-                file << "(" << m.time << ", " << to_kph(m.speed->value) << ")\n";
+                file << "(" << m.time << ", " << mps_to_kph(m.speed->value) << ")\n";
         }
 }
 
@@ -294,7 +289,7 @@ void write_filter_speed(std::ofstream& file, const Filter<T>& filter, const T in
                         file << "(None, None)\n";
                 }
                 last_time = f.time;
-                file << "(" << f.time << ", " << to_kph(f.speed) << ")\n";
+                file << "(" << f.time << ", " << mps_to_kph(f.speed) << ")\n";
         }
 }
 
