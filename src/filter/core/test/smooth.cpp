@@ -34,6 +34,18 @@ namespace ns::filter::core::test
 {
 namespace
 {
+template <typename T>
+view::Point<T> make_point(const T time, const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p)
+{
+        return {
+                .time = time,
+                .position = x[0],
+                .position_stddev = std::sqrt(p[0, 0]),
+                .speed = x[1],
+                .speed_stddev = std::sqrt(p[1, 1]),
+        };
+}
+
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
 class Data final
 {
@@ -97,53 +109,33 @@ public:
                 time_.pop_front();
         }
 
+        void smooth_all(std::vector<view::Point<T>>& points) const
+        {
+                const auto [x, p] = core::smooth_all(predict_f_, predict_x_, predict_p_, x_, p_);
+
+                ASSERT(x.size() == p.size());
+                ASSERT(x.size() == time_.size());
+
+                for (std::size_t i = 0; i < x.size(); ++i)
+                {
+                        points.push_back(make_point(time_[i], x[i], p[i]));
+                }
+        }
+
+        void smooth_first(std::vector<view::Point<T>>& points) const
+        {
+                ASSERT(!time_.empty());
+
+                const auto [xs, ps] = core::smooth_first(predict_f_, predict_x_, predict_p_, x_, p_);
+
+                points.push_back(make_point(time_.front(), xs, ps));
+        }
+
         [[nodiscard]] std::size_t size() const
         {
                 return predict_f_.size();
         }
-
-        [[nodiscard]] const Container<numerical::Matrix<N, N, T>>& predict_f() const
-        {
-                return predict_f_;
-        }
-
-        [[nodiscard]] const Container<numerical::Vector<N, T>>& predict_x() const
-        {
-                return predict_x_;
-        }
-
-        [[nodiscard]] const Container<numerical::Matrix<N, N, T>>& predict_p() const
-        {
-                return predict_p_;
-        }
-
-        [[nodiscard]] const Container<numerical::Vector<N, T>>& x() const
-        {
-                return x_;
-        }
-
-        [[nodiscard]] const Container<numerical::Matrix<N, N, T>>& p() const
-        {
-                return p_;
-        }
-
-        [[nodiscard]] const Container<T>& time() const
-        {
-                return time_;
-        }
 };
-
-template <typename T>
-view::Point<T> make_point(const T time, const numerical::Vector<2, T>& x, const numerical::Matrix<2, 2, T>& p)
-{
-        return {
-                .time = time,
-                .position = x[0],
-                .position_stddev = std::sqrt(p[0, 0]),
-                .speed = x[1],
-                .speed_stddev = std::sqrt(p[1, 1]),
-        };
-}
 
 template <typename T>
 std::vector<view::Point<T>> copy_x_p(const std::vector<TimeUpdateInfo<T>>& info)
@@ -157,34 +149,6 @@ std::vector<view::Point<T>> copy_x_p(const std::vector<TimeUpdateInfo<T>>& info)
         }
 
         return res;
-}
-
-template <typename T>
-void write_smooth(const Data<2, T, std::vector>& data, std::vector<view::Point<T>>& res)
-{
-        const auto [x, p] = core::smooth_all(data.predict_f(), data.predict_x(), data.predict_p(), data.x(), data.p());
-
-        ASSERT(x.size() == p.size());
-        ASSERT(x.size() == data.size());
-
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                res.push_back(make_point(data.time()[i], x[i], p[i]));
-        }
-}
-
-template <typename T>
-void write_smooth(const Data<2, T, std::deque>& data, std::vector<view::Point<T>>& res)
-{
-        const auto [x, p] = core::smooth_all(data.predict_f(), data.predict_x(), data.predict_p(), data.x(), data.p());
-
-        ASSERT(x.size() == p.size());
-        ASSERT(x.size() == data.size());
-
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                res.push_back(make_point(data.time()[i], x[i], p[i]));
-        }
 }
 }
 
@@ -211,7 +175,7 @@ std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>& inf
 
                 if (!(p_f && p_x && p_p))
                 {
-                        write_smooth(data, res);
+                        data.smooth_all(res);
                         data.init(info[i]);
                         continue;
                 }
@@ -219,7 +183,7 @@ std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>& inf
                 data.push(info[i]);
         }
 
-        write_smooth(data, res);
+        data.smooth_all(res);
 
         return res;
 }
@@ -252,7 +216,7 @@ std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& inf
 
                 if (!(p_f && p_x && p_p))
                 {
-                        write_smooth(data, res);
+                        data.smooth_all(res);
                         data.init(info[i]);
                         continue;
                 }
@@ -264,15 +228,11 @@ std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& inf
                         continue;
                 }
 
-                const auto [xs, ps] =
-                        core::smooth_first(data.predict_f(), data.predict_x(), data.predict_p(), data.x(), data.p());
-
-                res.push_back(make_point(data.time().front(), xs, ps));
-
+                data.smooth_first(res);
                 data.pop();
         }
 
-        write_smooth(data, res);
+        data.smooth_all(res);
 
         ASSERT(res.size() == info.size());
         return res;
