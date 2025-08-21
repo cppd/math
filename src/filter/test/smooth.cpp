@@ -36,31 +36,6 @@ namespace ns::filter::test
 {
 namespace
 {
-template <std::size_t N, typename T, std::size_t ORDER>
-view::Point<2, T> make_point(
-        const T time,
-        const numerical::Vector<N, T>& x,
-        const numerical::Matrix<N, N, T>& p,
-        const filters::FilterPosition<2, T, ORDER>& filter)
-{
-        T speed = 0;
-        T speed_p = 0;
-
-        if constexpr (ORDER > 0)
-        {
-                speed = filter.x_to_speed(x);
-                speed_p = filter.xp_to_speed_p(x, p);
-        }
-
-        return {
-                .time = time,
-                .position = filter.x_to_position(x),
-                .position_p = filter.p_to_position_p(p),
-                .speed = speed,
-                .speed_p = speed_p,
-        };
-}
-
 template <std::size_t N, typename T, template <typename... Ts> typename Container>
 class Data final
 {
@@ -124,37 +99,53 @@ public:
                 time_.pop_front();
         }
 
-        template <std::size_t ORDER>
-        void smooth_all(const filters::FilterPosition<2, T, ORDER>& filter, std::vector<view::Point<2, T>>& points)
-                const
+        [[nodiscard]] decltype(auto) smooth_all() const
         {
-                const auto [x, p] = core::smooth_all(predict_f_, predict_x_, predict_p_, x_, p_);
-
-                ASSERT(x.size() == p.size());
-                ASSERT(x.size() == time_.size());
-
-                for (std::size_t i = 0; i < x.size(); ++i)
-                {
-                        points.push_back(make_point(time_[i], x[i], p[i], filter));
-                }
+                return core::smooth_all(predict_f_, predict_x_, predict_p_, x_, p_);
         }
 
-        template <std::size_t ORDER>
-        void smooth_first(const filters::FilterPosition<2, T, ORDER>& filter, std::vector<view::Point<2, T>>& points)
-                const
+        [[nodiscard]] decltype(auto) smooth_first() const
         {
-                ASSERT(!time_.empty());
+                return core::smooth_first(predict_f_, predict_x_, predict_p_, x_, p_);
+        }
 
-                const auto [x, p] = core::smooth_first(predict_f_, predict_x_, predict_p_, x_, p_);
+        [[nodiscard]] T time(const std::size_t index) const
+        {
+                ASSERT(index < time_.size());
 
-                points.push_back(make_point(time_.front(), x, p, filter));
+                return time_[index];
         }
 
         [[nodiscard]] std::size_t size() const
         {
-                return time_.size();
+                return predict_f_.size();
         }
 };
+
+template <std::size_t N, typename T, std::size_t ORDER>
+view::Point<2, T> make_point(
+        const T time,
+        const numerical::Vector<N, T>& x,
+        const numerical::Matrix<N, N, T>& p,
+        const filters::FilterPosition<2, T, ORDER>& filter)
+{
+        T speed = 0;
+        T speed_p = 0;
+
+        if constexpr (ORDER > 0)
+        {
+                speed = filter.x_to_speed(x);
+                speed_p = filter.xp_to_speed_p(x, p);
+        }
+
+        return {
+                .time = time,
+                .position = filter.x_to_position(x),
+                .position_p = filter.p_to_position_p(p),
+                .speed = speed,
+                .speed_p = speed_p,
+        };
+}
 
 template <std::size_t N, typename T, std::size_t ORDER>
 std::vector<view::Point<2, T>> copy_x_p(
@@ -171,6 +162,36 @@ std::vector<view::Point<2, T>> copy_x_p(
         }
 
         return res;
+}
+
+template <std::size_t N, typename T, std::size_t ORDER, template <typename... Ts> typename Container>
+void smooth_all(
+        const Data<N, T, Container>& data,
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        std::vector<view::Point<2, T>>& points)
+{
+        const auto [x, p] = data.smooth_all();
+
+        ASSERT(x.size() == p.size());
+        ASSERT(x.size() == data.size());
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                points.push_back(make_point(data.time(i), x[i], p[i], filter));
+        }
+}
+
+template <std::size_t N, typename T, std::size_t ORDER, template <typename... Ts> typename Container>
+void smooth_first(
+        const Data<N, T, Container>& data,
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        std::vector<view::Point<2, T>>& points)
+{
+        ASSERT(data.size() > 0);
+
+        const auto [x, p] = data.smooth_first();
+
+        points.push_back(make_point(data.time(0), x, p, filter));
 }
 }
 
@@ -202,7 +223,7 @@ std::vector<view::Point<2, T>> smooth_all(
 
                 if (!(p_f && p_x && p_p))
                 {
-                        data.smooth_all(filter, res);
+                        smooth_all(data, filter, res);
                         data.init(details[i]);
                         continue;
                 }
@@ -210,7 +231,7 @@ std::vector<view::Point<2, T>> smooth_all(
                 data.push(details[i]);
         }
 
-        data.smooth_all(filter, res);
+        smooth_all(data, filter, res);
 
         return res;
 }
@@ -248,7 +269,7 @@ std::vector<view::Point<2, T>> smooth_lag(
 
                 if (!(p_f && p_x && p_p))
                 {
-                        data.smooth_all(filter, res);
+                        smooth_all(data, filter, res);
                         data.init(details[i]);
                         continue;
                 }
@@ -260,11 +281,11 @@ std::vector<view::Point<2, T>> smooth_lag(
                         continue;
                 }
 
-                data.smooth_first(filter, res);
+                smooth_first(data, filter, res);
                 data.pop();
         }
 
-        data.smooth_all(filter, res);
+        smooth_all(data, filter, res);
 
         ASSERT(res.size() == details.size());
         return res;
