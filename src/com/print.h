@@ -271,16 +271,20 @@ template <typename T>
                          std::end(data);
                  }
 {
-        auto i = std::begin(data);
-        if (i == std::end(data))
+        static constexpr bool IS_CLASS = std::is_class_v<std::remove_cvref_t<decltype(*std::begin(data))>>;
+
+        std::string res;
+
+        auto iter = std::begin(data);
+        const auto end = std::end(data);
+
+        if (iter == end)
         {
-                return {};
+                return res;
         }
 
-        constexpr bool IS_CLASS = std::is_class_v<std::remove_cvref_t<decltype(*i)>>;
-
-        std::string res = to_string(*i);
-        while (++i != std::end(data))
+        res = to_string(*iter);
+        while (++iter != end)
         {
                 if constexpr (IS_CLASS)
                 {
@@ -290,7 +294,7 @@ template <typename T>
                 {
                         res += ", ";
                 }
-                res += to_string(*i);
+                res += to_string(*iter);
         }
         return res;
 }
