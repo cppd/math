@@ -193,12 +193,15 @@ std::vector<ResultType> average(
 
         check_parameters(waves, samples, from, to, count);
 
+        std::vector<ResultType> res;
+
         if (to <= waves.front() || from >= waves.back())
         {
-                return std::vector(count, DEFAULT_VALUE<ResultType>);
+                ASSERT(res.empty());
+                res.resize(count, DEFAULT_VALUE<ResultType>);
+                return res;
         }
 
-        std::vector<ResultType> res;
         res.reserve(count);
 
         std::size_t dst_i;
