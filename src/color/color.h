@@ -304,7 +304,6 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 else
                 {
                         ASSERT(false);
-                        return spectrum;
                 }
 
                 return spectrum.max_n(0);
