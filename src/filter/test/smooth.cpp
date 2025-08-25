@@ -193,20 +193,16 @@ void smooth_first(
 
         points.push_back(make_point(data.time(0), x, p, filter));
 }
-}
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<view::Point<2, T>> smooth_all(
+std::vector<view::Point<2, T>> smooth_all_impl(
         const filters::FilterPosition<2, T, ORDER>& filter,
         const std::vector<TimeUpdateDetails<N, T>>& details)
 {
         static_assert(N >= 2);
         static_assert((N % 2) == 0);
 
-        if (details.empty())
-        {
-                return {};
-        }
+        ASSERT(!details.empty());
 
         std::vector<view::Point<2, T>> res;
         res.reserve(details.size());
@@ -233,11 +229,12 @@ std::vector<view::Point<2, T>> smooth_all(
 
         smooth_all(data, filter, res);
 
+        ASSERT(res.size() == details.size());
         return res;
 }
 
 template <std::size_t N, typename T, std::size_t ORDER>
-std::vector<view::Point<2, T>> smooth_lag(
+std::vector<view::Point<2, T>> smooth_lag_impl(
         const filters::FilterPosition<2, T, ORDER>& filter,
         const std::vector<TimeUpdateDetails<N, T>>& details,
         const unsigned lag)
@@ -245,15 +242,8 @@ std::vector<view::Point<2, T>> smooth_lag(
         static_assert(N >= 2);
         static_assert((N % 2) == 0);
 
-        if (details.empty())
-        {
-                return {};
-        }
-
-        if (lag == 0)
-        {
-                return copy_x_p(details, filter);
-        }
+        ASSERT(!details.empty());
+        ASSERT(lag > 0);
 
         std::vector<view::Point<2, T>> res;
 
@@ -289,6 +279,45 @@ std::vector<view::Point<2, T>> smooth_lag(
 
         ASSERT(res.size() == details.size());
         return res;
+}
+}
+
+template <std::size_t N, typename T, std::size_t ORDER>
+std::vector<view::Point<2, T>> smooth_all(
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        const std::vector<TimeUpdateDetails<N, T>>& details)
+{
+        static_assert(N >= 2);
+        static_assert((N % 2) == 0);
+
+        if (details.empty())
+        {
+                return {};
+        }
+
+        return smooth_all_impl(filter, details);
+}
+
+template <std::size_t N, typename T, std::size_t ORDER>
+std::vector<view::Point<2, T>> smooth_lag(
+        const filters::FilterPosition<2, T, ORDER>& filter,
+        const std::vector<TimeUpdateDetails<N, T>>& details,
+        const unsigned lag)
+{
+        static_assert(N >= 2);
+        static_assert((N % 2) == 0);
+
+        if (details.empty())
+        {
+                return {};
+        }
+
+        if (lag == 0)
+        {
+                return copy_x_p(details, filter);
+        }
+
+        return smooth_lag_impl(filter, details, lag);
 }
 
 #define TEMPLATE_N(T, ORDER, N)                                                                                \
