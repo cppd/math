@@ -195,7 +195,7 @@ template <typename T>
 
         if (res.empty())
         {
-                return oss.str();
+                res = oss.str();
         }
 
         return res;
