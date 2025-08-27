@@ -40,6 +40,8 @@ std::vector<char> read_file(const Path& path)
         f.seekg(0, std::ios_base::end);
         const long long length = f.tellg();
 
+        std::vector<char> res(length);
+
         if (length == 0)
         {
                 if (!f)
@@ -47,12 +49,10 @@ std::vector<char> read_file(const Path& path)
                         error("Failed to read file " + generic_utf8_filename(path));
                 }
 
-                return {};
+                return res;
         }
 
         f.seekg(0, std::ios_base::beg);
-
-        std::vector<char> res(length);
         f.read(res.data(), length);
 
         if (!f)
