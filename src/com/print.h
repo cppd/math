@@ -205,18 +205,18 @@ template <typename T>
         requires std::is_unsigned_v<T>
 [[nodiscard]] std::string to_string_binary(T value, const std::string_view prefix = {})
 {
+        std::string res(prefix);
+
         if (value == 0)
         {
-                if (prefix.empty())
-                {
-                        return "0";
-                }
-                return std::string(prefix) + '0';
+                res += '0';
+                return res;
         }
 
-        std::string res(prefix);
-        res.resize(res.size() + std::bit_width(value));
-        for (std::ptrdiff_t i = std::ssize(res) - 1; i >= std::ssize(prefix); --i)
+        const auto prefix_size = std::ssize(res);
+
+        res.resize(prefix_size + std::bit_width(value));
+        for (auto i = std::ssize(res) - 1; i >= prefix_size; --i)
         {
                 res[i] = (value & 1u) ? '1' : '0';
                 value >>= 1u;
