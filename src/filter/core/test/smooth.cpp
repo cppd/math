@@ -169,15 +169,11 @@ void smooth_first(const Data<N, T, Container>& data, std::vector<view::Point<T>>
 
         points.push_back(make_point(data.time(0), xs, ps));
 }
-}
 
 template <typename T>
-std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>& info)
+std::vector<view::Point<T>> smooth_all_impl(const std::vector<TimeUpdateInfo<T>>& info)
 {
-        if (info.empty())
-        {
-                return {};
-        }
+        ASSERT(!info.empty());
 
         std::vector<view::Point<T>> res;
         res.reserve(info.size());
@@ -208,17 +204,10 @@ std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>& inf
 }
 
 template <typename T>
-std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& info, const unsigned lag)
+std::vector<view::Point<T>> smooth_lag_impl(const std::vector<TimeUpdateInfo<T>>& info, const unsigned lag)
 {
-        if (info.empty())
-        {
-                return {};
-        }
-
-        if (lag == 0)
-        {
-                return copy_x_p(info);
-        }
+        ASSERT(!info.empty());
+        ASSERT(lag > 0);
 
         std::vector<view::Point<T>> res;
         res.reserve(info.size());
@@ -255,6 +244,34 @@ std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& inf
 
         ASSERT(res.size() == info.size());
         return res;
+}
+}
+
+template <typename T>
+std::vector<view::Point<T>> smooth_all(const std::vector<TimeUpdateInfo<T>>& info)
+{
+        if (info.empty())
+        {
+                return {};
+        }
+
+        return smooth_all_impl(info);
+}
+
+template <typename T>
+std::vector<view::Point<T>> smooth_lag(const std::vector<TimeUpdateInfo<T>>& info, const unsigned lag)
+{
+        if (info.empty())
+        {
+                return {};
+        }
+
+        if (lag == 0)
+        {
+                return copy_x_p(info);
+        }
+
+        return smooth_lag_impl(info, lag);
 }
 
 #define INSTANTIATION(T)                                                                        \
