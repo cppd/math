@@ -124,8 +124,7 @@ class Simulator final
         [[nodiscard]] Velocity velocity_with_noise(const T time)
         {
                 const T magnitude = velocity_magnitude(time);
-                if (magnitude == 0
-                    && (!previous_velocity_ || (previous_velocity_ && previous_velocity_->magnitude > 0)))
+                if (magnitude == 0 && (!previous_velocity_ || previous_velocity_->magnitude > 0))
                 {
                         zero_velocity_start_time_ = time;
                 }
@@ -136,16 +135,16 @@ class Simulator final
                         zero_velocity_time_sum_ += *previous_velocity_time_ - *zero_velocity_start_time_;
                         zero_velocity_start_time_.reset();
                 }
-                if (magnitude == 0 && previous_velocity_ && previous_velocity_->magnitude == 0)
+                if (!(magnitude == 0 && previous_velocity_ && previous_velocity_->magnitude == 0))
                 {
-                        previous_velocity_time_ = time;
-                        return *previous_velocity_;
+                        previous_velocity_ = {
+                                .magnitude = magnitude,
+                                .angle = velocity_angle(time - zero_velocity_time_sum_),
+                        };
                 }
-                const T angle = velocity_angle(time - zero_velocity_time_sum_);
-                const Velocity velocity{.magnitude = magnitude, .angle = angle};
-                previous_velocity_ = velocity;
                 previous_velocity_time_ = time;
-                return velocity;
+                ASSERT(previous_velocity_);
+                return *previous_velocity_;
         }
 
         [[nodiscard]] numerical::Vector<2, T> to_vector(const Velocity& v) const
