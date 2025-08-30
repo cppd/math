@@ -37,11 +37,7 @@ template <typename T>
         // normalizing without changing the sign of w
         const numerical::Quaternion<T> q(w, {x, y, z});
         const T norm = q.norm();
-        if (norm > 0)
-        {
-                return q / norm;
-        }
-        return q;
+        return (norm > 0) ? (q / norm) : q;
 }
 }
 
