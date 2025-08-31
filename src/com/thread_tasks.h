@@ -68,7 +68,7 @@ class ThreadTasks final
                         }
                         if (!tasks_.empty())
                         {
-                                std::optional<Task> task = std::move(tasks_.top());
+                                Task task = std::move(tasks_.top());
                                 tasks_.pop();
                                 ++task_count_;
                                 return task;
