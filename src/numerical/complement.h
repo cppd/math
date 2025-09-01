@@ -204,16 +204,13 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
 {
-        static_assert(N > 1);
-
         if constexpr (N == 2)
         {
                 return {
                         Vector<2, T>{unit_vector[1], -unit_vector[0]}
                 };
         }
-
-        if constexpr (N == 3)
+        else if constexpr (N == 3)
         {
                 static constexpr T LIMIT = 0.5;
                 static constexpr Vector<3, T> X(1, 0, 0);
@@ -223,26 +220,32 @@ template <std::size_t N, typename T>
                 const Vector<3, T> e1 = cross(unit_vector, e0);
                 return {e0, e1};
         }
-
-        const std::size_t excluded_axis = closest_axis(unit_vector);
-
-        std::array<Vector<N, T>, N - 1> subspace_basis;
-        for (std::size_t i = 0, num = 0; num < N - 2; ++i)
+        else if constexpr (N >= 4)
         {
-                if (i != excluded_axis)
+                const std::size_t excluded_axis = closest_axis(unit_vector);
+
+                std::array<Vector<N, T>, N - 1> basis;
+                for (std::size_t i = 0, num = 0; num < N - 2; ++i)
                 {
-                        subspace_basis[num++] = IDENTITY_ARRAY<N, T>[i];
+                        if (i != excluded_axis)
+                        {
+                                basis[num++] = IDENTITY_ARRAY<N, T>[i];
+                        }
                 }
-        }
-        subspace_basis[N - 2] = unit_vector;
+                basis[N - 2] = unit_vector;
 
-        for (std::size_t i = 0; i < N - 2; ++i)
+                for (std::size_t i = 0; i < N - 2; ++i)
+                {
+                        basis[i] = orthogonal_complement(basis).normalized();
+                }
+                basis[N - 2] = orthogonal_complement(basis);
+
+                return basis;
+        }
+        else
         {
-                subspace_basis[i] = orthogonal_complement(subspace_basis).normalized();
+                static_assert(false);
         }
-        subspace_basis[N - 2] = orthogonal_complement(subspace_basis);
-
-        return subspace_basis;
 }
 
 template <std::size_t N, typename T>
@@ -303,7 +306,7 @@ template <std::size_t N, typename T>
                         return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
                 }
         }
-        if constexpr (std::is_same_v<T, long double>)
+        else if constexpr (std::is_same_v<T, long double>)
         {
                 if constexpr (N <= 6)
                 {
@@ -313,6 +316,10 @@ template <std::size_t N, typename T>
                 {
                         return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
                 }
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 }
