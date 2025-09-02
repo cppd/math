@@ -52,19 +52,18 @@ T random_sign(const T v, PCG& engine)
 
 template <typename T>
 std::vector<Measurements<T>> reset_position_measurements(
-        const std::vector<Measurements<T>>& measurements,
+        std::vector<Measurements<T>> measurements,
         const MeasurementConfig<T>& config)
 {
         if (measurements.empty())
         {
-                return {};
+                return measurements;
         }
 
-        std::vector<Measurements<T>> res(measurements);
-        auto iter = res.begin();
+        auto iter = measurements.begin();
         T next_time = iter->time + config.position_reset_interval;
 
-        while (++iter != res.end())
+        while (++iter != measurements.end())
         {
                 if (iter->time < next_time)
                 {
@@ -81,7 +80,7 @@ std::vector<Measurements<T>> reset_position_measurements(
                 }
         }
 
-        return res;
+        return measurements;
 }
 
 template <typename T>
