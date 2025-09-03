@@ -236,10 +236,10 @@ public:
 
         [[nodiscard]] numerical::Vector<N, T> measurement_position()
         {
-                const numerical::Vector<N, T> m = position_ + vector(measurements_position_nd_);
+                numerical::Vector<N, T> m = position_ + vector(measurements_position_nd_);
                 if (std::bernoulli_distribution(bad_measurement_position_probability_)(engine_))
                 {
-                        return m + bad_measurement_position_ * sampling::uniform_on_sphere<N, T>(engine_);
+                        m += bad_measurement_position_ * sampling::uniform_on_sphere<N, T>(engine_);
                 }
                 return m;
         }
