@@ -55,18 +55,24 @@ constexpr T last_axis(const numerical::Vector<N, T>& v)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-numerical::Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
+numerical::Vector<N, T> bound_uniform_on_sphere(RandomEngine& engine)
 {
-        if (!bound)
-        {
-                return sampling::uniform_on_sphere<N, T>(engine);
-        }
         numerical::Vector<N, T> res;
         do
         {
                 res = sampling::uniform_on_sphere<N, T>(engine);
         } while (last_axis(res) < LAST_AXIS_VALUE);
         return res;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+numerical::Vector<N, T> uniform_on_sphere(RandomEngine& engine, const bool bound)
+{
+        if (!bound)
+        {
+                return sampling::uniform_on_sphere<N, T>(engine);
+        }
+        return bound_uniform_on_sphere<N, T>(engine);
 }
 
 template <std::size_t N>
@@ -78,7 +84,7 @@ std::vector<numerical::Vector<N, float>> points_sphere_with_notch(const unsigned
         res.reserve(point_count);
         for (unsigned i = 0; i < point_count; ++i)
         {
-                numerical::Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+                numerical::Vector<N, double> v = uniform_on_sphere<N, double>(engine, bound);
                 const double cos = last_axis(v);
                 if (cos > 0)
                 {
@@ -268,7 +274,7 @@ void test_algorithms(
 template <std::size_t N>
 void all_tests(
         const bool bound_object,
-        std::vector<numerical::Vector<N, float>>&& points,
+        const std::vector<numerical::Vector<N, float>>& points,
         progress::Ratio* const progress)
 {
         static_assert(2 <= N && N <= 4);
