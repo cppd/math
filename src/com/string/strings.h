@@ -25,6 +25,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
+namespace strings_implementation
+{
+template <typename T>
+        requires (std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>)
+std::string strings_to_sorted_string(std::vector<T>&& strings, const std::string_view separator)
+{
+        sort_and_unique(&strings);
+
+        auto iter = strings.cbegin();
+        std::string res{*iter};
+        while (++iter != strings.cend())
+        {
+                res += separator;
+                res += *iter;
+        }
+        return res;
+}
+}
+
 template <typename T>
         requires (std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>)
 std::string strings_to_sorted_string(std::vector<T>&& strings, const std::string_view separator)
@@ -39,16 +58,7 @@ std::string strings_to_sorted_string(std::vector<T>&& strings, const std::string
                 return std::string(std::move(strings.front()));
         }
 
-        sort_and_unique(&strings);
-
-        auto iter = strings.cbegin();
-        std::string res{*iter};
-        while (++iter != strings.cend())
-        {
-                res += separator;
-                res += *iter;
-        }
-        return res;
+        return strings_implementation::strings_to_sorted_string(std::move(strings), separator);
 }
 
 template <typename T>
@@ -64,7 +74,7 @@ std::string strings_to_sorted_string(const T& strings, const std::string_view se
                 return std::string(*std::cbegin(strings));
         }
 
-        return strings_to_sorted_string(
+        return strings_implementation::strings_to_sorted_string(
                 std::vector<std::string_view>(std::cbegin(strings), std::cend(strings)), separator);
 }
 }
