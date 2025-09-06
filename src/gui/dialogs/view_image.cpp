@@ -129,11 +129,9 @@ ViewImageDialog::ViewImageDialog(
         const ViewImageParameters& input,
         const std::string& title,
         const std::string& info,
-        const std::string* const file_name,
-        std::optional<ViewImageParameters>* const parameters)
+        const std::string* const file_name)
         : QDialog(com::parent_for_dialog()),
-          file_name_(file_name),
-          parameters_(parameters)
+          file_name_(file_name)
 {
         ui_.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
@@ -179,10 +177,10 @@ void ViewImageDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.path_string = std::move(path_string);
-        parameters.normalize = ui_.check_box_normalize->isChecked();
-        parameters.convert_to_8_bit = ui_.check_box_8_bit->isChecked();
+        parameters_.emplace();
+        parameters_->path_string = std::move(path_string);
+        parameters_->normalize = ui_.check_box_normalize->isChecked();
+        parameters_->convert_to_8_bit = ui_.check_box_8_bit->isChecked();
 
         QDialog::done(r);
 }
@@ -214,19 +212,16 @@ std::optional<ViewImageParameters> ViewImageDialog::show(
         const std::string& info,
         const std::string& file_name)
 {
-        std::optional<ViewImageParameters> parameters;
+        const com::QtObjectInDynamicMemory w(new ViewImageDialog(dialog_parameters().read(), title, info, &file_name));
 
-        const com::QtObjectInDynamicMemory w(
-                new ViewImageDialog(dialog_parameters().read(), title, info, &file_name, &parameters));
-
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        dialog_parameters().write(*parameters);
+        ASSERT(w->parameters_);
+        dialog_parameters().write(*w->parameters_);
 
-        return parameters;
+        return std::move(w->parameters_);
 }
 }

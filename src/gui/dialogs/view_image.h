@@ -43,14 +43,13 @@ private:
 
         const std::string* const file_name_;
 
-        std::optional<ViewImageParameters>* const parameters_;
+        std::optional<ViewImageParameters> parameters_;
 
         ViewImageDialog(
                 const ViewImageParameters& input,
                 const std::string& title,
                 const std::string& info,
-                const std::string* file_name,
-                std::optional<ViewImageParameters>* parameters);
+                const std::string* file_name);
 
         void done(int r) override;
 
