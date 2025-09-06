@@ -42,15 +42,14 @@ private:
         const int min_image_size_;
         const int max_image_size_;
 
-        std::optional<VolumeObjectParameters>* const parameters_;
+        std::optional<VolumeObjectParameters> parameters_;
 
         VolumeObjectParametersDialog(
                 int dimension,
                 const std::string& object_name,
                 int default_image_size,
                 int min_image_size,
-                int max_image_size,
-                std::optional<VolumeObjectParameters>* parameters);
+                int max_image_size);
 
         void done(int r) override;
 

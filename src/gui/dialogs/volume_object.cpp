@@ -76,12 +76,10 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         const std::string& object_name,
         const int default_image_size,
         const int min_image_size,
-        const int max_image_size,
-        std::optional<VolumeObjectParameters>* const parameters)
+        const int max_image_size)
         : QDialog(com::parent_for_dialog()),
           min_image_size_(min_image_size),
-          max_image_size_(max_image_size),
-          parameters_(parameters)
+          max_image_size_(max_image_size)
 {
         check_parameters(dimension, object_name, default_image_size, min_image_size, max_image_size);
 
@@ -117,8 +115,8 @@ void VolumeObjectParametersDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.image_size = image_size;
+        parameters_.emplace();
+        parameters_->image_size = image_size;
 
         QDialog::done(r);
 }
@@ -130,17 +128,15 @@ std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
         const int min_image_size,
         const int max_image_size)
 {
-        std::optional<VolumeObjectParameters> parameters;
-
         const com::QtObjectInDynamicMemory w(new VolumeObjectParametersDialog(
-                dimension, object_name, default_image_size, min_image_size, max_image_size, &parameters));
+                dimension, object_name, default_image_size, min_image_size, max_image_size));
 
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }
