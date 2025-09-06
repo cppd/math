@@ -46,12 +46,9 @@ private:
         class Items;
         std::unique_ptr<Items> items_;
 
-        std::optional<TestSelectionParameters>* const parameters_;
+        std::optional<TestSelectionParameters> parameters_;
 
-        TestSelectionParametersDialog(
-                std::string_view title,
-                std::vector<std::string> test_names,
-                std::optional<TestSelectionParameters>* parameters);
+        TestSelectionParametersDialog(std::string_view title, std::vector<std::string> test_names);
 
         void filter(const QString& text);
 

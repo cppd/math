@@ -196,10 +196,8 @@ public:
 
 TestSelectionParametersDialog::TestSelectionParametersDialog(
         const std::string_view title,
-        std::vector<std::string> test_names,
-        std::optional<TestSelectionParameters>* const parameters)
-        : QDialog(com::parent_for_dialog()),
-          parameters_(parameters)
+        std::vector<std::string> test_names)
+        : QDialog(com::parent_for_dialog())
 {
         ui_.setupUi(this);
         setWindowTitle(QString::fromUtf8(title.data(), title.size()));
@@ -281,8 +279,8 @@ void TestSelectionParametersDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.test_names = std::move(test_names);
+        parameters_.emplace();
+        parameters_->test_names = std::move(test_names);
 
         QDialog::done(r);
 }
@@ -291,17 +289,14 @@ std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(
         const std::string_view title,
         std::vector<std::string> test_names)
 {
-        std::optional<TestSelectionParameters> parameters;
+        const com::QtObjectInDynamicMemory w(new TestSelectionParametersDialog(title, std::move(test_names)));
 
-        const com::QtObjectInDynamicMemory w(
-                new TestSelectionParametersDialog(title, std::move(test_names), &parameters));
-
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }
