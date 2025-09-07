@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <mutex>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -67,10 +68,8 @@ DialogParameters& dialog_parameters()
 BoundCoconeParametersDialog::BoundCoconeParametersDialog(
         const int minimum_rho_exponent,
         const int minimum_alpha_exponent,
-        const BoundCoconeParameters& input,
-        std::optional<BoundCoconeParameters>* const parameters)
-        : QDialog(com::parent_for_dialog()),
-          parameters_(parameters)
+        const BoundCoconeParameters& input)
+        : QDialog(com::parent_for_dialog())
 {
         if (!(-10 <= minimum_rho_exponent && minimum_rho_exponent < 0))
         {
@@ -143,29 +142,27 @@ void BoundCoconeParametersDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.rho = rho;
-        parameters.alpha = alpha;
+        parameters_.emplace();
+        parameters_->rho = rho;
+        parameters_->alpha = alpha;
 
         QDialog::done(r);
 }
 
 std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
 {
-        std::optional<BoundCoconeParameters> parameters;
-
         const com::QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
-                MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, dialog_parameters().read(), &parameters));
+                MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, dialog_parameters().read()));
 
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        dialog_parameters().write(*parameters);
+        ASSERT(w->parameters_);
+        dialog_parameters().write(*w->parameters_);
 
-        return parameters;
+        return std::move(w->parameters_);
 }
 
 BoundCoconeParameters BoundCoconeParametersDialog::current()
