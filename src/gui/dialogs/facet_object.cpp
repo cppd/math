@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -76,12 +77,10 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
         const std::string& object_name,
         const int default_facet_count,
         const int min_facet_count,
-        const int max_facet_count,
-        std::optional<FacetObjectParameters>* const parameters)
+        const int max_facet_count)
         : QDialog(com::parent_for_dialog()),
           min_facet_count_(min_facet_count),
-          max_facet_count_(max_facet_count),
-          parameters_(parameters)
+          max_facet_count_(max_facet_count)
 {
         check_parameters(dimension, object_name, default_facet_count, min_facet_count, max_facet_count);
 
@@ -117,8 +116,8 @@ void FacetObjectParametersDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.facet_count = facet_count;
+        parameters_.emplace();
+        parameters_->facet_count = facet_count;
 
         QDialog::done(r);
 }
@@ -130,17 +129,15 @@ std::optional<FacetObjectParameters> FacetObjectParametersDialog::show(
         const int min_facet_count,
         const int max_facet_count)
 {
-        std::optional<FacetObjectParameters> parameters;
-
         const com::QtObjectInDynamicMemory w(new FacetObjectParametersDialog(
-                dimension, object_name, default_facet_count, min_facet_count, max_facet_count, &parameters));
+                dimension, object_name, default_facet_count, min_facet_count, max_facet_count));
 
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }

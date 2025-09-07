@@ -42,15 +42,14 @@ private:
         const int min_facet_count_;
         const int max_facet_count_;
 
-        std::optional<FacetObjectParameters>* const parameters_;
+        std::optional<FacetObjectParameters> parameters_;
 
         FacetObjectParametersDialog(
                 int dimension,
                 const std::string& object_name,
                 int default_facet_count,
                 int min_facet_count,
-                int max_facet_count,
-                std::optional<FacetObjectParameters>* parameters);
+                int max_facet_count);
 
         void done(int r) override;
 
