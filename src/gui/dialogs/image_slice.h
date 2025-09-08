@@ -40,15 +40,11 @@ private:
         Ui::ImageSliceDialog ui_;
 
         const int slice_dimension_;
-
         std::vector<std::optional<int>> slices_;
 
-        std::optional<ImageSliceParameters>* const parameters_;
+        std::optional<ImageSliceParameters> parameters_;
 
-        ImageSliceDialog(
-                const std::vector<int>& size,
-                int slice_dimension,
-                std::optional<ImageSliceParameters>* parameters);
+        ImageSliceDialog(const std::vector<int>& size, int slice_dimension);
 
         void done(int r) override;
 

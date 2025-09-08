@@ -129,13 +129,9 @@ void create_slider(
 }
 }
 
-ImageSliceDialog::ImageSliceDialog(
-        const std::vector<int>& size,
-        const int slice_dimension,
-        std::optional<ImageSliceParameters>* const parameters)
+ImageSliceDialog::ImageSliceDialog(const std::vector<int>& size, const int slice_dimension)
         : QDialog(com::parent_for_dialog()),
-          slice_dimension_(slice_dimension),
-          parameters_(parameters)
+          slice_dimension_(slice_dimension)
 {
         check_parameters(size, slice_dimension);
 
@@ -188,24 +184,22 @@ void ImageSliceDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.slices = std::move(slices_);
+        parameters_.emplace();
+        parameters_->slices = std::move(slices_);
 
         QDialog::done(r);
 }
 
 std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int>& size, const int slice_dimension)
 {
-        std::optional<ImageSliceParameters> parameters;
+        const com::QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension));
 
-        const com::QtObjectInDynamicMemory w(new ImageSliceDialog(size, slice_dimension, &parameters));
-
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }
