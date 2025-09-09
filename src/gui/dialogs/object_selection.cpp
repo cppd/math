@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <mutex>
 #include <optional>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -56,11 +57,8 @@ DialogParameters& dialog_parameters()
 }
 }
 
-ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
-        const ObjectSelectionParameters& input,
-        std::optional<ObjectSelectionParameters>* const parameters)
-        : QDialog(com::parent_for_dialog()),
-          parameters_(parameters)
+ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(const ObjectSelectionParameters& input)
+        : QDialog(com::parent_for_dialog())
 {
         ui_.setupUi(this);
         setWindowTitle("Object Selection");
@@ -100,31 +98,28 @@ void ObjectSelectionParametersDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.bound_cocone = ui_.check_box_bound_cocone->isChecked();
-        parameters.cocone = ui_.check_box_cocone->isChecked();
-        parameters.convex_hull = ui_.check_box_convex_hull->isChecked();
-        parameters.mst = ui_.check_box_minumum_spanning_tree->isChecked();
+        parameters_.emplace();
+        parameters_->bound_cocone = ui_.check_box_bound_cocone->isChecked();
+        parameters_->cocone = ui_.check_box_cocone->isChecked();
+        parameters_->convex_hull = ui_.check_box_convex_hull->isChecked();
+        parameters_->mst = ui_.check_box_minumum_spanning_tree->isChecked();
 
         QDialog::done(r);
 }
 
 std::optional<ObjectSelectionParameters> ObjectSelectionParametersDialog::show()
 {
-        std::optional<ObjectSelectionParameters> parameters;
+        const com::QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(dialog_parameters().read()));
 
-        const com::QtObjectInDynamicMemory w(
-                new ObjectSelectionParametersDialog(dialog_parameters().read(), &parameters));
-
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        dialog_parameters().write(*parameters);
+        ASSERT(w->parameters_);
+        dialog_parameters().write(*w->parameters_);
 
-        return parameters;
+        return std::move(w->parameters_);
 }
 
 ObjectSelectionParameters ObjectSelectionParametersDialog::current()
