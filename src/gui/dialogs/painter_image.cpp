@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -51,11 +52,9 @@ void set_line_edit_width(QLineEdit* const line_edit)
 PainterImageDialog::PainterImageDialog(
         const std::string& title,
         const PainterImagePathType path_type,
-        const bool use_all,
-        std::optional<PainterImageParameters>* const parameters)
+        const bool use_all)
         : QDialog(com::parent_for_dialog()),
-          path_type_(path_type),
-          parameters_(parameters)
+          path_type_(path_type)
 {
         ui_.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
@@ -139,21 +138,21 @@ void PainterImageDialog::done(const int r)
                 }
         }
 
-        auto& parameters = parameters_->emplace();
+        parameters_.emplace();
 
-        parameters.path_string = path_string;
+        parameters_->path_string = path_string;
 
         if (ui_.check_box_all->isVisible() && ui_.check_box_all->isChecked())
         {
-                parameters.all = true;
-                parameters.with_background = false;
-                parameters.convert_to_8_bit = false;
+                parameters_->all = true;
+                parameters_->with_background = false;
+                parameters_->convert_to_8_bit = false;
         }
         else
         {
-                parameters.all = false;
-                parameters.with_background = ui_.check_box_with_background->isChecked();
-                parameters.convert_to_8_bit = ui_.check_box_8_bit->isChecked();
+                parameters_->all = false;
+                parameters_->with_background = ui_.check_box_with_background->isChecked();
+                parameters_->convert_to_8_bit = ui_.check_box_8_bit->isChecked();
         }
 
         QDialog::done(r);
@@ -215,16 +214,14 @@ std::optional<PainterImageParameters> PainterImageDialog::show(
         const PainterImagePathType path_type,
         const bool use_all)
 {
-        std::optional<PainterImageParameters> parameters;
+        const com::QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all));
 
-        const com::QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, &parameters));
-
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }
