@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 #include <tuple>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -76,8 +77,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         const std::array<const char*, 2>& colors,
         const int color_index,
         const std::array<const char*, 2>& integrators,
-        const int integrator_index,
-        std::optional<std::tuple<PainterParameters, PainterParametersNd>>* const parameters)
+        const int integrator_index)
         : QDialog(com::parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
@@ -91,8 +91,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
                   integrators,
                   integrator_index)),
           min_screen_size_(min_screen_size),
-          max_screen_size_(max_screen_size),
-          parameters_(parameters)
+          max_screen_size_(max_screen_size)
 {
         ui_.setupUi(this);
         setWindowTitle("Painter");
@@ -131,9 +130,9 @@ void PainterParametersNdDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        std::get<0>(parameters) = parameters_widget_->parameters();
-        std::get<1>(parameters).max_size = max_size;
+        parameters_.emplace();
+        std::get<0>(*parameters_) = parameters_widget_->parameters();
+        std::get<1>(*parameters_).max_size = max_size;
 
         QDialog::done(r);
 }
@@ -155,19 +154,17 @@ std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParamet
 {
         check_parameters(dimension, screen_size, min_screen_size, max_screen_size);
 
-        std::optional<std::tuple<PainterParameters, PainterParametersNd>> parameters;
-
         const com::QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, screen_size, min_screen_size, max_screen_size, samples_per_pixel,
-                max_samples_per_pixel, precisions, precision_index, colors, color_index, integrators, integrator_index,
-                &parameters));
+                max_samples_per_pixel, precisions, precision_index, colors, color_index, integrators,
+                integrator_index));
 
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }

@@ -47,7 +47,7 @@ private:
         int min_screen_size_;
         int max_screen_size_;
 
-        std::optional<std::tuple<PainterParameters, PainterParametersNd>>* const parameters_;
+        std::optional<std::tuple<PainterParameters, PainterParametersNd>> parameters_;
 
         PainterParametersNdDialog(
                 int dimension,
@@ -62,8 +62,7 @@ private:
                 const std::array<const char*, 2>& colors,
                 int color_index,
                 const std::array<const char*, 2>& integrators,
-                int integrator_index,
-                std::optional<std::tuple<PainterParameters, PainterParametersNd>>* parameters);
+                int integrator_index);
 
         void done(int r) override;
 
