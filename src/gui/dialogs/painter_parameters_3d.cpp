@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <string>
 #include <tuple>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -74,8 +75,7 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         const std::array<const char*, 2>& colors,
         const int color_index,
         const std::array<const char*, 2>& integrators,
-        const int integrator_index,
-        std::optional<std::tuple<PainterParameters, PainterParameters3d>>* const parameters)
+        const int integrator_index)
         : QDialog(com::parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
                   this,
@@ -92,8 +92,7 @@ PainterParameters3dDialog::PainterParameters3dDialog(
           max_width_(aspect_ratio_ >= 1 ? max_screen_size : std::lround(max_screen_size * aspect_ratio_)),
           min_width_(std::min(max_width_, width)),
           max_height_(aspect_ratio_ >= 1 ? std::lround(max_screen_size / aspect_ratio_) : max_screen_size),
-          min_height_(std::min(max_height_, height)),
-          parameters_(parameters)
+          min_height_(std::min(max_height_, height))
 {
         ui_.setupUi(this);
         setWindowTitle("Painter");
@@ -167,10 +166,10 @@ void PainterParameters3dDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        std::get<0>(parameters) = parameters_widget_->parameters();
-        std::get<1>(parameters).width = width;
-        std::get<1>(parameters).height = height;
+        parameters_.emplace();
+        std::get<0>(*parameters_) = parameters_widget_->parameters();
+        std::get<1>(*parameters_).width = width;
+        std::get<1>(*parameters_).height = height;
 
         QDialog::done(r);
 }
@@ -191,18 +190,16 @@ std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParamet
 {
         check_parameters(width, height, max_screen_size);
 
-        std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
-
         const com::QtObjectInDynamicMemory w(new PainterParameters3dDialog(
                 max_thread_count, width, height, max_screen_size, samples_per_pixel, max_samples_per_pixel, precisions,
-                precision_index, colors, color_index, integrators, integrator_index, &parameters));
+                precision_index, colors, color_index, integrators, integrator_index));
 
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }
