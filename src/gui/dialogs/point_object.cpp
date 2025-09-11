@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace ns::gui::dialogs
 {
@@ -76,12 +77,10 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         const std::string& object_name,
         const int default_point_count,
         const int min_point_count,
-        const int max_point_count,
-        std::optional<PointObjectParameters>* const parameters)
+        const int max_point_count)
         : QDialog(com::parent_for_dialog()),
           min_point_count_(min_point_count),
-          max_point_count_(max_point_count),
-          parameters_(parameters)
+          max_point_count_(max_point_count)
 {
         check_parameters(dimension, object_name, default_point_count, min_point_count, max_point_count);
 
@@ -117,8 +116,8 @@ void PointObjectParametersDialog::done(const int r)
                 return;
         }
 
-        auto& parameters = parameters_->emplace();
-        parameters.point_count = point_count;
+        parameters_.emplace();
+        parameters_->point_count = point_count;
 
         QDialog::done(r);
 }
@@ -130,17 +129,15 @@ std::optional<PointObjectParameters> PointObjectParametersDialog::show(
         const int min_point_count,
         const int max_point_count)
 {
-        std::optional<PointObjectParameters> parameters;
-
         const com::QtObjectInDynamicMemory w(new PointObjectParametersDialog(
-                dimension, object_name, default_point_count, min_point_count, max_point_count, &parameters));
+                dimension, object_name, default_point_count, min_point_count, max_point_count));
 
-        if (!w->exec() || w.isNull())
+        if (w->exec() != QDialog::Accepted || w.isNull())
         {
                 return std::nullopt;
         }
 
-        ASSERT(parameters);
-        return parameters;
+        ASSERT(w->parameters_);
+        return std::move(w->parameters_);
 }
 }
