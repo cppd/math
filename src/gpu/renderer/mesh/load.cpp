@@ -151,7 +151,19 @@ std::array<numerical::Vector3f, 3> face_vertices(
         return res;
 }
 
-std::array<numerical::Vector3f, 3> face_normals(const numerical::Vector3f& geometric_normal)
+std::array<numerical::Vector3f, 3> copy_normals(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet)
+{
+        std::array<numerical::Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = mesh.normals[mesh_facet.normals[i]];
+        }
+        return res;
+}
+
+std::array<numerical::Vector3f, 3> copy_normal(const numerical::Vector3f& geometric_normal)
 {
         std::array<numerical::Vector3f, 3> res;
         for (int i = 0; i < 3; ++i)
@@ -161,6 +173,24 @@ std::array<numerical::Vector3f, 3> face_normals(const numerical::Vector3f& geome
         return res;
 }
 
+bool check_facet_normals(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet,
+        const numerical::Vector3f& geometric_normal)
+{
+        static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
+
+        for (int i = 0; i < 3; ++i)
+        {
+                const auto d = dot(mesh.normals[mesh_facet.normals[i]], geometric_normal);
+                if (!(std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
 std::array<numerical::Vector3f, 3> face_normals(
         const model::mesh::Mesh<3>& mesh,
         const model::mesh::Mesh<3>::Facet& mesh_facet,
@@ -168,6 +198,7 @@ std::array<numerical::Vector3f, 3> face_normals(
 {
         const numerical::Vector3f geometric_normal =
                 cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized();
+
         if (!is_finite(geometric_normal))
         {
                 error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(vertices[0])
@@ -176,34 +207,15 @@ std::array<numerical::Vector3f, 3> face_normals(
 
         if (!mesh_facet.has_normal)
         {
-                return face_normals(geometric_normal);
+                return copy_normal(geometric_normal);
         }
 
-        const bool use_mesh_normals = [&]
+        if (!check_facet_normals(mesh, mesh_facet, geometric_normal))
         {
-                static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
-                for (int i = 0; i < 3; ++i)
-                {
-                        const auto d = dot(mesh.normals[mesh_facet.normals[i]], geometric_normal);
-                        if (!(std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }();
-
-        if (!use_mesh_normals)
-        {
-                return face_normals(geometric_normal);
+                return copy_normal(geometric_normal);
         }
 
-        std::array<numerical::Vector3f, 3> res;
-        for (int i = 0; i < 3; ++i)
-        {
-                res[i] = mesh.normals[mesh_facet.normals[i]];
-        }
-        return res;
+        return copy_normals(mesh, mesh_facet);
 }
 
 std::array<numerical::Vector2f, 3> face_texcoords(
