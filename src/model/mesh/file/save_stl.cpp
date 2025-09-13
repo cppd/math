@@ -198,11 +198,7 @@ void write_facet(
         const numerical::Vector<N, float> n = [&]
         {
                 const numerical::Vector<N, float> v = to_vector<float>(normal.normalized());
-                if (is_finite(v))
-                {
-                        return v;
-                }
-                return numerical::Vector<N, float>(0);
+                return is_finite(v) ? v : numerical::Vector<N, float>(0);
         }();
 
         if constexpr (ASCII)
