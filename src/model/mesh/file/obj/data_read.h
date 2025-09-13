@@ -74,17 +74,17 @@ inline Split split_string(const std::array<const char*, 2> str)
                 ++i2;
         }
 
-        Split split;
-
-        split.first = {i, i2};
+        const std::string_view split_first{i, i2};
 
         i = i2;
 
         if (i == last || is_comment(*i))
         {
-                split.second_b = i;
-                split.second_e = i;
-                return split;
+                return {
+                        .first = split_first,
+                        .second_b = i,
+                        .second_e = i,
+                };
         }
 
         // skip the first space
@@ -96,9 +96,11 @@ inline Split split_string(const std::array<const char*, 2> str)
                 ++i2;
         }
 
-        split.second_b = i;
-        split.second_e = i2;
-        return split;
+        return {
+                .first = split_first,
+                .second_b = i,
+                .second_e = i2,
+        };
 }
 
 inline std::string_view read_name(const std::string_view object_name, const char* const first, const char* const last)
