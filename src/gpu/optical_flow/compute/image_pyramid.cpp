@@ -45,12 +45,13 @@ std::vector<std::array<int, 2>> downsample_groups(
         const std::array<int, 2> group_size,
         const std::vector<std::array<int, 2>>& sizes)
 {
+        std::vector<std::array<int, 2>> res;
+
         if (sizes.size() <= 1)
         {
-                return {};
+                return res;
         }
 
-        std::vector<std::array<int, 2>> res;
         res.reserve(sizes.size() - 1);
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {

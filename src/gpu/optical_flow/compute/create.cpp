@@ -105,12 +105,13 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const std::vector<std::array<int, 2>>& sizes,
         const std::uint32_t family_index)
 {
+        std::vector<vulkan::BufferWithMemory> res;
+
         if (sizes.size() <= 1)
         {
-                return {};
+                return res;
         }
 
-        std::vector<vulkan::BufferWithMemory> res;
         res.reserve(sizes.size() - 1);
 
         const std::vector<std::uint32_t> family_indices({family_index});
@@ -142,9 +143,11 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
 {
         const std::size_t size = sizes.size();
 
+        std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> res;
+
         if (size <= 1)
         {
-                return {};
+                return res;
         }
 
         ASSERT(images[0].size() == size);
@@ -154,8 +157,6 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
         ASSERT(flow_buffers.size() + 1 == size);
 
         const std::vector<std::uint32_t> family_indices{family_index};
-
-        std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> res;
 
         std::get<0>(res).reserve(size);
         std::get<1>(res).reserve(size);
@@ -184,5 +185,4 @@ std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_mem
 
         return res;
 }
-
 }
