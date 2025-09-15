@@ -193,13 +193,16 @@ struct LightSourceArriveInfo final
         Color radiance;
         std::optional<T> distance;
 
-        LightSourceArriveInfo()
-        {
-        }
-
         [[nodiscard]] bool usable() const
         {
                 return pdf > 0 && !radiance.is_black();
+        }
+
+        [[nodiscard]] static LightSourceArriveInfo non_usable()
+        {
+                LightSourceArriveInfo res;
+                res.pdf = 0;
+                return res;
         }
 };
 
@@ -213,13 +216,16 @@ struct LightSourceArriveSample final
         Color radiance;
         std::optional<T> distance;
 
-        LightSourceArriveSample()
-        {
-        }
-
         [[nodiscard]] bool usable() const
         {
                 return pdf > 0 && !radiance.is_black();
+        }
+
+        [[nodiscard]] static LightSourceArriveSample non_usable()
+        {
+                LightSourceArriveSample res;
+                res.pdf = 0;
+                return res;
         }
 };
 
@@ -234,10 +240,6 @@ struct LightSourceLeaveSample final
         T pdf_dir;
         Color radiance;
         bool infinite_distance;
-
-        LightSourceLeaveSample()
-        {
-        }
 };
 
 template <std::size_t N, typename T, typename Color>
