@@ -64,9 +64,7 @@ LightSourceArriveInfo<T, Color> DistantLight<N, T, Color>::arrive_info(
         const numerical::Vector<N, T>& /*point*/,
         const numerical::Vector<N, T>& /*l*/) const
 {
-        LightSourceArriveInfo<T, Color> res;
-        res.pdf = 0;
-        return res;
+        return LightSourceArriveInfo<T, Color>::non_usable();
 }
 
 template <std::size_t N, typename T, typename Color>
