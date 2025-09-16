@@ -55,15 +55,14 @@ LightSourceArriveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::arrive_samp
         const numerical::Vector<N, T>& /*point*/,
         const numerical::Vector<N, T>& n) const
 {
-        LightSourceArriveSample<N, T, Color> res;
-        res.l = [&]
-        {
-                const numerical::Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
-                return (dot(n, l) >= 0) ? l : -l;
-        }();
-        res.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
-        res.radiance = radiance_;
-        return res;
+        const numerical::Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
+
+        return {
+                .l = (dot(n, l) >= 0) ? l : -l,
+                .pdf = sampling::uniform_on_hemisphere_pdf<N, T>(),
+                .radiance = radiance_,
+                .distance = std::nullopt,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -71,10 +70,11 @@ LightSourceArriveInfo<T, Color> InfiniteAreaLight<N, T, Color>::arrive_info(
         const numerical::Vector<N, T>& /*point*/,
         const numerical::Vector<N, T>& /*l*/) const
 {
-        LightSourceArriveInfo<T, Color> res;
-        res.pdf = sampling::uniform_on_hemisphere_pdf<N, T>();
-        res.radiance = radiance_;
-        return res;
+        return {
+                .pdf = sampling::uniform_on_hemisphere_pdf<N, T>(),
+                .radiance = radiance_,
+                .distance = std::nullopt,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -85,14 +85,17 @@ LightSourceLeaveSample<N, T, Color> InfiniteAreaLight<N, T, Color>::leave_sample
         const std::array<numerical::Vector<N, T>, N - 1> vectors =
                 com::multiply(numerical::orthogonal_complement_of_unit_vector(dir), scene_radius_);
 
-        LightSourceLeaveSample<N, T, Color> res;
-        res.ray.set_org(scene_center_ - scene_radius_ * dir + sampling::uniform_in_sphere(engine, vectors));
-        res.ray.set_dir(dir);
-        res.pdf_pos = leave_pdf_pos_;
-        res.pdf_dir = leave_pdf_dir_;
-        res.radiance = radiance_;
-        res.infinite_distance = true;
-        return res;
+        const numerical::Vector<N, T> org =
+                scene_center_ - scene_radius_ * dir + sampling::uniform_in_sphere(engine, vectors);
+
+        return {
+                .ray{org, dir},
+                .n = std::nullopt,
+                .pdf_pos = leave_pdf_pos_,
+                .pdf_dir = leave_pdf_dir_,
+                .radiance = radiance_,
+                .infinite_distance = true,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
