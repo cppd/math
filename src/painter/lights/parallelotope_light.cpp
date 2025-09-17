@@ -72,9 +72,7 @@ LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sam
 {
         if (!visible(point))
         {
-                LightSourceArriveSample<N, T, Color> res;
-                res.pdf = 0;
-                return res;
+                return LightSourceArriveSample<N, T, Color>::non_usable();
         }
 
         const numerical::Vector<N, T> direction = sample_location(engine) - point;
@@ -83,12 +81,12 @@ LightSourceArriveSample<N, T, Color> ParallelotopeLight<N, T, Color>::arrive_sam
 
         const T cos = -dot(l, parallelotope_.normal());
 
-        LightSourceArriveSample<N, T, Color> res;
-        res.l = l;
-        res.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
-        res.radiance = radiance(cos);
-        res.distance = distance;
-        return res;
+        return {
+                .l = l,
+                .pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance),
+                .radiance = radiance(cos),
+                .distance = distance,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -98,27 +96,23 @@ LightSourceArriveInfo<T, Color> ParallelotopeLight<N, T, Color>::arrive_info(
 {
         if (!visible(point))
         {
-                LightSourceArriveInfo<T, Color> res;
-                res.pdf = 0;
-                return res;
+                return LightSourceArriveInfo<T, Color>::non_usable();
         }
 
         const numerical::Ray<N, T> ray(point, l);
         const auto intersection = parallelotope_.intersect(ray);
         if (!intersection)
         {
-                LightSourceArriveInfo<T, Color> res;
-                res.pdf = 0;
-                return res;
+                return LightSourceArriveInfo<T, Color>::non_usable();
         }
 
         const T cos = -dot(ray.dir(), parallelotope_.normal());
 
-        LightSourceArriveInfo<T, Color> res;
-        res.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
-        res.radiance = radiance(cos);
-        res.distance = intersection;
-        return res;
+        return {
+                .pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection),
+                .radiance = radiance(cos),
+                .distance = intersection,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -128,14 +122,14 @@ LightSourceLeaveSample<N, T, Color> ParallelotopeLight<N, T, Color>::leave_sampl
                 sample_location(engine), sampling::cosine_on_hemisphere(engine, parallelotope_.normal()));
         const T cos = dot(parallelotope_.normal(), ray.dir());
 
-        LightSourceLeaveSample<N, T, Color> res;
-        res.ray = ray;
-        res.n = parallelotope_.normal();
-        res.pdf_pos = pdf_;
-        res.pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos);
-        res.radiance = radiance(cos);
-        res.infinite_distance = false;
-        return res;
+        return {
+                .ray = ray,
+                .n = parallelotope_.normal(),
+                .pdf_pos = pdf_,
+                .pdf_dir = sampling::cosine_on_hemisphere_pdf<N, T>(cos),
+                .radiance = radiance(cos),
+                .infinite_distance = false,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
