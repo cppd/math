@@ -58,12 +58,12 @@ LightSourceArriveSample<N, T, Color> PointLight<N, T, Color>::arrive_sample(
         const T squared_distance = direction.norm_squared();
         const T distance = std::sqrt(squared_distance);
 
-        LightSourceArriveSample<N, T, Color> res;
-        res.distance = distance;
-        res.l = direction / distance;
-        res.pdf = 1;
-        res.radiance = radiance(squared_distance, distance);
-        return res;
+        return {
+                .l = direction / distance,
+                .pdf = 1,
+                .radiance = radiance(squared_distance, distance),
+                .distance = distance,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -71,9 +71,7 @@ LightSourceArriveInfo<T, Color> PointLight<N, T, Color>::arrive_info(
         const numerical::Vector<N, T>& /*point*/,
         const numerical::Vector<N, T>& /*l*/) const
 {
-        LightSourceArriveInfo<T, Color> res;
-        res.pdf = 0;
-        return res;
+        return LightSourceArriveInfo<T, Color>::non_usable();
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -81,13 +79,14 @@ LightSourceLeaveSample<N, T, Color> PointLight<N, T, Color>::leave_sample(PCG& e
 {
         const numerical::Ray<N, T> ray(location_, sampling::uniform_on_sphere<N, T>(engine));
 
-        LightSourceLeaveSample<N, T, Color> res;
-        res.ray = ray;
-        res.pdf_pos = 1;
-        res.pdf_dir = sampling::uniform_on_sphere_pdf<N, T>();
-        res.radiance = intensity_;
-        res.infinite_distance = false;
-        return res;
+        return {
+                .ray = ray,
+                .n = std::nullopt,
+                .pdf_pos = 1,
+                .pdf_dir = sampling::uniform_on_sphere_pdf<N, T>(),
+                .radiance = intensity_,
+                .infinite_distance = false,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
