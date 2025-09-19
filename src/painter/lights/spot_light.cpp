@@ -64,12 +64,12 @@ LightSourceArriveSample<N, T, Color> SpotLight<N, T, Color>::arrive_sample(
         const numerical::Vector<N, T> l = direction / distance;
         const T cos = -dot(l, direction_);
 
-        LightSourceArriveSample<N, T, Color> res;
-        res.distance = distance;
-        res.l = l;
-        res.pdf = 1;
-        res.radiance = radiance(cos, squared_distance, distance);
-        return res;
+        return {
+                .l = l,
+                .pdf = 1,
+                .radiance = radiance(cos, squared_distance, distance),
+                .distance = distance,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -77,9 +77,7 @@ LightSourceArriveInfo<T, Color> SpotLight<N, T, Color>::arrive_info(
         const numerical::Vector<N, T>& /*point*/,
         const numerical::Vector<N, T>& /*l*/) const
 {
-        LightSourceArriveInfo<T, Color> res;
-        res.pdf = 0;
-        return res;
+        return LightSourceArriveInfo<T, Color>::non_usable();
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -90,15 +88,17 @@ LightSourceLeaveSample<N, T, Color> SpotLight<N, T, Color>::leave_sample(PCG& en
                 const numerical::Ray<N, T> r(location_, sampling::uniform_on_sphere<N, T>(engine));
                 return (dot(r.dir(), direction_) >= 0) ? r : r.reversed();
         }();
+
         const T cos = dot(direction_, ray.dir());
 
-        LightSourceLeaveSample<N, T, Color> res;
-        res.ray = ray;
-        res.pdf_pos = 1;
-        res.pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>();
-        res.radiance = spotlight_.color(intensity_, cos);
-        res.infinite_distance = false;
-        return res;
+        return {
+                .ray = ray,
+                .n = std::nullopt,
+                .pdf_pos = 1,
+                .pdf_dir = sampling::uniform_on_hemisphere_pdf<N, T>(),
+                .radiance = spotlight_.color(intensity_, cos),
+                .infinite_distance = false,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
