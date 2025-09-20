@@ -94,11 +94,11 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 const shading::Sample<N, T, Color>& sample =
                         shading::ggx::brdf::sample_f(engine, obj_->roughness(), obj_->colors(), n, v);
 
-                SurfaceSample<N, T, Color> s;
-                s.l = sample.l;
-                s.pdf = sample.pdf;
-                s.brdf = sample.brdf;
-                return s;
+                return {
+                        .l = sample.l,
+                        .pdf = sample.pdf,
+                        .brdf = sample.brdf,
+                };
         }
 
         [[nodiscard]] bool is_specular(const numerical::Vector<N, T>& /*point*/) const override
