@@ -44,10 +44,6 @@ struct SurfaceSample final
         T pdf;
         Color brdf;
 
-        SurfaceSample()
-        {
-        }
-
         [[nodiscard]] bool usable() const
         {
                 return pdf > 0 && !brdf.is_black();
