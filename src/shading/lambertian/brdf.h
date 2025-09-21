@@ -104,15 +104,19 @@ Sample<N, T, Color> sample_f(RandomEngine& engine, const Color& color, const num
         const T n_l = dot(n, l);
         if (n_l <= 0)
         {
-                return {numerical::Vector<N, T>(0), 0, Color(0)};
+                return Sample<N, T, Color>::zero();
         }
 
         const T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
         if (pdf <= 0)
         {
-                return {numerical::Vector<N, T>(0), 0, Color(0)};
+                return Sample<N, T, Color>::zero();
         }
 
-        return {l, pdf, impl::f<N>(color)};
+        return {
+                .l = l,
+                .pdf = pdf,
+                .brdf = impl::f<N>(color),
+        };
 }
 }

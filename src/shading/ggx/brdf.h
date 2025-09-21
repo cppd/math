@@ -209,23 +209,31 @@ Sample<N, T, Color> sample_f(
 
         if (dot(n, v) <= 0)
         {
-                return {numerical::Vector<N, T>(0), 0, Color(0)};
+                return Sample<N, T, Color>::zero();
         }
 
         const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(engine, roughness, n, v);
 
         if (pdf <= 0)
         {
-                return {numerical::Vector<N, T>(0), 0, Color(0)};
+                return Sample<N, T, Color>::zero();
         }
 
         ASSERT(l.is_unit());
 
         if (dot(n, l) <= 0)
         {
-                return {l, pdf, Color(0)};
+                return {
+                        .l = l,
+                        .pdf = pdf,
+                        .brdf = Color(0),
+                };
         }
 
-        return {l, pdf, impl::f<GGX_ONLY>(roughness, colors.f0, colors.rho_ss, n, v, l)};
+        return {
+                .l = l,
+                .pdf = pdf,
+                .brdf = impl::f<GGX_ONLY>(roughness, colors.f0, colors.rho_ss, n, v, l),
+        };
 }
 }

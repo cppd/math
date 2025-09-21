@@ -28,16 +28,6 @@ struct Colors final
 {
         Color f0;
         Color rho_ss;
-
-        Colors()
-        {
-        }
-
-        constexpr Colors(const Color& f0, const Color& rho_ss)
-                : f0(f0),
-                  rho_ss(rho_ss)
-        {
-        }
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -47,15 +37,13 @@ struct Sample final
         T pdf;
         Color brdf;
 
-        Sample()
+        [[nodiscard]] static Sample zero()
         {
-        }
-
-        constexpr Sample(const numerical::Vector<N, T>& l, const T pdf, const Color& brdf)
-                : l(l),
-                  pdf(pdf),
-                  brdf(brdf)
-        {
+                return {
+                        .l = numerical::Vector<N, T>(0),
+                        .pdf = 0,
+                        .brdf = Color(0),
+                };
         }
 };
 }

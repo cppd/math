@@ -67,7 +67,7 @@ class ComputeBRDF final : public compute::BRDF<N, T, Color>
         static constexpr bool GGX_ONLY = true;
         static constexpr Color F0 = Color(1);
         static constexpr Color RHO_SS = Color(0);
-        static constexpr Colors<Color> COLORS{F0, RHO_SS};
+        static constexpr Colors<Color> COLORS{.f0 = F0, .rho_ss = RHO_SS};
 
         T roughness_ = 1;
 
