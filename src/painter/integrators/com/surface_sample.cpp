@@ -46,8 +46,7 @@ template <bool WITH_PDF, std::size_t N, typename T, typename Color>
         const numerical::Vector<N, T>& n = normals.shading;
 
         const painter::SurfaceSample<N, T, Color> sample = surface.sample(engine, n, v);
-
-        if (sample.pdf <= 0 || sample.brdf.is_black())
+        if (!sample.usable())
         {
                 return {};
         }
