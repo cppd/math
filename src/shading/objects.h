@@ -37,13 +37,11 @@ struct Sample final
         T pdf;
         Color brdf;
 
-        [[nodiscard]] static Sample zero()
+        [[nodiscard]] static Sample non_usable()
         {
-                return {
-                        .l = numerical::Vector<N, T>(0),
-                        .pdf = 0,
-                        .brdf = Color(0),
-                };
+                Sample res;
+                res.pdf = 0;
+                return res;
         }
 };
 }

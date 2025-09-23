@@ -104,13 +104,13 @@ Sample<N, T, Color> sample_f(RandomEngine& engine, const Color& color, const num
         const T n_l = dot(n, l);
         if (n_l <= 0)
         {
-                return Sample<N, T, Color>::zero();
+                return Sample<N, T, Color>::non_usable();
         }
 
         const T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
         if (pdf <= 0)
         {
-                return Sample<N, T, Color>::zero();
+                return Sample<N, T, Color>::non_usable();
         }
 
         return {

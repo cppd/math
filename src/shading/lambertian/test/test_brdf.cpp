@@ -82,7 +82,7 @@ public:
         {
                 if (dot(n, v) <= 0)
                 {
-                        return {numerical::Vector<N, T>(0), 0, Color(0)};
+                        return Sample<N, T, Color>::non_usable();
                 }
                 return lambertian::sample_f(engine, color_, n);
         }

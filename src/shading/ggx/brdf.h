@@ -209,14 +209,14 @@ Sample<N, T, Color> sample_f(
 
         if (dot(n, v) <= 0)
         {
-                return Sample<N, T, Color>::zero();
+                return Sample<N, T, Color>::non_usable();
         }
 
         const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(engine, roughness, n, v);
 
         if (pdf <= 0)
         {
-                return Sample<N, T, Color>::zero();
+                return Sample<N, T, Color>::non_usable();
         }
 
         ASSERT(l.is_unit());
