@@ -64,11 +64,11 @@ std::string comment_to_solid_name(const std::string_view comment)
                 str += (c != '\n') ? c : ' ';
         }
         str = trim(str);
-        if (!str.empty())
+        if (str.empty())
         {
-                return str;
+                str = "s";
         }
-        return "s";
+        return str;
 }
 
 void write_begin_ascii(std::ostream& file, const std::string& solid_name)
