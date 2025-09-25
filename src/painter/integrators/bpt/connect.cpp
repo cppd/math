@@ -227,6 +227,7 @@ template <std::size_t N, typename T, typename Color>
         }
 
         const auto color = compute_color(light, camera);
+
         if (!color || color->is_black())
         {
                 return {};
@@ -254,43 +255,42 @@ std::optional<Color> connect(
         ASSERT(s >= 0);
         ASSERT(t >= 2);
 
-        std::optional<Color> color;
-        const std::vector<vertex::Vertex<N, T, Color>>* connected_light_path = &light_path;
+        const auto make_result =
+                [&](const std::vector<vertex::Vertex<N, T, Color>>& connected_light_path,
+                    const std::optional<Color>& color) -> std::optional<Color>
+        {
+                if (!color || color->is_black())
+                {
+                        return {};
+                }
+
+                return *color * mis_weight(connected_light_path, camera_path, s, t);
+        };
 
         if (s == 0)
         {
-                color = connect_s_0(scene, camera_path[t - 1]);
+                return make_result(light_path, connect_s_0(scene, camera_path[t - 1]));
         }
-        else if (std::holds_alternative<vertex::InfiniteLight<N, T, Color>>(camera_path[t - 1]))
+
+        if (std::holds_alternative<vertex::InfiniteLight<N, T, Color>>(camera_path[t - 1]))
         {
                 return {};
         }
-        else if (s == 1)
+
+        if (s == 1)
         {
                 auto connection = connect_s_1(scene, camera_path[t - 1], light_distribution, engine);
                 if (!connection)
                 {
                         return {};
                 }
-                color = std::move(connection->color);
                 thread_local std::vector<vertex::Vertex<N, T, Color>> path;
                 path.clear();
                 path.push_back(std::move(connection->light_vertex));
-                connected_light_path = &path;
-        }
-        else
-        {
-                color = connect(scene, light_path[s - 1], camera_path[t - 1]);
+                return make_result(path, connection->color);
         }
 
-        if (!color || color->is_black())
-        {
-                return {};
-        }
-
-        *color *= mis_weight(*connected_light_path, camera_path, s, t);
-
-        return color;
+        return make_result(light_path, connect(scene, light_path[s - 1], camera_path[t - 1]));
 }
 
 #define TEMPLATE(N, T, C)                                                               \
