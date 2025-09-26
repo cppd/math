@@ -255,21 +255,18 @@ std::optional<Color> connect(
         ASSERT(s >= 0);
         ASSERT(t >= 2);
 
-        const auto make_result =
-                [&](const std::vector<vertex::Vertex<N, T, Color>>& connected_light_path,
-                    const std::optional<Color>& color) -> std::optional<Color>
+        const auto make_result = [&](const std::optional<Color>& color) -> std::optional<Color>
         {
                 if (!color || color->is_black())
                 {
                         return {};
                 }
-
-                return *color * mis_weight(connected_light_path, camera_path, s, t);
+                return *color * mis_weight(light_path, camera_path, s, t);
         };
 
         if (s == 0)
         {
-                return make_result(light_path, connect_s_0(scene, camera_path[t - 1]));
+                return make_result(connect_s_0(scene, camera_path[t - 1]));
         }
 
         if (std::holds_alternative<vertex::InfiniteLight<N, T, Color>>(camera_path[t - 1]))
@@ -284,13 +281,17 @@ std::optional<Color> connect(
                 {
                         return {};
                 }
+                if (connection->color.is_black())
+                {
+                        return {};
+                }
                 thread_local std::vector<vertex::Vertex<N, T, Color>> path;
                 path.clear();
                 path.push_back(std::move(connection->light_vertex));
-                return make_result(path, connection->color);
+                return connection->color * mis_weight(path, camera_path, s, t);
         }
 
-        return make_result(light_path, connect(scene, light_path[s - 1], camera_path[t - 1]));
+        return make_result(connect(scene, light_path[s - 1], camera_path[t - 1]));
 }
 
 #define TEMPLATE(N, T, C)                                                               \
