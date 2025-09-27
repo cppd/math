@@ -59,18 +59,18 @@ Color f(const T roughness,
         const T n_v = dot(n, v);
         const T n_h = dot(n, h);
 
-        const Color ggx = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
+        Color ggx = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
 
         if (GGX_ONLY)
         {
                 return ggx;
         }
 
-        const Color multiple_bounce = multiple_bounce_surface_reflection<N>(f0, roughness, n_l, n_v);
+        ggx += multiple_bounce_surface_reflection<N>(f0, roughness, n_l, n_v);
 
-        const Color diffuse = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
+        ggx += diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
 
-        return ggx + multiple_bounce + diffuse;
+        return ggx;
 }
 
 // template <std::size_t N, typename T, typename RandomEngine>
