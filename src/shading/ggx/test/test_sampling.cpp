@@ -60,7 +60,7 @@ numerical::Vector<N, T> random_v(const numerical::Vector<N, T>& normal, RandomEn
         numerical::Vector<N, T> res = sampling::uniform_on_sphere<N, T>(engine).normalized();
         if (dot(res, normal) < 0)
         {
-                return -res;
+                res = -res;
         }
         return res;
 }
