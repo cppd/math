@@ -324,15 +324,13 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
                 ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
 
-                std::optional<Images> images(std::in_place);
-
-                images->size = {screen_size_[0], screen_size_[1]};
-                images->rgb.color_format = rgb.color_format;
-                images->rgb.pixels = slice_pixels(rgb);
-                images->rgba.color_format = rgba.color_format;
-                images->rgba.pixels = slice_pixels(rgba);
-
-                return images;
+                return {
+                        {
+                         .size = {screen_size_[0], screen_size_[1]},
+                         .rgb = {.color_format = rgb.color_format, .pixels = slice_pixels(rgb)},
+                         .rgba = {.color_format = rgba.color_format, .pixels = slice_pixels(rgba)},
+                         }
+                };
         }
 
         [[nodiscard]] std::optional<Images> pixels() const override
@@ -351,15 +349,13 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
                 ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
 
-                std::optional<Images> images(std::in_place);
-
-                images->size = screen_size_;
-                images->rgb.color_format = rgb.color_format;
-                images->rgb.pixels = rgb.pixels;
-                images->rgba.color_format = rgba.color_format;
-                images->rgba.pixels = rgba.pixels;
-
-                return images;
+                return {
+                        {
+                         .size = screen_size_,
+                         .rgb = {.color_format = rgb.color_format, .pixels = rgb.pixels},
+                         .rgba = {.color_format = rgba.color_format, .pixels = rgba.pixels},
+                         }
+                };
         }
 
 public:
