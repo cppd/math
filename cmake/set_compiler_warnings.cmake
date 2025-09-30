@@ -93,10 +93,12 @@ function(set_compiler_warnings source_files)
                         -Wno-double-promotion
                         -Wno-exit-time-destructors
                         -Wno-float-equal
+                        -Wno-nrvo
                         -Wno-padded
                         -Wno-shadow-field-in-constructor
                         -Wno-shadow-uncaptured-local
                         -Wno-switch-default
+                        -Wno-thread-safety-negative
                         -Wno-unsafe-buffer-usage
                         -Wno-weak-template-vtables
                         -Wno-weak-vtables
