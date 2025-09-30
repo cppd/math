@@ -37,8 +37,8 @@ set(qt6_disable_deprecated_up_to 0x060800)
 
 macro(set_compiler)
         check_compiler_versions(
-                GCC_MINIMAL_VERSION 14
-                CLANG_MINIMAL_VERSION 19)
+                GCC_MINIMAL_VERSION 15
+                CLANG_MINIMAL_VERSION 21)
 
         set(CMAKE_C_STANDARD 23)
         set(CMAKE_C_STANDARD_REQUIRED ON)
