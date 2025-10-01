@@ -436,26 +436,30 @@ public:
                                   return window::vulkan_create_surface(window, instance);
                           }),
                   device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
-                  graphics_compute_command_pool_(vulkan::create_command_pool(
-                          device_graphics_.device().handle(),
-                          device_graphics_.graphics_compute_family_index())),
-                  compute_command_pool_(vulkan::create_command_pool(
-                          device_graphics_.device().handle(),
-                          device_graphics_.compute_family_index())),
-                  transfer_command_pool_(vulkan::create_transient_command_pool(
-                          device_graphics_.device().handle(),
-                          device_graphics_.transfer_family_index())),
+                  graphics_compute_command_pool_(
+                          vulkan::create_command_pool(
+                                  device_graphics_.device().handle(),
+                                  device_graphics_.graphics_compute_family_index())),
+                  compute_command_pool_(
+                          vulkan::create_command_pool(
+                                  device_graphics_.device().handle(),
+                                  device_graphics_.compute_family_index())),
+                  transfer_command_pool_(
+                          vulkan::create_transient_command_pool(
+                                  device_graphics_.device().handle(),
+                                  device_graphics_.transfer_family_index())),
                   clear_buffer_(device_graphics_.device().handle(), graphics_compute_command_pool_.handle()),
-                  renderer_(gpu::renderer::create_renderer(
-                          &device_graphics_.device(),
-                          &graphics_compute_command_pool_,
-                          &device_graphics_.graphics_compute_queue(0),
-                          &transfer_command_pool_,
-                          &device_graphics_.transfer_queue(),
-                          &compute_command_pool_,
-                          &device_graphics_.compute_queue(),
-                          SAMPLE_RATE_SHADING,
-                          SAMPLER_ANISOTROPY)),
+                  renderer_(
+                          gpu::renderer::create_renderer(
+                                  &device_graphics_.device(),
+                                  &graphics_compute_command_pool_,
+                                  &device_graphics_.graphics_compute_queue(0),
+                                  &transfer_command_pool_,
+                                  &device_graphics_.transfer_queue(),
+                                  &compute_command_pool_,
+                                  &device_graphics_.compute_queue(),
+                                  SAMPLE_RATE_SHADING,
+                                  SAMPLER_ANISOTROPY)),
                   text_(gpu::text_writer::create_view(
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,

@@ -164,10 +164,11 @@ ViewProgram::ViewProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device->handle(), ViewMemory::descriptor_set_layout_bindings())),
-          pipeline_layout_(vulkan::create_pipeline_layout(
-                  device->handle(),
-                  {ViewMemory::set_number()},
-                  {descriptor_set_layout_})),
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(
+                          device->handle(),
+                          {ViewMemory::set_number()},
+                          {descriptor_set_layout_})),
           vertex_shader_(device_->handle(), code_view_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           fragment_shader_(device_->handle(), code_view_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {

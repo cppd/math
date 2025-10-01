@@ -60,11 +60,12 @@ TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* const device, c
                   vulkan::create_descriptor_set_layout(device->handle(), descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_mesh_(
                   vulkan::create_descriptor_set_layout(device->handle(), descriptor_set_layout_mesh_bindings())),
-          pipeline_layout_(vulkan::create_pipeline_layout(
-                  device->handle(),
-                  {SharedMemory::set_number(), MeshMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_},
-                  push_constant_ranges())),
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(
+                          device->handle(),
+                          {SharedMemory::set_number(), MeshMemory::set_number()},
+                          {descriptor_set_layout_shared_, descriptor_set_layout_mesh_},
+                          push_constant_ranges())),
           vertex_shader_(device_->handle(), code.mesh_triangle_lines_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           geometry_shader_(device_->handle(), code.mesh_triangle_lines_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
           fragment_shader_(device_->handle(), code.mesh_triangle_lines_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)

@@ -59,14 +59,16 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& cod
                   vulkan::create_descriptor_set_layout(device_->handle(), descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_image_(
                   vulkan::create_descriptor_set_layout(device_->handle(), descriptor_set_layout_image_bindings())),
-          pipeline_layout_shared_image_(vulkan::create_pipeline_layout(
-                  device_->handle(),
-                  {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
-          pipeline_layout_shared_(vulkan::create_pipeline_layout(
-                  device_->handle(),
-                  {VolumeSharedMemory::set_number()},
-                  {descriptor_set_layout_shared_})),
+          pipeline_layout_shared_image_(
+                  vulkan::create_pipeline_layout(
+                          device_->handle(),
+                          {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
+                          {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
+          pipeline_layout_shared_(
+                  vulkan::create_pipeline_layout(
+                          device_->handle(),
+                          {VolumeSharedMemory::set_number()},
+                          {descriptor_set_layout_shared_})),
           vertex_shader_(device_->handle(), code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           fragment_shader_image_(device_->handle(), code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
           fragment_shader_image_opacity_(

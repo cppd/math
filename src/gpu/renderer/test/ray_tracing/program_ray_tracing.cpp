@@ -49,10 +49,11 @@ std::vector<VkDescriptorSetLayoutBinding> RayTracingProgram::descriptor_set_layo
 RayTracingProgram::RayTracingProgram(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
         : descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device.handle(), descriptor_set_layout_bindings())),
-          pipeline_layout_(vulkan::create_pipeline_layout(
-                  device.handle(),
-                  {RayTracingMemory::set_number()},
-                  {descriptor_set_layout_}))
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(
+                          device.handle(),
+                          {RayTracingMemory::set_number()},
+                          {descriptor_set_layout_}))
 {
         create(device, family_indices);
 }

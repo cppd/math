@@ -223,76 +223,85 @@ void create_menu(
         QAction* action = nullptr;
 
         action = menu_file->addAction("Load Mesh...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        load_mesh(threads, "", true, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                load_mesh(threads, "", true, action_name(*action));
+                        }));
 
         action = menu_file->addAction("Load Volume...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        load_volume(threads, "", action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                load_volume(threads, "", action_name(*action));
+                        }));
 
         action = menu_file->addAction("Save...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        save_mesh(threads, model_tree, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                save_mesh(threads, model_tree, action_name(*action));
+                        }));
 
         action = menu_file->addAction("Save Image...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        save_view_image(threads, view, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                save_view_image(threads, view, action_name(*action));
+                        }));
 
         action = action_self_test;
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        self_test(threads, process::TestType::ALL, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                self_test(threads, process::TestType::ALL, action_name(*action));
+                        }));
 
         action = action_benchmark;
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        self_test(threads, process::TestType::BENCHMARK, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                self_test(threads, process::TestType::BENCHMARK, action_name(*action));
+                        }));
 
         action = menu_rendering->addAction("Painter...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        painter(threads, model_tree, view, lighting, colors, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                painter(threads, model_tree, view, lighting, colors, action_name(*action));
+                        }));
 
         action = menu_edit->addAction("BoundCocone...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        bound_cocone(threads, model_tree, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                bound_cocone(threads, model_tree, action_name(*action));
+                        }));
 
         action = menu_edit->addAction("3D Slice...");
-        connections->emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [=]
-                {
-                        volume_3d_slice(threads, model_tree, action_name(*action));
-                }));
+        connections->emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [=]
+                        {
+                                volume_3d_slice(threads, model_tree, action_name(*action));
+                        }));
 }
 }
 

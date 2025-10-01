@@ -213,8 +213,8 @@ void test_impl()
         const SimulationConfig<T> simulation_config;
         const FilterConfig<T> filter_config;
 
-        const simulator::SimulatorMeasurements<T> measurements =
-                simulator::prepare_measurements(simulator::simulate_acceleration<T>(
+        const simulator::SimulatorMeasurements<T> measurements = simulator::prepare_measurements(
+                simulator::simulate_acceleration<T>(
                         simulation_config.length, simulation_config.init_x, simulation_config.dt,
                         simulation_config.acceleration, simulation_config.velocity_variance,
                         simulation_config.measurement_variance_x, simulation_config.measurement_variance_v));

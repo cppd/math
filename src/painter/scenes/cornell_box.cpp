@@ -100,16 +100,19 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
 
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
-                                METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED), ALPHA, org,
-                                del_elem(walls_vectors, i)));
-                        shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
-                                METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::GREEN), ALPHA,
-                                org + walls_vectors[i], del_elem(walls_vectors, i)));
+                        shapes.push_back(
+                                std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                                        METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED),
+                                        ALPHA, org, del_elem(walls_vectors, i)));
+                        shapes.push_back(
+                                std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                                        METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::GREEN),
+                                        ALPHA, org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
-                shapes.push_back(std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
-                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[N - 1],
-                        del_elem(walls_vectors, N - 1)));
+                shapes.push_back(
+                        std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                                METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[N - 1],
+                                del_elem(walls_vectors, N - 1)));
         }
 
         // Box
@@ -130,8 +133,9 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
                 box_vectors[N - 2] = (1 - 2 * BOX_SPACE) * camera[N - 2];
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
-                shapes.push_back(std::make_unique<shapes::Parallelotope<N, T, Color>>(
-                        METALNESS, ROUGHNESS, Color(color::rgb::MAGENTA), ALPHA, box_org, box_vectors));
+                shapes.push_back(
+                        std::make_unique<shapes::Parallelotope<N, T, Color>>(
+                                METALNESS, ROUGHNESS, Color(color::rgb::MAGENTA), ALPHA, box_org, box_vectors));
         }
 
         return shapes;
@@ -206,8 +210,9 @@ void create_light_sources(
                 auto shape = std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org, vectors);
 
-                lights->push_back(std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
-                        shape->hyperplane_parallelotope(), direction, INTENSITY * light, FALLOFF_START, WIDTH));
+                lights->push_back(
+                        std::make_unique<lights::ParallelotopeLight<N, T, Color>>(
+                                shape->hyperplane_parallelotope(), direction, INTENSITY * light, FALLOFF_START, WIDTH));
 
                 shape->set_light_source(lights->back().get());
 
@@ -222,8 +227,9 @@ void create_light_sources(
                 const numerical::Vector<N, T> org = center + T{0.49} * camera[N - 2];
                 const numerical::Vector<N, T> direction = -camera[N - 2];
 
-                lights->push_back(std::make_unique<lights::SpotLight<N, T, Color>>(
-                        org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
+                lights->push_back(
+                        std::make_unique<lights::SpotLight<N, T, Color>>(
+                                org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
 
                 return;
         }

@@ -57,8 +57,9 @@ Swapchain::Swapchain(
                 attachments[0] = swapchain.image_views()[i];
                 attachments[1] = (image_views.size() == 1) ? image_views[0] : image_views[i];
 
-                framebuffers_.push_back(vulkan::create_framebuffer(
-                        device, render_pass_.handle(), swapchain.width(), swapchain.height(), attachments));
+                framebuffers_.push_back(
+                        vulkan::create_framebuffer(
+                                device, render_pass_.handle(), swapchain.width(), swapchain.height(), attachments));
         }
 
         std::vector<VkFramebuffer> framebuffers;

@@ -58,19 +58,21 @@ RangeSlider::RangeSlider(QSlider* const slider_min, QSlider* const slider_max)
 
         set_range(0, 1);
 
-        connections_.emplace_back(QObject::connect(
-                slider_min_, &QSlider::valueChanged,
-                [&](int)
-                {
-                        on_min_value_changed();
-                }));
+        connections_.emplace_back(
+                QObject::connect(
+                        slider_min_, &QSlider::valueChanged,
+                        [&](int)
+                        {
+                                on_min_value_changed();
+                        }));
 
-        connections_.emplace_back(QObject::connect(
-                slider_max_, &QSlider::valueChanged,
-                [&](int)
-                {
-                        on_max_value_changed();
-                }));
+        connections_.emplace_back(
+                QObject::connect(
+                        slider_max_, &QSlider::valueChanged,
+                        [&](int)
+                        {
+                                on_max_value_changed();
+                        }));
 }
 
 void RangeSlider::set_range(double min, double max)

@@ -72,32 +72,35 @@ Actions::Actions(
         QAction* action = nullptr;
 
         action = menu->addAction("Save...");
-        connections_.emplace_back(QObject::connect(
-                action, &QAction::triggered,
-                [this, action, slice_number = std::move(slice_number)]
-                {
-                        save_image(action_name(*action), slice_number());
-                }));
+        connections_.emplace_back(
+                QObject::connect(
+                        action, &QAction::triggered,
+                        [this, action, slice_number = std::move(slice_number)]
+                        {
+                                save_image(action_name(*action), slice_number());
+                        }));
 
         if (pixels_->screen_size().size() >= 3)
         {
                 action = menu->addAction("Save all...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [action, this]
-                        {
-                                save_image(action_name(*action));
-                        }));
+                connections_.emplace_back(
+                        QObject::connect(
+                                action, &QAction::triggered,
+                                [action, this]
+                                {
+                                        save_image(action_name(*action));
+                                }));
 
                 menu->addSeparator();
 
                 action = menu->addAction("Add volume...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [action, this]
-                        {
-                                add_volume(action_name(*action));
-                        }));
+                connections_.emplace_back(
+                        QObject::connect(
+                                action, &QAction::triggered,
+                                [action, this]
+                                {
+                                        add_volume(action_name(*action));
+                                }));
         }
 }
 

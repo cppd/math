@@ -133,14 +133,16 @@ BufferWithMemory::BufferWithMemory(
                   memory_type == BufferMemoryType::HOST_VISIBLE
                           ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
                           : (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          device_memory_(buffers::create_device_memory(
-                  device.handle(),
-                  device.physical_device(),
-                  buffer_.handle(),
-                  memory_properties_,
-                  (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) == VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                          ? VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT
-                          : 0))
+          device_memory_(
+                  buffers::create_device_memory(
+                          device.handle(),
+                          device.physical_device(),
+                          buffer_.handle(),
+                          memory_properties_,
+                          (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+                                          == VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                                  ? VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT
+                                  : 0))
 {
         ASSERT(size > 0);
 }
@@ -260,11 +262,12 @@ ImageWithMemory::ImageWithMemory(
                   sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
                   usage)),
-          device_memory_(buffers::create_device_memory(
-                  device.handle(),
-                  physical_device_,
-                  image_.handle(),
-                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+          device_memory_(
+                  buffers::create_device_memory(
+                          device.handle(),
+                          physical_device_,
+                          image_.handle(),
+                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (buffers::has_usage_for_image_view(usage))
         {
@@ -370,11 +373,12 @@ DepthImageWithMemory::DepthImageWithMemory(
                   sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
                   usage)),
-          device_memory_(buffers::create_device_memory(
-                  device.handle(),
-                  device.physical_device(),
-                  image_.handle(),
-                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+          device_memory_(
+                  buffers::create_device_memory(
+                          device.handle(),
+                          device.physical_device(),
+                          image_.handle(),
+                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {

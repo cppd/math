@@ -39,8 +39,9 @@ AccelerationStructure::AccelerationStructure(
         std::vector<std::uint32_t> family_indices)
         : family_indices_(std::move(family_indices))
 {
-        acceleration_structure_.emplace(vulkan::create_top_level_acceleration_structure(
-                device, compute_command_pool, compute_queue, family_indices_, {}, {}));
+        acceleration_structure_.emplace(
+                vulkan::create_top_level_acceleration_structure(
+                        device, compute_command_pool, compute_queue, family_indices_, {}, {}));
 }
 
 VkAccelerationStructureKHR AccelerationStructure::handle() const
@@ -72,9 +73,10 @@ void AccelerationStructure::create(
                 }
         }
 
-        acceleration_structure_.emplace(vulkan::create_top_level_acceleration_structure(
-                device, compute_command_pool, compute_queue, family_indices_, bottom_level_references,
-                bottom_level_matrices));
+        acceleration_structure_.emplace(
+                vulkan::create_top_level_acceleration_structure(
+                        device, compute_command_pool, compute_queue, family_indices_, bottom_level_references,
+                        bottom_level_matrices));
 }
 
 void AccelerationStructure::update_matrices(

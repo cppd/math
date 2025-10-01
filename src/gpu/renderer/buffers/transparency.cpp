@@ -68,9 +68,10 @@ TransparencyBuffers::TransparencyBuffers(
         const vulkan::Device& device,
         const std::vector<std::uint32_t>& family_indices)
         : node_size_(node_size(ray_tracing)),
-          buffer_size_(std::min<unsigned long long>(
-                  BUFFER_SIZE,
-                  device.properties().properties_10.limits.maxStorageBufferRange)),
+          buffer_size_(
+                  std::min<unsigned long long>(
+                          BUFFER_SIZE,
+                          device.properties().properties_10.limits.maxStorageBufferRange)),
           node_count_(buffer_size_ / node_size_),
           node_buffer_(
                   vulkan::BufferMemoryType::DEVICE_LOCAL,

@@ -266,8 +266,9 @@ Impl::Impl(
         {
                 attachments[0] = depth_attachment.image_view().handle();
 
-                framebuffers_.push_back(vulkan::create_framebuffer(
-                        device.handle(), render_pass_.handle(), depth_width, depth_height, attachments));
+                framebuffers_.push_back(
+                        vulkan::create_framebuffer(
+                                device.handle(), render_pass_.handle(), depth_width, depth_height, attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 

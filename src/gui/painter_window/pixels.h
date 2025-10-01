@@ -373,14 +373,15 @@ public:
                                   return std::vector(array.cbegin(), array.cend());
                           }(scene_.scene->projector().screen_size())),
                   busy_indices_2d_(thread_count, NULL_INDEX),
-                  painter_(painter::create_painter(
-                          integrator,
-                          this,
-                          samples_per_pixel,
-                          MAX_PASS_COUNT,
-                          scene_.scene.get(),
-                          thread_count,
-                          flat_shading))
+                  painter_(
+                          painter::create_painter(
+                                  integrator,
+                                  this,
+                                  samples_per_pixel,
+                                  MAX_PASS_COUNT,
+                                  scene_.scene.get(),
+                                  thread_count,
+                                  flat_shading))
         {
                 normalize_thread_ = std::thread(
                         [this]

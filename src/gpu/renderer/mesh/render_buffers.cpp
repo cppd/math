@@ -206,8 +206,10 @@ Impl::Impl(const RenderBuffers3D* const render_buffers, const Opacity& opacity, 
                 }
                 attachments.back() = render_buffers->depth_image_view(i);
 
-                framebuffers_.push_back(vulkan::create_framebuffer(
-                        device, render_pass_.handle(), render_buffers->width(), render_buffers->height(), attachments));
+                framebuffers_.push_back(
+                        vulkan::create_framebuffer(
+                                device, render_pass_.handle(), render_buffers->width(), render_buffers->height(),
+                                attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 

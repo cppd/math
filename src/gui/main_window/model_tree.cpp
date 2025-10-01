@@ -53,20 +53,22 @@ ModelTree::ModelTree()
 {
         ui_.setupUi(this);
 
-        connections_.emplace_back(QObject::connect(
-                ui_.model_tree, &QTreeWidget::currentItemChanged,
-                [this](QTreeWidgetItem*, QTreeWidgetItem*)
-                {
-                        Q_EMIT item_update();
-                }));
+        connections_.emplace_back(
+                QObject::connect(
+                        ui_.model_tree, &QTreeWidget::currentItemChanged,
+                        [this](QTreeWidgetItem*, QTreeWidgetItem*)
+                        {
+                                Q_EMIT item_update();
+                        }));
 
         ui_.model_tree->setContextMenuPolicy(Qt::CustomContextMenu);
-        connections_.emplace_back(QObject::connect(
-                ui_.model_tree, &QTreeWidget::customContextMenuRequested,
-                [this](const QPoint& p)
-                {
-                        make_menu(p);
-                }));
+        connections_.emplace_back(
+                QObject::connect(
+                        ui_.model_tree, &QTreeWidget::customContextMenuRequested,
+                        [this](const QPoint& p)
+                        {
+                                make_menu(p);
+                        }));
 }
 
 ModelTree::~ModelTree()

@@ -129,13 +129,15 @@ void create_point_mesh_menu(
                 ASSERT(!object_name.empty());
 
                 QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
-                connections->emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]
-                        {
-                                load_point_mesh(
-                                        thread_id, threads, repository, dimension, object_name, action_name(*action));
-                        }));
+                connections->emplace_back(
+                        QObject::connect(
+                                action, &QAction::triggered,
+                                [=]
+                                {
+                                        load_point_mesh(
+                                                thread_id, threads, repository, dimension, object_name,
+                                                action_name(*action));
+                                }));
         }
 }
 
@@ -164,13 +166,15 @@ void create_facet_mesh_menu(
                 ASSERT(!object_name.empty());
 
                 QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
-                connections->emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]
-                        {
-                                load_facet_mesh(
-                                        thread_id, threads, repository, dimension, object_name, action_name(*action));
-                        }));
+                connections->emplace_back(
+                        QObject::connect(
+                                action, &QAction::triggered,
+                                [=]
+                                {
+                                        load_facet_mesh(
+                                                thread_id, threads, repository, dimension, object_name,
+                                                action_name(*action));
+                                }));
         }
 }
 
@@ -199,13 +203,15 @@ void create_volume_menu(
                 ASSERT(!object_name.empty());
 
                 QAction* const action = menu->addAction(QString::fromStdString(object_name + "..."));
-                connections->emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]
-                        {
-                                load_volume(
-                                        thread_id, threads, repository, dimension, object_name, action_name(*action));
-                        }));
+                connections->emplace_back(
+                        QObject::connect(
+                                action, &QAction::triggered,
+                                [=]
+                                {
+                                        load_volume(
+                                                thread_id, threads, repository, dimension, object_name,
+                                                action_name(*action));
+                                }));
         }
 }
 }
