@@ -26,9 +26,11 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: false
+AllowShortNamespacesOnASingleLine: false
 AlwaysBreakBeforeMultilineStrings: true
 BinPackArguments: true
-BinPackParameters: false
+BinPackLongBracedList: true
+BinPackParameters: OnePerLine
 BitFieldColonSpacing: After
 BraceWrapping:
         AfterCaseLabel: true
@@ -56,7 +58,9 @@ BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 BreakBeforeConceptDeclarations: Always
 BreakBeforeInlineASMColon: OnlyMultiline
+BreakBeforeTemplateCloser: false
 BreakBeforeTernaryOperators: true
+BreakBinaryOperations: Never
 BreakConstructorInitializers: BeforeColon
 BreakFunctionDefinitionParameters: false
 BreakInheritanceList: BeforeColon
@@ -70,6 +74,7 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: Always
+EnumTrailingComma: Leave
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: false
 IncludeBlocks: Regroup
@@ -114,6 +119,7 @@ KeepEmptyLines:
         AtEndOfFile: false
         AtStartOfBlock: false
         AtStartOfFile: false
+KeepFormFeed: false
 LambdaBodyIndentation: Signature
 LineEnding: LF
 MainIncludeChar: Quote
@@ -123,6 +129,7 @@ PPIndentWidth: -1
 PackConstructorInitializers: Never
 # PenaltyBreakAssignment: 0
 # PenaltyBreakBeforeFirstCallParameter: 19
+# PenaltyBreakBeforeMemberAccess: 0
 # PenaltyBreakComment: 300
 # PenaltyBreakFirstLessLess: 120
 # PenaltyBreakOpenParenthesis: 0
@@ -137,6 +144,7 @@ QualifierAlignment: Custom
 QualifierOrder: [inline, static, friend, constexpr, const, volatile, type, restrict]
 ReferenceAlignment: Left
 ReflowComments: true
+RemoveEmptyLinesInUnwrappedLines: true
 RemoveParentheses: Leave
 RemoveSemicolon: false
 RequiresClausePosition: OwnLine
@@ -144,10 +152,13 @@ RequiresExpressionIndentation: Keyword
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
 SkipMacroDefinitionBody: false
-SortIncludes: CaseSensitive
+SortIncludes:
+        Enabled: true
+        IgnoreCase: false
 SortUsingDeclarations: Lexicographic
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
+SpaceAfterOperatorKeyword: false
 SpaceAfterTemplateKeyword: true
 SpaceAroundPointerQualifiers: Default
 SpaceBeforeAssignmentOperators: true
@@ -187,3 +198,4 @@ SpacesInSquareBrackets: false
 Standard: Latest
 TabWidth: 8
 UseTab: Never
+WrapNamespaceBodyWithEmptyLines: Never
