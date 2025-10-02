@@ -117,7 +117,6 @@ public:
         {
         }
 };
-
 }
 
 template <std::size_t N, typename T, typename Color>

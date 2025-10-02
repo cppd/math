@@ -99,5 +99,4 @@ template <typename T>
 
         error("Error reading integral");
 }
-
 }

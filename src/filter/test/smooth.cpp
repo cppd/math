@@ -333,5 +333,4 @@ std::vector<view::Point<2, T>> smooth_lag(
         TEMPLATE_N(T, 2, 6)
 
 FILTER_TEMPLATE_INSTANTIATION_T(TEMPLATE)
-
 }

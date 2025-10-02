@@ -26,7 +26,6 @@ namespace ns::geometry::core::convex_hull
 {
 namespace
 {
-
 template <std::size_t N>
 constexpr bool CHECK_NON_CLASS = (N <= 4);
 

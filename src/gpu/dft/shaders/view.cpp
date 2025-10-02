@@ -36,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-
 ViewDataBuffer::ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
         : buffer_(vulkan::BufferMemoryType::HOST_VISIBLE,
                   device,

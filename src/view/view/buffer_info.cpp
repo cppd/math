@@ -162,5 +162,4 @@ std::string render_buffer_info(
 
         return oss.str();
 }
-
 }
