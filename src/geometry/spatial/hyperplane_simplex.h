@@ -27,7 +27,6 @@ Cambridge University Press, 2003.
 #include "hyperplane.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/ray.h>

@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-#include <cmath>
-
 namespace ns::filter::attitude::kalman
 {
 template <typename T>

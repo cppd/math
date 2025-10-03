@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/statistics/mad.h>
 #include <src/test/test.h>
 
-#include <cmath>
 #include <cstddef>
 #include <random>
 #include <vector>

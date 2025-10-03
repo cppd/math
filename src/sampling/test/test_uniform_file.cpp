@@ -30,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <array>
-#include <cctype>
 #include <cstddef>
 #include <fstream>
 #include <sstream>
