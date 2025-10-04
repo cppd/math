@@ -219,7 +219,7 @@ class SphereDistribution final
         void check_bucket_distribution(
                 const long long sample_count,
                 const long long uniform_count,
-                const std::vector<SphereBucket<N, T>> buckets,
+                const std::vector<SphereBucket<N, T>>& buckets,
                 const unsigned facet_index,
                 long double* const sum_sampled,
                 long double* const sum_expected,
