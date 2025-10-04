@@ -160,7 +160,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        if (occluded(scene, surface.normals(), ray_to_light, sample.distance))
+        if (com::occluded(scene, surface.normals(), ray_to_light, sample.distance))
         {
                 return {};
         }
@@ -233,7 +233,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        if (occluded(scene, camera.pos(), camera.normals(), light.pos(), light.normals()))
+        if (com::occluded(scene, camera.pos(), camera.normals(), light.pos(), light.normals()))
         {
                 return {};
         }

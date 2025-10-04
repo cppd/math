@@ -87,7 +87,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        if (occluded(scene, normals, numerical::Ray(surface.point(), l), sample.distance))
+        if (com::occluded(scene, normals, numerical::Ray(surface.point(), l), sample.distance))
         {
                 return {};
         }
@@ -140,7 +140,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        if (occluded(scene, normals, numerical::Ray(surface.point(), l), light_info.distance))
+        if (com::occluded(scene, normals, numerical::Ray(surface.point(), l), light_info.distance))
         {
                 return {};
         }

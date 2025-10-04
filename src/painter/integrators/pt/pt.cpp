@@ -97,7 +97,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
                         color.multiply_add(beta, *c);
                 }
 
-                const auto& sample = surface_sample(surface, v, normals, engine);
+                const auto& sample = com::surface_sample(surface, v, normals, engine);
                 if (!sample)
                 {
                         break;

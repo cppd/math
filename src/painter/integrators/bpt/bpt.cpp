@@ -146,7 +146,7 @@ void walk(
                         return;
                 }
 
-                const auto sample = surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
+                const auto sample = com::surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
 
                 add_sample(sample, beta, pdf_forward, ray, surface, normals, path);
 
