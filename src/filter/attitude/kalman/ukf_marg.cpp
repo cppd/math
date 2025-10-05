@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "integrator.h"
 #include "matrices.h"
 #include "measurement.h"
+#include "quaternion.h"
 #include "ukf_utility.h"
 
 #include <src/com/error.h>

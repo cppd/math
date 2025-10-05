@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constant.h"
 #include "init_utility.h"
+#include "quaternion.h"
 
 #include <src/com/error.h>
 #include <src/filter/attitude/limit.h>

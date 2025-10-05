@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/filter/attitude/madgwick/gradient.h>
+#include <src/numerical/quaternion.h>
 #include <src/numerical/vector_object.h>
 #include <src/test/test.h>
 
