@@ -79,7 +79,7 @@ CheckOptions:
 - key:   misc-const-correctness.WarnPointersAsValues
   value: '1'
 - key:   misc-include-cleaner.IgnoreHeaders
-  value: 'q[a-z].*\.h$;Qt?[A-Z].*[^h]$;\.bin$;\.spr$'
+  value: 'Q[a-z].*\.h$'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-use-auto.MinTypeNameLength
