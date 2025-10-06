@@ -78,6 +78,8 @@ CheckOptions:
   value: '1'
 - key:   misc-const-correctness.WarnPointersAsValues
   value: '1'
+- key:   misc-const-correctness.AllowedTypes
+  value: 'std::[a-z_]+_distribution'
 - key:   misc-include-cleaner.IgnoreHeaders
   value: 'Q[a-z].*\.h$'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
