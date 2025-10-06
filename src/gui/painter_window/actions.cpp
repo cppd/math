@@ -69,7 +69,7 @@ Actions::Actions(
 {
         ASSERT(slice_number);
 
-        QAction* action = nullptr;
+        const QAction* action = nullptr;
 
         action = menu->addAction("Save...");
         connections_.emplace_back(

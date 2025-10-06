@@ -445,7 +445,7 @@ void ModelTree::make_menu(const QPoint& pos)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        QTreeWidgetItem* const item = ui_.model_tree->itemAt(pos);
+        const QTreeWidgetItem* const item = ui_.model_tree->itemAt(pos);
         if (item != ui_.model_tree->currentItem())
         {
                 return;

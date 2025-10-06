@@ -61,7 +61,7 @@ private:
 
         storage::Storage storage_;
 
-        std::unordered_map<QTreeWidgetItem*, model::ObjectId> map_item_id_;
+        std::unordered_map<const QTreeWidgetItem*, model::ObjectId> map_item_id_;
         std::unordered_map<model::ObjectId, Item> map_id_item_;
 
         std::vector<com::Connection> connections_;

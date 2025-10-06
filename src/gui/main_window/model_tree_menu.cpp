@@ -37,7 +37,7 @@ std::unique_ptr<QMenu> make_model_tree_menu_for_object(
 {
         auto menu = std::make_unique<QMenu>();
 
-        QAction* action = nullptr;
+        const QAction* action = nullptr;
 
         action = menu->addAction("Show Only It");
         QObject::connect(
