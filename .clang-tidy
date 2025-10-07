@@ -86,6 +86,8 @@ CheckOptions:
   value: '1'
 - key:   modernize-use-auto.MinTypeNameLength
   value: '0'
+- key:   modernize-use-scoped-lock.WarnOnSingleLocks
+  value: '0'
 - key:   readability-function-cognitive-complexity.Threshold
   value: '13'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
