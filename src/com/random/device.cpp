@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 
-#if defined(__linux__)
+#ifdef __linux__
 
 #include <src/com/error.h>
 
@@ -47,7 +47,7 @@ void read_system_random(const std::span<std::byte> bytes)
 }
 }
 
-#elif defined(_WIN32)
+#elifdef _WIN32
 
 #include <src/com/error.h>
 
