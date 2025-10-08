@@ -50,11 +50,11 @@ namespace error_implementation
 }
 }
 
-#if !defined(BUILD_RELEASE)
+#ifdef BUILD_RELEASE
+#define ASSERT(expr) (static_cast<void>(0))
+#else
 #define ASSERT(expr)                    \
         (static_cast<bool>(expr)        \
                  ? static_cast<void>(0) \
                  : ::ns::error_implementation::error_assert(#expr, __FILE__, __LINE__))
-#else
-#define ASSERT(expr) (static_cast<void>(0))
 #endif
