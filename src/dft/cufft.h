@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#if defined(CUDA_FOUND)
+#ifdef CUDA_FOUND
 
 #include "dft.h"
 
