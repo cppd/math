@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_data.h"
 
-#if defined(CUDA_FOUND)
+#ifdef CUDA_FOUND
 #include <src/dft/cufft.h>
 #endif
 
-#if defined(FFTW_FOUND)
+#ifdef FFTW_FOUND
 #include <src/dft/fftw.h>
 #endif
 
@@ -155,7 +155,7 @@ void compute_vulkan(
         LOG(time_string("Vulkan", start_time));
 }
 
-#if defined(CUDA_FOUND)
+#ifdef CUDA_FOUND
 void compute_cuda(const bool inverse, const int n1, const int n2, std::vector<Complex>* const data)
 {
         if (inverse)
@@ -176,7 +176,7 @@ void compute_cuda(const bool inverse, const int n1, const int n2, std::vector<Co
 }
 #endif
 
-#if defined(FFTW_FOUND)
+#ifdef FFTW_FOUND
 void compute_fftw(const bool inverse, const int n1, const int n2, std::vector<Complex>* const data)
 {
         if (inverse)
@@ -234,7 +234,7 @@ DftData run_vulkan(
         return dft_data;
 }
 
-#if defined(CUDA_FOUND)
+#ifdef CUDA_FOUND
 void run_cuda(
         const std::string& test_name,
         const int n1,
@@ -291,7 +291,7 @@ void run_cuda(
 }
 #endif
 
-#if defined(FFTW_FOUND)
+#ifdef FFTW_FOUND
 void run_fftw(
         const std::string& test_name,
         const int n1,
@@ -358,10 +358,10 @@ void dft_test(
 {
         int computation_count = 2;
 
-#if defined(CUDA_FOUND)
+#ifdef CUDA_FOUND
         computation_count += 2;
 #endif
-#if defined(FFTW_FOUND)
+#ifdef FFTW_FOUND
         computation_count += 2;
 #endif
 
@@ -371,11 +371,11 @@ void dft_test(
         const DftData vulkan_data =
                 run_vulkan(test_name, dft, n1, n2, source_data, progress, &computation, computation_count);
 
-#if defined(CUDA_FOUND)
+#ifdef CUDA_FOUND
         run_cuda(test_name, n1, n2, source_data, progress, &computation, computation_count, vulkan_data);
 #endif
 
-#if defined(FFTW_FOUND)
+#ifdef FFTW_FOUND
         run_fftw(test_name, n1, n2, source_data, progress, &computation, computation_count, vulkan_data);
 #endif
 }
