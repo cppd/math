@@ -74,7 +74,7 @@ inline constexpr std::array<std::array<unsigned char, R>, BINOMIAL<N, R>> COMBIN
 
         std::array<std::array<unsigned char, R>, BINOMIAL<N, R>> res;
 
-        for (int row = 0; row < BINOMIAL<N, R>; ++row, std::next_permutation(v.begin(), v.end()))
+        for (int row = 0; row < BINOMIAL<N, R>; ++row, std::ranges::next_permutation(v))
         {
                 int cnt = -1;
                 for (int i = 0; i < N; ++i)
