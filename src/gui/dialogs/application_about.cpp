@@ -38,31 +38,31 @@ QString message(const bool ray_tracing)
 
 #if defined(BUILD_DEBUG) && defined(BUILD_RELEASE)
 #error BUILD_DEBUG and BUILD_RELEASE
-#elif defined(BUILD_DEBUG)
+#elifdef BUILD_DEBUG
         oss << "\n\n";
         oss << "Debug Build";
-#elif defined(BUILD_RELEASE)
+#elifdef BUILD_RELEASE
         oss << "\n\n";
         oss << "Release Build";
 #endif
 
         oss << "\n\n";
-#if defined(__clang__)
+#ifdef __clang__
         oss << "Clang " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__;
-#elif defined(__GNUC__)
+#elifdef __GNUC__
         oss << "GCC " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__;
 #else
 #error Unknown Compiler
 #endif
 
-#if !defined(__cplusplus)
+#ifndef __cplusplus
 #error Unknown C++ Version
 #else
         oss << "\n";
         oss << "__cplusplus " << __cplusplus;
 #endif
 
-#if defined(BUILD_LIB_CPP)
+#ifdef BUILD_LIB_CPP
         oss << "\n";
         oss << "libc++";
 #endif
