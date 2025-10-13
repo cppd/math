@@ -141,7 +141,7 @@ struct AddTest final
         }
 };
 
-#if defined(__clang__)
+#ifdef __clang__
 #define TEST_IMPL_PRAGMA_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wglobal-constructors\"")
 #define TEST_IMPL_PRAGMA_POP _Pragma("GCC diagnostic pop")
 #else
