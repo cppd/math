@@ -63,14 +63,14 @@ template <typename T>
 }
 }
 
-#if !defined(BUILD_RELEASE)
-#define VULKAN_CHECK(code) ns::vulkan::error_implementation::check_code((code), __FILE__, __LINE__)
-#else
+#ifdef BUILD_RELEASE
 #define VULKAN_CHECK(code) ns::vulkan::error_implementation::check_code((code))
+#else
+#define VULKAN_CHECK(code) ns::vulkan::error_implementation::check_code((code), __FILE__, __LINE__)
 #endif
 
-#if !defined(BUILD_RELEASE)
-#define VULKAN_ERROR(code) ns::vulkan::error_implementation::error_code((code), __FILE__, __LINE__)
-#else
+#ifdef BUILD_RELEASE
 #define VULKAN_ERROR(code) ns::vulkan::error_implementation::error_code((code))
+#else
+#define VULKAN_ERROR(code) ns::vulkan::error_implementation::error_code((code), __FILE__, __LINE__)
 #endif
