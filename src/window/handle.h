@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::window
 {
-#if defined(__linux__)
+#ifdef __linux__
 
 using WindowID = unsigned long;
 
-#elif defined(_WIN32)
+#elifdef _WIN32
 
 struct HWND__;
 using WindowID = HWND__*;
