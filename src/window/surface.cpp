@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-#if defined(__linux__)
+#ifdef __linux__
 
 #include <QGuiApplication>
 
@@ -56,7 +56,7 @@ VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance insta
 }
 }
 
-#elif defined(_WIN32)
+#elifdef _WIN32
 
 #include <windows.h>
 //
