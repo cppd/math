@@ -118,11 +118,12 @@ public:
 
 class Impl final : public DFT
 {
-        FFTPlanThreads threads_;
         std::vector<std::complex<float>> in_;
         std::vector<std::complex<float>> out_;
-        FFTPlan forward_;
-        FFTPlan backward_;
+
+        const FFTPlanThreads threads_;
+        const FFTPlan forward_;
+        const FFTPlan backward_;
         const float inv_k_;
 
         void exec(const bool inverse, std::vector<std::complex<float>>* const data) override
@@ -166,6 +167,11 @@ public:
                   inv_k_(1.0 / (n1 * n2))
         {
         }
+
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
