@@ -234,7 +234,7 @@ class Impl final : public View
                         return;
                 }
 
-                compute_->reset();
+                (*compute_).reset();
         }
 
 public:
