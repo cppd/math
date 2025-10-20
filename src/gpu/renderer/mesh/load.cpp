@@ -222,21 +222,23 @@ std::array<numerical::Vector2f, 3> face_texcoords(
         const model::mesh::Mesh<3>& mesh,
         const model::mesh::Mesh<3>::Facet& mesh_facet)
 {
+        std::array<numerical::Vector2f, 3> res;
+
         if (mesh_facet.has_texcoord)
         {
-                std::array<numerical::Vector2f, 3> res;
                 for (int i = 0; i < 3; ++i)
                 {
                         res[i] = mesh.texcoords[mesh_facet.texcoords[i]];
                 }
-                return res;
+        }
+        else
+        {
+                for (int i = 0; i < 3; ++i)
+                {
+                        res[i] = NULL_TEXTURE_COORDINATES;
+                }
         }
 
-        std::array<numerical::Vector2f, 3> res;
-        for (int i = 0; i < 3; ++i)
-        {
-                res[i] = NULL_TEXTURE_COORDINATES;
-        }
         return res;
 }
 

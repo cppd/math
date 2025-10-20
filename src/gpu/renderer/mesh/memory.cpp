@@ -101,12 +101,12 @@ std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory
         const std::vector<MaterialMemory::MaterialInfo> material_info =
                 materials_info(mesh, textures, material_buffers);
 
+        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> res;
+
         if (material_info.empty())
         {
-                return {};
+                return res;
         }
-
-        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> res;
 
         for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts)
         {
