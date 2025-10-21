@@ -327,6 +327,22 @@ void load_mesh_to_buffers(
         (*index_buffer)->write(command_pool, queue, data_size(mesh.indices), data_pointer(mesh.indices));
 }
 
+std::unique_ptr<vulkan::BufferWithMemory> make_vertex_buffer(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const std::vector<std::uint32_t>& family_indices,
+        const std::vector<PointsVertex>& vertices)
+{
+        auto buffer = std::make_unique<vulkan::BufferWithMemory>(
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
+
+        buffer->write(command_pool, queue, data_size(vertices), data_pointer(vertices));
+
+        return buffer;
+}
+
 std::string mesh_info(
         const BufferMesh& mesh,
         const double create_duration,
@@ -451,13 +467,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
                 vertices.emplace_back(mesh.vertices[p.vertex]);
         }
 
-        auto buffer = std::make_unique<vulkan::BufferWithMemory>(
-                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
-                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
-
-        buffer->write(command_pool, queue, data_size(vertices), data_pointer(vertices));
-
-        return buffer;
+        return make_vertex_buffer(device, command_pool, queue, family_indices, vertices);
 }
 
 std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
@@ -483,13 +493,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
                 }
         }
 
-        auto buffer = std::make_unique<vulkan::BufferWithMemory>(
-                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
-                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
-
-        buffer->write(command_pool, queue, data_size(vertices), data_pointer(vertices));
-
-        return buffer;
+        return make_vertex_buffer(device, command_pool, queue, family_indices, vertices);
 }
 
 std::vector<vulkan::ImageWithMemory> load_textures(
