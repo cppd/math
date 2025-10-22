@@ -50,45 +50,45 @@ template <std::size_t N, typename T, typename Color>
         const Scene<N, T, Color>& scene,
         const vertex::Vertex<N, T, Color>& camera_path_vertex)
 {
-        return std::visit(
-                Visitors{
-                        [](const vertex::Surface<N, T, Color>& surface) -> std::optional<Color>
+        const Visitors visitors{
+                [](const vertex::Surface<N, T, Color>& surface) -> std::optional<Color>
+                {
+                        if (!surface.is_light())
                         {
-                                if (!surface.is_light())
-                                {
-                                        return {};
-                                }
-                                if (const auto& radiance = surface.light_radiance())
-                                {
-                                        return *radiance * surface.beta();
-                                }
                                 return {};
-                        },
-                        [](const vertex::Camera<N, T, Color>&) -> std::optional<Color>
+                        }
+                        if (const auto& radiance = surface.light_radiance())
                         {
-                                error("Last camera path vertex is a camera");
-                        },
-                        [](const vertex::Light<N, T, Color>&) -> std::optional<Color>
+                                return *radiance * surface.beta();
+                        }
+                        return {};
+                },
+                [](const vertex::Camera<N, T, Color>&) -> std::optional<Color>
+                {
+                        error("Last camera path vertex is a camera");
+                },
+                [](const vertex::Light<N, T, Color>&) -> std::optional<Color>
+                {
+                        error("Last camera path vertex is an light");
+                },
+                [&scene](const vertex::InfiniteLight<N, T, Color>& infinite_light) -> std::optional<Color>
+                {
+                        std::optional<Color> res;
+                        for (const LightSource<N, T, Color>* const light : scene.light_sources())
                         {
-                                error("Last camera path vertex is an light");
-                        },
-                        [&scene](const vertex::InfiniteLight<N, T, Color>& infinite_light) -> std::optional<Color>
-                        {
-                                std::optional<Color> res;
-                                for (const LightSource<N, T, Color>* const light : scene.light_sources())
+                                if (!light->is_infinite_area())
                                 {
-                                        if (!light->is_infinite_area())
-                                        {
-                                                continue;
-                                        }
-                                        if (const auto& radiance = light->leave_radiance(infinite_light.dir()))
-                                        {
-                                                com::add_optional(&res, *radiance * infinite_light.beta());
-                                        }
+                                        continue;
                                 }
-                                return res;
-                        }},
-                camera_path_vertex);
+                                if (const auto& radiance = light->leave_radiance(infinite_light.dir()))
+                                {
+                                        com::add_optional(&res, *radiance * infinite_light.beta());
+                                }
+                        }
+                        return res;
+                }};
+
+        return std::visit(visitors, camera_path_vertex);
 }
 
 template <std::size_t N, typename T, typename Color>
