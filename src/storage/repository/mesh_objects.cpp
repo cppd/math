@@ -50,12 +50,6 @@ constexpr int POINT_DISCRETIZATION = 100000;
 constexpr double LAST_AXIS_VALUE = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
 
-template <std::size_t N, typename T>
-constexpr T last_axis(const numerical::Vector<N, T>& v)
-{
-        return v[N - 1];
-}
-
 template <std::size_t N>
 class DiscretePoints final
 {
@@ -115,19 +109,31 @@ public:
         }
 };
 
+template <std::size_t N, typename T>
+constexpr T last_axis(const numerical::Vector<N, T>& v)
+{
+        return v[N - 1];
+}
+
 template <std::size_t N, typename T, typename RandomEngine>
-numerical::Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
+numerical::Vector<N, T> bound_uniform_on_sphere(RandomEngine& engine)
+{
+        numerical::Vector<N, T> res;
+        do
+        {
+                res = sampling::uniform_on_sphere<N, T>(engine);
+        } while (last_axis(res) < LAST_AXIS_VALUE);
+        return res;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+numerical::Vector<N, T> uniform_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {
                 return sampling::uniform_on_sphere<N, T>(engine);
         }
-        numerical::Vector<N, T> v;
-        do
-        {
-                v = sampling::uniform_on_sphere<N, T>(engine);
-        } while (last_axis(v) < LAST_AXIS_VALUE);
-        return v;
+        return bound_uniform_on_sphere<N, T>(engine);
 }
 
 // std::vector<numerical::Vector<2, float>> generate_points_semicircle(const unsigned point_count)
@@ -164,7 +170,7 @@ std::vector<numerical::Vector<N, float>> generate_points_ellipsoid(const unsigne
 
         while (points.size() < point_count)
         {
-                numerical::Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+                numerical::Vector<N, double> v = uniform_on_sphere<N, double>(engine, bound);
                 v[0] *= 2;
                 points.add(v);
         }
@@ -181,7 +187,7 @@ std::vector<numerical::Vector<N, float>> generate_points_sphere_with_notch(const
 
         while (points.size() < point_count)
         {
-                numerical::Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
+                numerical::Vector<N, double> v = uniform_on_sphere<N, double>(engine, bound);
                 const double cos = last_axis(v);
                 if (cos > 0)
                 {
