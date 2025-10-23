@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_objects.h"
 
+#include "quantized_points.h"
+
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
@@ -36,78 +38,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 #include <string>
-#include <type_traits>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace ns::storage::repository
 {
 namespace
 {
-constexpr int POINT_DISCRETIZATION = 100000;
+constexpr int POINT_QUANTIZATION = 100000;
 
 constexpr double LAST_AXIS_VALUE = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
-
-template <std::size_t N>
-class DiscretePoints final
-{
-        std::vector<numerical::Vector<N, float>> points_;
-        std::unordered_set<numerical::Vector<N, int>> integer_points_;
-
-        template <typename T>
-        static numerical::Vector<N, int> to_integer(const numerical::Vector<N, T>& v, const int factor)
-        {
-                static_assert(std::is_floating_point_v<T>);
-
-                numerical::Vector<N, int> res;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        res[i] = std::lround(v[i] * factor);
-                }
-                return res;
-        }
-
-        template <typename T>
-        static bool points_are_unique(const std::vector<T>& points)
-        {
-                return points.size() == std::unordered_set<T>(points.cbegin(), points.cend()).size();
-        }
-
-public:
-        explicit DiscretePoints(const unsigned point_count)
-        {
-                points_.reserve(point_count);
-                integer_points_.reserve(point_count);
-        }
-
-        template <typename T>
-        void add(const numerical::Vector<N, T>& p)
-        {
-                const numerical::Vector<N, int> integer_point = to_integer(p, POINT_DISCRETIZATION);
-                if (!integer_points_.contains(integer_point))
-                {
-                        integer_points_.insert(integer_point);
-                        points_.push_back(to_vector<float>(p));
-                }
-        }
-
-        [[nodiscard]] unsigned size() const
-        {
-                return points_.size();
-        }
-
-        std::vector<numerical::Vector<N, float>> release()
-        {
-                ASSERT(integer_points_.size() == points_.size());
-                ASSERT(points_are_unique(points_));
-
-                integer_points_.clear();
-
-                return std::move(points_);
-        }
-};
 
 template <std::size_t N, typename T>
 constexpr T last_axis(const numerical::Vector<N, T>& v)
@@ -143,7 +83,7 @@ numerical::Vector<N, T> uniform_on_sphere(RandomEngine& engine, const bool bound
 //                 error("point count out of range");
 //         }
 //
-//         DiscretePoints<2> points(point_count);
+//         QuantizedPoints<2> points(POINT_QUANTIZATION, point_count);
 //
 //         for (unsigned i = 0; i < point_count; ++i)
 //         {
@@ -166,7 +106,7 @@ std::vector<numerical::Vector<N, float>> generate_points_ellipsoid(const unsigne
 {
         PCG engine(point_count);
 
-        DiscretePoints<N> points(point_count);
+        QuantizedPoints<N> points(POINT_QUANTIZATION, point_count);
 
         while (points.size() < point_count)
         {
@@ -183,7 +123,7 @@ std::vector<numerical::Vector<N, float>> generate_points_sphere_with_notch(const
 {
         PCG engine(point_count);
 
-        DiscretePoints<N> points(point_count);
+        QuantizedPoints<N> points(POINT_QUANTIZATION, point_count);
 
         while (points.size() < point_count)
         {
@@ -203,7 +143,7 @@ std::vector<numerical::Vector<3, float>> generate_points_mobius_strip(const unsi
 {
         PCG engine(point_count);
 
-        DiscretePoints<3> points(point_count);
+        QuantizedPoints<3> points(POINT_QUANTIZATION, point_count);
 
         while (points.size() < point_count)
         {
@@ -222,7 +162,7 @@ std::vector<numerical::Vector<N, float>> generate_points_torus(const unsigned po
 
         PCG engine(point_count);
 
-        DiscretePoints<N> points(point_count);
+        QuantizedPoints<N> points(POINT_QUANTIZATION, point_count);
 
         while (points.size() < point_count)
         {
