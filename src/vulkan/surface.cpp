@@ -27,23 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-namespace
-{
-std::uint32_t find_format_count(const VkPhysicalDevice device, const VkSurfaceKHR surface)
-{
-        std::uint32_t count;
-        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, nullptr));
-        return count;
-}
-
-std::uint32_t find_present_mode_count(const VkPhysicalDevice device, const VkSurfaceKHR surface)
-{
-        std::uint32_t count;
-        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, nullptr));
-        return count;
-}
-}
-
 VkSurfaceCapabilitiesKHR find_surface_capabilities(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
@@ -53,33 +36,41 @@ VkSurfaceCapabilitiesKHR find_surface_capabilities(const VkPhysicalDevice device
 
 std::vector<VkSurfaceFormatKHR> find_surface_formats(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
-        std::uint32_t format_count = find_format_count(device, surface);
-        if (format_count < 1)
+        std::uint32_t count;
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, nullptr));
+
+        std::vector<VkSurfaceFormatKHR> formats(count);
+
+        if (formats.empty())
         {
-                return {};
+                return formats;
         }
 
-        std::vector<VkSurfaceFormatKHR> formats(format_count);
-        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &format_count, formats.data()));
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, formats.data()));
         return formats;
 }
 
 std::vector<VkPresentModeKHR> find_present_modes(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
-        std::uint32_t mode_count = find_present_mode_count(device, surface);
-        if (mode_count < 1)
+        std::uint32_t count;
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, nullptr));
+
+        std::vector<VkPresentModeKHR> modes(count);
+
+        if (modes.empty())
         {
-                return {};
+                return modes;
         }
 
-        std::vector<VkPresentModeKHR> modes(mode_count);
-        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &mode_count, modes.data()));
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, modes.data()));
         return modes;
 }
 
 bool surface_suitable(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 {
-        find_surface_capabilities(device, surface);
+        VkSurfaceCapabilitiesKHR surface_capabilities;
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &surface_capabilities));
+
         return !find_surface_formats(device, surface).empty() && !find_present_modes(device, surface).empty();
 }
 
