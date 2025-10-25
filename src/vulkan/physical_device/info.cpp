@@ -59,13 +59,12 @@ std::unordered_set<std::string> find_extensions(const VkPhysicalDevice device)
         std::uint32_t count;
         VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr));
 
-        if (count < 1)
-        {
-                return {};
-        }
-
         std::vector<VkExtensionProperties> extensions(count);
-        VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data()));
+
+        if (count > 0)
+        {
+                VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data()));
+        }
 
         std::unordered_set<std::string> res;
         res.reserve(extensions.size());
@@ -244,14 +243,14 @@ std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice 
         std::uint32_t count;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
 
-        if (count < 1)
+        std::vector<VkQueueFamilyProperties> queue_families(count);
+
+        if (queue_families.empty())
         {
-                return {};
+                return queue_families;
         }
 
-        std::vector<VkQueueFamilyProperties> queue_families(count);
         vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queue_families.data());
-
         return queue_families;
 }
 
