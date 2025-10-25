@@ -30,16 +30,15 @@ namespace ns::vulkan::instance
 {
 std::unordered_set<std::string> supported_extensions()
 {
-        std::uint32_t extension_count;
-        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr));
+        std::uint32_t count;
+        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr));
 
-        if (extension_count < 1)
+        std::vector<VkExtensionProperties> extensions(count);
+
+        if (count > 0)
         {
-                return {};
+                VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &count, extensions.data()));
         }
-
-        std::vector<VkExtensionProperties> extensions(extension_count);
-        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data()));
 
         std::unordered_set<std::string> res;
         res.reserve(extensions.size());
@@ -52,16 +51,15 @@ std::unordered_set<std::string> supported_extensions()
 
 std::unordered_set<std::string> supported_layers()
 {
-        std::uint32_t layer_count;
-        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
+        std::uint32_t count;
+        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
 
-        if (layer_count < 1)
+        std::vector<VkLayerProperties> layers(count);
+
+        if (count > 0)
         {
-                return {};
+                VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&count, layers.data()));
         }
-
-        std::vector<VkLayerProperties> layers(layer_count);
-        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, layers.data()));
 
         std::unordered_set<std::string> res;
         res.reserve(layers.size());
