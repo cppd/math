@@ -154,6 +154,21 @@ BufferWithMemory create_index_buffer(
         return res;
 }
 
+BufferWithMemory create_transform_matrix_buffer(
+        const Device& device,
+        const std::vector<std::uint32_t>& family_indices,
+        const VkTransformMatrixKHR& transform_matrix)
+{
+        constexpr VkBufferUsageFlags USAGE =
+                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+        BufferWithMemory res(
+                BufferMemoryType::HOST_VISIBLE, device, family_indices, USAGE, data_size(transform_matrix));
+        BufferMapper(res).write(transform_matrix);
+        return res;
+}
+
 std::optional<BufferWithMemory> create_transform_matrix_buffer(
         const Device& device,
         const std::vector<std::uint32_t>& family_indices,
@@ -161,17 +176,9 @@ std::optional<BufferWithMemory> create_transform_matrix_buffer(
 {
         if (!transform_matrix)
         {
-                return {};
+                return std::nullopt;
         }
-
-        constexpr VkBufferUsageFlags USAGE =
-                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
-
-        std::optional<BufferWithMemory> res;
-        res.emplace(BufferMemoryType::HOST_VISIBLE, device, family_indices, USAGE, data_size(*transform_matrix));
-        BufferMapper(*res).write(*transform_matrix);
-        return res;
+        return create_transform_matrix_buffer(device, family_indices, *transform_matrix);
 }
 
 void check_data(const std::span<const numerical::Vector3f> vertices, const std::span<const std::uint32_t> indices)
@@ -279,7 +286,7 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
 
         const BufferWithMemory index_buffer = create_index_buffer(device, buffer_family_indices, indices);
 
-        const std::optional<BufferWithMemory> transform_matrix_buffer =
+        const std::optional<BufferWithMemory> transform_buffer =
                 create_transform_matrix_buffer(device, buffer_family_indices, transform_matrix);
 
         VkAccelerationStructureGeometryKHR geometry{};
@@ -293,9 +300,9 @@ BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         geometry.geometry.triangles.vertexStride = sizeof(vertices[0]);
         geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
         geometry.geometry.triangles.indexData.deviceAddress = index_buffer.device_address();
-        if (transform_matrix_buffer)
+        if (transform_buffer)
         {
-                geometry.geometry.triangles.transformData.deviceAddress = transform_matrix_buffer->device_address();
+                geometry.geometry.triangles.transformData.deviceAddress = transform_buffer->device_address();
         }
 
         constexpr bool ALLOW_UPDATE = false;
