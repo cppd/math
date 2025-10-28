@@ -410,12 +410,12 @@ std::function<void(progress::RatioList*)> action_painter_function(
 }
 
 std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_objects(
-        const std::vector<storage::MeshObjectConst>& objects)
+        const std::vector<storage::MeshObjectConst>& paint_objects)
 {
-        std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> res;
-
+        std::vector<storage::MeshObjectConst> objects;
         std::set<std::size_t> dimensions;
-        for (const storage::MeshObjectConst& storage_object : objects)
+
+        for (const storage::MeshObjectConst& storage_object : paint_objects)
         {
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<const model::mesh::MeshObject<N>>& object)
@@ -424,7 +424,7 @@ std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_object
                                 if (reading.visible() && !reading.mesh().facets.empty())
                                 {
                                         dimensions.insert(N);
-                                        std::get<0>(res).push_back(object);
+                                        objects.push_back(object);
                                 }
                         },
                         storage_object);
@@ -437,15 +437,15 @@ std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_object
                 }
         }
 
-        if (std::get<0>(res).empty())
+        if (objects.empty())
         {
                 message_warning("No objects to paint");
                 return {};
         }
 
-        std::get<1>(res) = *dimensions.cbegin();
+        ASSERT(dimensions.size() == 1);
 
-        return res;
+        return {std::move(objects), *dimensions.cbegin()};
 }
 }
 
