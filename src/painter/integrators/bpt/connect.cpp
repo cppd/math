@@ -238,7 +238,7 @@ template <std::size_t N, typename T, typename Color>
                 return {};
         }
 
-        return color;
+        return std::move(color);
 }
 }
 
