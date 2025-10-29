@@ -39,6 +39,7 @@ function(set_compiler_warnings source_files)
                         -Wmissing-declarations
                         -Wmissing-format-attribute
                         -Wmissing-include-dirs
+                        -Wnrvo
                         -Wpacked
                         -Wredundant-decls
                         -Wshadow=local
