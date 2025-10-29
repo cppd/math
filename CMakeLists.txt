@@ -30,8 +30,8 @@ set(shader_environment "vulkan1.3")
 set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})
-set(qt6_version 6.8)
-set(qt6_disable_deprecated_up_to 0x060800)
+set(qt6_version 6.9)
+set(qt6_disable_deprecated_up_to 0x060900)
 
 ##################################################
 
