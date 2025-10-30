@@ -47,10 +47,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cstddef>
+#include <flat_set>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -413,7 +413,7 @@ std::tuple<std::vector<storage::MeshObjectConst>, std::size_t> copy_paint_object
         const std::vector<storage::MeshObjectConst>& paint_objects)
 {
         std::vector<storage::MeshObjectConst> objects;
-        std::set<std::size_t> dimensions;
+        std::flat_set<std::size_t> dimensions;
 
         for (const storage::MeshObjectConst& storage_object : paint_objects)
         {
