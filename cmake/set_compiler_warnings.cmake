@@ -35,6 +35,7 @@ function(set_compiler_warnings source_files)
                         -Wimplicit-fallthrough=5
                         -Winit-self
                         -Wlarger-than=1000000
+                        -Wleading-whitespace=spaces
                         -Wlogical-op
                         -Wmissing-declarations
                         -Wmissing-format-attribute
@@ -49,6 +50,7 @@ function(set_compiler_warnings source_files)
                         -Wsuggest-attribute=format
                         -Wsuggest-attribute=noreturn
                         -Wswitch-enum
+                        -Wtrailing-whitespace=any
                         -Wtrampolines
                         -Wundef
                         -Wunreachable-code
