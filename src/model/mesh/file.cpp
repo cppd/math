@@ -36,8 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 #include <filesystem>
+#include <flat_set>
 #include <memory>
-#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -58,7 +58,7 @@ std::vector<FileFormat> save_formats(const unsigned dimension)
         return v;
 }
 
-std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
+std::vector<FileFormat> load_formats(const std::flat_set<unsigned>& dimensions)
 {
         std::vector<FileFormat> v(1);
 

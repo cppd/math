@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 #include <filesystem>
-#include <set>
+#include <flat_set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -44,7 +44,7 @@ std::string obj_file_extension(const std::size_t n)
         return (n == 3) ? "obj" : "obj" + to_string(n);
 }
 
-std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions)
+std::vector<std::string> obj_file_extensions(const std::flat_set<unsigned>& dimensions)
 {
         std::vector<std::string> res;
         res.reserve(dimensions.size() + (dimensions.contains(3) ? 1 : 0));
@@ -77,7 +77,7 @@ std::string stl_file_extension(const std::size_t n)
         return (n == 3) ? "stl" : "stl" + to_string(n);
 }
 
-std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions)
+std::vector<std::string> stl_file_extensions(const std::flat_set<unsigned>& dimensions)
 {
         std::vector<std::string> res;
         res.reserve(dimensions.size() + (dimensions.contains(3) ? 1 : 0));
@@ -137,7 +137,7 @@ FileType file_type_by_name(const std::filesystem::path& file_name)
 
 //
 
-std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimensions)
+std::vector<std::string> txt_file_extensions(const std::flat_set<unsigned>& dimensions)
 {
         std::vector<std::string> res;
         res.reserve(dimensions.size() + 1);

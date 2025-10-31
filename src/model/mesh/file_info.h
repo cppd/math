@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 #include <filesystem>
-#include <set>
+#include <flat_set>
 #include <string>
 #include <vector>
 
@@ -35,12 +35,12 @@ enum class FileType
 FileType file_type_by_name(const std::filesystem::path& file_name);
 
 std::string obj_file_extension(std::size_t n);
-std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions);
+std::vector<std::string> obj_file_extensions(const std::flat_set<unsigned>& dimensions);
 bool file_has_obj_extension(std::size_t n, const std::filesystem::path& file_name);
 
 std::string stl_file_extension(std::size_t n);
-std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions);
+std::vector<std::string> stl_file_extensions(const std::flat_set<unsigned>& dimensions);
 bool file_has_stl_extension(std::size_t n, const std::filesystem::path& file_name);
 
-std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimensions);
+std::vector<std::string> txt_file_extensions(const std::flat_set<unsigned>& dimensions);
 }

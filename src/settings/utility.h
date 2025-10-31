@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <set>
+#include <flat_set>
 
 namespace ns::settings
 {
-std::set<unsigned> supported_dimensions();
+std::flat_set<unsigned> supported_dimensions();
 }

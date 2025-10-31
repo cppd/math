@@ -20,16 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dimensions.h"
 
 #include <cstddef>
-#include <set>
+#include <flat_set>
 #include <utility>
 
 namespace ns::settings
 {
-std::set<unsigned> supported_dimensions()
+std::flat_set<unsigned> supported_dimensions()
 {
         return []<std::size_t... N>(std::index_sequence<N...>&&)
         {
-                return std::set<unsigned>({N...});
+                return std::flat_set<unsigned>({N...});
         }(Dimensions());
 }
 }

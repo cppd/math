@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 #include <filesystem>
+#include <flat_set>
 #include <memory>
-#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -37,7 +37,7 @@ struct FileFormat final
 };
 
 std::vector<FileFormat> save_formats(unsigned dimension);
-std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions);
+std::vector<FileFormat> load_formats(const std::flat_set<unsigned>& dimensions);
 
 template <std::size_t N, typename Path>
 std::unique_ptr<Mesh<N>> load(const Path& file_name, progress::Ratio* progress);
