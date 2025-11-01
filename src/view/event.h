@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 #include <src/numerical/vector.h>
 
+#include <flat_set>
 #include <memory>
 #include <optional>
-#include <set>
 #include <utility>
 #include <variant>
 
@@ -507,7 +507,7 @@ struct Description final
 
 struct SampleCount final
 {
-        std::set<int> sample_counts;
+        std::flat_set<int> sample_counts;
         int sample_count;
 };
 }

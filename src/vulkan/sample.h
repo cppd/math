@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan_core.h>
 
-#include <set>
+#include <flat_set>
 
 namespace ns::vulkan
 {
-std::set<int> supported_sample_counts(const VkPhysicalDeviceLimits& limits);
+std::flat_set<int> supported_sample_counts(const VkPhysicalDeviceLimits& limits);
 
 VkSampleCountFlagBits sample_count_to_sample_count_flag(int sample_count);
 int sample_count_flag_to_sample_count(VkSampleCountFlagBits sample_count);

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan_core.h>
 
-#include <set>
+#include <flat_set>
 
 namespace ns::vulkan
 {
@@ -35,48 +35,29 @@ bool set(const VkSampleCountFlags flags, const VkSampleCountFlagBits bits)
 }
 }
 
-std::set<int> supported_sample_counts(const VkPhysicalDeviceLimits& limits)
+std::flat_set<int> supported_sample_counts(const VkPhysicalDeviceLimits& limits)
 {
         const VkSampleCountFlags flags =
                 limits.framebufferColorSampleCounts & limits.framebufferDepthSampleCounts
                 & limits.storageImageSampleCounts;
 
-        std::set<int> res;
+        std::flat_set<int> res;
 
-        if (set(flags, VK_SAMPLE_COUNT_1_BIT))
+        const auto insert = [&](const VkSampleCountFlagBits bits)
         {
-                res.insert(1);
-        }
+                if (set(flags, bits))
+                {
+                        res.insert(sample_count_flag_to_sample_count(bits));
+                }
+        };
 
-        if (set(flags, VK_SAMPLE_COUNT_2_BIT))
-        {
-                res.insert(2);
-        }
-
-        if (set(flags, VK_SAMPLE_COUNT_4_BIT))
-        {
-                res.insert(4);
-        }
-
-        if (set(flags, VK_SAMPLE_COUNT_8_BIT))
-        {
-                res.insert(8);
-        }
-
-        if (set(flags, VK_SAMPLE_COUNT_16_BIT))
-        {
-                res.insert(16);
-        }
-
-        if (set(flags, VK_SAMPLE_COUNT_32_BIT))
-        {
-                res.insert(32);
-        }
-
-        if (set(flags, VK_SAMPLE_COUNT_64_BIT))
-        {
-                res.insert(64);
-        }
+        insert(VK_SAMPLE_COUNT_1_BIT);
+        insert(VK_SAMPLE_COUNT_2_BIT);
+        insert(VK_SAMPLE_COUNT_4_BIT);
+        insert(VK_SAMPLE_COUNT_8_BIT);
+        insert(VK_SAMPLE_COUNT_16_BIT);
+        insert(VK_SAMPLE_COUNT_32_BIT);
+        insert(VK_SAMPLE_COUNT_64_BIT);
 
         if (res.empty())
         {

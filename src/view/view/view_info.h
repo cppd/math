@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vulkan/vulkan_core.h>
 
 #include <array>
+#include <flat_set>
 #include <optional>
-#include <set>
 
 namespace ns::view::view
 {
@@ -51,5 +51,5 @@ std::optional<VkSampleCountFlagBits> sample_count_flag(
         int sample_count,
         const vulkan::physical_device::Properties& properties);
 
-std::set<int> sample_counts(bool multisampling, const vulkan::physical_device::Properties& properties);
+std::flat_set<int> sample_counts(bool multisampling, const vulkan::physical_device::Properties& properties);
 }

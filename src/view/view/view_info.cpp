@@ -28,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <flat_set>
 #include <iterator>
 #include <optional>
-#include <set>
 
 namespace ns::view::view
 {
@@ -63,7 +63,8 @@ VkSampleCountFlagBits sample_count_flag_preferred(
 {
         const int sample_count = [&]
         {
-                const std::set<int> sample_counts = vulkan::supported_sample_counts(properties.properties_10.limits);
+                const std::flat_set<int> sample_counts =
+                        vulkan::supported_sample_counts(properties.properties_10.limits);
                 const auto iter = sample_counts.lower_bound(preferred_sample_count);
                 if (iter == sample_counts.cend())
                 {
@@ -94,9 +95,9 @@ std::optional<VkSampleCountFlagBits> sample_count_flag(
         return vulkan::sample_count_to_sample_count_flag(sample_count);
 }
 
-std::set<int> sample_counts(const bool multisampling, const vulkan::physical_device::Properties& properties)
+std::flat_set<int> sample_counts(const bool multisampling, const vulkan::physical_device::Properties& properties)
 {
-        std::set<int> counts = vulkan::supported_sample_counts(properties.properties_10.limits);
+        std::flat_set<int> counts = vulkan::supported_sample_counts(properties.properties_10.limits);
         if (multisampling)
         {
                 counts.erase(counts.cbegin(), counts.lower_bound(2));
