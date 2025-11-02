@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-#include <iterator>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -28,13 +28,9 @@ namespace ns::text
 {
 namespace
 {
-std::vector<unsigned char> deja_vu_sans()
-{
-        static constexpr unsigned char DATA[] = {
+constexpr unsigned char DEJA_VU_SANS[] = {
 #include "DejaVuSans.ttf.bin"
-        };
-        return {std::cbegin(DATA), std::cend(DATA)};
-}
+};
 }
 
 const Fonts& Fonts::instance()
@@ -45,7 +41,7 @@ const Fonts& Fonts::instance()
 
 Fonts::Fonts()
 {
-        fonts_.emplace("DejaVuSans", deja_vu_sans);
+        fonts_.emplace("DejaVuSans", DEJA_VU_SANS);
 }
 
 std::vector<std::string> Fonts::names() const
@@ -64,7 +60,7 @@ std::vector<unsigned char> Fonts::data(const std::string_view name) const
         const auto iter = fonts_.find(name);
         if (iter != fonts_.cend())
         {
-                return iter->second();
+                return {iter->second.cbegin(), iter->second.cend()};
         }
         error("Font not found: " + std::string(name));
 }

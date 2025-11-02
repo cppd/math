@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <map>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -26,7 +27,7 @@ namespace ns::text
 {
 class Fonts final
 {
-        std::map<std::string_view, std::vector<unsigned char> (*)()> fonts_;
+        std::map<std::string_view, std::span<const unsigned char>> fonts_;
 
         Fonts();
 
