@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <map>
+#include <flat_map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -35,7 +35,7 @@ namespace
 std::string distribution_to_string(const std::unordered_map<int, unsigned>& distribution)
 {
         std::string res;
-        for (const auto& [k, v] : std::map{distribution.cbegin(), distribution.cend()})
+        for (const auto [k, v] : std::flat_map{distribution.cbegin(), distribution.cend()})
         {
                 if (!res.empty())
                 {
