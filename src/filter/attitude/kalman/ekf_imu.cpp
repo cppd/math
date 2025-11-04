@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrices.h"
 #include "quaternion.h"
 
-#include <src/com/error.h>
 #include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/rotation.h>
@@ -38,9 +37,7 @@ namespace ns::filter::attitude::kalman
 template <typename T>
 void EkfImu<T>::predict(const Vector3& w0, const Vector3& w1, const T variance, const T dt)
 {
-        ASSERT(q_);
-
-        q_ = first_order_quaternion_integrator(*q_, w0, w1, dt).normalized();
+        q_ = first_order_quaternion_integrator(q_, w0, w1, dt).normalized();
 
         const Matrix3 phi = ekf_state_transition_matrix_3(w1, dt);
         const Matrix3 q = noise_covariance_matrix_3(variance, dt);
@@ -52,8 +49,6 @@ template <typename T>
 template <std::size_t N>
 void EkfImu<T>::update(const std::array<Update, N>& data)
 {
-        ASSERT(q_);
-
         numerical::Vector<3 * N, T> z;
         numerical::Vector<3 * N, T> hx;
         numerical::Matrix<3 * N, 3, T> h;
@@ -79,37 +74,34 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
         const Vector3 dx = k * (z - hx);
 
         const Quaternion<T> dq = ekf_delta_quaternion(dx / T{2});
-        q_ = (dq * *q_).normalized();
+        q_ = (dq * q_).normalized();
 
         const Matrix3 i_kh = numerical::IDENTITY_MATRIX<3, T> - k * h;
         p_ = i_kh * p_ * i_kh.transposed() + mul_diagonal(k, r) * k.transposed();
 }
 
 template <typename T>
+EkfImu<T>::EkfImu(const Quaternion<T>& q)
+        : q_(q)
+{
+}
+
+template <typename T>
 void EkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance, const T dt)
 {
-        if (q_)
-        {
-                predict(w0, w1, variance, dt);
-        }
+        predict(w0, w1, variance, dt);
 }
 
 template <typename T>
 bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
-        if (!q_)
-        {
-                q_ = init_.update(a);
-                return q_.has_value();
-        }
-
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{

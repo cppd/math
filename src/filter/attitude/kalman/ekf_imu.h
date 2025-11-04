@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "init_imu.h"
 #include "quaternion.h"
 
 #include <src/numerical/matrix.h>
@@ -36,9 +35,7 @@ class EkfImu final
         using Vector3 = numerical::Vector<3, T>;
         using Matrix3 = numerical::Matrix<3, 3, T>;
 
-        InitImu<T> init_;
-
-        std::optional<Quaternion<T>> q_;
+        Quaternion<T> q_;
         Matrix3 p_{numerical::ZERO_MATRIX};
 
         void predict(const Vector3& w0, const Vector3& w1, T variance, T dt);
@@ -54,17 +51,15 @@ class EkfImu final
         void update(const std::array<Update, N>& data);
 
 public:
+        explicit EkfImu(const Quaternion<T>& q);
+
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance, T dt);
 
         bool update_acc(const Vector3& a, T variance, T variance_direction);
 
-        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        [[nodiscard]] numerical::Quaternion<T> attitude() const
         {
-                if (q_)
-                {
-                        return numerical::Quaternion<T>(*q_);
-                }
-                return std::nullopt;
+                return numerical::Quaternion<T>(q_);
         }
 };
 }
