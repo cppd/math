@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurement.h"
 #include "quaternion.h"
 
-#include <src/com/error.h>
 #include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/rotation.h>
@@ -39,12 +38,10 @@ namespace ns::filter::attitude::kalman
 template <typename T>
 void EkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
-        ASSERT(q_);
-
         const Vector3 wb0 = w0 - b_;
         const Vector3 wb1 = w1 - b_;
 
-        q_ = first_order_quaternion_integrator(*q_, wb0, wb1, dt).normalized();
+        q_ = first_order_quaternion_integrator(q_, wb0, wb1, dt).normalized();
 
         const Matrix6 phi = ekf_state_transition_matrix_6(wb1, dt);
         const Matrix6 q = noise_covariance_matrix_6(wb1, variance_r, variance_w, dt);
@@ -56,8 +53,6 @@ template <typename T>
 template <std::size_t N>
 void EkfMarg<T>::update(const std::array<Update, N>& data)
 {
-        ASSERT(q_);
-
         numerical::Vector<3 * N, T> z;
         numerical::Vector<3 * N, T> hx;
         numerical::Matrix<3 * N, 6, T> h(numerical::ZERO_MATRIX);
@@ -86,7 +81,7 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
         const Vector3 dx_b = numerical::block<3, 3>(dx);
 
         const Quaternion<T> dq = ekf_delta_quaternion(dx_q / T{2});
-        q_ = (dq * *q_).normalized();
+        q_ = (dq * q_).normalized();
 
         b_ += dx_b;
 
@@ -95,30 +90,27 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
+EkfMarg<T>::EkfMarg(const Quaternion<T>& q)
+        : q_(q)
+{
+}
+
+template <typename T>
 void EkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
-        if (q_)
-        {
-                predict(w0, w1, variance_r, variance_w, dt);
-        }
+        predict(w0, w1, variance_r, variance_w, dt);
 }
 
 template <typename T>
 bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
-        if (!q_)
-        {
-                q_ = init_.update_acc(a);
-                return q_.has_value();
-        }
-
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
@@ -139,19 +131,13 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
 template <typename T>
 bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance_direction)
 {
-        if (!q_)
-        {
-                q_ = init_.update_mag(m);
-                return q_.has_value();
-        }
-
         const T m_norm = m.norm();
         if (!mag_suitable(m_norm))
         {
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         const auto& mag = mag_measurement(attitude, m / m_norm, variance);
         if (!mag)
@@ -178,12 +164,6 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
 template <typename T>
 bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
 {
-        if (!q_)
-        {
-                q_ = init_.update_acc_mag(a, m);
-                return q_.has_value();
-        }
-
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {
@@ -196,7 +176,7 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         const auto& mag = mag_measurement(attitude, m / m_norm, m_variance);
         if (!mag)

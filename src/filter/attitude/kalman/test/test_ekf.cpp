@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/attitude/kalman/ekf_imu.h>
 #include <src/filter/attitude/kalman/ekf_marg.h>
 #include <src/filter/attitude/kalman/init_imu.h>
+#include <src/filter/attitude/kalman/init_marg.h>
 #include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -112,14 +113,23 @@ void test_marg_1(const T precision)
         constexpr T VARIANCE_MAG = square(0.01);
         constexpr T VARIANCE_MAG_DIRECTION = square(0.01);
 
-        EkfMarg<T> f;
-
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+        const numerical::Vector<3, T> mag{15, -20, 25};
 
-        for (int i = 0; i < 1000; ++i)
+        std::optional<Quaternion<T>> init_q;
+        InitMarg<T> init_marg;
+        do
+        {
+                init_q = init_marg.update_acc(axis * T{9.8});
+                init_q = init_marg.update_mag(mag);
+        } while (!init_q);
+
+        EkfMarg<T> f(*init_q);
+
+        for (int i = 9; i < 1000; ++i)
         {
                 f.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
-                f.update_mag({15, -20, 25}, VARIANCE_MAG, VARIANCE_MAG_DIRECTION);
+                f.update_mag(mag, VARIANCE_MAG, VARIANCE_MAG_DIRECTION);
                 const T k = 1 + i / T{1000};
                 f.update_gyro(axis * T{0.010} * k, axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
                 f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
@@ -157,13 +167,21 @@ void test_marg_2(const T precision)
         constexpr T VARIANCE_ACC = square(0.01);
         constexpr T VARIANCE_MAG = square(0.01);
 
-        EkfMarg<T> f;
-
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+        const numerical::Vector<3, T> mag{15, -20, 25};
 
-        for (int i = 0; i < 1000; ++i)
+        std::optional<Quaternion<T>> init_q;
+        InitMarg<T> init_marg;
+        do
         {
-                f.update_acc_mag(axis * T{9.8}, {15, -20, 25}, VARIANCE_ACC, VARIANCE_MAG);
+                init_q = init_marg.update_acc_mag(axis * T{9.8}, mag);
+        } while (!init_q);
+
+        EkfMarg<T> f(*init_q);
+
+        for (int i = 9; i < 1000; ++i)
+        {
+                f.update_acc_mag(axis * T{9.8}, mag, VARIANCE_ACC, VARIANCE_MAG);
                 const T k = 1 + i / T{1000};
                 f.update_gyro(axis * T{0.010} * k, axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
                 f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
