@@ -45,17 +45,6 @@ void check_attitude(const numerical::Quaternion<T>& attitude)
 }
 
 template <typename T>
-void check_attitude(const std::optional<numerical::Quaternion<T>>& attitude)
-{
-        if (!attitude)
-        {
-                error("No attitude");
-        }
-
-        check_attitude(*attitude);
-}
-
-template <typename T>
 void test_imu(const T precision)
 {
         constexpr T DT = 0.01L;
@@ -135,20 +124,19 @@ void test_marg_1(const T precision)
                 f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
-        const auto a = f.attitude();
+        const numerical::Quaternion<T> a = f.attitude();
 
         check_attitude(a);
-        ASSERT(a);
 
         test_equal(
-                *a,
+                a,
                 numerical::Quaternion<T>(
                         0.124439467170343173159L,
                         {0.192749927647793641811L, 0.242459166811415931201L, 0.942643006037410423055L}),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
                 {0.303045763365663224588L, 0.505076272276105374675L, 0.808122035641768599317L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
@@ -187,20 +175,19 @@ void test_marg_2(const T precision)
                 f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
-        const auto a = f.attitude();
+        const numerical::Quaternion<T> a = f.attitude();
 
         check_attitude(a);
-        ASSERT(a);
 
         test_equal(
-                *a,
+                a,
                 numerical::Quaternion<T>(
                         0.124463110842182846114L,
                         {0.192756009035205944175L, 0.242454332112122312624L, 0.942639884505408993628L}),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
                 {0.30304576336566322494L, 0.505076272276105374729L, 0.808122035641768599263L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};

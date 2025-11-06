@@ -64,7 +64,7 @@ public:
 
         bool update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 
-        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        [[nodiscard]] numerical::Quaternion<T> attitude() const
         {
                 return numerical::Quaternion<T>(q_);
         }
