@@ -84,14 +84,12 @@ std::array<numerical::Vector<3, T>, COUNT> propagate_points(
 template <typename T>
 void UkfImu<T>::predict(const Vector3& w0, const Vector3& w1, const T variance, const T dt)
 {
-        ASSERT(q_);
-
         x_ = Vector3(0);
 
         const std::array<Vector3, POINT_COUNT> sigma_points = sigma_points_.points(x_, p_);
         ASSERT(sigma_points[0] == x_);
 
-        propagated_quaternions_ = propagate_quaternions(*q_, sigma_points, w0, w1, dt);
+        propagated_quaternions_ = propagate_quaternions(q_, sigma_points, w0, w1, dt);
         propagated_points_ = propagate_points(sigma_points, propagated_quaternions_);
 
         const Matrix3 q = noise_covariance_matrix_3(variance, dt);
@@ -158,8 +156,9 @@ void UkfImu<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-UkfImu<T>::UkfImu(const T variance)
+UkfImu<T>::UkfImu(const Quaternion<T>& q, const T variance)
         : sigma_points_(SIGMA_POINTS_PARAMETERS<T>),
+          q_(q),
           x_(0),
           p_(numerical::make_diagonal_matrix<3, T>({variance, variance, variance}))
 {
@@ -168,21 +167,12 @@ UkfImu<T>::UkfImu(const T variance)
 template <typename T>
 void UkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance, const T dt)
 {
-        if (q_)
-        {
-                predict(w0, w1, variance, dt);
-        }
+        predict(w0, w1, variance, dt);
 }
 
 template <typename T>
 bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
-        if (!q_)
-        {
-                q_ = init_.update(a);
-                return q_.has_value();
-        }
-
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {

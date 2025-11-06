@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "init_imu.h"
 #include "quaternion.h"
 
 #include <src/filter/core/sigma_points.h>
@@ -45,9 +44,7 @@ class UkfImu final
 
         const core::SigmaPoints<3, T> sigma_points_;
 
-        InitImu<T> init_;
-
-        std::optional<Quaternion<T>> q_;
+        Quaternion<T> q_;
         std::array<Vector3, POINT_COUNT> propagated_points_;
         std::array<Quaternion<T>, POINT_COUNT> propagated_quaternions_;
         Vector3 x_;
@@ -68,19 +65,15 @@ class UkfImu final
         void update(const std::array<Update, N>& data);
 
 public:
-        explicit UkfImu(T variance);
+        UkfImu(const Quaternion<T>& q, T variance);
 
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance, T dt);
 
         bool update_acc(const Vector3& a, T variance, T variance_direction);
 
-        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        [[nodiscard]] numerical::Quaternion<T> attitude() const
         {
-                if (q_)
-                {
-                        return numerical::Quaternion<T>(*q_);
-                }
-                return std::nullopt;
+                return numerical::Quaternion<T>(q_);
         }
 };
 }
