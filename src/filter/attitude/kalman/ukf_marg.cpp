@@ -108,14 +108,12 @@ std::array<numerical::Vector<6, T>, COUNT> propagate_points(
 template <typename T>
 void UkfMarg<T>::predict(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
-        ASSERT(q_);
-
         numerical::set_block<0>(x_, Vector3(0));
 
         const std::array<Vector6, POINT_COUNT> sigma_points = sigma_points_.points(x_, p_);
         ASSERT(sigma_points[0] == x_);
 
-        propagated_quaternions_ = propagate_quaternions(*q_, sigma_points, w0, w1, dt);
+        propagated_quaternions_ = propagate_quaternions(q_, sigma_points, w0, w1, dt);
         propagated_points_ = propagate_points(sigma_points, propagated_quaternions_);
 
         const Matrix6 q = noise_covariance_matrix_6(w1 - to_bias(x_), variance_r, variance_w, dt);
@@ -176,8 +174,9 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-UkfMarg<T>::UkfMarg(const T variance_error, const T variance_bias)
+UkfMarg<T>::UkfMarg(const Quaternion<T>& q, const T variance_error, const T variance_bias)
         : sigma_points_(SIGMA_POINTS_PARAMETERS<T>),
+          q_(q),
           x_(0),
           p_(numerical::make_diagonal_matrix<6, T>(
                   {variance_error, variance_error, variance_error, variance_bias, variance_bias, variance_bias}))
@@ -187,21 +186,12 @@ UkfMarg<T>::UkfMarg(const T variance_error, const T variance_bias)
 template <typename T>
 void UkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T variance_r, const T variance_w, const T dt)
 {
-        if (q_)
-        {
-                predict(w0, w1, variance_r, variance_w, dt);
-        }
+        predict(w0, w1, variance_r, variance_w, dt);
 }
 
 template <typename T>
 bool UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
 {
-        if (!q_)
-        {
-                q_ = init_.update_acc_mag(a, m);
-                return q_.has_value();
-        }
-
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {
@@ -214,7 +204,7 @@ bool UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                 return false;
         }
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(*q_);
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         const auto& mag = mag_measurement(attitude, m / m_norm, m_variance);
         if (!mag)

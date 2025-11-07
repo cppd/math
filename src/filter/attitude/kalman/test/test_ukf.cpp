@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/init_imu.h>
+#include <src/filter/attitude/kalman/init_marg.h>
 #include <src/filter/attitude/kalman/quaternion.h>
 #include <src/filter/attitude/kalman/ukf_imu.h>
 #include <src/filter/attitude/kalman/ukf_marg.h>
@@ -41,17 +42,6 @@ void check_attitude(const numerical::Quaternion<T>& attitude)
         {
                 error("Attitude " + to_string(attitude) + " is not unit");
         }
-}
-
-template <typename T>
-void check_attitude(const std::optional<numerical::Quaternion<T>>& attitude)
-{
-        if (!attitude)
-        {
-                error("No attitude");
-        }
-
-        check_attitude(*attitude);
 }
 
 template <typename T>
@@ -114,32 +104,39 @@ void test_marg(const T precision)
         constexpr T VARIANCE_ACC = square(0.01);
         constexpr T VARIANCE_MAG = square(0.01);
 
-        UkfMarg<T> f(INIT_VARIANCE_ERROR, INIT_VARIANCE_BIAS);
-
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
+        const numerical::Vector<3, T> mag{15, -20, 25};
 
-        for (int i = 0; i < 1000; ++i)
+        std::optional<Quaternion<T>> init_q;
+        InitMarg<T> init_marg;
+        do
         {
-                f.update_acc_mag(axis * T{9.8}, {15, -20, 25}, VARIANCE_ACC, VARIANCE_MAG);
+                init_q = init_marg.update_acc_mag(axis * T{9.8}, mag);
+        } while (!init_q);
+
+        UkfMarg<T> f(*init_q, INIT_VARIANCE_ERROR, INIT_VARIANCE_BIAS);
+
+        for (int i = 9; i < 1000; ++i)
+        {
+                f.update_acc_mag(axis * T{9.8}, mag, VARIANCE_ACC, VARIANCE_MAG);
                 const T k = 1 + i / T{1000};
                 f.update_gyro(axis * T{0.010} * k, axis * T{0.015} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
                 f.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
-        const auto a = f.attitude();
+        const numerical::Quaternion<T> a = f.attitude();
 
         check_attitude(a);
-        ASSERT(a);
 
         test_equal(
-                *a,
+                a,
                 numerical::Quaternion<T>(
                         0.124463110594081722302L,
                         {0.192756008969864434804L, 0.242454332156917833161L, 0.942639884540007082128L}),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
                 {0.303045763364969783054L, 0.50507627226542319628L, 0.808122035648705001399L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};

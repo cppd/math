@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "init_marg.h"
 #include "quaternion.h"
 
 #include <src/filter/core/sigma_points.h>
@@ -27,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cstddef>
-#include <optional>
 #include <type_traits>
 
 namespace ns::filter::attitude::kalman
@@ -46,9 +44,7 @@ class UkfMarg final
 
         const core::SigmaPoints<6, T> sigma_points_;
 
-        InitMarg<T> init_;
-
-        std::optional<Quaternion<T>> q_;
+        Quaternion<T> q_;
         std::array<Vector6, POINT_COUNT> propagated_points_;
         std::array<Quaternion<T>, POINT_COUNT> propagated_quaternions_;
         Vector6 x_;
@@ -69,19 +65,15 @@ class UkfMarg final
         void update(const std::array<Update, N>& data);
 
 public:
-        UkfMarg(T variance_error, T variance_bias);
+        UkfMarg(const Quaternion<T>& q, T variance_error, T variance_bias);
 
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
         bool update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 
-        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
+        [[nodiscard]] numerical::Quaternion<T> attitude() const
         {
-                if (q_)
-                {
-                        return numerical::Quaternion<T>(*q_);
-                }
-                return std::nullopt;
+                return numerical::Quaternion<T>(q_);
         }
 
         [[nodiscard]] Vector3 bias() const
