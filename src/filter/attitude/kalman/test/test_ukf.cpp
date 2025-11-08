@@ -35,6 +35,8 @@ namespace ns::filter::attitude::kalman::test
 {
 namespace
 {
+constexpr unsigned INIT_COUNT{10};
+
 template <typename T>
 void check_attitude(const numerical::Quaternion<T>& attitude)
 {
@@ -59,7 +61,7 @@ void test_imu(const T precision)
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
 
         std::optional<Quaternion<T>> init_q;
-        InitImu<T> init_imu;
+        InitImu<T> init_imu(INIT_COUNT);
         do
         {
                 init_q = init_imu.update(axis * T{9.8});
@@ -108,7 +110,7 @@ void test_marg(const T precision)
         const numerical::Vector<3, T> mag{15, -20, 25};
 
         std::optional<Quaternion<T>> init_q;
-        InitMarg<T> init_marg;
+        InitMarg<T> init_marg(INIT_COUNT);
         do
         {
                 init_q = init_marg.update_acc_mag(axis * T{9.8}, mag);

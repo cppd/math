@@ -30,17 +30,20 @@ class InitMarg final
 {
         using Vector3 = numerical::Vector<3, T>;
 
-        Vector3 acc_data_;
+        const unsigned count_;
+
         unsigned acc_count_;
-        Vector3 mag_data_;
+        Vector3 acc_data_;
+
         unsigned mag_count_;
+        Vector3 mag_data_;
 
         void reset();
 
         std::optional<Quaternion<T>> init();
 
 public:
-        InitMarg();
+        explicit InitMarg(unsigned count);
 
         [[nodiscard]] std::optional<Quaternion<T>> update_acc(const Vector3& acc);
 

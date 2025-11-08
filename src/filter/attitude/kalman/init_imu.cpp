@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init_imu.h"
 
-#include "constant.h"
 #include "init_utility.h"
 #include "quaternion.h"
 
@@ -29,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::attitude::kalman
 {
 template <typename T>
-InitImu<T>::InitImu()
+InitImu<T>::InitImu(const unsigned count)
+        : count_(count)
 {
         reset();
 }
@@ -44,12 +44,12 @@ void InitImu<T>::reset()
 template <typename T>
 std::optional<Quaternion<T>> InitImu<T>::update(const Vector3& acc)
 {
-        ASSERT(acc_count_ < INIT_COUNT);
+        ASSERT(acc_count_ < count_);
 
         acc_data_ += acc;
         ++acc_count_;
 
-        if (acc_count_ < INIT_COUNT)
+        if (acc_count_ < count_)
         {
                 return std::nullopt;
         }

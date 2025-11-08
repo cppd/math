@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init_marg.h"
 
-#include "constant.h"
 #include "init_utility.h"
 #include "quaternion.h"
 
@@ -29,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::attitude::kalman
 {
 template <typename T>
-InitMarg<T>::InitMarg()
+InitMarg<T>::InitMarg(const unsigned count)
+        : count_(count)
 {
         reset();
 }
@@ -46,7 +46,7 @@ void InitMarg<T>::reset()
 template <typename T>
 std::optional<Quaternion<T>> InitMarg<T>::init()
 {
-        if (acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT)
+        if (acc_count_ < count_ || mag_count_ < count_)
         {
                 return std::nullopt;
         }
@@ -75,7 +75,7 @@ std::optional<Quaternion<T>> InitMarg<T>::init()
 template <typename T>
 std::optional<Quaternion<T>> InitMarg<T>::update_acc(const Vector3& acc)
 {
-        ASSERT(acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT);
+        ASSERT(acc_count_ < count_ || mag_count_ < count_);
 
         acc_data_ += acc;
         ++acc_count_;
@@ -86,7 +86,7 @@ std::optional<Quaternion<T>> InitMarg<T>::update_acc(const Vector3& acc)
 template <typename T>
 std::optional<Quaternion<T>> InitMarg<T>::update_mag(const Vector3& mag)
 {
-        ASSERT(acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT);
+        ASSERT(acc_count_ < count_ || mag_count_ < count_);
 
         mag_data_ += mag;
         ++mag_count_;
@@ -97,7 +97,7 @@ std::optional<Quaternion<T>> InitMarg<T>::update_mag(const Vector3& mag)
 template <typename T>
 std::optional<Quaternion<T>> InitMarg<T>::update_acc_mag(const Vector3& acc, const Vector3& mag)
 {
-        ASSERT(acc_count_ < INIT_COUNT || mag_count_ < INIT_COUNT);
+        ASSERT(acc_count_ < count_ || mag_count_ < count_);
 
         acc_data_ += acc;
         ++acc_count_;

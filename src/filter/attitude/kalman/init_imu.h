@@ -30,13 +30,15 @@ class InitImu final
 {
         using Vector3 = numerical::Vector<3, T>;
 
-        Vector3 acc_data_;
+        const unsigned count_;
+
         unsigned acc_count_;
+        Vector3 acc_data_;
 
         void reset();
 
 public:
-        InitImu();
+        explicit InitImu(unsigned count);
 
         [[nodiscard]] std::optional<Quaternion<T>> update(const Vector3& acc);
 };
