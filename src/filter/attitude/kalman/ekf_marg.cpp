@@ -90,8 +90,11 @@ void EkfMarg<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-EkfMarg<T>::EkfMarg(const Quaternion<T>& q)
-        : q_(q)
+EkfMarg<T>::EkfMarg(const Quaternion<T>& q, const T variance_error, const T variance_bias)
+        : q_(q),
+          b_(0),
+          p_(numerical::make_diagonal_matrix<6, T>(
+                  {variance_error, variance_error, variance_error, variance_bias, variance_bias, variance_bias}))
 {
 }
 

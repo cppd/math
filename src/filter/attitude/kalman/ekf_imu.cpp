@@ -81,8 +81,9 @@ void EkfImu<T>::update(const std::array<Update, N>& data)
 }
 
 template <typename T>
-EkfImu<T>::EkfImu(const Quaternion<T>& q)
-        : q_(q)
+EkfImu<T>::EkfImu(const Quaternion<T>& q, const T variance)
+        : q_(q),
+          p_(numerical::make_diagonal_matrix<3, T>({variance, variance, variance}))
 {
 }
 

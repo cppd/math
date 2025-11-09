@@ -49,6 +49,8 @@ void check_attitude(const numerical::Quaternion<T>& attitude)
 template <typename T>
 void test_imu(const T precision)
 {
+        constexpr T INIT_VARIANCE = square(0.1);
+
         constexpr T DT = 0.01L;
 
         constexpr T VARIANCE_GYRO = square(1e-4);
@@ -65,7 +67,7 @@ void test_imu(const T precision)
                 init_q = init_imu.update(axis * T{9.8});
         } while (!init_q);
 
-        EkfImu<T> f(*init_q);
+        EkfImu<T> f(*init_q, INIT_VARIANCE);
 
         for (int i = 0; i <= 90; ++i)
         {
@@ -81,18 +83,21 @@ void test_imu(const T precision)
         test_equal(
                 a,
                 numerical::Quaternion<T>(
-                        0.82822937784681067595L,
-                        {0.153083694947164173687L, -0.269266344945741933117L, -0.467008688883161158801L}),
+                        {0.153083694947164173673L, -0.269266344945741933252L, -0.467008688883161158909L},
+                        0.828229377846810675841L),
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
-                {0.303045763365663224317L, 0.505076272276105374566L, 0.808122035641768599534L}, precision);
+                {0.303045763365663224425L, 0.505076272276105374729L, 0.808122035641768599425L}, precision);
 }
 
 template <typename T>
 void test_marg_1(const T precision)
 {
+        constexpr T INIT_VARIANCE_ERROR = square(0.1);
+        constexpr T INIT_VARIANCE_BIAS = square(0.1);
+
         constexpr T DT = 0.01L;
 
         constexpr T VARIANCE_GYRO_R = square(1e-3);
@@ -115,7 +120,7 @@ void test_marg_1(const T precision)
                 init_q = init_marg.update_mag(mag);
         } while (!init_q);
 
-        EkfMarg<T> f(*init_q);
+        EkfMarg<T> f(*init_q, INIT_VARIANCE_ERROR, INIT_VARIANCE_BIAS);
 
         for (int i = 9; i < 1000; ++i)
         {
@@ -133,22 +138,25 @@ void test_marg_1(const T precision)
         test_equal(
                 a,
                 numerical::Quaternion<T>(
-                        0.124439467170343173159L,
-                        {0.192749927647793641811L, 0.242459166811415931201L, 0.942643006037410423055L}),
+                        {0.192749927644073040103L, 0.242459166814373731412L, 0.942643006039319980582L},
+                        0.124439467155878059218L),
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
-                {0.303045763365663224588L, 0.505076272276105374675L, 0.808122035641768599317L}, precision);
+                {0.303045763365663225157L, 0.505076272276105374729L, 0.8081220356417685991L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
 
-        test_equal(bias, {0.0246948027225495865531L, 0.0246948027225495872205L, 0.0246948027225495878202L}, precision);
+        test_equal(bias, {0.0246948026772886199882L, 0.0246948026772886125665L, 0.0246948026772886141183L}, precision);
 }
 
 template <typename T>
 void test_marg_2(const T precision)
 {
+        constexpr T INIT_VARIANCE_ERROR = square(0.1);
+        constexpr T INIT_VARIANCE_BIAS = square(0.1);
+
         constexpr T DT = 0.01L;
 
         constexpr T VARIANCE_GYRO_R = square(1e-3);
@@ -167,7 +175,7 @@ void test_marg_2(const T precision)
                 init_q = init_marg.update_acc_mag(axis * T{9.8}, mag);
         } while (!init_q);
 
-        EkfMarg<T> f(*init_q);
+        EkfMarg<T> f(*init_q, INIT_VARIANCE_ERROR, INIT_VARIANCE_BIAS);
 
         for (int i = 9; i < 1000; ++i)
         {
@@ -184,17 +192,17 @@ void test_marg_2(const T precision)
         test_equal(
                 a,
                 numerical::Quaternion<T>(
-                        0.124463110842182846114L,
-                        {0.192756009035205944175L, 0.242454332112122312624L, 0.942639884505408993628L}),
+                        {0.192756009035205943687L, 0.242454332112122312949L, 0.942639884505408993899L},
+                        0.124463110842182844271L),
                 precision);
 
         test_equal(
                 numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
-                {0.30304576336566322494L, 0.505076272276105374729L, 0.808122035641768599263L}, precision);
+                {0.303045763365663224967L, 0.50507627227610537462L, 0.808122035641768599263L}, precision);
 
         const numerical::Vector<3, T> bias{f.bias()[0] / axis[0], f.bias()[1] / axis[1], f.bias()[2] / axis[2]};
 
-        test_equal(bias, {0.0246334465758026264918L, 0.0246334465758026172981L, 0.0246334465758026190701L}, precision);
+        test_equal(bias, {0.024633446575802612387L, 0.0246334465758026084178L, 0.0246334465758026095529L}, precision);
 }
 
 template <typename T>
@@ -210,7 +218,7 @@ void test()
         LOG("Test attitude EKF");
         test_impl<float>(1e-4);
         test_impl<double>(1e-13);
-        test_impl<long double>(1e-17);
+        test_impl<long double>(0);
         LOG("Test attitude EKF passed");
 }
 

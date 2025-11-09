@@ -38,8 +38,8 @@ class EkfMarg final
         using Matrix6 = numerical::Matrix<6, 6, T>;
 
         Quaternion<T> q_;
-        Vector3 b_{0};
-        Matrix6 p_{numerical::ZERO_MATRIX};
+        Vector3 b_;
+        Matrix6 p_;
 
         void predict(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 
@@ -54,7 +54,7 @@ class EkfMarg final
         void update(const std::array<Update, N>& data);
 
 public:
-        explicit EkfMarg(const Quaternion<T>& q);
+        EkfMarg(const Quaternion<T>& q, T variance_error, T variance_bias);
 
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance_r, T variance_w, T dt);
 

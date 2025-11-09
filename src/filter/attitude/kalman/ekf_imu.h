@@ -36,7 +36,7 @@ class EkfImu final
         using Matrix3 = numerical::Matrix<3, 3, T>;
 
         Quaternion<T> q_;
-        Matrix3 p_{numerical::ZERO_MATRIX};
+        Matrix3 p_;
 
         void predict(const Vector3& w0, const Vector3& w1, T variance, T dt);
 
@@ -51,7 +51,7 @@ class EkfImu final
         void update(const std::array<Update, N>& data);
 
 public:
-        explicit EkfImu(const Quaternion<T>& q);
+        EkfImu(const Quaternion<T>& q, T variance);
 
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance, T dt);
 
