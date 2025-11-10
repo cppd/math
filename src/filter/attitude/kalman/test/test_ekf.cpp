@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/filter/attitude/kalman/ekf_imu.h>
 #include <src/filter/attitude/kalman/ekf_marg.h>
-#include <src/filter/attitude/kalman/init_imu.h>
+#include <src/filter/attitude/kalman/filter_imu.h>
 #include <src/filter/attitude/kalman/init_marg.h>
 #include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/quaternion.h>
@@ -60,23 +60,16 @@ void test_imu(const T precision)
 
         const numerical::Vector<3, T> axis = numerical::Vector<3, T>(3, 5, 8).normalized();
 
-        std::optional<Quaternion<T>> init_q;
-        InitImu<T> init_imu(INIT_COUNT);
-        do
-        {
-                init_q = init_imu.update(axis * T{9.8});
-        } while (!init_q);
+        FilterImu<T, EkfImu> filter(INIT_COUNT, INIT_VARIANCE);
 
-        EkfImu<T> f(*init_q, INIT_VARIANCE);
-
-        for (int i = 0; i <= 90; ++i)
+        for (int i = 0; i < 100; ++i)
         {
-                f.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
-                f.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE_GYRO, DT);
-                f.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE_GYRO, DT);
+                filter.update_acc(axis * T{9.8}, VARIANCE_ACC, VARIANCE_ACC_DIRECTION);
+                filter.update_gyro(axis * T{0.2}, axis * T{0.3}, VARIANCE_GYRO, DT);
+                filter.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE_GYRO, DT);
         }
 
-        const numerical::Quaternion<T> a = f.attitude();
+        const numerical::Quaternion<T> a = filter.attitude();
 
         check_attitude(a);
 
