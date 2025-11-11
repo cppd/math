@@ -55,7 +55,7 @@ public:
 
         void update_gyro(const Vector3& w0, const Vector3& w1, T variance, T dt);
 
-        bool update_acc(const Vector3& a, T variance, T variance_direction);
+        void update_acc(const Vector3& a, T variance, T variance_direction);
 
         [[nodiscard]] numerical::Quaternion<T> attitude() const
         {

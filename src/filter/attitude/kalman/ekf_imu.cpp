@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrices.h"
 #include "quaternion.h"
 
-#include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
@@ -94,19 +93,13 @@ void EkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varian
 }
 
 template <typename T>
-bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
+void EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
-        const T a_norm = a.norm();
-        if (!acc_suitable(a_norm))
-        {
-                return false;
-        }
-
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
-                       .measurement = a / a_norm,
+                       .measurement = a.normalized(),
                        .reference_local = attitude.column(2),
                        .variance = variance,
                        },
@@ -116,8 +109,6 @@ bool EkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
                        .variance = variance_direction,
                        }
         });
-
-        return true;
 }
 
 template class EkfImu<float>;

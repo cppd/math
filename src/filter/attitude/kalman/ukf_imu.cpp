@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ukf_utility.h"
 
 #include <src/com/error.h>
-#include <src/filter/attitude/limit.h>
 #include <src/filter/core/sigma_points.h>
 #include <src/filter/core/ukf_transform.h>
 #include <src/numerical/matrix.h>
@@ -171,17 +170,11 @@ void UkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varian
 }
 
 template <typename T>
-bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
+void UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
-        const T a_norm = a.norm();
-        if (!acc_suitable(a_norm))
-        {
-                return false;
-        }
-
         update(std::array{
                 Update{
-                       .measurement = a / a_norm,
+                       .measurement = a.normalized(),
                        .reference_global = {0, 0, 1},
                        .variance = variance,
                        },
@@ -191,8 +184,6 @@ bool UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_
                        .variance = variance_direction,
                        }
         });
-
-        return true;
 }
 
 template class UkfImu<float>;

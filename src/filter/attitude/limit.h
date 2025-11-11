@@ -17,15 +17,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/exponent.h>
+#include <src/numerical/vector.h>
+
 namespace ns::filter::attitude
 {
 template <typename T>
 [[nodiscard]] bool acc_suitable(const T acc)
 {
-        constexpr T ACCELERATION_MIN = 9.0; // m/s/s
-        constexpr T ACCELERATION_MAX = 10.6; // m/s/s
+        constexpr T ACCELERATION_MIN = 9.0; // m/(s*s)
+        constexpr T ACCELERATION_MAX = 10.6; // m/(s*s)
 
         return acc >= ACCELERATION_MIN && acc <= ACCELERATION_MAX;
+}
+
+template <typename T>
+[[nodiscard]] bool acc_suitable(const numerical::Vector<3, T>& acc)
+{
+        constexpr T ACCELERATION_MIN = 9.0; // m/(s*s)
+        constexpr T ACCELERATION_MAX = 10.6; // m/(s*s)
+
+        constexpr T A_MIN_2 = square(ACCELERATION_MIN);
+        constexpr T A_MAX_2 = square(ACCELERATION_MAX);
+
+        const T n2 = acc.norm_squared();
+
+        return n2 >= A_MIN_2 && n2 <= A_MAX_2;
 }
 
 template <typename T>

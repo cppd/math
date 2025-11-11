@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/filter/attitude/kalman/init_imu.h>
+#include <src/filter/attitude/limit.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
@@ -56,8 +57,13 @@ public:
                 filter_->update_gyro(w0, w1, variance, dt);
         }
 
-        bool update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
+        void update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
         {
+                if (!acc_suitable(a))
+                {
+                        return;
+                }
+
                 if (init_imu_)
                 {
                         ASSERT(!filter_);
@@ -67,11 +73,11 @@ public:
                                 init_imu_.reset();
                                 filter_.emplace(*init_q, init_variance_);
                         }
-                        return false;
+                        return;
                 }
 
                 ASSERT(filter_);
-                return filter_->update_acc(a, variance, variance_direction);
+                filter_->update_acc(a, variance, variance_direction);
         }
 
         [[nodiscard]] numerical::Quaternion<T> attitude() const
