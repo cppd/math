@@ -80,10 +80,13 @@ public:
                 filter_->update_acc(a, variance, variance_direction);
         }
 
-        [[nodiscard]] numerical::Quaternion<T> attitude() const
+        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
-                ASSERT(filter_);
-                return filter_->attitude();
+                if (filter_)
+                {
+                        return filter_->attitude();
+                }
+                return std::nullopt;
         }
 };
 }

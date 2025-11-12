@@ -44,6 +44,16 @@ void check_attitude(const numerical::Quaternion<T>& attitude)
 }
 
 template <typename T>
+void check_attitude(const std::optional<numerical::Quaternion<T>>& attitude)
+{
+        if (!attitude)
+        {
+                error("No attitude");
+        }
+        check_attitude(*attitude);
+}
+
+template <typename T>
 void test_imu(const T precision)
 {
         constexpr T INIT_VARIANCE = square(0.1);
@@ -66,19 +76,19 @@ void test_imu(const T precision)
                 filter.update_gyro(axis * T{0.3}, axis * T{0.2}, VARIANCE_GYRO, DT);
         }
 
-        const numerical::Quaternion<T> a = filter.attitude();
+        const auto a = filter.attitude();
 
         check_attitude(a);
 
         test_equal(
-                a,
+                *a,
                 numerical::Quaternion<T>(
                         {0.153107912344738161621L, -0.269255351726610421466L, -0.46693786244933079143L},
                         0.828268407797415102934L),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
                 {0.303047640302402107495L, 0.505079930334457345253L, 0.808119045488030572047L}, precision);
 }
 
