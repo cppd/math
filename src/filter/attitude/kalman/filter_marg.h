@@ -69,7 +69,7 @@ public:
                 filter_->update_gyro(w0, w1, variance_r, variance_w, dt);
         }
 
-        bool update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
+        void update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
         {
                 if (init_marg_)
                 {
@@ -79,14 +79,14 @@ public:
                         {
                                 init(*init_q);
                         }
-                        return false;
+                        return;
                 }
 
                 ASSERT(filter_);
-                return filter_->update_acc(a, variance, variance_direction);
+                filter_->update_acc(a, variance, variance_direction);
         }
 
-        bool update_mag(const numerical::Vector<3, T>& m, const T variance, const T variance_direction)
+        void update_mag(const numerical::Vector<3, T>& m, const T variance, const T variance_direction)
         {
                 if (init_marg_)
                 {
@@ -96,14 +96,14 @@ public:
                         {
                                 init(*init_q);
                         }
-                        return false;
+                        return;
                 }
 
                 ASSERT(filter_);
-                return filter_->update_mag(m, variance, variance_direction);
+                filter_->update_mag(m, variance, variance_direction);
         }
 
-        bool update_acc_mag(
+        void update_acc_mag(
                 const numerical::Vector<3, T>& a,
                 const numerical::Vector<3, T>& m,
                 const T a_variance,
@@ -117,23 +117,29 @@ public:
                         {
                                 init(*init_q);
                         }
-                        return false;
+                        return;
                 }
 
                 ASSERT(filter_);
-                return filter_->update_acc_mag(a, m, a_variance, m_variance);
+                filter_->update_acc_mag(a, m, a_variance, m_variance);
         }
 
-        [[nodiscard]] numerical::Quaternion<T> attitude() const
+        [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
         {
-                ASSERT(filter_);
-                return filter_->attitude();
+                if (filter_)
+                {
+                        return filter_->attitude();
+                }
+                return std::nullopt;
         }
 
-        [[nodiscard]] numerical::Vector<3, T> bias() const
+        [[nodiscard]] std::optional<numerical::Vector<3, T>> bias() const
         {
-                ASSERT(filter_);
-                return filter_->bias();
+                if (filter_)
+                {
+                        return filter_->bias();
+                }
+                return std::nullopt;
         }
 };
 }

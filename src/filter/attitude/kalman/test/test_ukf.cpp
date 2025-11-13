@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
+#include <optional>
+
 namespace ns::filter::attitude::kalman::test
 {
 namespace
@@ -51,6 +53,14 @@ void check_attitude(const std::optional<numerical::Quaternion<T>>& attitude)
                 error("No attitude");
         }
         check_attitude(*attitude);
+}
+
+void check_bias(const auto& bias)
+{
+        if (!bias)
+        {
+                error("No bias");
+        }
 }
 
 template <typename T>
@@ -77,8 +87,8 @@ void test_imu(const T precision)
         }
 
         const auto a = filter.attitude();
-
         check_attitude(a);
+        ASSERT(a);
 
         test_equal(
                 *a,
@@ -119,24 +129,26 @@ void test_marg(const T precision)
                 filter.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
-        const numerical::Quaternion<T> a = filter.attitude();
-
+        const auto a = filter.attitude();
         check_attitude(a);
+        ASSERT(a);
 
         test_equal(
-                a,
+                *a,
                 numerical::Quaternion<T>(
                         {0.192756008969864434791L, 0.242454332156917833161L, 0.942639884540007082128L},
                         0.124463110594081722268L),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
                 {0.303045763364969783054L, 0.505076272265423196226L, 0.808122035648705001399L}, precision);
 
-        const numerical::Vector<3, T> b = filter.bias();
+        const auto b = filter.bias();
+        check_bias(b);
+        ASSERT(b);
 
-        const numerical::Vector<3, T> bias{b[0] / axis[0], b[1] / axis[1], b[2] / axis[2]};
+        const numerical::Vector<3, T> bias{(*b)[0] / axis[0], (*b)[1] / axis[1], (*b)[2] / axis[2]};
 
         test_equal(bias, {0.0246333890965691297965L, 0.0246333879906535483539L, 0.0246333882931189850517L}, precision);
 }

@@ -105,12 +105,12 @@ void EkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varia
 }
 
 template <typename T>
-bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
+void EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {
-                return false;
+                return;
         }
 
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
@@ -127,17 +127,15 @@ bool EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
                        .variance = variance_direction,
                        }
         });
-
-        return true;
 }
 
 template <typename T>
-bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance_direction)
+void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance_direction)
 {
         const T m_norm = m.norm();
         if (!mag_suitable(m_norm))
         {
-                return false;
+                return;
         }
 
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
@@ -145,7 +143,7 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
         const auto& mag = mag_measurement(attitude, m / m_norm, variance);
         if (!mag)
         {
-                return false;
+                return;
         }
 
         update(std::array{
@@ -160,23 +158,21 @@ bool EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                        .variance = variance_direction,
                        }
         });
-
-        return true;
 }
 
 template <typename T>
-bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
+void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
 {
         const T a_norm = a.norm();
         if (!acc_suitable(a_norm))
         {
-                return false;
+                return;
         }
 
         const T m_norm = m.norm();
         if (!mag_suitable(m_norm))
         {
-                return false;
+                return;
         }
 
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
@@ -184,7 +180,7 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
         const auto& mag = mag_measurement(attitude, m / m_norm, m_variance);
         if (!mag)
         {
-                return false;
+                return;
         }
 
         update(std::array{
@@ -199,8 +195,6 @@ bool EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                        .variance = a_variance,
                        }
         });
-
-        return true;
 }
 
 template class EkfMarg<float>;

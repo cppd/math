@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
+#include <optional>
+
 namespace ns::filter::attitude::kalman::test
 {
 namespace
@@ -51,6 +53,14 @@ void check_attitude(const std::optional<numerical::Quaternion<T>>& attitude)
                 error("No attitude");
         }
         check_attitude(*attitude);
+}
+
+void check_bias(const auto& bias)
+{
+        if (!bias)
+        {
+                error("No bias");
+        }
 }
 
 template <typename T>
@@ -77,8 +87,8 @@ void test_imu(const T precision)
         }
 
         const auto a = filter.attitude();
-
         check_attitude(a);
+        ASSERT(a);
 
         test_equal(
                 *a,
@@ -123,23 +133,26 @@ void test_marg_1(const T precision)
                 filter.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
-        const numerical::Quaternion<T> a = filter.attitude();
-
+        const auto a = filter.attitude();
         check_attitude(a);
+        ASSERT(a);
 
         test_equal(
-                a,
+                *a,
                 numerical::Quaternion<T>(
                         {0.192749927644040618149L, 0.242459166814399506272L, 0.942643006039336620863L},
                         0.124439467155752007197L),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
                 {0.303045763365663225455L, 0.505076272276105374729L, 0.8081220356417685991L}, precision);
 
-        const numerical::Vector<3, T> bias{
-                filter.bias()[0] / axis[0], filter.bias()[1] / axis[1], filter.bias()[2] / axis[2]};
+        const auto b = filter.bias();
+        check_bias(b);
+        ASSERT(b);
+
+        const numerical::Vector<3, T> bias{(*b)[0] / axis[0], (*b)[1] / axis[1], (*b)[2] / axis[2]};
 
         test_equal(bias, {0.0246948026765289834482L, 0.0246948026765289776121L, 0.0246948026765289808359L}, precision);
 }
@@ -171,24 +184,26 @@ void test_marg_2(const T precision)
                 filter.update_gyro(axis * T{0.015} * k, axis * T{0.010} * k, VARIANCE_GYRO_R, VARIANCE_GYRO_W, DT);
         }
 
-        const numerical::Quaternion<T> a = filter.attitude();
-
+        const auto a = filter.attitude();
         check_attitude(a);
+        ASSERT(a);
 
         test_equal(
-                a,
+                *a,
                 numerical::Quaternion<T>(
                         {0.192756009035205943687L, 0.242454332112122312949L, 0.942639884505408993899L},
                         0.124463110842182844271L),
                 precision);
 
         test_equal(
-                numerical::rotate_vector(a.conjugate(), {0, 0, 1}),
+                numerical::rotate_vector(a->conjugate(), {0, 0, 1}),
                 {0.303045763365663224967L, 0.50507627227610537462L, 0.808122035641768599263L}, precision);
 
-        const numerical::Vector<3, T> b = filter.bias();
+        const auto b = filter.bias();
+        check_bias(b);
+        ASSERT(b);
 
-        const numerical::Vector<3, T> bias{b[0] / axis[0], b[1] / axis[1], b[2] / axis[2]};
+        const numerical::Vector<3, T> bias{(*b)[0] / axis[0], (*b)[1] / axis[1], (*b)[2] / axis[2]};
 
         test_equal(bias, {0.0246334465758026123311L, 0.0246334465758026084195L, 0.0246334465758026095325L}, precision);
 }
