@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/filter/attitude/kalman/init_marg.h>
 #include <src/filter/attitude/kalman/quaternion.h>
+#include <src/filter/attitude/limit.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
@@ -71,6 +72,11 @@ public:
 
         void update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
         {
+                if (!acc_suitable(a))
+                {
+                        return;
+                }
+
                 if (init_marg_)
                 {
                         ASSERT(!filter_);
@@ -88,6 +94,11 @@ public:
 
         void update_mag(const numerical::Vector<3, T>& m, const T variance, const T variance_direction)
         {
+                if (!mag_suitable(m))
+                {
+                        return;
+                }
+
                 if (init_marg_)
                 {
                         ASSERT(!filter_);
@@ -109,6 +120,16 @@ public:
                 const T a_variance,
                 const T m_variance)
         {
+                if (!acc_suitable(a))
+                {
+                        return;
+                }
+
+                if (!mag_suitable(m))
+                {
+                        return;
+                }
+
                 if (init_marg_)
                 {
                         ASSERT(!filter_);

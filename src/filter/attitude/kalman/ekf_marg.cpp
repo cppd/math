@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "measurement.h"
 #include "quaternion.h"
 
-#include <src/filter/attitude/limit.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
@@ -107,17 +106,11 @@ void EkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varia
 template <typename T>
 void EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
 {
-        const T a_norm = a.norm();
-        if (!acc_suitable(a_norm))
-        {
-                return;
-        }
-
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
-                       .measurement = a / a_norm,
+                       .measurement = a.normalized(),
                        .reference_local = attitude.column(2),
                        .variance = variance,
                        },
@@ -132,15 +125,9 @@ void EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance
 template <typename T>
 void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance_direction)
 {
-        const T m_norm = m.norm();
-        if (!mag_suitable(m_norm))
-        {
-                return;
-        }
-
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const auto& mag = mag_measurement(attitude, m / m_norm, variance);
+        const auto& mag = mag_measurement(attitude, m.normalized(), variance);
         if (!mag)
         {
                 return;
@@ -163,21 +150,9 @@ void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
 template <typename T>
 void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
 {
-        const T a_norm = a.norm();
-        if (!acc_suitable(a_norm))
-        {
-                return;
-        }
-
-        const T m_norm = m.norm();
-        if (!mag_suitable(m_norm))
-        {
-                return;
-        }
-
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const auto& mag = mag_measurement(attitude, m / m_norm, m_variance);
+        const auto& mag = mag_measurement(attitude, m.normalized(), m_variance);
         if (!mag)
         {
                 return;
@@ -190,7 +165,7 @@ void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                        .variance = mag->variance,
                        },
                 Update{
-                       .measurement = a / a_norm,
+                       .measurement = a.normalized(),
                        .reference_local = attitude.column(2),
                        .variance = a_variance,
                        }

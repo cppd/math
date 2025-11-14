@@ -53,4 +53,18 @@ template <typename T>
 
         return mag >= MAGNETIC_FIELD_MIN && mag <= MAGNETIC_FIELD_MAX;
 }
+
+template <typename T>
+[[nodiscard]] bool mag_suitable(const numerical::Vector<3, T>& mag)
+{
+        constexpr T MAGNETIC_FIELD_MIN = 10; // uT
+        constexpr T MAGNETIC_FIELD_MAX = 90; // uT
+
+        constexpr T M_MIN_2 = square(MAGNETIC_FIELD_MIN);
+        constexpr T M_MAX_2 = square(MAGNETIC_FIELD_MAX);
+
+        const T n2 = mag.norm_squared();
+
+        return n2 >= M_MIN_2 && n2 <= M_MAX_2;
+}
 }
