@@ -22,49 +22,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude
 {
+namespace limit_implementation
+{
+template <typename T>
+inline constexpr T ACCELERATION_MIN = 9.0; // m/(s*s)
+
+template <typename T>
+inline constexpr T ACCELERATION_MAX = 10.6; // m/(s*s)
+
+template <typename T>
+inline constexpr T MAGNETIC_FIELD_MIN = 10; // uT
+
+template <typename T>
+inline constexpr T MAGNETIC_FIELD_MAX = 90; // uT
+}
+
 template <typename T>
 [[nodiscard]] bool acc_suitable(const T acc)
 {
-        constexpr T ACCELERATION_MIN = 9.0; // m/(s*s)
-        constexpr T ACCELERATION_MAX = 10.6; // m/(s*s)
+        namespace impl = limit_implementation;
 
-        return acc >= ACCELERATION_MIN && acc <= ACCELERATION_MAX;
+        return acc >= impl::ACCELERATION_MIN<T> && acc <= impl::ACCELERATION_MAX<T>;
 }
 
 template <typename T>
 [[nodiscard]] bool acc_suitable(const numerical::Vector<3, T>& acc)
 {
-        constexpr T ACCELERATION_MIN = 9.0; // m/(s*s)
-        constexpr T ACCELERATION_MAX = 10.6; // m/(s*s)
+        namespace impl = limit_implementation;
 
-        constexpr T A_MIN_2 = square(ACCELERATION_MIN);
-        constexpr T A_MAX_2 = square(ACCELERATION_MAX);
+        constexpr T MIN_2 = square(impl::ACCELERATION_MIN<T>);
+        constexpr T MAX_2 = square(impl::ACCELERATION_MAX<T>);
 
         const T n2 = acc.norm_squared();
 
-        return n2 >= A_MIN_2 && n2 <= A_MAX_2;
+        return n2 >= MIN_2 && n2 <= MAX_2;
 }
 
 template <typename T>
 [[nodiscard]] bool mag_suitable(const T mag)
 {
-        constexpr T MAGNETIC_FIELD_MIN = 10; // uT
-        constexpr T MAGNETIC_FIELD_MAX = 90; // uT
+        namespace impl = limit_implementation;
 
-        return mag >= MAGNETIC_FIELD_MIN && mag <= MAGNETIC_FIELD_MAX;
+        return mag >= impl::MAGNETIC_FIELD_MIN<T> && mag <= impl::MAGNETIC_FIELD_MAX<T>;
 }
 
 template <typename T>
 [[nodiscard]] bool mag_suitable(const numerical::Vector<3, T>& mag)
 {
-        constexpr T MAGNETIC_FIELD_MIN = 10; // uT
-        constexpr T MAGNETIC_FIELD_MAX = 90; // uT
+        namespace impl = limit_implementation;
 
-        constexpr T M_MIN_2 = square(MAGNETIC_FIELD_MIN);
-        constexpr T M_MAX_2 = square(MAGNETIC_FIELD_MAX);
+        constexpr T MIN_2 = square(impl::MAGNETIC_FIELD_MIN<T>);
+        constexpr T MAX_2 = square(impl::MAGNETIC_FIELD_MAX<T>);
 
         const T n2 = mag.norm_squared();
 
-        return n2 >= M_MIN_2 && n2 <= M_MAX_2;
+        return n2 >= MIN_2 && n2 <= MAX_2;
 }
 }
