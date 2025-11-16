@@ -33,7 +33,7 @@ class MadgwickMarg final
         Vector3 wb_{0, 0, 0};
 
 public:
-        bool update(const Vector3& w, const Vector3& a, const Vector3& m, T beta, T zeta, T dt);
+        void update(const Vector3& w, const Vector3& a, const Vector3& m, T beta, T zeta, T dt);
 
         [[nodiscard]] const numerical::Quaternion<T>& attitude() const
         {

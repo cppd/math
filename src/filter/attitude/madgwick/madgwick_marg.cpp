@@ -32,7 +32,7 @@ and inertial/magnetic sensor arrays.
 namespace ns::filter::attitude::madgwick
 {
 template <typename T>
-bool MadgwickMarg<
+void MadgwickMarg<
         T>::update(const Vector3& w, const Vector3& a, const Vector3& m, const T beta, const T zeta, const T dt)
 {
         const T a_norm = a.norm();
@@ -42,7 +42,7 @@ bool MadgwickMarg<
                 const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
                 // (13)
                 q_ = (q_ + d * dt).normalized();
-                return false;
+                return;
         }
 
         const Vector3 an = a / a_norm;
@@ -55,7 +55,7 @@ bool MadgwickMarg<
                 const numerical::Quaternion<T> gn = compute_gn(q_, an);
                 // (42) (43) (44)
                 q_ = (q_ + (d - beta * gn) * dt).normalized();
-                return false;
+                return;
         }
 
         const Vector3 mn = m / m_norm;
@@ -76,8 +76,6 @@ bool MadgwickMarg<
         const Vector3 h = numerical::rotate_vector(q_, mn);
         b_x_ = std::sqrt(h[0] * h[0] + h[1] * h[1]);
         b_z_ = h[2];
-
-        return true;
 }
 
 template class MadgwickMarg<float>;
