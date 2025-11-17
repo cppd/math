@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
-#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <optional>
@@ -30,15 +29,12 @@ namespace ns::filter::attitude::kalman
 {
 template <typename T>
 std::optional<MagMeasurement<T>> mag_measurement(
-        const numerical::Matrix<3, 3, T>& attitude,
+        const numerical::Vector<3, T>& z_unit,
         const numerical::Vector<3, T>& m_unit,
         const T variance)
 {
-        ASSERT(m_unit.is_unit());
-
-        // attitude * Vector(0, 0, 1)
-        const numerical::Vector<3, T> z_unit = attitude.column(2);
         ASSERT(z_unit.is_unit());
+        ASSERT(m_unit.is_unit());
 
         const numerical::Vector<3, T> x = cross(m_unit, z_unit);
 
@@ -56,7 +52,7 @@ std::optional<MagMeasurement<T>> mag_measurement(
 
 #define TEMPLATE(T)                                                \
         template std::optional<MagMeasurement<T>> mag_measurement( \
-                const numerical::Matrix<3, 3, T>&, const numerical::Vector<3, T>&, T);
+                const numerical::Vector<3, T>&, const numerical::Vector<3, T>&, T);
 
 TEMPLATE(float)
 TEMPLATE(double)

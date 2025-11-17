@@ -127,7 +127,9 @@ void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
 {
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const auto& mag = mag_measurement(attitude, m.normalized(), variance);
+        const numerical::Vector<3, T> z_local = attitude.column(2);
+
+        const auto& mag = mag_measurement(z_local, m.normalized(), variance);
         if (!mag)
         {
                 return;
@@ -141,7 +143,7 @@ void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
                        },
                 Update{
                        .measurement = std::nullopt,
-                       .reference_local = attitude.column(2),
+                       .reference_local = z_local,
                        .variance = variance_direction,
                        }
         });
@@ -152,7 +154,9 @@ void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
 {
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const auto& mag = mag_measurement(attitude, m.normalized(), m_variance);
+        const numerical::Vector<3, T> z_local = attitude.column(2);
+
+        const auto& mag = mag_measurement(z_local, m.normalized(), m_variance);
         if (!mag)
         {
                 return;
@@ -166,7 +170,7 @@ void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                        },
                 Update{
                        .measurement = a.normalized(),
-                       .reference_local = attitude.column(2),
+                       .reference_local = z_local,
                        .variance = a_variance,
                        }
         });

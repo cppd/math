@@ -193,7 +193,7 @@ void UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
 {
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const auto& mag = mag_measurement(attitude, m.normalized(), m_variance);
+        const auto& mag = mag_measurement(attitude.column(2), m.normalized(), m_variance);
         if (!mag)
         {
                 return;
