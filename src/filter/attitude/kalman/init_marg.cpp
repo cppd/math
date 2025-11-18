@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init_marg.h"
 
+#include "constant.h"
 #include "init_utility.h"
 #include "quaternion.h"
 
@@ -69,7 +70,18 @@ std::optional<Quaternion<T>> InitMarg<T>::init()
                 return std::nullopt;
         }
 
-        return initial_quaternion(a_avg / a_avg_norm, m_avg / m_avg_norm);
+        const Vector3 a_normalized = a_avg / a_avg_norm;
+        const Vector3 m_normalized = m_avg / m_avg_norm;
+
+        const T cos = dot(a_normalized, m_normalized);
+
+        if (!(cos < MAX_COS_Z_MAG<T>))
+        {
+                reset();
+                return std::nullopt;
+        }
+
+        return initial_quaternion(a_normalized, m_normalized);
 }
 
 template <typename T>
