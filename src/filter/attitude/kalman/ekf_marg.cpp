@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ekf_utility.h"
 #include "integrator.h"
 #include "matrices.h"
-#include "measurement.h"
 #include "quaternion.h"
 
 #include <src/numerical/matrix.h>
@@ -127,23 +126,15 @@ void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance
 {
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const numerical::Vector<3, T> z_local = attitude.column(2);
-
-        const auto& mag = mag_measurement(z_local, m.normalized(), variance);
-        if (!mag)
-        {
-                return;
-        }
-
         update(std::array{
                 Update{
-                       .measurement = mag->y,
+                       .measurement = m.normalized(),
                        .reference_local = attitude.column(1),
-                       .variance = mag->variance,
+                       .variance = variance,
                        },
                 Update{
                        .measurement = std::nullopt,
-                       .reference_local = z_local,
+                       .reference_local = attitude.column(2),
                        .variance = variance_direction,
                        }
         });
@@ -154,26 +145,26 @@ void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
 {
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
-        const numerical::Vector<3, T> z_local = attitude.column(2);
-
-        const auto& mag = mag_measurement(z_local, m.normalized(), m_variance);
-        if (!mag)
-        {
-                return;
-        }
-
         update(std::array{
                 Update{
-                       .measurement = mag->y,
+                       .measurement = m.normalized(),
                        .reference_local = attitude.column(1),
-                       .variance = mag->variance,
+                       .variance = m_variance,
                        },
                 Update{
                        .measurement = a.normalized(),
-                       .reference_local = z_local,
+                       .reference_local = attitude.column(2),
                        .variance = a_variance,
                        }
         });
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> EkfMarg<T>::z_local() const
+{
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+
+        return attitude.column(2);
 }
 
 template class EkfMarg<float>;

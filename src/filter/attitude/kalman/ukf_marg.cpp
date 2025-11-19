@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "integrator.h"
 #include "matrices.h"
-#include "measurement.h"
 #include "quaternion.h"
 #include "ukf_utility.h"
 
@@ -191,19 +190,11 @@ void UkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varia
 template <typename T>
 void UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
 {
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
-
-        const auto& mag = mag_measurement(attitude.column(2), m.normalized(), m_variance);
-        if (!mag)
-        {
-                return;
-        }
-
         update(std::array{
                 Update{
-                       .measurement = mag->y,
+                       .measurement = m.normalized(),
                        .reference_global = {0, 1, 0},
-                       .variance = mag->variance,
+                       .variance = m_variance,
                        },
                 Update{
                        .measurement = a.normalized(),
@@ -211,6 +202,14 @@ void UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_va
                        .variance = a_variance,
                        }
         });
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<3, T> UkfMarg<T>::z_local() const
+{
+        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+
+        return attitude.column(2);
 }
 
 template class UkfMarg<float>;

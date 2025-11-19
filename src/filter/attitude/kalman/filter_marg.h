@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "measurement.h"
+
 #include <src/com/error.h>
 #include <src/filter/attitude/kalman/init_marg.h>
 #include <src/filter/attitude/kalman/quaternion.h>
@@ -111,7 +113,14 @@ public:
                 }
 
                 ASSERT(filter_);
-                filter_->update_mag(m, variance, variance_direction);
+
+                const auto mag = mag_measurement(filter_->z_local(), m.normalized(), variance);
+                if (!mag)
+                {
+                        return;
+                }
+
+                filter_->update_mag(mag->y, mag->variance, variance_direction);
         }
 
         void update_acc_mag(
@@ -142,7 +151,14 @@ public:
                 }
 
                 ASSERT(filter_);
-                filter_->update_acc_mag(a, m, a_variance, m_variance);
+
+                const auto mag = mag_measurement(filter_->z_local(), m.normalized(), m_variance);
+                if (!mag)
+                {
+                        return;
+                }
+
+                filter_->update_acc_mag(a, mag->y, a_variance, mag->variance);
         }
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const

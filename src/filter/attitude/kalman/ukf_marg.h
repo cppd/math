@@ -71,6 +71,8 @@ public:
 
         void update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
 
+        [[nodiscard]] Vector3 z_local() const;
+
         [[nodiscard]] numerical::Quaternion<T> attitude() const
         {
                 return numerical::Quaternion<T>(q_);
