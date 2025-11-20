@@ -170,18 +170,20 @@ void UkfImu<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varian
 }
 
 template <typename T>
-void UkfImu<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
+void UkfImu<T>::update_z(const Vector3& z, const T z_variance, const T y_variance)
 {
+        ASSERT(z.is_unit());
+
         update(std::array{
                 Update{
-                       .measurement = a.normalized(),
+                       .measurement = z,
                        .reference_global = {0, 0, 1},
-                       .variance = variance,
+                       .variance = z_variance,
                        },
                 Update{
                        .measurement = std::nullopt,
                        .reference_global = {0, 1, 0},
-                       .variance = variance_direction,
+                       .variance = y_variance,
                        }
         });
 }

@@ -57,9 +57,11 @@ public:
                 filter_->update_gyro(w0, w1, variance, dt);
         }
 
-        void update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
+        void update_acc(const numerical::Vector<3, T>& a, const T a_variance, const T y_variance)
         {
-                if (!acc_suitable(a))
+                const T a_norm = a.norm();
+
+                if (!acc_suitable(a_norm))
                 {
                         return;
                 }
@@ -77,7 +79,7 @@ public:
                 }
 
                 ASSERT(filter_);
-                filter_->update_acc(a, variance, variance_direction);
+                filter_->update_z(a / a_norm, a_variance, y_variance);
         }
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const
