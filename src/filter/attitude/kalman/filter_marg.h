@@ -72,9 +72,11 @@ public:
                 filter_->update_gyro(w0, w1, variance_r, variance_w, dt);
         }
 
-        void update_acc(const numerical::Vector<3, T>& a, const T variance, const T variance_direction)
+        void update_acc(const numerical::Vector<3, T>& acc, const T acc_variance, const T y_variance)
         {
-                if (!acc_suitable(a))
+                const T acc_norm = acc.norm();
+
+                if (!acc_suitable(acc_norm))
                 {
                         return;
                 }
@@ -82,7 +84,7 @@ public:
                 if (init_marg_)
                 {
                         ASSERT(!filter_);
-                        const auto init_q = init_marg_->update_acc(a);
+                        const auto init_q = init_marg_->update_acc(acc);
                         if (init_q)
                         {
                                 init(*init_q);
@@ -91,12 +93,14 @@ public:
                 }
 
                 ASSERT(filter_);
-                filter_->update_acc(a, variance, variance_direction);
+                filter_->update_z(acc / acc_norm, acc_variance, y_variance);
         }
 
-        void update_mag(const numerical::Vector<3, T>& m, const T variance, const T variance_direction)
+        void update_mag(const numerical::Vector<3, T>& mag, const T mag_variance, const T z_variance)
         {
-                if (!mag_suitable(m))
+                const T mag_norm = mag.norm();
+
+                if (!mag_suitable(mag_norm))
                 {
                         return;
                 }
@@ -104,7 +108,7 @@ public:
                 if (init_marg_)
                 {
                         ASSERT(!filter_);
-                        const auto init_q = init_marg_->update_mag(m);
+                        const auto init_q = init_marg_->update_mag(mag);
                         if (init_q)
                         {
                                 init(*init_q);
@@ -114,13 +118,13 @@ public:
 
                 ASSERT(filter_);
 
-                const auto mag = mag_measurement(filter_->z_local(), m.normalized(), variance);
-                if (!mag)
+                const auto m = mag_measurement(filter_->z_local(), mag / mag_norm, mag_variance);
+                if (!m)
                 {
                         return;
                 }
 
-                filter_->update_mag(mag->y, mag->variance, variance_direction);
+                filter_->update_y(m->y, m->variance, z_variance);
         }
 
         void update_acc_mag(

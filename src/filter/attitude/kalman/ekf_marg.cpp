@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrices.h"
 #include "quaternion.h"
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/rotation.h>
 #include <src/numerical/vector.h>
@@ -103,39 +104,43 @@ void EkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varia
 }
 
 template <typename T>
-void EkfMarg<T>::update_acc(const Vector3& a, const T variance, const T variance_direction)
+void EkfMarg<T>::update_z(const Vector3& z, const T z_variance, const T y_variance)
 {
+        ASSERT(z.is_unit());
+
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
-                       .measurement = a.normalized(),
+                       .measurement = z,
                        .reference_local = attitude.column(2),
-                       .variance = variance,
+                       .variance = z_variance,
                        },
                 Update{
                        .measurement = std::nullopt,
                        .reference_local = attitude.column(1),
-                       .variance = variance_direction,
+                       .variance = y_variance,
                        }
         });
 }
 
 template <typename T>
-void EkfMarg<T>::update_mag(const Vector3& m, const T variance, const T variance_direction)
+void EkfMarg<T>::update_y(const Vector3& y, const T y_variance, const T z_variance)
 {
+        ASSERT(y.is_unit());
+
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
-                       .measurement = m.normalized(),
+                       .measurement = y,
                        .reference_local = attitude.column(1),
-                       .variance = variance,
+                       .variance = y_variance,
                        },
                 Update{
                        .measurement = std::nullopt,
                        .reference_local = attitude.column(2),
-                       .variance = variance_direction,
+                       .variance = z_variance,
                        }
         });
 }
