@@ -62,7 +62,7 @@ public:
 
         void update_y(const Vector3& y, T y_variance, T z_variance);
 
-        void update_acc_mag(const Vector3& a, const Vector3& m, T a_variance, T m_variance);
+        void update_z_y(const Vector3& z, const Vector3& y, T z_variance, T y_variance);
 
         [[nodiscard]] Vector3 z_local() const;
 

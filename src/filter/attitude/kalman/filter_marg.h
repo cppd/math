@@ -128,17 +128,21 @@ public:
         }
 
         void update_acc_mag(
-                const numerical::Vector<3, T>& a,
-                const numerical::Vector<3, T>& m,
-                const T a_variance,
-                const T m_variance)
+                const numerical::Vector<3, T>& acc,
+                const numerical::Vector<3, T>& mag,
+                const T acc_variance,
+                const T mag_variance)
         {
-                if (!acc_suitable(a))
+                const T acc_norm = acc.norm();
+
+                if (!acc_suitable(acc_norm))
                 {
                         return;
                 }
 
-                if (!mag_suitable(m))
+                const T mag_norm = mag.norm();
+
+                if (!mag_suitable(mag_norm))
                 {
                         return;
                 }
@@ -146,7 +150,7 @@ public:
                 if (init_marg_)
                 {
                         ASSERT(!filter_);
-                        const auto init_q = init_marg_->update_acc_mag(a, m);
+                        const auto init_q = init_marg_->update_acc_mag(acc, mag);
                         if (init_q)
                         {
                                 init(*init_q);
@@ -156,13 +160,13 @@ public:
 
                 ASSERT(filter_);
 
-                const auto mag = mag_measurement(filter_->z_local(), m.normalized(), m_variance);
-                if (!mag)
+                const auto m = mag_measurement(filter_->z_local(), mag / mag_norm, mag_variance);
+                if (!m)
                 {
                         return;
                 }
 
-                filter_->update_acc_mag(a, mag->y, a_variance, mag->variance);
+                filter_->update_z_y(acc / acc_norm, m->y, acc_variance, m->variance);
         }
 
         [[nodiscard]] std::optional<numerical::Quaternion<T>> attitude() const

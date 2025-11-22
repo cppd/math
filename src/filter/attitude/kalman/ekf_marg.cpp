@@ -146,20 +146,23 @@ void EkfMarg<T>::update_y(const Vector3& y, const T y_variance, const T z_varian
 }
 
 template <typename T>
-void EkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
+void EkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_variance, const T y_variance)
 {
+        ASSERT(z.is_unit());
+        ASSERT(y.is_unit());
+
         const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
-                       .measurement = m.normalized(),
+                       .measurement = y.normalized(),
                        .reference_local = attitude.column(1),
-                       .variance = m_variance,
+                       .variance = y_variance,
                        },
                 Update{
-                       .measurement = a.normalized(),
+                       .measurement = z.normalized(),
                        .reference_local = attitude.column(2),
-                       .variance = a_variance,
+                       .variance = z_variance,
                        }
         });
 }

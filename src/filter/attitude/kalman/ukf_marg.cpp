@@ -188,18 +188,21 @@ void UkfMarg<T>::update_gyro(const Vector3& w0, const Vector3& w1, const T varia
 }
 
 template <typename T>
-void UkfMarg<T>::update_acc_mag(const Vector3& a, const Vector3& m, const T a_variance, const T m_variance)
+void UkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_variance, const T y_variance)
 {
+        ASSERT(z.is_unit());
+        ASSERT(y.is_unit());
+
         update(std::array{
                 Update{
-                       .measurement = m.normalized(),
+                       .measurement = y.normalized(),
                        .reference_global = {0, 1, 0},
-                       .variance = m_variance,
+                       .variance = y_variance,
                        },
                 Update{
-                       .measurement = a.normalized(),
+                       .measurement = z.normalized(),
                        .reference_global = {0, 0, 1},
-                       .variance = a_variance,
+                       .variance = z_variance,
                        }
         });
 }
