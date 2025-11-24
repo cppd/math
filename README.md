@@ -56,6 +56,15 @@ Discrete Fourier transform for arbitrary sizes | Bluestein's algorithm and radix
 Optical flow                                   | Pyramidal Lucas-Kanade
 Convex hull                                    | Divide et impera
 
+### 3-space
+
+C++
+
+Subject             | Algorithms
+--------------------|-----------------------------------------------------------------------------------------------
+Attitude estimation | The extended Kalman filter (EKF)<br/>The unscented Kalman filter (UKF)<br/>The Madgwick filter
+
+
 ### Spaces with arbitrary number of dimensions
 
 C++
@@ -75,6 +84,7 @@ Ray intersection acceleration using object subdivision  | Bounding volume hierar
 Eigenvalues and eigenvectors of symmetric matrices      | Jacobi method
 Least squares fitting a plane to points                 | Principal component analysis
 State estimation                                        | The Kalman filter<br/>The extended Kalman filter (EKF)<br/>The unscented Kalman filter (UKF)<br/>The H<sub>∞</sub> filter<br/>The information filter
+
 
 ## Technical details
 
