@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/filter/core/sigma_points.h>
 #include <src/numerical/matrix.h>
-#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
 #include <array>
@@ -71,9 +70,9 @@ public:
 
         void update_z(const Vector3& z, T z_variance, T y_variance);
 
-        [[nodiscard]] numerical::Quaternion<T> attitude() const
+        [[nodiscard]] const Quaternion<T>& attitude() const
         {
-                return numerical::Quaternion<T>(q_);
+                return q_;
         }
 };
 }
