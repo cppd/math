@@ -12,6 +12,7 @@ Just for fun with mathematics and stuff
   * [CPU](#cpu)
 * [Algorithms](#algorithms)
   * [2-space](#2-space)
+  * [3-space](#3-space)
   * [Spaces with arbitrary number of dimensions](#spaces-with-arbitrary-number-of-dimensions)
 * [Technical details](#technical-details)
 * [Images](#images)
@@ -84,7 +85,6 @@ Ray intersection acceleration using object subdivision  | Bounding volume hierar
 Eigenvalues and eigenvectors of symmetric matrices      | Jacobi method
 Least squares fitting a plane to points                 | Principal component analysis
 State estimation                                        | The Kalman filter<br/>The extended Kalman filter (EKF)<br/>The unscented Kalman filter (UKF)<br/>The H<sub>∞</sub> filter<br/>The information filter
-
 
 ## Technical details
 
