@@ -28,6 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::attitude::kalman
 {
+namespace
+{
+template <typename T>
+constexpr T MAX_COS_Z_MAG_SQUARED = 1 - square(MIN_SIN_Z_MAG<T>);
+}
+
 template <typename T>
 InitMarg<T>::InitMarg(const unsigned count)
         : count_(count)
@@ -75,7 +81,7 @@ std::optional<Quaternion<T>> InitMarg<T>::init()
 
         const T cos = dot(a_normalized, m_normalized);
 
-        if (!(cos < MAX_COS_Z_MAG<T>))
+        if (!(square(cos) < MAX_COS_Z_MAG_SQUARED<T>))
         {
                 reset();
                 return std::nullopt;
