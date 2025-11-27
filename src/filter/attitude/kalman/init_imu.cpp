@@ -42,6 +42,26 @@ void InitImu<T>::reset()
 }
 
 template <typename T>
+std::optional<Quaternion<T>> InitImu<T>::init()
+{
+        if (acc_count_ < count_)
+        {
+                return std::nullopt;
+        }
+
+        const Vector3 acc = acc_data_ / T(acc_count_);
+        const T acc_norm = acc.norm();
+
+        if (!acc_suitable(acc_norm))
+        {
+                reset();
+                return std::nullopt;
+        }
+
+        return initial_quaternion(acc / acc_norm);
+}
+
+template <typename T>
 std::optional<Quaternion<T>> InitImu<T>::update(const Vector3& acc)
 {
         ASSERT(acc_count_ < count_);
@@ -49,21 +69,7 @@ std::optional<Quaternion<T>> InitImu<T>::update(const Vector3& acc)
         acc_data_ += acc;
         ++acc_count_;
 
-        if (acc_count_ < count_)
-        {
-                return std::nullopt;
-        }
-
-        const Vector3 a_avg = acc_data_ / T(acc_count_);
-        const T a_avg_norm = a_avg.norm();
-
-        if (!acc_suitable(a_avg_norm))
-        {
-                reset();
-                return std::nullopt;
-        }
-
-        return initial_quaternion(a_avg / a_avg_norm);
+        return init();
 }
 
 template class InitImu<float>;

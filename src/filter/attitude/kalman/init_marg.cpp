@@ -46,6 +46,7 @@ void InitMarg<T>::reset()
 {
         acc_data_ = Vector3(0);
         acc_count_ = 0;
+
         mag_data_ = Vector3(0);
         mag_count_ = 0;
 }
@@ -58,36 +59,34 @@ std::optional<Quaternion<T>> InitMarg<T>::init()
                 return std::nullopt;
         }
 
-        const Vector3 a_avg = acc_data_ / T(acc_count_);
-        const T a_avg_norm = a_avg.norm();
+        const Vector3 acc = acc_data_ / T(acc_count_);
+        const T acc_norm = acc.norm();
 
-        if (!acc_suitable(a_avg_norm))
+        if (!acc_suitable(acc_norm))
         {
                 reset();
                 return std::nullopt;
         }
 
-        const Vector3 m_avg = mag_data_ / T(mag_count_);
-        const T m_avg_norm = m_avg.norm();
+        const Vector3 mag = mag_data_ / T(mag_count_);
+        const T mag_norm = mag.norm();
 
-        if (!mag_suitable(m_avg_norm))
+        if (!mag_suitable(mag_norm))
         {
                 reset();
                 return std::nullopt;
         }
 
-        const Vector3 a_normalized = a_avg / a_avg_norm;
-        const Vector3 m_normalized = m_avg / m_avg_norm;
+        const Vector3 a = acc / acc_norm;
+        const Vector3 m = mag / mag_norm;
 
-        const T cos = dot(a_normalized, m_normalized);
-
-        if (!(square(cos) < MAX_COS_Z_MAG_SQUARED<T>))
+        if (!(square(dot(a, m)) < MAX_COS_Z_MAG_SQUARED<T>))
         {
                 reset();
                 return std::nullopt;
         }
 
-        return initial_quaternion(a_normalized, m_normalized);
+        return initial_quaternion(a, m);
 }
 
 template <typename T>

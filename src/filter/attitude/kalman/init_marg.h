@@ -40,7 +40,7 @@ class InitMarg final
 
         void reset();
 
-        std::optional<Quaternion<T>> init();
+        [[nodiscard]] std::optional<Quaternion<T>> init();
 
 public:
         explicit InitMarg(unsigned count);

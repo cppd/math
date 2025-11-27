@@ -37,6 +37,8 @@ class InitImu final
 
         void reset();
 
+        [[nodiscard]] std::optional<Quaternion<T>> init();
+
 public:
         explicit InitImu(unsigned count);
 
