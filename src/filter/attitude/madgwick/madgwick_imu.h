@@ -30,7 +30,7 @@ class MadgwickImu final
         numerical::Quaternion<T> q_{numerical::IDENTITY_QUATERNION};
 
 public:
-        void update(const Vector3& w, const Vector3& a, T beta, T dt);
+        void update(const Vector3& w, const Vector3& acc, T beta, T dt);
 
         [[nodiscard]] const numerical::Quaternion<T>& attitude() const
         {

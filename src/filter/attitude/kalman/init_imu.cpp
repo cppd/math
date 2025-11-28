@@ -58,7 +58,7 @@ std::optional<Quaternion<T>> InitImu<T>::init()
                 return std::nullopt;
         }
 
-        return initial_quaternion(acc / acc_norm);
+        return initial_quaternion(acc);
 }
 
 template <typename T>

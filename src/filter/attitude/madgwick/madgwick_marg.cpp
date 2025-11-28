@@ -33,10 +33,10 @@ namespace ns::filter::attitude::madgwick
 {
 template <typename T>
 void MadgwickMarg<
-        T>::update(const Vector3& w, const Vector3& a, const Vector3& m, const T beta, const T zeta, const T dt)
+        T>::update(const Vector3& w, const Vector3& acc, const Vector3& mag, const T beta, const T zeta, const T dt)
 {
-        const T a_norm = a.norm();
-        if (!acc_suitable(a_norm))
+        const T acc_norm = acc.norm();
+        if (!acc_suitable(acc_norm))
         {
                 // (11)
                 const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
@@ -45,10 +45,10 @@ void MadgwickMarg<
                 return;
         }
 
-        const Vector3 an = a / a_norm;
+        const Vector3 an = acc / acc_norm;
 
-        const T m_norm = m.norm();
-        if (!mag_suitable(m_norm))
+        const T mag_norm = mag.norm();
+        if (!mag_suitable(mag_norm))
         {
                 // (11)
                 const numerical::Quaternion<T> d = q_ * ((w - wb_) / T{2});
@@ -58,7 +58,7 @@ void MadgwickMarg<
                 return;
         }
 
-        const Vector3 mn = m / m_norm;
+        const Vector3 mn = mag / mag_norm;
 
         const numerical::Quaternion<T> gn = compute_gn(q_, an, mn, b_x_, b_z_);
 

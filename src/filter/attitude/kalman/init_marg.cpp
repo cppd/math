@@ -77,16 +77,15 @@ std::optional<Quaternion<T>> InitMarg<T>::init()
                 return std::nullopt;
         }
 
-        const Vector3 a = acc / acc_norm;
-        const Vector3 m = mag / mag_norm;
+        const T cos = dot(acc, mag) / (acc_norm * mag_norm);
 
-        if (!(square(dot(a, m)) < MAX_COS_Z_MAG_SQUARED<T>))
+        if (!(square(cos) < MAX_COS_Z_MAG_SQUARED<T>))
         {
                 reset();
                 return std::nullopt;
         }
 
-        return initial_quaternion(a, m);
+        return initial_quaternion(acc, mag);
 }
 
 template <typename T>

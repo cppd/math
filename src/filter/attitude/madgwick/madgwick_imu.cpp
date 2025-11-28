@@ -32,21 +32,20 @@ and inertial/magnetic sensor arrays.
 namespace ns::filter::attitude::madgwick
 {
 template <typename T>
-void MadgwickImu<T>::update(const Vector3& w, const Vector3& a, const T beta, const T dt)
+void MadgwickImu<T>::update(const Vector3& w, const Vector3& acc, const T beta, const T dt)
 {
         // (11)
         const numerical::Quaternion<T> d = q_ * (w / T{2});
 
-        const T a_norm = a.norm();
-
-        if (!acc_suitable(a_norm))
+        const T acc_norm = acc.norm();
+        if (!acc_suitable(acc_norm))
         {
                 // (13)
                 q_ = (q_ + d * dt).normalized();
                 return;
         }
 
-        const numerical::Quaternion<T> gn = compute_gn(q_, a / a_norm);
+        const numerical::Quaternion<T> gn = compute_gn(q_, acc / acc_norm);
 
         // (42) (43) (44)
         q_ = (q_ + (d - beta * gn) * dt).normalized();
