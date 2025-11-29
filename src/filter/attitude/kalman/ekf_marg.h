@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quaternion.h"
 
 #include <src/numerical/matrix.h>
-#include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
 #include <array>
@@ -66,9 +65,9 @@ public:
 
         [[nodiscard]] Vector3 z_local() const;
 
-        [[nodiscard]] numerical::Quaternion<T> attitude() const
+        [[nodiscard]] const Quaternion<T>& attitude() const
         {
-                return numerical::Quaternion<T>(q_);
+                return q_;
         }
 
         [[nodiscard]] const Vector3& bias() const

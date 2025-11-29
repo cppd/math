@@ -61,7 +61,7 @@ public:
         {
                 if (filter_)
                 {
-                        return filter_->attitude();
+                        return numerical::Quaternion<T>(filter_->attitude());
                 }
                 return std::nullopt;
         }
