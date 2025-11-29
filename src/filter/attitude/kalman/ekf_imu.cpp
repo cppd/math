@@ -98,7 +98,7 @@ void EkfImu<T>::update_z(const Vector3& z, const T z_variance, const T y_varianc
 {
         ASSERT(z.is_unit());
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+        const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{

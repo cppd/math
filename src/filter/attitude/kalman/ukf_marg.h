@@ -35,6 +35,7 @@ class UkfMarg final
 {
         using Vector3 = numerical::Vector<3, T>;
         using Vector6 = numerical::Vector<6, T>;
+        using Matrix3 = numerical::Matrix<3, 3, T>;
         using Matrix6 = numerical::Matrix<6, 6, T>;
 
         static constexpr std::size_t POINT_COUNT =

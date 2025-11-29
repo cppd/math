@@ -145,8 +145,7 @@ void UkfMarg<T>::update(const std::array<Update, N>& data)
         std::array<numerical::Vector<3 * N, T>, POINT_COUNT> sigmas_h;
         for (std::size_t i = 0; i < POINT_COUNT; ++i)
         {
-                const numerical::Matrix<3, 3, T> attitude =
-                        numerical::rotation_quaternion_to_matrix(propagated_quaternions_[i]);
+                const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(propagated_quaternions_[i]);
 
                 for (std::size_t j = 0; j < N; ++j)
                 {
@@ -208,9 +207,9 @@ void UkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_varian
 }
 
 template <typename T>
-[[nodiscard]] numerical::Vector<3, T> UkfMarg<T>::z_local() const
+[[nodiscard]] UkfMarg<T>::Vector3 UkfMarg<T>::z_local() const
 {
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+        const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         return attitude.column(2);
 }

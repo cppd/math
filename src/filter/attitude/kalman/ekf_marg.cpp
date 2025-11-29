@@ -108,7 +108,7 @@ void EkfMarg<T>::update_z(const Vector3& z, const T z_variance, const T y_varian
 {
         ASSERT(z.is_unit());
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+        const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
@@ -129,7 +129,7 @@ void EkfMarg<T>::update_y(const Vector3& y, const T y_variance, const T z_varian
 {
         ASSERT(y.is_unit());
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+        const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
@@ -151,7 +151,7 @@ void EkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_varian
         ASSERT(z.is_unit());
         ASSERT(y.is_unit());
 
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+        const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         update(std::array{
                 Update{
@@ -168,9 +168,9 @@ void EkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_varian
 }
 
 template <typename T>
-[[nodiscard]] numerical::Vector<3, T> EkfMarg<T>::z_local() const
+[[nodiscard]] EkfMarg<T>::Vector3 EkfMarg<T>::z_local() const
 {
-        const numerical::Matrix<3, 3, T> attitude = numerical::rotation_quaternion_to_matrix(q_);
+        const Matrix3 attitude = numerical::rotation_quaternion_to_matrix(q_);
 
         return attitude.column(2);
 }
