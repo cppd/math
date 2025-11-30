@@ -31,7 +31,7 @@ namespace ns::filter::attitude::kalman
 namespace
 {
 template <typename T>
-constexpr T MAX_COS_Z_MAG_SQUARED = 1 - square(MIN_SIN_Z_MAG<T>);
+constexpr T ACC_MAG_MAX_COS_SQUARED = 1 - square(MAG_INCLINATION_MIN_COS<T>);
 }
 
 template <typename T>
@@ -79,7 +79,7 @@ std::optional<Quaternion<T>> InitMarg<T>::init()
 
         const T cos = dot(acc, mag) / (acc_norm * mag_norm);
 
-        if (!(square(cos) < MAX_COS_Z_MAG_SQUARED<T>))
+        if (!(square(cos) < ACC_MAG_MAX_COS_SQUARED<T>))
         {
                 reset();
                 return std::nullopt;

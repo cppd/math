@@ -38,15 +38,16 @@ std::optional<MagMeasurement<T>> mag_measurement(
 
         const numerical::Vector<3, T> x = cross(m_unit, z_unit);
 
-        const T sin2 = x.norm_squared();
-        if (!(sin2 > square(MIN_SIN_Z_MAG<T>)))
+        const T inclination_cos_2 = x.norm_squared();
+
+        if (!(inclination_cos_2 > square(MAG_INCLINATION_MIN_COS<T>)))
         {
                 return std::nullopt;
         }
 
         return MagMeasurement{
                 .y = cross(z_unit, x).normalized(),
-                .variance = variance / sin2,
+                .variance = variance / inclination_cos_2,
         };
 }
 
