@@ -20,6 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::filter::attitude
 {
 template <typename T>
+inline constexpr T MAG_INCLINATION_MIN_COS{0.173648}; // 80 degrees
+
+template <typename T>
 [[nodiscard]] bool acc_suitable(const T acc)
 {
         constexpr T ACCELERATION_MIN = 9.0; // m/(s*s)

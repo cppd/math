@@ -21,7 +21,4 @@ namespace ns::filter::attitude::kalman
 {
 template <typename T>
 inline constexpr T W_THRESHOLD{1e-5}; // rad/s
-
-template <typename T>
-inline constexpr T MAG_INCLINATION_MIN_COS{0.173648}; // 80 degrees
 }

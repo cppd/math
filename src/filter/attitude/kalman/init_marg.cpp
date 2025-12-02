@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init_marg.h"
 
-#include "constant.h"
 #include "init_utility.h"
 #include "quaternion.h"
 
