@@ -111,6 +111,8 @@ vulkan::physical_device::DeviceFunctionality device_functionality()
                 res.required_features.features_10.samplerAnisotropy = VK_TRUE;
         }
 
+        res.optional_features.features_13.shaderDemoteToHelperInvocation = VK_TRUE;
+
         res.required_extensions.insert(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         res.merge(gpu::renderer::Renderer::device_functionality());
