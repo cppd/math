@@ -33,6 +33,6 @@ struct MagMeasurement
 template <typename T>
 [[nodiscard]] std::optional<MagMeasurement<T>> mag_measurement(
         const numerical::Vector<3, T>& z_unit,
-        const numerical::Vector<3, T>& m_unit,
+        const numerical::Vector<3, T>& mag_unit,
         T variance);
 }

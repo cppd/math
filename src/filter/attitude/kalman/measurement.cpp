@@ -29,13 +29,13 @@ namespace ns::filter::attitude::kalman
 template <typename T>
 std::optional<MagMeasurement<T>> mag_measurement(
         const numerical::Vector<3, T>& z_unit,
-        const numerical::Vector<3, T>& m_unit,
+        const numerical::Vector<3, T>& mag_unit,
         const T variance)
 {
         ASSERT(z_unit.is_unit());
-        ASSERT(m_unit.is_unit());
+        ASSERT(mag_unit.is_unit());
 
-        const numerical::Vector<3, T> x = cross(m_unit, z_unit);
+        const numerical::Vector<3, T> x = cross(mag_unit, z_unit);
 
         const T inclination_cos_2 = x.norm_squared();
 
