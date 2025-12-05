@@ -155,12 +155,12 @@ void EkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_varian
 
         update(std::array{
                 Update{
-                       .measurement = y.normalized(),
+                       .measurement = y,
                        .reference_local = attitude.column(1),
                        .variance = y_variance,
                        },
                 Update{
-                       .measurement = z.normalized(),
+                       .measurement = z,
                        .reference_local = attitude.column(2),
                        .variance = z_variance,
                        }

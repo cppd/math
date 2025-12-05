@@ -194,12 +194,12 @@ void UkfMarg<T>::update_z_y(const Vector3& z, const Vector3& y, const T z_varian
 
         update(std::array{
                 Update{
-                       .measurement = y.normalized(),
+                       .measurement = y,
                        .reference_global = {0, 1, 0},
                        .variance = y_variance,
                        },
                 Update{
-                       .measurement = z.normalized(),
+                       .measurement = z,
                        .reference_global = {0, 0, 1},
                        .variance = z_variance,
                        }
