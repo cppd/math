@@ -20,36 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constant.h"
 
 #include <cmath>
-#include <type_traits>
 
 namespace ns
 {
 template <typename T>
-[[nodiscard]] T normalize_angle(const T difference)
+[[nodiscard]] T normalize_angle(const T angle)
 {
-        return std::remainder(difference, 2 * PI<T>);
+        return std::remainder(angle, 2 * PI<T>);
 }
 
-template <typename T, typename Previous>
-[[nodiscard]] T unbound_angle(const Previous previous, const T next)
+template <typename T>
+[[nodiscard]] T unwrap_angle(const T reference, const T angle)
 {
-        const auto unbound = [&](const auto p)
-        {
-                static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(p)>>);
-                return p + normalize_angle(next - p);
-        };
-
-        if constexpr (requires { unbound(*previous); })
-        {
-                if (previous)
-                {
-                        return unbound(*previous);
-                }
-                return next;
-        }
-        else
-        {
-                return unbound(previous);
-        }
+        return reference + normalize_angle(angle - reference);
 }
 }

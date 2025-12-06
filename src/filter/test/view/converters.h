@@ -177,10 +177,11 @@ std::vector<std::optional<numerical::Vector<2, T>>> angle_measurements(
                 {
                         res.emplace_back();
                 }
-                const T unbounded_angle = unbound_angle(previous_angle, m.direction->value[0]);
-                previous_angle = unbounded_angle;
+                const T angle = m.direction->value[0];
+                const T unwrapped_angle = previous_angle ? unwrap_angle(*previous_angle, angle) : angle;
+                previous_angle = unwrapped_angle;
                 res.push_back({
-                        {impl::time_unit(m.time), radians_to_degrees(unbounded_angle)}
+                        {impl::time_unit(m.time), radians_to_degrees(unwrapped_angle)}
                 });
                 last_time = m.time;
         }
