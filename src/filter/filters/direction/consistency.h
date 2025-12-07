@@ -49,7 +49,7 @@ void update_nees(const Filter& filter, const TrueData<2, T>& true_data, Nees<T>&
 {
         nees.position.add(true_data.position - filter.position(), filter.position_p());
         nees.speed.add_1(true_data.speed - filter.speed(), filter.speed_p());
-        nees.angle.add_1(normalize_angle(true_data.angle + true_data.angle_r - filter.angle()), filter.angle_p());
+        nees.angle.add_1(wrap_angle(true_data.angle + true_data.angle_r - filter.angle()), filter.angle_p());
 }
 
 template <typename T>

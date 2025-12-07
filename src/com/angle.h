@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-[[nodiscard]] T normalize_angle(const T angle)
+[[nodiscard]] T wrap_angle(const T angle)
 {
         return std::remainder(angle, 2 * PI<T>);
 }
@@ -32,6 +32,6 @@ template <typename T>
 template <typename T>
 [[nodiscard]] T unwrap_angle(const T reference, const T angle)
 {
-        return reference + normalize_angle(angle - reference);
+        return reference + wrap_angle(angle - reference);
 }
 }

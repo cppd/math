@@ -87,7 +87,7 @@ template <typename T>
 numerical::Vector<8, T> add_x(const numerical::Vector<8, T>& a, const numerical::Vector<8, T>& b)
 {
         numerical::Vector<8, T> res = a + b;
-        res[6] = normalize_angle(res[6]);
+        res[6] = wrap_angle(res[6]);
         return res;
 }
 

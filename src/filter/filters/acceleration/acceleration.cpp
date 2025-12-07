@@ -53,16 +53,16 @@ std::string measurement_description(const Measurements<2, T>& m)
 template <typename T>
 std::string filter_description(const Filter0<T>& filter)
 {
-        return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())))
-               + "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter.angle_r())));
+        return "; angle = " + to_string(radians_to_degrees(wrap_angle(filter.angle())))
+               + "; angle r = " + to_string(radians_to_degrees(wrap_angle(filter.angle_r())));
 }
 
 template <typename T, template <typename> typename Filter>
 std::string filter_description(const Filter<T>& filter)
 {
-        return "; angle = " + to_string(radians_to_degrees(normalize_angle(filter.angle())))
-               + "; angle speed = " + to_string(radians_to_degrees(normalize_angle(filter.angle_speed())))
-               + "; angle r = " + to_string(radians_to_degrees(normalize_angle(filter.angle_r())));
+        return "; angle = " + to_string(radians_to_degrees(wrap_angle(filter.angle())))
+               + "; angle speed = " + to_string(radians_to_degrees(wrap_angle(filter.angle_speed())))
+               + "; angle r = " + to_string(radians_to_degrees(wrap_angle(filter.angle_r())));
 }
 
 template <typename T, template <typename> typename F>
