@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "point.h"
 
-#include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
+#include <src/filter/core/angle.h>
 #include <src/filter/filters/measurement.h>
 #include <src/numerical/vector.h>
 
@@ -178,7 +178,7 @@ std::vector<std::optional<numerical::Vector<2, T>>> angle_measurements(
                         res.emplace_back();
                 }
                 const T angle = m.direction->value[0];
-                const T unwrapped_angle = previous_angle ? unwrap_angle(*previous_angle, angle) : angle;
+                const T unwrapped_angle = previous_angle ? core::unwrap_angle(*previous_angle, angle) : angle;
                 previous_angle = unwrapped_angle;
                 res.push_back({
                         {impl::time_unit(m.time), radians_to_degrees(unwrapped_angle)}

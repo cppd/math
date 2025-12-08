@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "annotation.h"
 #include "config.h"
 
-#include <src/com/angle.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/random/pcg.h>
+#include <src/filter/core/angle.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/settings/instantiation.h>
 #include <src/numerical/matrix.h>
@@ -171,7 +171,7 @@ public:
                   speed_clamp_max_(config.speed_clamp_max),
                   velocity_magnitude_period_(config.velocity_magnitude_period),
                   angle_drift_(config.measurement_dt * config.angle_drift_per_hour / (T{60} * T{60})),
-                  angle_r_(wrap_angle(config.angle_r)),
+                  angle_r_(core::wrap_angle(config.angle_r)),
                   bad_measurement_position_(config.bad_measurement_position),
                   bad_measurement_position_probability_(config.bad_measurement_position_probability),
                   speed_nd_(0, std::sqrt(config.speed_variance)),
@@ -183,7 +183,7 @@ public:
                   next_velocity_(velocity_with_noise(time_ + dt_)),
                   next_acceleration_((to_vector(next_velocity_) - to_vector(velocity_)) / dt_),
                   acceleration_(next_acceleration_),
-                  angle_(wrap_angle(config.angle))
+                  angle_(core::wrap_angle(config.angle))
         {
                 position_[N - 1] = OFFSET;
         }
@@ -201,7 +201,7 @@ public:
                 next_acceleration_ = (to_vector(next_velocity_) - to_vector(velocity_)) / dt_;
                 acceleration_ = (previous_acceleration + next_acceleration_) / T{2};
 
-                angle_ = wrap_angle(angle_ + angle_drift_);
+                angle_ = core::wrap_angle(angle_ + angle_drift_);
         }
 
         [[nodiscard]] const numerical::Vector<N, T>& position() const
@@ -226,7 +226,7 @@ public:
 
         [[nodiscard]] T measurement_direction()
         {
-                return wrap_angle(velocity_.angle + angle_r_ + angle_ + measurements_direction_nd_(engine_));
+                return core::wrap_angle(velocity_.angle + angle_r_ + angle_ + measurements_direction_nd_(engine_));
         }
 
         [[nodiscard]] numerical::Vector<N, T> measurement_acceleration()

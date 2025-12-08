@@ -24,11 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "init.h"
 #include "update.h"
 
-#include <src/com/angle.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
+#include <src/filter/core/angle.h>
 #include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
@@ -61,21 +61,21 @@ struct Standing final
 template <typename T>
 std::string measurement_description(const Measurements<2, T>& m)
 {
-        return to_string(m.time)
-               + "; true angle = " + to_string(radians_to_degrees(wrap_angle(m.true_data.angle + m.true_data.angle_r)));
+        return to_string(m.time) + "; true angle = "
+               + to_string(radians_to_degrees(core::wrap_angle(m.true_data.angle + m.true_data.angle_r)));
 }
 
 template <typename T>
 std::string filter_description(const Filter10<T>& filter)
 {
-        return "; angle = " + to_string(radians_to_degrees(wrap_angle(filter.angle())));
+        return "; angle = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle())));
 }
 
 template <typename T, template <typename> typename Filter>
 std::string filter_description(const Filter<T>& filter)
 {
-        return "; angle = " + to_string(radians_to_degrees(wrap_angle(filter.angle())))
-               + "; angle speed = " + to_string(radians_to_degrees(wrap_angle(filter.angle_speed())));
+        return "; angle = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle())))
+               + "; angle speed = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle_speed())));
 }
 
 template <typename T, template <typename> typename F>

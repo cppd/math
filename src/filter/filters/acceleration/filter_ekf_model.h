@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "init.h"
 
-#include <src/com/angle.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/variant.h>
+#include <src/filter/core/angle.h>
 #include <src/filter/core/kinematic_models.h>
 #include <src/filter/filters/noise_model.h>
 #include <src/numerical/matrix.h>
@@ -89,8 +89,8 @@ template <typename T>
 numerical::Vector<9, T> add_x(const numerical::Vector<9, T>& a, const numerical::Vector<9, T>& b)
 {
         numerical::Vector<9, T> res = a + b;
-        res[6] = wrap_angle(res[6]);
-        res[8] = wrap_angle(res[8]);
+        res[6] = core::wrap_angle(res[6]);
+        res[8] = core::wrap_angle(res[8]);
         return res;
 }
 

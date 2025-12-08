@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/angle.h>
+#include <src/filter/core/angle.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -118,7 +118,7 @@ numerical::Vector<4, T> position_speed_direction_residual(
         const numerical::Vector<4, T>& b)
 {
         numerical::Vector<4, T> res = a - b;
-        res[3] = wrap_angle(res[3]);
+        res[3] = core::wrap_angle(res[3]);
         return res;
 }
 
@@ -156,7 +156,7 @@ template <typename T>
 numerical::Vector<3, T> position_direction_residual(const numerical::Vector<3, T>& a, const numerical::Vector<3, T>& b)
 {
         numerical::Vector<3, T> res = a - b;
-        res[2] = wrap_angle(res[2]);
+        res[2] = core::wrap_angle(res[2]);
         return res;
 }
 
@@ -190,7 +190,7 @@ template <typename T>
 numerical::Vector<2, T> speed_direction_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
         numerical::Vector<2, T> res = a - b;
-        res[1] = wrap_angle(res[1]);
+        res[1] = core::wrap_angle(res[1]);
         return res;
 }
 
@@ -219,7 +219,7 @@ template <typename T>
 numerical::Vector<1, T> direction_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
         numerical::Vector<1, T> res = a - b;
-        res[0] = wrap_angle(res[0]);
+        res[0] = core::wrap_angle(res[0]);
         return res;
 }
 
