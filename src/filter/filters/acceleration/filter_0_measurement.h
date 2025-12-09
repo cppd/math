@@ -95,7 +95,9 @@ numerical::Matrix<6, 6, T> position_speed_direction_acceleration_r(
 }
 
 template <typename T>
-numerical::Vector<6, T> position_speed_direction_acceleration_h(const numerical::Vector<8, T>& x)
+numerical::Vector<6, T> position_speed_direction_acceleration_h(
+        const numerical::Vector<8, T>& x,
+        const T reference_angle)
 {
         // px = px
         // py = py
@@ -117,7 +119,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(const numerical:
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle_r, // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -148,7 +150,7 @@ numerical::Matrix<4, 4, T> position_speed_direction_r(
 }
 
 template <typename T>
-numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>& x)
+numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // px = px
         // py = py
@@ -163,7 +165,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle_r // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r // angle
         };
 }
 
@@ -240,7 +242,7 @@ numerical::Matrix<5, 5, T> position_direction_acceleration_r(
 }
 
 template <typename T>
-numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vector<8, T>& x)
+numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // px = px
         // py = py
@@ -260,7 +262,7 @@ numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vecto
         return {
                 px, // px
                 py, // py
-                std::atan2(vy, vx) + angle_r, // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -289,7 +291,7 @@ numerical::Matrix<3, 3, T> position_direction_r(
 }
 
 template <typename T>
-numerical::Vector<3, T> position_direction_h(const numerical::Vector<8, T>& x)
+numerical::Vector<3, T> position_direction_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // px = px
         // py = py
@@ -302,7 +304,7 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<8, T>& x)
         return {
                 px, // px
                 py, // py
-                std::atan2(vy, vx) + angle_r // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r // angle
         };
 }
 
@@ -371,7 +373,7 @@ numerical::Matrix<4, 4, T> speed_direction_acceleration_r(
 }
 
 template <typename T>
-numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<8, T>& x)
+numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle + angle_r
@@ -387,7 +389,7 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<8
         const T sin = std::sin(angle);
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle_r, // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -416,7 +418,7 @@ numerical::Matrix<2, 2, T> speed_direction_r(
 }
 
 template <typename T>
-numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x)
+numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle + angle_r
@@ -425,7 +427,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x)
         const T angle_r = x[7];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle_r // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r // angle
         };
 }
 
@@ -450,7 +452,7 @@ numerical::Matrix<3, 3, T> direction_acceleration_r(
 }
 
 template <typename T>
-numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<8, T>& x)
+numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // angle = atan(vy, vx) + angle + angle_r
         // ax = ax*cos(angle) - ay*sin(angle)
@@ -464,7 +466,7 @@ numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<8, T>& 
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         return {
-                std::atan2(vy, vx) + angle_r, // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -520,14 +522,14 @@ numerical::Matrix<1, 1, T> direction_r(const numerical::Vector<1, T>& direction_
 }
 
 template <typename T>
-numerical::Vector<1, T> direction_h(const numerical::Vector<8, T>& x)
+numerical::Vector<1, T> direction_h(const numerical::Vector<8, T>& x, const T reference_angle)
 {
         // angle = atan(vy, vx) + angle + angle_r
         const T vx = x[1];
         const T vy = x[4];
         const T angle_r = x[7];
         return numerical::Vector<1, T>{
-                std::atan2(vy, vx) + angle_r // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle_r // angle
         };
 }
 
