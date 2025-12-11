@@ -43,6 +43,14 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] T velocity_angle(const numerical::Vector<5, T>& x)
+{
+        const T vx = x[1];
+        const T vy = x[3];
+        return std::atan2(vy, vx);
+}
+
+template <typename T>
 [[nodiscard]] numerical::Matrix<2, 2, T> velocity_p(const numerical::Matrix<5, 5, T>& p)
 {
         return {

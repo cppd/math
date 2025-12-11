@@ -91,7 +91,7 @@ numerical::Matrix<4, 4, T> position_speed_direction_r(
 }
 
 template <typename T>
-numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<5, T>& x)
+numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<5, T>& x, const T reference_angle)
 {
         // px = px
         // py = py
@@ -106,7 +106,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<5, T>
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -133,7 +133,7 @@ numerical::Matrix<3, 3, T> position_direction_r(
 }
 
 template <typename T>
-numerical::Vector<3, T> position_direction_h(const numerical::Vector<5, T>& x)
+numerical::Vector<3, T> position_direction_h(const numerical::Vector<5, T>& x, const T reference_angle)
 {
         // px = px
         // py = py
@@ -146,7 +146,7 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<5, T>& x)
         return {
                 px, // px
                 py, // py
-                std::atan2(vy, vx) + angle // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -171,7 +171,7 @@ numerical::Matrix<2, 2, T> speed_direction_r(
 }
 
 template <typename T>
-numerical::Vector<2, T> speed_direction_h(const numerical::Vector<5, T>& x)
+numerical::Vector<2, T> speed_direction_h(const numerical::Vector<5, T>& x, const T reference_angle)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // angle = atan(vy, vx) + angle
@@ -180,7 +180,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<5, T>& x)
         const T angle = x[4];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -202,14 +202,14 @@ numerical::Matrix<1, 1, T> direction_r(const numerical::Vector<1, T>& direction_
 }
 
 template <typename T>
-numerical::Vector<1, T> direction_h(const numerical::Vector<5, T>& x)
+numerical::Vector<1, T> direction_h(const numerical::Vector<5, T>& x, const T reference_angle)
 {
         // angle = atan(vy, vx) + angle
         const T vx = x[1];
         const T vy = x[3];
         const T angle = x[4];
         return numerical::Vector<1, T>{
-                std::atan2(vy, vx) + angle // angle
+                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
