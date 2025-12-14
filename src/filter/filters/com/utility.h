@@ -45,12 +45,6 @@ template <std::size_t N, typename T>
 }
 
 template <typename T>
-[[nodiscard]] T compute_angle(const numerical::Vector<2, T>& velocity)
-{
-        return std::atan2(velocity[1], velocity[0]);
-}
-
-template <typename T>
 [[nodiscard]] numerical::Vector<1, T> compute_angle_variance(
         const numerical::Vector<1, T>& /*velocity*/,
         const numerical::Matrix<1, 1, T>& /*velocity_p*/)
