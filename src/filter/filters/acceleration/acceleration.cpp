@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/filter/core/angle.h>
+#include <src/filter/filters/com/angle.h>
 #include <src/filter/filters/com/measurement_queue.h>
 #include <src/filter/filters/estimation.h>
 #include <src/filter/filters/filter.h>
@@ -53,16 +53,16 @@ std::string measurement_description(const Measurements<2, T>& m)
 template <typename T>
 std::string filter_description(const Filter0<T>& filter)
 {
-        return "; angle = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle())))
-               + "; angle r = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle_r())));
+        return "; angle = " + to_string(radians_to_degrees(com::wrap_angle(filter.angle())))
+               + "; angle r = " + to_string(radians_to_degrees(com::wrap_angle(filter.angle_r())));
 }
 
 template <typename T, template <typename> typename Filter>
 std::string filter_description(const Filter<T>& filter)
 {
-        return "; angle = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle())))
-               + "; angle speed = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle_speed())))
-               + "; angle r = " + to_string(radians_to_degrees(core::wrap_angle(filter.angle_r())));
+        return "; angle = " + to_string(radians_to_degrees(com::wrap_angle(filter.angle())))
+               + "; angle speed = " + to_string(radians_to_degrees(com::wrap_angle(filter.angle_speed())))
+               + "; angle r = " + to_string(radians_to_degrees(com::wrap_angle(filter.angle_r())));
 }
 
 template <typename T, template <typename> typename F>

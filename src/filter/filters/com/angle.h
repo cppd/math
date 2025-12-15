@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 
-namespace ns::filter::core
+namespace ns::filter::filters::com
 {
 template <typename T>
 [[nodiscard]] T wrap_angle(const T angle)

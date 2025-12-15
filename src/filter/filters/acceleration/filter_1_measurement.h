@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/filter/core/angle.h>
+#include <src/filter/filters/com/angle.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -119,7 +119,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -131,7 +131,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_residual(
         const numerical::Vector<6, T>& b)
 {
         numerical::Vector<6, T> res = a - b;
-        res[3] = core::wrap_angle(res[3]);
+        res[3] = com::wrap_angle(res[3]);
         return res;
 }
 
@@ -166,7 +166,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<9, T>
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
         };
 }
 
@@ -176,7 +176,7 @@ numerical::Vector<4, T> position_speed_direction_residual(
         const numerical::Vector<4, T>& b)
 {
         numerical::Vector<4, T> res = a - b;
-        res[3] = core::wrap_angle(res[3]);
+        res[3] = com::wrap_angle(res[3]);
         return res;
 }
 
@@ -263,7 +263,7 @@ numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vecto
         return {
                 px, // px
                 py, // py
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -275,7 +275,7 @@ numerical::Vector<5, T> position_direction_acceleration_residual(
         const numerical::Vector<5, T>& b)
 {
         numerical::Vector<5, T> res = a - b;
-        res[2] = core::wrap_angle(res[2]);
+        res[2] = com::wrap_angle(res[2]);
         return res;
 }
 
@@ -306,7 +306,7 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<9, T>& x, c
         return {
                 px, // px
                 py, // py
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
         };
 }
 
@@ -314,7 +314,7 @@ template <typename T>
 numerical::Vector<3, T> position_direction_residual(const numerical::Vector<3, T>& a, const numerical::Vector<3, T>& b)
 {
         numerical::Vector<3, T> res = a - b;
-        res[2] = core::wrap_angle(res[2]);
+        res[2] = com::wrap_angle(res[2]);
         return res;
 }
 
@@ -391,7 +391,7 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<9
         const T sin = std::sin(angle);
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -403,7 +403,7 @@ numerical::Vector<4, T> speed_direction_acceleration_residual(
         const numerical::Vector<4, T>& b)
 {
         numerical::Vector<4, T> res = a - b;
-        res[1] = core::wrap_angle(res[1]);
+        res[1] = com::wrap_angle(res[1]);
         return res;
 }
 
@@ -430,7 +430,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<9, T>& x, cons
         const T angle_r = x[8];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
         };
 }
 
@@ -438,7 +438,7 @@ template <typename T>
 numerical::Vector<2, T> speed_direction_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
         numerical::Vector<2, T> res = a - b;
-        res[1] = core::wrap_angle(res[1]);
+        res[1] = com::wrap_angle(res[1]);
         return res;
 }
 
@@ -469,7 +469,7 @@ numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<9, T>& 
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         return {
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -481,7 +481,7 @@ numerical::Vector<3, T> direction_acceleration_residual(
         const numerical::Vector<3, T>& b)
 {
         numerical::Vector<3, T> res = a - b;
-        res[0] = core::wrap_angle(res[0]);
+        res[0] = com::wrap_angle(res[0]);
         return res;
 }
 
@@ -533,7 +533,7 @@ numerical::Vector<1, T> direction_h(const numerical::Vector<9, T>& x, const T re
         const T angle = x[6];
         const T angle_r = x[8];
         return numerical::Vector<1, T>{
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle + angle_r // angle
         };
 }
 
@@ -541,7 +541,7 @@ template <typename T>
 numerical::Vector<1, T> direction_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
         numerical::Vector<1, T> res = a - b;
-        res[0] = core::wrap_angle(res[0]);
+        res[0] = com::wrap_angle(res[0]);
         return res;
 }
 

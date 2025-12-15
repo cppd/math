@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/filter/core/angle.h>
+#include <src/filter/filters/com/angle.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -108,7 +108,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -118,7 +118,7 @@ numerical::Vector<4, T> position_speed_direction_residual(
         const numerical::Vector<4, T>& b)
 {
         numerical::Vector<4, T> res = a - b;
-        res[3] = core::wrap_angle(res[3]);
+        res[3] = com::wrap_angle(res[3]);
         return res;
 }
 
@@ -148,7 +148,7 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<8, T>& x, c
         return {
                 px, // px
                 py, // py
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -156,7 +156,7 @@ template <typename T>
 numerical::Vector<3, T> position_direction_residual(const numerical::Vector<3, T>& a, const numerical::Vector<3, T>& b)
 {
         numerical::Vector<3, T> res = a - b;
-        res[2] = core::wrap_angle(res[2]);
+        res[2] = com::wrap_angle(res[2]);
         return res;
 }
 
@@ -182,7 +182,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x, cons
         const T angle = x[6];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -190,7 +190,7 @@ template <typename T>
 numerical::Vector<2, T> speed_direction_residual(const numerical::Vector<2, T>& a, const numerical::Vector<2, T>& b)
 {
         numerical::Vector<2, T> res = a - b;
-        res[1] = core::wrap_angle(res[1]);
+        res[1] = com::wrap_angle(res[1]);
         return res;
 }
 
@@ -211,7 +211,7 @@ numerical::Vector<1, T> direction_h(const numerical::Vector<8, T>& x, const T re
         const T vy = x[4];
         const T angle = x[6];
         return numerical::Vector<1, T>{
-                core::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
         };
 }
 
@@ -219,7 +219,7 @@ template <typename T>
 numerical::Vector<1, T> direction_residual(const numerical::Vector<1, T>& a, const numerical::Vector<1, T>& b)
 {
         numerical::Vector<1, T> res = a - b;
-        res[0] = core::wrap_angle(res[0]);
+        res[0] = com::wrap_angle(res[0]);
         return res;
 }
 
