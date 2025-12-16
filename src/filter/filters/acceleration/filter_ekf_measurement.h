@@ -150,7 +150,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(const numerical:
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle + angle_r, // angle
+                com::angle(vx, vy) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -235,7 +235,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<9, T>
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle + angle_r // angle
+                com::angle(vx, vy) + angle + angle_r // angle
         };
 }
 
@@ -391,7 +391,7 @@ numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vecto
         return {
                 px, // px
                 py, // py
-                std::atan2(vy, vx) + angle + angle_r, // angle
+                com::angle(vx, vy) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -468,7 +468,7 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<9, T>& x)
         return {
                 px, // px
                 py, // py
-                std::atan2(vy, vx) + angle + angle_r // angle
+                com::angle(vx, vy) + angle + angle_r // angle
         };
 }
 
@@ -602,7 +602,7 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<9
         const T sin = std::sin(angle);
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle + angle_r, // angle
+                com::angle(vx, vy) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -673,7 +673,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<9, T>& x)
         const T angle_r = x[8];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                std::atan2(vy, vx) + angle + angle_r // angle
+                com::angle(vx, vy) + angle + angle_r // angle
         };
 }
 
@@ -731,7 +731,7 @@ numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<9, T>& 
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         return {
-                std::atan2(vy, vx) + angle + angle_r, // angle
+                com::angle(vx, vy) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -840,7 +840,7 @@ numerical::Vector<1, T> direction_h(const numerical::Vector<9, T>& x)
         const T angle = x[6];
         const T angle_r = x[8];
         return numerical::Vector<1, T>{
-                std::atan2(vy, vx) + angle + angle_r // angle
+                com::angle(vx, vy) + angle + angle_r // angle
         };
 }
 
