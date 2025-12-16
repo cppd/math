@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
-#include <src/numerical/vector.h>
 
 #include <cmath>
 
@@ -37,8 +36,8 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T compute_angle(const numerical::Vector<2, T>& velocity)
+[[nodiscard]] T angle(const T vx, const T vy)
 {
-        return std::atan2(velocity[1], velocity[0]);
+        return std::atan2(vy, vx);
 }
 }
