@@ -106,7 +106,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<5, T>
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle // angle
         };
 }
 
@@ -146,7 +146,7 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<5, T>& x, c
         return {
                 px, // px
                 py, // py
-                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle // angle
         };
 }
 
@@ -180,7 +180,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<5, T>& x, cons
         const T angle = x[4];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle // angle
         };
 }
 
@@ -209,7 +209,7 @@ numerical::Vector<1, T> direction_h(const numerical::Vector<5, T>& x, const T re
         const T vy = x[3];
         const T angle = x[4];
         return numerical::Vector<1, T>{
-                com::unwrap_angle(reference_angle, std::atan2(vy, vx)) + angle // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle // angle
         };
 }
 

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/filter/filters/com/angle.h>
 #include <src/filter/filters/com/utility.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -47,7 +48,7 @@ template <typename T>
 {
         const T vx = x[1];
         const T vy = x[3];
-        return std::atan2(vy, vx);
+        return com::angle(vx, vy);
 }
 
 template <typename T>
