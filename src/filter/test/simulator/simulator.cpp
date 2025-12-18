@@ -149,7 +149,7 @@ class Simulator final
 
         [[nodiscard]] numerical::Vector<2, T> to_vector(const Velocity& v) const
         {
-                return {v.magnitude * std::cos(v.angle), v.magnitude * std::sin(v.angle)};
+                return v.magnitude * filters::com::angle_vector(v.angle);
         }
 
         [[nodiscard]] numerical::Vector<N, T> vector(std::normal_distribution<T>& distribution)
