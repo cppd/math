@@ -44,6 +44,20 @@ namespace ns::filter::test::simulator
 namespace
 {
 template <typename T>
+[[nodiscard]] T velocity_angle(const T time)
+{
+        static constexpr T PERIOD = 31;
+        static constexpr T CHANGE_PERIOD = 9;
+
+        const T period_number = std::floor(time / PERIOD);
+        const T time_in_period = time - period_number * PERIOD;
+        const T angle_time = period_number + std::clamp<T>(time_in_period / CHANGE_PERIOD, 0, 1);
+        const T angle = 0.2 + (PI<T> / 2) * std::cos(angle_time * (PI<T> / 2));
+
+        return angle;
+}
+
+template <typename T>
 [[nodiscard]] numerical::Vector<2, T> rotate(const numerical::Vector<2, T>& v, const T angle)
 {
         const T cos = std::cos(angle);
@@ -100,17 +114,6 @@ class Simulator final
         numerical::Vector<N, T> acceleration_;
 
         T angle_;
-
-        [[nodiscard]] T velocity_angle(const T time) const
-        {
-                static constexpr T PERIOD = 31;
-                static constexpr T CHANGE_PERIOD = 9;
-                const T period_number = std::floor(time / PERIOD);
-                const T time_in_period = time - period_number * PERIOD;
-                const T angle_time = period_number + std::clamp<T>(time_in_period / CHANGE_PERIOD, 0, 1);
-                const T angle = 0.2 + (PI<T> / 2) * std::cos(angle_time * (PI<T> / 2));
-                return angle;
-        }
 
         [[nodiscard]] T velocity_magnitude(const T time)
         {
