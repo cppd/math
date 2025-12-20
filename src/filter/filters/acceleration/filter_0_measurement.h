@@ -119,7 +119,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r, // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -160,12 +160,13 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>
         const T vx = x[1];
         const T py = x[3];
         const T vy = x[4];
+        const T angle = x[6];
         const T angle_r = x[7];
         return {
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r // angle
         };
 }
 
@@ -262,7 +263,7 @@ numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vecto
         return {
                 px, // px
                 py, // py
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r, // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r, // angleangle_r
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -300,11 +301,12 @@ numerical::Vector<3, T> position_direction_h(const numerical::Vector<8, T>& x, c
         const T vx = x[1];
         const T py = x[3];
         const T vy = x[4];
+        const T angle = x[6];
         const T angle_r = x[7];
         return {
                 px, // px
                 py, // py
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r // angle
         };
 }
 
@@ -389,7 +391,7 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<8
         const T sin = std::sin(angle);
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r, // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -424,10 +426,11 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x, cons
         // angle = atan(vy, vx) + angle + angle_r
         const T vx = x[1];
         const T vy = x[4];
+        const T angle = x[6];
         const T angle_r = x[7];
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r // angle
         };
 }
 
@@ -466,7 +469,7 @@ numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<8, T>& 
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         return {
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r, // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r, // angle
                 ax * cos - ay * sin, // ax
                 ax * sin + ay * cos // ay
         };
@@ -527,9 +530,10 @@ numerical::Vector<1, T> direction_h(const numerical::Vector<8, T>& x, const T re
         // angle = atan(vy, vx) + angle + angle_r
         const T vx = x[1];
         const T vy = x[4];
+        const T angle = x[6];
         const T angle_r = x[7];
         return numerical::Vector<1, T>{
-                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle_r // angle
+                com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r // angle
         };
 }
 
