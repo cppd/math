@@ -41,8 +41,14 @@ struct hash<::ns::numerical::Vector<N, T>> final
 };
 
 template <size_t N, typename T>
-struct tuple_size<::ns::numerical::Vector<N, T>> final : integral_constant<size_t, N>
+struct tuple_size<::ns::numerical::Vector<N, T>> : integral_constant<size_t, N>
 {
+};
+
+template <std::size_t I, size_t N, typename T>
+struct tuple_element<I, ::ns::numerical::Vector<N, T>>
+{
+        using type = T;
 };
 }
 
