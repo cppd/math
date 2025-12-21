@@ -85,6 +85,12 @@ public:
                 return data_[i];
         }
 
+        template <std::size_t I>
+        [[nodiscard]] constexpr const T& get() const
+        {
+                return data_[I];
+        }
+
         [[nodiscard]] const T* data() const
         {
                 static_assert(sizeof(Vector) == N * sizeof(T));
