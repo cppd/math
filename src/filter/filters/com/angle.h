@@ -47,4 +47,17 @@ template <typename T>
 {
         return {std::cos(angle), std::sin(angle)};
 }
+
+template <typename T>
+[[nodiscard]] numerical::Vector<2, T> rotate(const numerical::Vector<2, T>& v, const T angle)
+{
+        const T x = v[0];
+        const T y = v[1];
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        return {
+                x * cos - y * sin,
+                x * sin + y * cos,
+        };
+}
 }
