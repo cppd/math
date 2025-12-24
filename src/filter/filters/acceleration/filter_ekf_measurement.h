@@ -144,15 +144,14 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(const numerical:
         const T ay = x[5];
         const T angle = x[6];
         const T angle_r = x[8];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
                 com::angle(vx, vy) + angle + angle_r, // angle
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
@@ -303,14 +302,13 @@ numerical::Vector<5, T> position_speed_acceleration_h(const numerical::Vector<9,
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 px, // px
                 py, // py
                 std::sqrt(vx * vx + vy * vy), // speed
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
@@ -386,14 +384,13 @@ numerical::Vector<5, T> position_direction_acceleration_h(const numerical::Vecto
         const T ay = x[5];
         const T angle = x[6];
         const T angle_r = x[8];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 px, // px
                 py, // py
                 com::angle(vx, vy) + angle + angle_r, // angle
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
@@ -525,13 +522,12 @@ numerical::Vector<4, T> position_acceleration_h(const numerical::Vector<9, T>& x
         const T py = x[3];
         const T ay = x[5];
         const T angle = x[6];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 px, // px
                 py, // py
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
@@ -598,13 +594,12 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<9
         const T ay = x[5];
         const T angle = x[6];
         const T angle_r = x[8];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
                 com::angle(vx, vy) + angle + angle_r, // angle
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
@@ -728,12 +723,11 @@ numerical::Vector<3, T> direction_acceleration_h(const numerical::Vector<9, T>& 
         const T ay = x[5];
         const T angle = x[6];
         const T angle_r = x[8];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 com::angle(vx, vy) + angle + angle_r, // angle
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
@@ -791,9 +785,7 @@ numerical::Vector<2, T> acceleration_h(const numerical::Vector<9, T>& x)
         const T ax = x[2];
         const T ay = x[5];
         const T angle = x[6];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
-        return {ax * cos - ay * sin, ax * sin + ay * cos};
+        return com::rotate({ax, ay}, angle);
 }
 
 template <typename T>
@@ -931,12 +923,11 @@ numerical::Vector<3, T> speed_acceleration_h(const numerical::Vector<9, T>& x)
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T cos = std::cos(angle);
-        const T sin = std::sin(angle);
+        const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
                 std::sqrt(vx * vx + vy * vy), // speed
-                ax * cos - ay * sin, // ax
-                ax * sin + ay * cos // ay
+                ax_r, // ax
+                ay_r // ay
         };
 }
 
