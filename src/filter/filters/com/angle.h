@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
 #include <cmath>
@@ -58,6 +59,19 @@ template <typename T>
         return {
                 x * cos - y * sin,
                 x * sin + y * cos,
+        };
+}
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<3, 2, T> rotate_jacobian(const numerical::Vector<2, T>& v, const T angle)
+{
+        const T x = v[0];
+        const T y = v[1];
+        const T cos = std::cos(angle);
+        const T sin = std::sin(angle);
+        return {
+                {cos, -sin, -x * sin - y * cos},
+                {sin,  cos,  x * cos - y * sin},
         };
 }
 }
