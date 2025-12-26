@@ -38,9 +38,16 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T angle(const T vx, const T vy)
+[[nodiscard]] T angle(const T x, const T y)
 {
-        return std::atan2(vy, vx);
+        return std::atan2(y, x);
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<2, T> angle_jacobian(const T x, const T y)
+{
+        const T d = x * x + y * y;
+        return {-y / d, x / d};
 }
 
 template <typename T>
@@ -63,7 +70,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::Matrix<3, 2, T> rotate_jacobian(const numerical::Vector<2, T>& v, const T angle)
+[[nodiscard]] numerical::Matrix<2, 3, T> rotate_jacobian(const numerical::Vector<2, T>& v, const T angle)
 {
         const T x = v[0];
         const T y = v[1];
