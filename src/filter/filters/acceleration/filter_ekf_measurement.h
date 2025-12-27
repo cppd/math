@@ -183,13 +183,14 @@ numerical::Matrix<6, 9, T> position_speed_direction_acceleration_hj(const numeri
         const T sin = std::sin(angle);
         const T a_1 = -ax * sin - ay * cos;
         const T a_2 = ax * cos - ay * sin;
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {1,             0,   0, 0,            0,    0,   0, 0, 0},
-                {0,             0,   0, 1,            0,    0,   0, 0, 0},
-                {0,    vx / speed,   0, 0,   vy / speed,    0,   0, 0, 0},
-                {0, -vy / speed_2,   0, 0, vx / speed_2,    0,   1, 0, 1},
-                {0,             0, cos, 0,            0, -sin, a_1, 0, 0},
-                {0,             0, sin, 0,            0,  cos, a_2, 0, 0}
+                {1,          0,   0, 0,          0,    0,   0, 0, 0},
+                {0,          0,   0, 1,          0,    0,   0, 0, 0},
+                {0, vx / speed,   0, 0, vy / speed,    0,   0, 0, 0},
+                {0, angle_j[0],   0, 0, angle_j[1],    0,   1, 0, 1},
+                {0,          0, cos, 0,          0, -sin, a_1, 0, 0},
+                {0,          0, sin, 0,          0,  cos, a_2, 0, 0}
         };
 }
 
@@ -255,11 +256,12 @@ numerical::Matrix<4, 9, T> position_speed_direction_hj(const numerical::Vector<9
         const T vy = x[4];
         const T speed_2 = vx * vx + vy * vy;
         const T speed = std::sqrt(speed_2);
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {1,             0, 0, 0,            0, 0, 0, 0, 0},
-                {0,             0, 0, 1,            0, 0, 0, 0, 0},
-                {0,    vx / speed, 0, 0,   vy / speed, 0, 0, 0, 0},
-                {0, -vy / speed_2, 0, 0, vx / speed_2, 0, 1, 0, 1}
+                {1,          0, 0, 0,          0, 0, 0, 0, 0},
+                {0,          0, 0, 1,          0, 0, 0, 0, 0},
+                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0},
+                {0, angle_j[0], 0, 0, angle_j[1], 0, 1, 0, 1}
         };
 }
 
@@ -414,17 +416,17 @@ numerical::Matrix<5, 9, T> position_direction_acceleration_hj(const numerical::V
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T s_2 = vx * vx + vy * vy;
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         const T a_1 = -ax * sin - ay * cos;
         const T a_2 = ax * cos - ay * sin;
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {1,         0,   0, 0,        0,    0,   0, 0, 0},
-                {0,         0,   0, 1,        0,    0,   0, 0, 0},
-                {0, -vy / s_2,   0, 0, vx / s_2,    0,   1, 0, 1},
-                {0,         0, cos, 0,        0, -sin, a_1, 0, 0},
-                {0,         0, sin, 0,        0,  cos, a_2, 0, 0}
+                {1,          0,   0, 0,          0,    0,   0, 0, 0},
+                {0,          0,   0, 1,          0,    0,   0, 0, 0},
+                {0, angle_j[0],   0, 0, angle_j[1],    0,   1, 0, 1},
+                {0,          0, cos, 0,          0, -sin, a_1, 0, 0},
+                {0,          0, sin, 0,          0,  cos, a_2, 0, 0}
         };
 }
 
@@ -482,11 +484,11 @@ numerical::Matrix<3, 9, T> position_direction_hj(const numerical::Vector<9, T>& 
         // Simplify[D[{mPx,mPy,mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T s_2 = vx * vx + vy * vy;
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {1,         0, 0, 0,        0, 0, 0, 0, 0},
-                {0,         0, 0, 1,        0, 0, 0, 0, 0},
-                {0, -vy / s_2, 0, 0, vx / s_2, 0, 1, 0, 1}
+                {1,          0, 0, 0,          0, 0, 0, 0, 0},
+                {0,          0, 0, 1,          0, 0, 0, 0, 0},
+                {0, angle_j[0], 0, 0, angle_j[1], 0, 1, 0, 1}
         };
 }
 
@@ -627,11 +629,12 @@ numerical::Matrix<4, 9, T> speed_direction_acceleration_hj(const numerical::Vect
         const T sin = std::sin(angle);
         const T a_1 = -ax * sin - ay * cos;
         const T a_2 = ax * cos - ay * sin;
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {0,    vx / speed,   0, 0,   vy / speed,    0,   0, 0, 0},
-                {0, -vy / speed_2,   0, 0, vx / speed_2,    0,   1, 0, 1},
-                {0,             0, cos, 0,            0, -sin, a_1, 0, 0},
-                {0,             0, sin, 0,            0,  cos, a_2, 0, 0}
+                {0, vx / speed,   0, 0, vy / speed,    0,   0, 0, 0},
+                {0, angle_j[0],   0, 0, angle_j[1],    0,   1, 0, 1},
+                {0,          0, cos, 0,          0, -sin, a_1, 0, 0},
+                {0,          0, sin, 0,          0,  cos, a_2, 0, 0}
         };
 }
 
@@ -685,9 +688,10 @@ numerical::Matrix<2, 9, T> speed_direction_hj(const numerical::Vector<9, T>& x)
         const T vy = x[4];
         const T speed_2 = vx * vx + vy * vy;
         const T speed = std::sqrt(speed_2);
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {0,    vx / speed, 0, 0,   vy / speed, 0, 0, 0, 0},
-                {0, -vy / speed_2, 0, 0, vx / speed_2, 0, 1, 0, 1}
+                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0},
+                {0, angle_j[0], 0, 0, angle_j[1], 0, 1, 0, 1}
         };
 }
 
@@ -747,15 +751,15 @@ numerical::Matrix<3, 9, T> direction_acceleration_hj(const numerical::Vector<9, 
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T s_2 = vx * vx + vy * vy;
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         const T a_1 = -ax * sin - ay * cos;
         const T a_2 = ax * cos - ay * sin;
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {0, -vy / s_2,   0, 0, vx / s_2,    0,   1, 0, 1},
-                {0,         0, cos, 0,        0, -sin, a_1, 0, 0},
-                {0,         0, sin, 0,        0,  cos, a_2, 0, 0}
+                {0, angle_j[0],   0, 0, angle_j[1],    0,   1, 0, 1},
+                {0,          0, cos, 0,          0, -sin, a_1, 0, 0},
+                {0,          0, sin, 0,          0,  cos, a_2, 0, 0}
         };
 }
 
@@ -845,9 +849,9 @@ numerical::Matrix<1, 9, T> direction_hj(const numerical::Vector<9, T>& x)
         // Simplify[D[{mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T s_2 = vx * vx + vy * vy;
+        const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {0, -vy / s_2, 0, 0, vx / s_2, 0, 1, 0, 1}
+                {0, angle_j[0], 0, 0, angle_j[1], 0, 1, 0, 1}
         };
 }
 
