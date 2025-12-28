@@ -118,6 +118,11 @@ public:
                 return rows_[r];
         }
 
+        [[nodiscard]] constexpr const std::array<Vector<COLUMNS, T>, ROWS>& rows() const
+        {
+                return rows_;
+        }
+
         [[nodiscard]] constexpr Vector<ROWS, T> column(const std::size_t column) const
         {
                 return [&]<std::size_t... I>(std::integer_sequence<std::size_t, I...>&&)
