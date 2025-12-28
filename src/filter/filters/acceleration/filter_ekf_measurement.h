@@ -177,8 +177,7 @@ numerical::Matrix<6, 9, T> position_speed_direction_acceleration_hj(const numeri
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T speed_2 = vx * vx + vy * vy;
-        const T speed = std::sqrt(speed_2);
+        const T speed = std::sqrt(vx * vx + vy * vy);
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         const T a_1 = -ax * sin - ay * cos;
@@ -254,8 +253,7 @@ numerical::Matrix<4, 9, T> position_speed_direction_hj(const numerical::Vector<9
         // Simplify[D[{mPx,mPy,mSpeed,mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T speed_2 = vx * vx + vy * vy;
-        const T speed = std::sqrt(speed_2);
+        const T speed = std::sqrt(vx * vx + vy * vy);
         const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
                 {1,          0, 0, 0,          0, 0, 0, 0, 0},
@@ -623,8 +621,7 @@ numerical::Matrix<4, 9, T> speed_direction_acceleration_hj(const numerical::Vect
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T speed_2 = vx * vx + vy * vy;
-        const T speed = std::sqrt(speed_2);
+        const T speed = std::sqrt(vx * vx + vy * vy);
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         const T a_1 = -ax * sin - ay * cos;
@@ -686,8 +683,7 @@ numerical::Matrix<2, 9, T> speed_direction_hj(const numerical::Vector<9, T>& x)
         // Simplify[D[{mSpeed,mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T speed_2 = vx * vx + vy * vy;
-        const T speed = std::sqrt(speed_2);
+        const T speed = std::sqrt(vx * vx + vy * vy);
         const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
                 {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0},
