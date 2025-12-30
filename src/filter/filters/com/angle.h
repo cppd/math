@@ -40,20 +40,20 @@ template <typename T>
 template <typename T>
 [[nodiscard]] T angle(const T x, const T y)
 {
-        return std::atan2(y, x);
+        return std::atan2(x, y);
 }
 
 template <typename T>
 [[nodiscard]] numerical::Vector<2, T> angle_jacobian(const T x, const T y)
 {
         const T d = x * x + y * y;
-        return {-y / d, x / d};
+        return {y / d, -x / d};
 }
 
 template <typename T>
 [[nodiscard]] numerical::Vector<2, T> angle_vector(const T angle)
 {
-        return {std::cos(angle), std::sin(angle)};
+        return {std::sin(angle), std::cos(angle)};
 }
 
 template <typename T>
@@ -64,8 +64,8 @@ template <typename T>
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         return {
-                x * cos - y * sin,
-                x * sin + y * cos,
+                x * cos + y * sin,
+                -x * sin + y * cos,
         };
 }
 
@@ -77,8 +77,8 @@ template <typename T>
         const T cos = std::cos(angle);
         const T sin = std::sin(angle);
         return {
-                {cos, -sin, -x * sin - y * cos},
-                {sin,  cos,  x * cos - y * sin},
+                { cos, sin, -x * sin + y * cos},
+                {-sin, cos, -x * cos - y * sin},
         };
 }
 }

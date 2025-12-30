@@ -54,7 +54,7 @@ template <typename T>
         const T angle_time = period_number + std::clamp<T>(time_in_period / CHANGE_PERIOD, 0, 1);
         const T angle = 0.2 + (PI<T> / 2) * std::cos(angle_time * (PI<T> / 2));
 
-        return angle;
+        return PI<T> / 2 - angle;
 }
 
 template <typename T>
