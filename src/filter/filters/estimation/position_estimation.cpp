@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/filter/filters/com/utility.h>
+#include <src/filter/filters/com/variance.h>
 #include <src/filter/filters/filter.h>
 #include <src/filter/filters/measurement.h>
 #include <src/filter/settings/instantiation.h>
