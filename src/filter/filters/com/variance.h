@@ -125,7 +125,9 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T compute_speed_p(const numerical::Vector<N, T>& velocity, const numerical::Matrix<N, N, T>& velocity_p)
+[[nodiscard]] T compute_speed_variance(
+        const numerical::Vector<N, T>& velocity,
+        const numerical::Matrix<N, N, T>& velocity_p)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // Jacobian

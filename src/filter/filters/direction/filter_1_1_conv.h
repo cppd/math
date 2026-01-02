@@ -69,7 +69,7 @@ template <typename T>
 template <typename T>
 [[nodiscard]] T speed_p(const numerical::Vector<6, T>& x, const numerical::Matrix<6, 6, T>& p)
 {
-        return com::compute_speed_p(velocity(x), velocity_p(p));
+        return com::compute_speed_variance(velocity(x), velocity_p(p));
 }
 
 template <typename T>
