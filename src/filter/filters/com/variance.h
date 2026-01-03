@@ -39,7 +39,7 @@ template <std::size_t N, typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::Vector<1, T> compute_angle_variance(
+[[nodiscard]] numerical::Vector<1, T> angle_variance(
         const numerical::Vector<1, T>& /*velocity*/,
         const numerical::Matrix<1, 1, T>& /*velocity_p*/)
 {
@@ -47,7 +47,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::Vector<2, T> compute_angle_variance(
+[[nodiscard]] numerical::Vector<2, T> angle_variance(
         const numerical::Vector<2, T>& velocity,
         const numerical::Matrix<2, 2, T>& velocity_p)
 {
@@ -67,7 +67,7 @@ template <typename T>
 
 template <std::size_t N, typename T>
         requires (N >= 3)
-[[nodiscard]] numerical::Vector<N, T> compute_angle_variance(
+[[nodiscard]] numerical::Vector<N, T> angle_variance(
         const numerical::Vector<N, T>& velocity,
         const numerical::Matrix<N, N, T>& velocity_p)
 {
@@ -125,9 +125,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T compute_speed_variance(
-        const numerical::Vector<N, T>& velocity,
-        const numerical::Matrix<N, N, T>& velocity_p)
+[[nodiscard]] T speed_variance(const numerical::Vector<N, T>& velocity, const numerical::Matrix<N, N, T>& velocity_p)
 {
         // speed = sqrt(vx*vx + vy*vy)
         // Jacobian

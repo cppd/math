@@ -58,7 +58,7 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] T speed_p(const numerical::Vector<N, T>& x, const numerical::Matrix<N, N, T>& p)
 {
-        return com::compute_speed_variance(velocity(x), velocity_p(p));
+        return com::speed_variance(velocity(x), velocity_p(p));
 }
 
 template <std::size_t N, typename T>

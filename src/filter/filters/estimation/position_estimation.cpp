@@ -68,7 +68,7 @@ void PositionEstimation<N, T>::update(const Measurements<N, T>& m)
         }
 
         const numerical::Vector<N, T> angle_variance =
-                com::compute_angle_variance(position_->velocity(), position_->velocity_p());
+                com::angle_variance(position_->velocity(), position_->velocity_p());
         if (!is_finite(angle_variance))
         {
                 return;
