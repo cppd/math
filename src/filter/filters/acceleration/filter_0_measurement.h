@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/filter/filters/com/angle.h>
+#include <src/filter/filters/com/speed.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -68,7 +69,7 @@ numerical::Vector<3, T> position_speed_h(const numerical::Vector<8, T>& x)
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy) // speed
+                com::speed(vx, vy) // speed
         };
 }
 
@@ -117,7 +118,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r, // angle
                 ax_r, // ax
                 ay_r // ay
@@ -164,7 +165,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<8, T>
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r // angle
         };
 }
@@ -212,7 +213,7 @@ numerical::Vector<5, T> position_speed_acceleration_h(const numerical::Vector<8,
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 ax_r, // ax
                 ay_r // ay
         };
@@ -385,7 +386,7 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<8
         const T angle_r = x[7];
         const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r, // angle
                 ax_r, // ax
                 ay_r // ay
@@ -424,7 +425,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<8, T>& x, cons
         const T angle = x[6];
         const T angle_r = x[7];
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle + angle_r // angle
         };
 }
@@ -554,7 +555,7 @@ numerical::Vector<1, T> speed_h(const numerical::Vector<8, T>& x)
         const T vx = x[1];
         const T vy = x[4];
         return numerical::Vector<1, T>{
-                std::sqrt(vx * vx + vy * vy) // speed
+                com::speed(vx, vy) // speed
         };
 }
 
@@ -589,7 +590,7 @@ numerical::Vector<3, T> speed_acceleration_h(const numerical::Vector<8, T>& x)
         const T angle = x[6];
         const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 ax_r, // ax
                 ay_r // ay
         };
