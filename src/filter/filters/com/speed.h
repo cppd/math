@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/vector.h>
+
 #include <cmath>
 
 namespace ns::filter::filters::com
@@ -25,5 +27,12 @@ template <typename T>
 [[nodiscard]] T speed(const T x, const T y)
 {
         return std::sqrt(x * x + y * y);
+}
+
+template <typename T>
+[[nodiscard]] numerical::Vector<2, T> speed_jacobian(const T x, const T y)
+{
+        const T d = std::sqrt(x * x + y * y);
+        return {x / d, y / d};
 }
 }
