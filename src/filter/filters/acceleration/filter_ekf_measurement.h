@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/filter/filters/com/angle.h>
+#include <src/filter/filters/com/speed.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -80,7 +81,7 @@ numerical::Vector<3, T> position_speed_h(const numerical::Vector<9, T>& x)
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
         };
 }
 
@@ -97,11 +98,11 @@ numerical::Matrix<3, 9, T> position_speed_hj(const numerical::Vector<9, T>& x)
         // Simplify[D[{mPx,mPy,mSpeed},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         return {
                 {1,          0, 0, 0,          0, 0, 0, 0, 0},
                 {0,          0, 0, 1,          0, 0, 0, 0, 0},
-                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0}
+                {0, speed_j[0], 0, 0, speed_j[1], 0, 0, 0, 0}
         };
 }
 
@@ -148,7 +149,7 @@ numerical::Vector<6, T> position_speed_direction_acceleration_h(const numerical:
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::angle(vx, vy) + angle + angle_r, // angle
                 ax_r, // ax
                 ay_r // ay
@@ -177,14 +178,14 @@ numerical::Matrix<6, 9, T> position_speed_direction_acceleration_hj(const numeri
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         const numerical::Matrix<2, 3, T> a_j = com::rotate_jacobian({ax, ay}, angle);
         const auto& [ax_j, ay_j] = a_j.rows();
         return {
                 {1,          0,       0, 0,          0,       0,       0, 0, 0},
                 {0,          0,       0, 1,          0,       0,       0, 0, 0},
-                {0, vx / speed,       0, 0, vy / speed,       0,       0, 0, 0},
+                {0, speed_j[0],       0, 0, speed_j[1],       0,       0, 0, 0},
                 {0, angle_j[0],       0, 0, angle_j[1],       0,       1, 0, 1},
                 {0,          0, ax_j[0], 0,          0, ax_j[1], ax_j[2], 0, 0},
                 {0,          0, ay_j[0], 0,          0, ay_j[1], ay_j[2], 0, 0}
@@ -231,7 +232,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<9, T>
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::angle(vx, vy) + angle + angle_r // angle
         };
 }
@@ -251,12 +252,12 @@ numerical::Matrix<4, 9, T> position_speed_direction_hj(const numerical::Vector<9
         // Simplify[D[{mPx,mPy,mSpeed,mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
                 {1,          0, 0, 0,          0, 0, 0, 0, 0},
                 {0,          0, 0, 1,          0, 0, 0, 0, 0},
-                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0},
+                {0, speed_j[0], 0, 0, speed_j[1], 0, 0, 0, 0},
                 {0, angle_j[0], 0, 0, angle_j[1], 0, 1, 0, 1}
         };
 }
@@ -304,7 +305,7 @@ numerical::Vector<5, T> position_speed_acceleration_h(const numerical::Vector<9,
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 ax_r, // ax
                 ay_r // ay
         };
@@ -330,13 +331,13 @@ numerical::Matrix<5, 9, T> position_speed_acceleration_hj(const numerical::Vecto
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         const numerical::Matrix<2, 3, T> a_j = com::rotate_jacobian({ax, ay}, angle);
         const auto& [ax_j, ay_j] = a_j.rows();
         return {
                 {1,          0,       0, 0,          0,       0,       0, 0, 0},
                 {0,          0,       0, 1,          0,       0,       0, 0, 0},
-                {0, vx / speed,       0, 0, vy / speed,       0,       0, 0, 0},
+                {0, speed_j[0],       0, 0, speed_j[1],       0,       0, 0, 0},
                 {0,          0, ax_j[0], 0,          0, ax_j[1], ax_j[2], 0, 0},
                 {0,          0, ay_j[0], 0,          0, ay_j[1], ay_j[2], 0, 0}
         };
@@ -588,7 +589,7 @@ numerical::Vector<4, T> speed_direction_acceleration_h(const numerical::Vector<9
         const T angle_r = x[8];
         const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::angle(vx, vy) + angle + angle_r, // angle
                 ax_r, // ax
                 ay_r // ay
@@ -613,12 +614,12 @@ numerical::Matrix<4, 9, T> speed_direction_acceleration_hj(const numerical::Vect
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         const numerical::Matrix<2, 3, T> a_j = com::rotate_jacobian({ax, ay}, angle);
         const auto& [ax_j, ay_j] = a_j.rows();
         return {
-                {0, vx / speed,       0, 0, vy / speed,       0,       0, 0, 0},
+                {0, speed_j[0],       0, 0, speed_j[1],       0,       0, 0, 0},
                 {0, angle_j[0],       0, 0, angle_j[1],       0,       1, 0, 1},
                 {0,          0, ax_j[0], 0,          0, ax_j[1], ax_j[2], 0, 0},
                 {0,          0, ay_j[0], 0,          0, ay_j[1], ay_j[2], 0, 0}
@@ -657,7 +658,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<9, T>& x)
         const T angle = x[6];
         const T angle_r = x[8];
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::angle(vx, vy) + angle + angle_r // angle
         };
 }
@@ -673,10 +674,10 @@ numerical::Matrix<2, 9, T> speed_direction_hj(const numerical::Vector<9, T>& x)
         // Simplify[D[{mSpeed,mAngle},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         const numerical::Vector<2, T> angle_j = com::angle_jacobian(vx, vy);
         return {
-                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0},
+                {0, speed_j[0], 0, 0, speed_j[1], 0, 0, 0, 0},
                 {0, angle_j[0], 0, 0, angle_j[1], 0, 1, 0, 1}
         };
 }
@@ -863,7 +864,7 @@ numerical::Vector<1, T> speed_h(const numerical::Vector<9, T>& x)
         const T vx = x[1];
         const T vy = x[4];
         return numerical::Vector<1, T>{
-                std::sqrt(vx * vx + vy * vy) // speed
+                com::speed(vx, vy), // speed
         };
 }
 
@@ -876,9 +877,9 @@ numerical::Matrix<1, 9, T> speed_hj(const numerical::Vector<9, T>& x)
         // Simplify[D[{mSpeed},{{Px,Vx,Ax,Py,Vy,Ay,Bc,Bv,Br}}]]
         const T vx = x[1];
         const T vy = x[4];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         return {
-                {0, vx / speed, 0, 0, vy / speed, 0, 0, 0, 0}
+                {0, speed_j[0], 0, 0, speed_j[1], 0, 0, 0, 0}
         };
 }
 
@@ -913,7 +914,7 @@ numerical::Vector<3, T> speed_acceleration_h(const numerical::Vector<9, T>& x)
         const T angle = x[6];
         const auto [ax_r, ay_r] = com::rotate({ax, ay}, angle);
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 ax_r, // ax
                 ay_r // ay
         };
@@ -935,11 +936,11 @@ numerical::Matrix<3, 9, T> speed_acceleration_hj(const numerical::Vector<9, T>& 
         const T vy = x[4];
         const T ay = x[5];
         const T angle = x[6];
-        const T speed = std::sqrt(vx * vx + vy * vy);
+        const numerical::Vector<2, T> speed_j = com::speed_jacobian(vx, vy);
         const numerical::Matrix<2, 3, T> a_j = com::rotate_jacobian({ax, ay}, angle);
         const auto& [ax_j, ay_j] = a_j.rows();
         return {
-                {0, vx / speed,       0, 0, vy / speed,       0,       0, 0, 0},
+                {0, speed_j[0],       0, 0, speed_j[1],       0,       0, 0, 0},
                 {0,          0, ax_j[0], 0,          0, ax_j[1], ax_j[2], 0, 0},
                 {0,          0, ay_j[0], 0,          0, ay_j[1], ay_j[2], 0, 0}
         };
