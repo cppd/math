@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <src/filter/filters/com/angle.h>
+#include <src/filter/filters/com/speed.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
 
@@ -66,7 +67,7 @@ numerical::Vector<3, T> position_speed_h(const numerical::Vector<6, T>& x)
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy) // speed
+                com::speed(vx, vy), // speed
         };
 }
 
@@ -105,7 +106,7 @@ numerical::Vector<4, T> position_speed_direction_h(const numerical::Vector<6, T>
         return {
                 px, // px
                 py, // py
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle // angle
         };
 }
@@ -179,7 +180,7 @@ numerical::Vector<2, T> speed_direction_h(const numerical::Vector<6, T>& x, cons
         const T vy = x[3];
         const T angle = x[4];
         return {
-                std::sqrt(vx * vx + vy * vy), // speed
+                com::speed(vx, vy), // speed
                 com::unwrap_angle(reference_angle, com::angle(vx, vy)) + angle // angle
         };
 }
@@ -237,7 +238,7 @@ numerical::Vector<1, T> speed_h(const numerical::Vector<6, T>& x)
         const T vx = x[1];
         const T vy = x[3];
         return numerical::Vector<1, T>{
-                std::sqrt(vx * vx + vy * vy) // speed
+                com::speed(vx, vy), // speed
         };
 }
 
