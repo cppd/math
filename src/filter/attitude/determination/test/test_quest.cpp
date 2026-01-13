@@ -32,14 +32,30 @@ void test_impl(const T precision)
 {
         const numerical::QuaternionHJ<T, true> q = numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized();
 
-        const numerical::Vector<3, T> r1(-2, 3, -4);
-        const numerical::Vector<3, T> r2(2, 3, -4);
-        const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
-        const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
+        {
+                const numerical::Vector<3, T> r1(-2, 3, -4);
+                const numerical::Vector<3, T> r2(2, 3, -4);
+                const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
+                const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
 
-        const numerical::QuaternionHJ<T, true> a = quest_attitude<T>({s1, s2}, {r1, r2}, {0.5, 0.5});
+                const numerical::QuaternionHJ<T, true> a = quest_attitude<T>({s1, s2}, {r1, r2}, {0.5, 0.5});
 
-        test_equal(a, q, precision);
+                test_equal(a, q, precision);
+        }
+
+        {
+                const numerical::Vector<3, T> r1(-2, 3, -4);
+                const numerical::Vector<3, T> r2(2, 3, -4);
+                const numerical::Vector<3, T> r3(-2, -3, -4);
+                const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
+                const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
+                const numerical::Vector<3, T> s3 = numerical::rotate_vector(q, r3);
+
+                const numerical::QuaternionHJ<T, true> a =
+                        quest_attitude<T>({s1, s2, s3}, {r1, r2, r3}, {0.5, 0.5, 0.5});
+
+                test_equal(a, q, precision);
+        }
 }
 
 void test()

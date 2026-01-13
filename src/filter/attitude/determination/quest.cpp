@@ -18,11 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quest.h"
 
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
+#include <array>
 #include <cstddef>
+#include <optional>
+#include <string>
 #include <vector>
 
 namespace ns::filter::attitude::determination
@@ -126,6 +130,144 @@ template <typename T>
 {
         return m[0, 0] * adj[0, 0] + m[0, 1] * adj[1, 0] + m[0, 2] * adj[2, 0];
 }
+
+template <typename T>
+[[nodiscard]] std::array<T, 3> characteristic_polynomial(
+        const numerical::Matrix<3, 3, T>& s,
+        const numerical::Vector<3, T>& z)
+{
+        const numerical::Matrix<3, 3, T> s_adj = adjoint(s);
+
+        const T sigma = s.trace() / 2;
+        const T kappa = s_adj.trace();
+        const T delta = determinant(s, s_adj);
+
+        const numerical::Vector<3, T> s_z = s * z;
+
+        const T a = sigma * sigma - kappa;
+        const T b = sigma * sigma + dot(z, z);
+        const T c = delta + dot(z, s_z);
+        const T d = dot(z, s * s_z);
+
+        return {
+                -a - b,
+                -c,
+                a * b + c * sigma - d,
+        };
+}
+
+template <typename T>
+class CharacteristicPolynomial final
+{
+        // x^4 + c0 * x^2 + c1 * x + c2
+        const std::array<T, 3> f_;
+
+        // 4 * x^3 + c0 * x + c1
+        const std::array<T, 2> d_;
+
+public:
+        explicit CharacteristicPolynomial(const std::array<T, 3>& f)
+                : f_(f),
+                  d_{2 * f[0], f[1]}
+        {
+        }
+
+        [[nodiscard]] T f(const T x) const
+        {
+                return ((x * x + f_[0]) * x + f_[1]) * x + f_[2];
+        }
+
+        [[nodiscard]] T d(const T x) const
+        {
+                return (4 * x * x + d_[0]) * x + d_[1];
+        }
+
+        [[nodiscard]] std::string str() const
+        {
+                const auto s = [](const T v)
+                {
+                        return (v < 0 ? " - " : " + ") + to_string(std::abs(v));
+                };
+
+                std::string res;
+                res += "f = x^4";
+                if (!(f_[0] == 0))
+                {
+                        res += s(f_[0]) + " * x^2";
+                }
+                if (!(f_[1] == 0))
+                {
+                        res += s(f_[1]) + " * x";
+                }
+                if (!(f_[2] == 0))
+                {
+                        res += s(f_[2]);
+                }
+                res += ", ";
+                res += "d = 4 * x^3";
+                if (!(d_[0] == 0))
+                {
+                        res += s(d_[0]) + " * x";
+                }
+                if (!(d_[1] == 0))
+                {
+                        res += s(d_[1]);
+                }
+                return res;
+        }
+};
+
+template <typename F, typename T>
+[[nodiscard]] std::optional<T> newton_raphson(const F& function, const T init, const T acc)
+{
+        constexpr int MAX_ITERATION_COUNT = 15;
+        T res = init;
+        std::optional<T> last_abs_dx;
+        for (int i = 0; i < MAX_ITERATION_COUNT; ++i)
+        {
+                const T f = function.f(res);
+                const T d = function.d(res);
+                const T dx = f / d;
+                res -= dx;
+                const T abs_dx = std::abs(dx);
+                if (abs_dx <= acc)
+                {
+                        return res;
+                }
+                if (i >= 3)
+                {
+                        ASSERT(last_abs_dx);
+                        if (!(2 * abs_dx < *last_abs_dx))
+                        {
+                                return std::nullopt;
+                        }
+                }
+                last_abs_dx = abs_dx;
+        }
+        return std::nullopt;
+}
+
+template <typename T>
+[[nodiscard]] std::optional<T> largest_eigenvalue(
+        const std::vector<numerical::Vector<3, T>>& observations,
+        const std::vector<numerical::Vector<3, T>>& references,
+        const std::vector<T>& weights,
+        const numerical::Matrix<3, 3, T>& s,
+        const numerical::Vector<3, T>& z)
+{
+        ASSERT(observations.size() >= 2);
+        ASSERT(observations.size() == references.size());
+        ASSERT(observations.size() == weights.size());
+
+        if (observations.size() == 2)
+        {
+                return largest_eigenvalue_2(observations, references, weights);
+        }
+
+        const CharacteristicPolynomial p(characteristic_polynomial(s, z));
+
+        return newton_raphson(p, T{1}, T{1e-6});
+}
 }
 
 template <typename T>
@@ -160,14 +302,13 @@ template <typename T>
                 b[0, 1] - b[1, 0],
         };
 
-        if (obs_n.size() > 2)
+        const auto l_max = largest_eigenvalue(obs_n, ref_n, w_2, s, z);
+        if (!l_max)
         {
-                error("More than 2 observations not implemented");
+                error("Largest eigenvalue not found");
         }
 
-        const T l_max = largest_eigenvalue_2(obs_n, ref_n, w_2);
-
-        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(l_max + sigma) - s;
+        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + sigma) - s;
         const numerical::Matrix<3, 3, T> m_adj = adjoint(m);
         const T m_det = determinant(m, m_adj);
 
