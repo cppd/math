@@ -222,27 +222,16 @@ template <typename F, typename T>
 {
         constexpr int MAX_ITERATION_COUNT = 15;
         T res = init;
-        std::optional<T> last_abs_dx;
         for (int i = 0; i < MAX_ITERATION_COUNT; ++i)
         {
                 const T f = function.f(res);
                 const T d = function.d(res);
                 const T dx = f / d;
                 res -= dx;
-                const T abs_dx = std::abs(dx);
-                if (abs_dx <= acc)
+                if (std::abs(dx) <= acc && std::abs(f) <= acc)
                 {
                         return res;
                 }
-                if (i >= 3)
-                {
-                        ASSERT(last_abs_dx);
-                        if (!(2 * abs_dx < *last_abs_dx))
-                        {
-                                return std::nullopt;
-                        }
-                }
-                last_abs_dx = abs_dx;
         }
         return std::nullopt;
 }
