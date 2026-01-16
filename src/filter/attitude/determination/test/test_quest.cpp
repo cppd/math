@@ -44,7 +44,7 @@ numerical::Vector<3, T> add_error(const numerical::Vector<3, T>& v, const T erro
 }
 
 template <typename T>
-void test_impl(const T precision)
+void test_const(const T precision)
 {
         const numerical::QuaternionHJ<T, true> q = numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized();
 
@@ -72,35 +72,67 @@ void test_impl(const T precision)
 
                 test_equal(a, q, precision);
         }
+}
 
+template <typename T>
+void test_random()
+{
+        const numerical::QuaternionHJ<T, true> q = numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized();
+
+        PCG pcg;
+
+        numerical::Vector<3, T> r1;
+        numerical::Vector<3, T> r2;
+        numerical::Vector<3, T> r3;
+
+        while (true)
         {
-                PCG pcg;
-
-                const numerical::Vector<3, T> r1(-2, 3, -4);
-                const numerical::Vector<3, T> r2(2, 3, -4);
-                const numerical::Vector<3, T> r3(-2, -3, -4);
-
-                const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
-                const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
-                const numerical::Vector<3, T> s3 = numerical::rotate_vector(q, r3);
-
-                const T e1 = 0.01 * r1.norm();
-                const T e2 = 0.02 * r2.norm();
-                const T e3 = 0.1 * r3.norm();
-
-                const numerical::Vector<3, T> s1e = add_error(s1, e1, pcg);
-                const numerical::Vector<3, T> s2e = add_error(s2, e2, pcg);
-                const numerical::Vector<3, T> s3e = add_error(s3, e3, pcg);
-
-                const T w1 = r1.norm() / e1;
-                const T w2 = r2.norm() / e2;
-                const T w3 = r3.norm() / e3;
-
-                const numerical::QuaternionHJ<T, true> a =
-                        quest_attitude<T>({s1e, s2e, s3e}, {r1, r2, r3}, {w1, w2, w3});
-
-                test_equal(a, q, T{0.02});
+                r1 = sampling::uniform_on_sphere<3, T>(pcg);
+                r2 = sampling::uniform_on_sphere<3, T>(pcg);
+                r3 = sampling::uniform_on_sphere<3, T>(pcg);
+                const T max = 0.98;
+                if (std::abs(dot(r1, r2)) < max && std::abs(dot(r1, r3)) < max && std::abs(dot(r2, r3)) < max)
+                {
+                        break;
+                }
         }
+
+        const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
+        const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
+        const numerical::Vector<3, T> s3 = numerical::rotate_vector(q, r3);
+
+        const T e1 = 0.01 * r1.norm();
+        const T e2 = 0.02 * r2.norm();
+        const T e3 = 0.1 * r3.norm();
+
+        const numerical::Vector<3, T> s1e = add_error(s1, e1, pcg);
+        const numerical::Vector<3, T> s2e = add_error(s2, e2, pcg);
+        const numerical::Vector<3, T> s3e = add_error(s3, e3, pcg);
+
+        const T w1 = r1.norm() / e1;
+        const T w2 = r2.norm() / e2;
+        const T w3 = r3.norm() / e3;
+
+        const numerical::QuaternionHJ<T, true> a = quest_attitude<T>({s1e, s2e, s3e}, {r1, r2, r3}, {w1, w2, w3});
+
+        const numerical::Vector<4, T> av(a.x(), a.y(), a.z(), a.w());
+        const numerical::Vector<4, T> qv(q.x(), q.y(), q.z(), q.w());
+        const T diff = (av - qv).norm();
+
+        if (diff < 0.1)
+        {
+                return;
+        }
+
+        error(to_string(a) + " is not similar to " + to_string(q) + ", diff = " + to_string(diff) + ", cosines = "
+              + to_string(dot(r1, r2)) + ", " + to_string(dot(r1, r3)) + ", " + to_string(dot(r2, r3)));
+}
+
+template <typename T>
+void test_impl(const T precision)
+{
+        test_const(precision);
+        test_random<T>();
 }
 
 void test()
