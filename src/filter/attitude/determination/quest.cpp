@@ -34,6 +34,9 @@ namespace ns::filter::attitude::determination
 namespace
 {
 template <typename T>
+constexpr T EIGENVALUE_ACCURACY = 1e-5;
+
+template <typename T>
 [[nodiscard]] std::vector<numerical::Vector<3, T>> normalize(const std::vector<numerical::Vector<3, T>>& values)
 {
         std::vector<numerical::Vector<3, T>> res;
@@ -218,7 +221,7 @@ public:
 };
 
 template <typename F, typename T>
-[[nodiscard]] std::optional<T> newton_raphson(const F& function, const T init, const T acc)
+[[nodiscard]] std::optional<T> newton_raphson(const F& function, const T init, const T accuracy)
 {
         constexpr int MAX_ITERATION_COUNT = 15;
         T res = init;
@@ -228,7 +231,7 @@ template <typename F, typename T>
                 const T d = function.d(res);
                 const T dx = f / d;
                 res -= dx;
-                if (std::abs(dx) <= acc && std::abs(f) <= acc)
+                if (std::abs(dx) <= accuracy && std::abs(f) <= accuracy)
                 {
                         return res;
                 }
@@ -255,7 +258,7 @@ template <typename T>
 
         const CharacteristicPolynomial p(characteristic_polynomial(s, z));
 
-        return newton_raphson(p, T{1}, T{1e-6});
+        return newton_raphson(p, T{1}, EIGENVALUE_ACCURACY<T>);
 }
 }
 
