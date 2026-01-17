@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quest.h"
 
 #include "adjoint.h"
+#include "solve.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -195,25 +196,6 @@ public:
                 return res;
         }
 };
-
-template <typename F, typename T>
-[[nodiscard]] std::optional<T> newton_raphson(const F& function, const T init, const T accuracy)
-{
-        constexpr int MAX_ITERATION_COUNT = 15;
-        T res = init;
-        for (int i = 0; i < MAX_ITERATION_COUNT; ++i)
-        {
-                const T f = function.f(res);
-                const T d = function.d(res);
-                const T dx = f / d;
-                res -= dx;
-                if (std::abs(dx) <= accuracy && std::abs(f) <= accuracy)
-                {
-                        return res;
-                }
-        }
-        return std::nullopt;
-}
 
 template <typename T>
 [[nodiscard]] std::optional<T> largest_eigenvalue(
