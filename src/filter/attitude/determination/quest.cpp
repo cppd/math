@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quest.h"
 
+#include "adjoint.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/numerical/matrix.h>
@@ -109,37 +111,11 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::Matrix<3, 3, T> adjoint(const numerical::Matrix<3, 3, T>& m)
-{
-        numerical::Matrix<3, 3, T> res;
-
-        res[0, 0] = +(m[1, 1] * m[2, 2] - m[1, 2] * m[2, 1]);
-        res[0, 1] = -(m[0, 1] * m[2, 2] - m[0, 2] * m[2, 1]);
-        res[0, 2] = +(m[0, 1] * m[1, 2] - m[0, 2] * m[1, 1]);
-
-        res[1, 0] = -(m[1, 0] * m[2, 2] - m[1, 2] * m[2, 0]);
-        res[1, 1] = +(m[0, 0] * m[2, 2] - m[0, 2] * m[2, 0]);
-        res[1, 2] = -(m[0, 0] * m[1, 2] - m[0, 2] * m[1, 0]);
-
-        res[2, 0] = +(m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0]);
-        res[2, 1] = -(m[0, 0] * m[2, 1] - m[0, 1] * m[2, 0]);
-        res[2, 2] = +(m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0]);
-
-        return res;
-}
-
-template <typename T>
-[[nodiscard]] T determinant(const numerical::Matrix<3, 3, T>& m, const numerical::Matrix<3, 3, T>& adj)
-{
-        return m[0, 0] * adj[0, 0] + m[0, 1] * adj[1, 0] + m[0, 2] * adj[2, 0];
-}
-
-template <typename T>
 [[nodiscard]] std::array<T, 3> characteristic_polynomial(
         const numerical::Matrix<3, 3, T>& s,
         const numerical::Vector<3, T>& z)
 {
-        const numerical::Matrix<3, 3, T> s_adj = adjoint(s);
+        const numerical::Matrix<3, 3, T> s_adj = adjoint_symmetric(s);
 
         const T sigma = s.trace() / 2;
         const T kappa = s_adj.trace();
@@ -301,7 +277,7 @@ template <typename T>
         }
 
         const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + sigma) - s;
-        const numerical::Matrix<3, 3, T> m_adj = adjoint(m);
+        const numerical::Matrix<3, 3, T> m_adj = adjoint_symmetric(m);
         const T m_det = determinant(m, m_adj);
 
         return numerical::QuaternionHJ<T, true>(m_adj * z, m_det).normalized();
