@@ -93,7 +93,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] T largest_eigenvalue_2(
+[[nodiscard]] std::optional<T> largest_eigenvalue_2(
         const std::vector<numerical::Vector<3, T>>& observations,
         const std::vector<numerical::Vector<3, T>>& references,
         const std::vector<T>& weights)
@@ -112,7 +112,13 @@ template <typename T>
         const T a0 = weights[0];
         const T a1 = weights[1];
 
-        return std::sqrt(a0 * a0 + 2 * a0 * a1 * cos + a1 * a1);
+        const T v = a0 * a0 + 2 * a0 * a1 * cos + a1 * a1;
+        if (v >= 0)
+        {
+                return std::sqrt(v);
+        }
+
+        return std::nullopt;
 }
 
 template <typename T>
@@ -139,6 +145,50 @@ template <typename T>
 
         return newton_raphson(p, T{1}, EIGENVALUE_ACCURACY<T>);
 }
+
+template <typename T>
+struct Solve final
+{
+        numerical::Vector<3, T> z;
+        numerical::Matrix<3, 3, T> adj;
+        T det;
+};
+
+template <typename T>
+[[nodiscard]] Solve<T> solve(
+        const std::vector<numerical::Vector<3, T>>& obs,
+        const std::vector<numerical::Vector<3, T>>& ref,
+        const std::vector<T>& w)
+{
+        ASSERT(obs.size() == ref.size());
+        ASSERT(obs.size() == w.size());
+        ASSERT(obs.size() >= 2);
+
+        const numerical::Matrix<3, 3, T> b = make_b_matrix(obs, ref, w);
+        const numerical::Matrix<3, 3, T> s = b + b.transposed();
+
+        const numerical::Vector<3, T> z{
+                b[1, 2] - b[2, 1],
+                b[2, 0] - b[0, 2],
+                b[0, 1] - b[1, 0],
+        };
+
+        const auto l_max = (obs.size() == 2) ? largest_eigenvalue_2(obs, ref, w) : largest_eigenvalue(s, z);
+        if (!l_max)
+        {
+                error("Largest eigenvalue not found");
+        }
+
+        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
+        const numerical::Matrix<3, 3, T> m_adj = adjoint_symmetric(m);
+        const T m_det = determinant(m, m_adj);
+
+        return {
+                .z = z,
+                .adj = m_adj,
+                .det = m_det,
+        };
+}
 }
 
 template <typename T>
@@ -157,31 +207,13 @@ template <typename T>
                 error("At least 2 observations are required");
         }
 
-        const std::size_t size = observations.size();
-
         const std::vector<numerical::Vector<3, T>> obs_n = normalize(observations);
         const std::vector<numerical::Vector<3, T>> ref_n = normalize(references);
         const std::vector<T> w_2 = normalize_weights(weights);
 
-        const numerical::Matrix<3, 3, T> b = make_b_matrix(obs_n, ref_n, w_2);
-        const numerical::Matrix<3, 3, T> s = b + b.transposed();
-        const numerical::Vector<3, T> z{
-                b[1, 2] - b[2, 1],
-                b[2, 0] - b[0, 2],
-                b[0, 1] - b[1, 0],
-        };
+        const Solve<T> s = solve(obs_n, ref_n, w_2);
 
-        const auto l_max = (size == 2) ? largest_eigenvalue_2(obs_n, ref_n, w_2) : largest_eigenvalue(s, z);
-        if (!l_max)
-        {
-                error("Largest eigenvalue not found");
-        }
-
-        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
-        const numerical::Matrix<3, 3, T> m_adj = adjoint_symmetric(m);
-        const T m_det = determinant(m, m_adj);
-
-        return numerical::QuaternionHJ<T, true>(m_adj * z, m_det).normalized();
+        return numerical::QuaternionHJ<T, true>(s.adj * s.z, s.det).normalized();
 }
 
 #define TEMPLATE(T)                                                                                       \
