@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
-#include <array>
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -68,24 +67,29 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::Matrix<3, 3, T> make_b(
+[[nodiscard]] numerical::Matrix<3, 3, T> make_b_matrix(
         const std::vector<numerical::Vector<3, T>>& observations,
         const std::vector<numerical::Vector<3, T>>& references,
         const std::vector<T>& weights)
 {
         const std::size_t size = observations.size();
-        numerical::Matrix<3, 3, T> b(numerical::ZERO_MATRIX);
+
+        numerical::Matrix<3, 3, T> res(numerical::ZERO_MATRIX);
         for (std::size_t n = 0; n < size; ++n)
         {
+                const auto& w = weights[n];
+                const auto& obs = observations[n];
+                const auto& ref = references[n];
+
                 for (std::size_t i = 0; i < 3; ++i)
                 {
                         for (std::size_t j = 0; j < 3; ++j)
                         {
-                                b[i, j] += weights[n] * observations[n][i] * references[n][j];
+                                res[i, j] += w * obs[i] * ref[j];
                         }
                 }
         }
-        return b;
+        return res;
 }
 
 template <typename T>
@@ -112,9 +116,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::array<T, 3> characteristic_polynomial(
-        const numerical::Matrix<3, 3, T>& s,
-        const numerical::Vector<3, T>& z)
+[[nodiscard]] std::optional<T> largest_eigenvalue(const numerical::Matrix<3, 3, T>& s, const numerical::Vector<3, T>& z)
 {
         const numerical::Matrix<3, 3, T> s_adj = adjoint_symmetric(s);
 
@@ -129,31 +131,11 @@ template <typename T>
         const T c = delta + dot(z, s_z);
         const T d = dot(z, s * s_z);
 
-        return {
-                -a - b,
-                -c,
-                a * b + c * sigma - d,
-        };
-}
+        const T c0 = -a - b;
+        const T c1 = -c;
+        const T c2 = a * b + c * sigma - d;
 
-template <typename T>
-[[nodiscard]] std::optional<T> largest_eigenvalue(
-        const std::vector<numerical::Vector<3, T>>& observations,
-        const std::vector<numerical::Vector<3, T>>& references,
-        const std::vector<T>& weights,
-        const numerical::Matrix<3, 3, T>& s,
-        const numerical::Vector<3, T>& z)
-{
-        ASSERT(observations.size() >= 2);
-        ASSERT(observations.size() == references.size());
-        ASSERT(observations.size() == weights.size());
-
-        if (observations.size() == 2)
-        {
-                return largest_eigenvalue_2(observations, references, weights);
-        }
-
-        const CharacteristicPolynomial p(characteristic_polynomial(s, z));
+        const CharacteristicPolynomial<T> p({c0, c1, c2});
 
         return newton_raphson(p, T{1}, EIGENVALUE_ACCURACY<T>);
 }
@@ -175,29 +157,27 @@ template <typename T>
                 error("At least 2 observations are required");
         }
 
+        const std::size_t size = observations.size();
+
         const std::vector<numerical::Vector<3, T>> obs_n = normalize(observations);
         const std::vector<numerical::Vector<3, T>> ref_n = normalize(references);
         const std::vector<T> w_2 = normalize_weights(weights);
 
-        const numerical::Matrix<3, 3, T> b = make_b(obs_n, ref_n, w_2);
-
-        const T sigma = b.trace();
-
+        const numerical::Matrix<3, 3, T> b = make_b_matrix(obs_n, ref_n, w_2);
         const numerical::Matrix<3, 3, T> s = b + b.transposed();
-
         const numerical::Vector<3, T> z{
                 b[1, 2] - b[2, 1],
                 b[2, 0] - b[0, 2],
                 b[0, 1] - b[1, 0],
         };
 
-        const auto l_max = largest_eigenvalue(obs_n, ref_n, w_2, s, z);
+        const auto l_max = (size == 2) ? largest_eigenvalue_2(obs_n, ref_n, w_2) : largest_eigenvalue(s, z);
         if (!l_max)
         {
                 error("Largest eigenvalue not found");
         }
 
-        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + sigma) - s;
+        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
         const numerical::Matrix<3, 3, T> m_adj = adjoint_symmetric(m);
         const T m_det = determinant(m, m_adj);
 
