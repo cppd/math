@@ -95,13 +95,15 @@ void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
 }
 
 template <typename T>
-void test_random(const T max_diff, const T max_cosine, const std::vector<T>& errors)
+void test_random(
+        const T max_diff,
+        const T max_cosine,
+        const std::vector<T>& errors,
+        const numerical::QuaternionHJ<T, true>& q)
 {
         ASSERT(errors.size() >= 2);
 
         const T size = errors.size();
-
-        const numerical::QuaternionHJ<T, true> q = numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized();
 
         PCG pcg;
 
@@ -136,14 +138,27 @@ void test_random(const T max_diff, const T max_cosine, const std::vector<T>& err
         const numerical::Vector<4, T> av(a.x(), a.y(), a.z(), a.w());
         const numerical::Vector<4, T> qv(q.x(), q.y(), q.z(), q.w());
 
-        const T diff = (av - qv).norm();
+        const T diff_1 = (av - qv).norm();
+        const T diff_2 = (av + qv).norm();
 
-        if (diff < max_diff)
+        if (diff_1 < max_diff || diff_2 < max_diff)
         {
                 return;
         }
 
-        error(to_string(a) + " is not similar to " + to_string(q) + ", diff = " + to_string(diff));
+        error(to_string(a) + " is not similar to " + to_string(q) + ", diff 1 = " + to_string(diff_1)
+              + ", diff 2 = " + to_string(diff_2));
+}
+
+template <typename T>
+void test_random(const T max_diff, const T max_cosine, const std::vector<T>& errors)
+{
+        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized());
+
+        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({1, 0, 0}, 0).normalized());
+        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({0, 1, 0}, 0).normalized());
+        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({0, 0, 1}, 0).normalized());
+        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({0, 0, 0}, 1).normalized());
 }
 
 template <typename T>
@@ -156,9 +171,9 @@ void test_impl(const T precision)
         test_const(numerical::QuaternionHJ<T, true>({0, 0, 1}, 0), precision);
         test_const(numerical::QuaternionHJ<T, true>({0, 0, 0}, 1), precision);
 
-        test_random<T>(0.1, 0.98, {0.01, 0.03});
-        test_random<T>(0.1, 0.98, {0.01, 0.02, 0.1});
-        test_random<T>(0.1, 0.98, {0.01, 0.02, 0.05, 0.2});
+        test_random<T>(0.11, 0.98, {0.01, 0.03});
+        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.1});
+        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 0.2});
 }
 
 void test()

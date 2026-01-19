@@ -42,6 +42,9 @@ template <typename T>
 constexpr T EIGENVALUE_ACCURACY = 1e-5;
 
 template <typename T>
+using Quaternion = numerical::QuaternionHJ<T, true>;
+
+template <typename T>
 [[nodiscard]] std::vector<numerical::Vector<3, T>> normalize(const std::vector<numerical::Vector<3, T>>& values)
 {
         std::vector<numerical::Vector<3, T>> res;
@@ -91,12 +94,8 @@ template <std::size_t AXIS, typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::QuaternionHJ<T, true> rotate_axis(
-        const numerical::QuaternionHJ<T, true>& q,
-        const std::size_t axis)
+[[nodiscard]] Quaternion<T> rotate_axis(const Quaternion<T>& q, const std::size_t axis)
 {
-        using Quaternion = numerical::QuaternionHJ<T, true>;
-
         switch (axis)
         {
         case 0:
@@ -249,7 +248,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] numerical::QuaternionHJ<T, true> quest_attitude(
+[[nodiscard]] Quaternion<T> quest_attitude(
         const std::vector<numerical::Vector<3, T>>& observations,
         const std::vector<numerical::Vector<3, T>>& references,
         const std::vector<T>& weights)
@@ -278,7 +277,7 @@ template <typename T>
         const std::size_t index = max_det_index(s);
         ASSERT(index >= 0 && index <= 3);
 
-        const numerical::QuaternionHJ<T, true> q(s[index].adj * s[index].z, s[index].det);
+        const Quaternion<T> q(s[index].adj * s[index].z, s[index].det);
 
         if (index < 3)
         {
@@ -288,7 +287,7 @@ template <typename T>
 }
 
 #define TEMPLATE(T)                                                                                       \
-        template numerical::QuaternionHJ<T, true> quest_attitude(                                         \
+        template Quaternion<T> quest_attitude(                                                            \
                 const std::vector<numerical::Vector<3, T>>&, const std::vector<numerical::Vector<3, T>>&, \
                 const std::vector<T>&);
 
