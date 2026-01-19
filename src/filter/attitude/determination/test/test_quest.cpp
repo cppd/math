@@ -64,9 +64,9 @@ numerical::Vector<3, T> add_error(const numerical::Vector<3, T>& v, const T erro
 }
 
 template <typename T>
-void test_const(const T precision)
+void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
 {
-        const numerical::QuaternionHJ<T, true> q = numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized();
+        ASSERT(q.is_normalized());
 
         {
                 const numerical::Vector<3, T> r1(-2, 3, -4);
@@ -149,7 +149,12 @@ void test_random(const T max_diff, const T max_cosine, const std::vector<T>& err
 template <typename T>
 void test_impl(const T precision)
 {
-        test_const(precision);
+        test_const(numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized(), precision);
+
+        test_const(numerical::QuaternionHJ<T, true>({1, 0, 0}, 0), precision);
+        test_const(numerical::QuaternionHJ<T, true>({0, 1, 0}, 0), precision);
+        test_const(numerical::QuaternionHJ<T, true>({0, 0, 1}, 0), precision);
+        test_const(numerical::QuaternionHJ<T, true>({0, 0, 0}, 1), precision);
 
         test_random<T>(0.1, 0.98, {0.01, 0.03});
         test_random<T>(0.1, 0.98, {0.01, 0.02, 0.1});

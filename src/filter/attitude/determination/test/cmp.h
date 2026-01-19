@@ -69,7 +69,8 @@ void test_equal(const numerical::QuaternionHJ<T, JPL>& a, const numerical::Quate
 {
         namespace impl = cmp_implementation;
 
-        if (!impl::equal(a.w(), b.w(), precision) || !impl::equal(a.vec(), b.vec(), precision))
+        if (!(impl::equal(a.w(), b.w(), precision) && impl::equal(a.vec(), b.vec(), precision))
+            && !(impl::equal(a.w(), -b.w(), precision) && impl::equal(a.vec(), -b.vec(), precision)))
         {
                 error(to_string(a) + " is not equal to " + to_string(b));
         }
