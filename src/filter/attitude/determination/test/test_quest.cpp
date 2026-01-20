@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <vector>
@@ -99,13 +100,13 @@ void test_random(
         const T max_diff,
         const T max_cosine,
         const std::vector<T>& errors,
-        const numerical::QuaternionHJ<T, true>& q)
+        const numerical::QuaternionHJ<T, true>& q,
+        PCG& pcg)
 {
         ASSERT(errors.size() >= 2);
+        ASSERT(q.is_normalized());
 
         const T size = errors.size();
-
-        PCG pcg;
 
         std::vector<numerical::Vector<3, T>> r(size);
         while (true)
@@ -151,14 +152,32 @@ void test_random(
 }
 
 template <typename T>
-void test_random(const T max_diff, const T max_cosine, const std::vector<T>& errors)
+void test_random(const T max_diff, const T max_cosine, std::vector<T> errors)
 {
-        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized());
+        const std::vector<numerical::QuaternionHJ<T, true>> quaternions{
+                { {1, -2, 3}, 4},
+                {{-4, 3, -2}, 1},
+                {  {1, 0, 0}, 0},
+                {  {0, 1, 0}, 0},
+                {  {0, 0, 1}, 0},
+                {  {0, 0, 0}, 1},
+        };
 
-        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({1, 0, 0}, 0).normalized());
-        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({0, 1, 0}, 0).normalized());
-        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({0, 0, 1}, 0).normalized());
-        test_random<T>(max_diff, max_cosine, errors, numerical::QuaternionHJ<T, true>({0, 0, 0}, 1).normalized());
+        PCG pcg;
+
+        for (const auto& q : quaternions)
+        {
+                std::ranges::shuffle(errors, pcg);
+                test_random<T>(max_diff, max_cosine, errors, q.normalized(), pcg);
+        }
+
+        for (int i = 0; i < 100; ++i)
+        {
+                const numerical::Vector<4, T> v = sampling::uniform_on_sphere<4, T>(pcg);
+                const numerical::QuaternionHJ<T, true> q({v[0], v[1], v[2]}, v[3]);
+                std::ranges::shuffle(errors, pcg);
+                test_random<T>(max_diff, max_cosine, errors, q.normalized(), pcg);
+        }
 }
 
 template <typename T>
@@ -174,6 +193,8 @@ void test_impl(const T precision)
         test_random<T>(0.11, 0.98, {0.01, 0.03});
         test_random<T>(0.11, 0.98, {0.01, 0.02, 0.1});
         test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 0.2});
+        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 10.0});
+        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 0.2, 10.0});
 }
 
 void test()
