@@ -65,6 +65,56 @@ numerical::Vector<3, T> add_error(const numerical::Vector<3, T>& v, const T erro
 }
 
 template <typename T>
+std::vector<numerical::Vector<3, T>> create_references(const std::size_t count, const T max_cosine, PCG& pcg)
+{
+        std::vector<numerical::Vector<3, T>> res(count);
+        while (true)
+        {
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                        res[i] = sampling::uniform_on_sphere<3, T>(pcg);
+                }
+                if (check_angles(res, max_cosine))
+                {
+                        break;
+                }
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<numerical::Vector<3, T>> create_observations(
+        const std::vector<numerical::Vector<3, T>>& references,
+        const std::vector<T>& errors,
+        const numerical::QuaternionHJ<T, true>& q,
+        PCG& pcg)
+{
+        ASSERT(references.size() == errors.size());
+        const T size = references.size();
+
+        std::vector<numerical::Vector<3, T>> res;
+        res.reserve(size);
+        for (std::size_t i = 0; i < size; ++i)
+        {
+                const numerical::Vector<3, T> rotated = numerical::rotate_vector(q, references[i]);
+                res.push_back(add_error(rotated, errors[i], pcg));
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<T> errors_to_weights(const std::vector<T>& errors)
+{
+        std::vector<T> weights;
+        weights.reserve(errors.size());
+        for (const T error : errors)
+        {
+                weights.push_back(1 / error);
+        }
+        return weights;
+}
+
+template <typename T>
 void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
 {
         ASSERT(q.is_normalized());
@@ -106,35 +156,11 @@ void test_random(
         ASSERT(errors.size() >= 2);
         ASSERT(q.is_normalized());
 
-        const T size = errors.size();
+        const std::vector<numerical::Vector<3, T>> references = create_references(errors.size(), max_cosine, pcg);
+        const std::vector<numerical::Vector<3, T>> observations = create_observations(references, errors, q, pcg);
+        const std::vector<T> weights = errors_to_weights(errors);
 
-        std::vector<numerical::Vector<3, T>> r(size);
-        while (true)
-        {
-                for (std::size_t i = 0; i < size; ++i)
-                {
-                        r[i] = sampling::uniform_on_sphere<3, T>(pcg);
-                }
-                if (check_angles(r, max_cosine))
-                {
-                        break;
-                }
-        }
-
-        std::vector<numerical::Vector<3, T>> s(size);
-        for (std::size_t i = 0; i < size; ++i)
-        {
-                const numerical::Vector<3, T> rotated = numerical::rotate_vector(q, r[i]);
-                s[i] = add_error(rotated, errors[i], pcg);
-        }
-
-        std::vector<T> w(size);
-        for (std::size_t i = 0; i < size; ++i)
-        {
-                w[i] = 1 / errors[i];
-        }
-
-        const numerical::QuaternionHJ<T, true> a = quest_attitude<T>(s, r, w);
+        const numerical::QuaternionHJ<T, true> a = quest_attitude<T>(observations, references, weights);
 
         const numerical::Vector<4, T> av(a.x(), a.y(), a.z(), a.w());
         const numerical::Vector<4, T> qv(q.x(), q.y(), q.z(), q.w());
