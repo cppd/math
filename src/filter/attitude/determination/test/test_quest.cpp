@@ -17,9 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cmp.h"
 
+#include <src/com/benchmark.h>
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/com/random/pcg.h>
+#include <src/com/type/name.h>
 #include <src/filter/attitude/determination/quest.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/quaternion.h>
@@ -29,7 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <string>
 #include <vector>
 
 namespace ns::filter::attitude::determination::test
@@ -178,7 +184,7 @@ void test_random(
 }
 
 template <typename T>
-void test_random(const T max_diff, const T max_cosine, std::vector<T> errors)
+void test_random(PCG& pcg, const T max_diff, const T max_cosine, std::vector<T> errors)
 {
         const std::vector<numerical::QuaternionHJ<T, true>> quaternions{
                 { {1, -2, 3}, 4},
@@ -188,8 +194,6 @@ void test_random(const T max_diff, const T max_cosine, std::vector<T> errors)
                 {  {0, 0, 1}, 0},
                 {  {0, 0, 0}, 1},
         };
-
-        PCG pcg;
 
         for (const auto& q : quaternions)
         {
@@ -216,11 +220,57 @@ void test_impl(const T precision)
         test_const(numerical::QuaternionHJ<T, true>({0, 0, 1}, 0), precision);
         test_const(numerical::QuaternionHJ<T, true>({0, 0, 0}, 1), precision);
 
-        test_random<T>(0.11, 0.98, {0.01, 0.03});
-        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.1});
-        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 0.2});
-        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 10.0});
-        test_random<T>(0.11, 0.98, {0.01, 0.02, 0.05, 0.2, 10.0});
+        PCG pcg;
+
+        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.03});
+        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.1});
+        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.05, 0.2});
+        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.05, 10.0});
+        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.05, 0.2, 10.0});
+}
+
+template <typename T>
+void test_quest_performance(PCG& pcg, const T max_cosine, std::vector<T> errors)
+{
+        static constexpr int DATA_COUNT = 5'000;
+        static constexpr int ITERATION_COUNT = 100;
+
+        const numerical::Vector<4, T> v = sampling::uniform_on_sphere<4, T>(pcg);
+        const numerical::QuaternionHJ<T, true> q({v[0], v[1], v[2]}, v[3]);
+        std::ranges::shuffle(errors, pcg);
+
+        const std::vector<T> weights = errors_to_weights(errors);
+
+        std::vector<std::vector<numerical::Vector<3, T>>> references;
+        std::vector<std::vector<numerical::Vector<3, T>>> observations;
+
+        for (int i = 0; i < DATA_COUNT; ++i)
+        {
+                references.push_back(create_references(errors.size(), max_cosine, pcg));
+                observations.push_back(create_observations(references.back(), errors, q, pcg));
+        }
+
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < DATA_COUNT; ++i)
+        {
+                for (int j = 0; j < ITERATION_COUNT; ++j)
+                {
+                        do_not_optimize(quest_attitude<T>(observations[i], references[i], weights));
+                }
+        }
+        const auto performance = std::llround(DATA_COUNT * (ITERATION_COUNT / duration_from(start_time)));
+
+        LOG(std::string("QUEST<") + type_name<T>() + ">: size = " + to_string(errors.size())
+            + ", performance = " + to_string_digit_groups(performance) + " o/s");
+}
+
+template <typename T>
+void test_quest_performance(PCG& pcg)
+{
+        test_quest_performance<T>(pcg, 0.98, {0.01, 0.03});
+        test_quest_performance<T>(pcg, 0.98, {0.01, 0.02, 0.1});
+        test_quest_performance<T>(pcg, 0.98, {0.01, 0.02, 0.05, 0.2});
+        test_quest_performance<T>(pcg, 0.98, {0.01, 0.02, 0.05, 0.2, 10.0});
 }
 
 void test()
@@ -232,6 +282,15 @@ void test()
         LOG("Test attitude determination quest passed");
 }
 
+void test_performance()
+{
+        PCG pcg;
+        test_quest_performance<float>(pcg);
+        test_quest_performance<double>(pcg);
+        test_quest_performance<long double>(pcg);
+}
+
 TEST_SMALL("Attitude Determination Quest", test)
+TEST_PERFORMANCE("Attitude Determination Quest", test_performance)
 }
 }
