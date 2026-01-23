@@ -39,13 +39,13 @@ namespace ns::filter::attitude::determination
 namespace
 {
 template <typename T>
-constexpr T EIGENVALUE_ACCURACY = 1e-5;
+constexpr T EIGENVALUE_ACCURACY = 1e-6;
 
 template <typename T>
 using Quaternion = numerical::QuaternionHJ<T, true>;
 
 template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<3, T>> normalize(const std::vector<numerical::Vector<3, T>>& values)
+[[nodiscard]] std::vector<numerical::Vector<3, T>> normalize_vectors(const std::vector<numerical::Vector<3, T>>& values)
 {
         std::vector<numerical::Vector<3, T>> res;
         res.reserve(values.size());
@@ -190,57 +190,61 @@ template <typename T>
 }
 
 template <typename T>
-struct Solve final
+class Solve final
 {
-        numerical::Vector<3, T> z;
-        numerical::Matrix<3, 3, T> adj;
-        T det;
-};
+        numerical::Vector<3, T> z_;
+        numerical::Matrix<3, 3, T> adj_;
+        T det_;
 
-template <typename T>
-[[nodiscard]] Solve<T> solve(
-        const std::vector<numerical::Vector<3, T>>& obs,
-        const std::vector<numerical::Vector<3, T>>& ref,
-        const std::vector<T>& w)
-{
-        ASSERT(obs.size() == ref.size());
-        ASSERT(obs.size() == w.size());
-        ASSERT(obs.size() >= 2);
-
-        const numerical::Matrix<3, 3, T> b = make_b_matrix(obs, ref, w);
-        const numerical::Matrix<3, 3, T> s = b + b.transposed();
-
-        const numerical::Vector<3, T> z{
-                b[1, 2] - b[2, 1],
-                b[2, 0] - b[0, 2],
-                b[0, 1] - b[1, 0],
-        };
-
-        const auto l_max = (obs.size() == 2) ? largest_eigenvalue_2(obs, ref, w) : largest_eigenvalue(s, z);
-        if (!l_max)
+public:
+        Solve(const std::vector<numerical::Vector<3, T>>& obs,
+              const std::vector<numerical::Vector<3, T>>& ref,
+              const std::vector<T>& w)
         {
-                error("Largest eigenvalue not found");
+                ASSERT(obs.size() == ref.size());
+                ASSERT(obs.size() == w.size());
+                ASSERT(obs.size() >= 2);
+
+                const numerical::Matrix<3, 3, T> b = make_b_matrix(obs, ref, w);
+                const numerical::Matrix<3, 3, T> s = b + b.transposed();
+
+                z_ = {
+                        b[1, 2] - b[2, 1],
+                        b[2, 0] - b[0, 2],
+                        b[0, 1] - b[1, 0],
+                };
+
+                const auto l_max = (obs.size() == 2) ? largest_eigenvalue_2(obs, ref, w) : largest_eigenvalue(s, z_);
+                if (!l_max)
+                {
+                        error("Largest eigenvalue not found");
+                }
+
+                const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
+
+                adj_ = adjoint_symmetric(m);
+                det_ = determinant(m, adj_);
         }
 
-        const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
-        const numerical::Matrix<3, 3, T> m_adj = adjoint_symmetric(m);
-        const T m_det = determinant(m, m_adj);
+        [[nodiscard]] T det() const
+        {
+                return det_;
+        }
 
-        return {
-                .z = z,
-                .adj = m_adj,
-                .det = m_det,
-        };
-}
+        [[nodiscard]] Quaternion<T> compute() const
+        {
+                return Quaternion<T>(adj_ * z_, det_).normalized();
+        }
+};
 
 template <typename T>
 [[nodiscard]] std::size_t max_det_index(const std::array<Solve<T>, 4>& s)
 {
         const std::array<T, 4> dets{
-                std::abs(s[0].det),
-                std::abs(s[1].det),
-                std::abs(s[2].det),
-                std::abs(s[3].det),
+                std::abs(s[0].det()),
+                std::abs(s[1].det()),
+                std::abs(s[2].det()),
+                std::abs(s[3].det()),
         };
 
         return std::ranges::max_element(dets) - dets.cbegin();
@@ -263,27 +267,23 @@ template <typename T>
                 error("At least 2 observations are required");
         }
 
-        const std::vector<numerical::Vector<3, T>> obs_n = normalize(observations);
-        const std::vector<numerical::Vector<3, T>> ref_n = normalize(references);
+        const std::vector<numerical::Vector<3, T>> obs_n = normalize_vectors(observations);
+        const std::vector<numerical::Vector<3, T>> ref_n = normalize_vectors(references);
         const std::vector<T> w_2 = normalize_weights(weights);
 
-        const std::array<Solve<T>, 4> s{
-                solve(obs_n, rotate_axis<0>(ref_n), w_2),
-                solve(obs_n, rotate_axis<1>(ref_n), w_2),
-                solve(obs_n, rotate_axis<2>(ref_n), w_2),
-                solve(obs_n, ref_n, w_2),
+        const std::array s{
+                Solve<T>{obs_n, rotate_axis<0>(ref_n), w_2},
+                Solve<T>{obs_n, rotate_axis<1>(ref_n), w_2},
+                Solve<T>{obs_n, rotate_axis<2>(ref_n), w_2},
+                Solve<T>{obs_n,                 ref_n, w_2},
         };
 
         const std::size_t index = max_det_index(s);
         ASSERT(index >= 0 && index <= 3);
 
-        const Quaternion<T> q(s[index].adj * s[index].z, s[index].det);
+        const Quaternion<T> attitude = s[index].compute();
 
-        if (index < 3)
-        {
-                return rotate_axis(q, index).normalized();
-        }
-        return q.normalized();
+        return (index < 3) ? rotate_axis(attitude, index) : attitude;
 }
 
 #define TEMPLATE(T)                                                                                       \
