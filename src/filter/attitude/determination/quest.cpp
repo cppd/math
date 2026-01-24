@@ -208,13 +208,13 @@ public:
                 const numerical::Matrix<3, 3, T> b = make_b_matrix(obs, ref, w);
                 const numerical::Matrix<3, 3, T> s = b + b.transposed();
 
-                z_ = {
+                const numerical::Vector<3, T> z = {
                         b[1, 2] - b[2, 1],
                         b[2, 0] - b[0, 2],
                         b[0, 1] - b[1, 0],
                 };
 
-                const auto l_max = (obs.size() == 2) ? largest_eigenvalue_2(obs, ref, w) : largest_eigenvalue(s, z_);
+                const auto l_max = (obs.size() == 2) ? largest_eigenvalue_2(obs, ref, w) : largest_eigenvalue(s, z);
                 if (!l_max)
                 {
                         error("Largest eigenvalue not found");
@@ -222,6 +222,7 @@ public:
 
                 const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
 
+                z_ = z;
                 adj_ = adjoint_symmetric(m);
                 det_ = determinant(m, adj_);
         }
