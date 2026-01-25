@@ -110,6 +110,45 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] numerical::Matrix<3, 3, T> sum_with_transpose(const numerical::Matrix<3, 3, T>& m)
+{
+        numerical::Matrix<3, 3, T> res;
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                for (std::size_t j = i + 1; j < 3; ++j)
+                {
+                        const T v = m[i, j] + m[j, i];
+                        res[i, j] = v;
+                        res[j, i] = v;
+                }
+        }
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                const T v = m[i, i];
+                res[i, i] = v + v;
+        }
+        return res;
+}
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<3, 3, T> negate_and_add_diagonal(const numerical::Matrix<3, 3, T>& m, const T v)
+{
+        numerical::Matrix<3, 3, T> res;
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                for (std::size_t j = 0; j < 3; ++j)
+                {
+                        res[i, j] = -m[i, j];
+                }
+        }
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                res[i, i] += v;
+        }
+        return res;
+}
+
+template <typename T>
 [[nodiscard]] numerical::Matrix<3, 3, T> make_b_matrix(
         const std::vector<numerical::Vector<3, T>>& observations,
         const std::vector<numerical::Vector<3, T>>& references,
@@ -206,7 +245,7 @@ public:
                 ASSERT(obs.size() >= 2);
 
                 const numerical::Matrix<3, 3, T> b = make_b_matrix(obs, ref, w);
-                const numerical::Matrix<3, 3, T> s = b + b.transposed();
+                const numerical::Matrix<3, 3, T> s = sum_with_transpose(b);
 
                 const numerical::Vector<3, T> z = {
                         b[1, 2] - b[2, 1],
@@ -220,7 +259,7 @@ public:
                         error("Largest eigenvalue not found");
                 }
 
-                const numerical::Matrix<3, 3, T> m = numerical::make_diagonal_matrix<3, T>(*l_max + b.trace()) - s;
+                const numerical::Matrix<3, 3, T> m = negate_and_add_diagonal(s, *l_max + b.trace());
 
                 z_ = z;
                 adj_ = adjoint_symmetric(m);
