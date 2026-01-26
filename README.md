@@ -61,9 +61,10 @@ Convex hull                                    | Divide et impera
 
 C++
 
-Subject             | Algorithms
---------------------|-----------------------------------------------------------------------------------------------
-Attitude estimation | The extended Kalman filter (EKF)<br/>The unscented Kalman filter (UKF)<br/>The Madgwick filter
+Subject                | Algorithms
+-----------------------|-----------------------------------------------------------------------------------------------
+Attitude determination | QUEST
+Attitude estimation    | The extended Kalman filter (EKF)<br/>The unscented Kalman filter (UKF)<br/>The Madgwick filter
 
 
 ### Spaces with arbitrary number of dimensions
