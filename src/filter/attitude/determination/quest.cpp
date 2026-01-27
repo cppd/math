@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quest.h"
 
-#include "adjoint.h"
+#include "matrix.h"
 #include "polynomial.h"
 #include "solve.h"
 
@@ -107,45 +107,6 @@ template <typename T>
         default:
                 error("Unknown axis " + to_string(axis));
         }
-}
-
-template <typename T>
-[[nodiscard]] numerical::Matrix<3, 3, T> sum_with_transpose(const numerical::Matrix<3, 3, T>& m)
-{
-        numerical::Matrix<3, 3, T> res;
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-                for (std::size_t j = i + 1; j < 3; ++j)
-                {
-                        const T v = m[i, j] + m[j, i];
-                        res[i, j] = v;
-                        res[j, i] = v;
-                }
-        }
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-                const T v = m[i, i];
-                res[i, i] = v + v;
-        }
-        return res;
-}
-
-template <typename T>
-[[nodiscard]] numerical::Matrix<3, 3, T> negate_and_add_diagonal(const numerical::Matrix<3, 3, T>& m, const T v)
-{
-        numerical::Matrix<3, 3, T> res;
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-                for (std::size_t j = 0; j < 3; ++j)
-                {
-                        res[i, j] = -m[i, j];
-                }
-        }
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-                res[i, i] += v;
-        }
-        return res;
 }
 
 template <typename T>

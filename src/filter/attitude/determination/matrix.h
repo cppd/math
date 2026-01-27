@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/matrix.h>
 
+#include <cstddef>
+
 namespace ns::filter::attitude::determination
 {
 template <typename T>
@@ -45,5 +47,44 @@ template <typename T>
 [[nodiscard]] T determinant(const numerical::Matrix<3, 3, T>& m, const numerical::Matrix<3, 3, T>& m_adj)
 {
         return m[0, 0] * m_adj[0, 0] + m[0, 1] * m_adj[1, 0] + m[0, 2] * m_adj[2, 0];
+}
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<3, 3, T> sum_with_transpose(const numerical::Matrix<3, 3, T>& m)
+{
+        numerical::Matrix<3, 3, T> res;
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                for (std::size_t j = i + 1; j < 3; ++j)
+                {
+                        const T v = m[i, j] + m[j, i];
+                        res[i, j] = v;
+                        res[j, i] = v;
+                }
+        }
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                const T v = m[i, i];
+                res[i, i] = v + v;
+        }
+        return res;
+}
+
+template <typename T>
+[[nodiscard]] numerical::Matrix<3, 3, T> negate_and_add_diagonal(const numerical::Matrix<3, 3, T>& m, const T v)
+{
+        numerical::Matrix<3, 3, T> res;
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                for (std::size_t j = 0; j < 3; ++j)
+                {
+                        res[i, j] = -m[i, j];
+                }
+        }
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                res[i, i] += v;
+        }
+        return res;
 }
 }
