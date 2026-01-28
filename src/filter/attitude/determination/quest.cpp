@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "matrix.h"
 #include "polynomial.h"
+#include "rotation.h"
 #include "solve.h"
 
 #include <src/com/error.h>
-#include <src/com/print.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -70,43 +70,6 @@ template <typename T>
                 v /= sum;
         }
         return weights;
-}
-
-template <std::size_t AXIS, typename T>
-[[nodiscard]] std::vector<numerical::Vector<3, T>> rotate_axis(const std::vector<numerical::Vector<3, T>>& values)
-{
-        static_assert(AXIS >= 0 && AXIS <= 2);
-
-        std::vector<numerical::Vector<3, T>> res;
-        res.reserve(values.size());
-        for (auto v : values)
-        {
-                for (std::size_t i = 0; i < 3; ++i)
-                {
-                        if (i != AXIS)
-                        {
-                                v[i] = -v[i];
-                        }
-                }
-                res.push_back(v);
-        }
-        return res;
-}
-
-template <typename T>
-[[nodiscard]] Quaternion<T> rotate_axis(const Quaternion<T>& q, const std::size_t axis)
-{
-        switch (axis)
-        {
-        case 0:
-                return Quaternion({q.w(), -q.z(), q.y()}, -q.x()); // q * ({1, 0, 0}, 0)
-        case 1:
-                return Quaternion({q.z(), q.w(), -q.x()}, -q.y()); // q * ({0, 1, 0}, 0)
-        case 2:
-                return Quaternion({-q.y(), q.x(), q.w()}, -q.z()); // q * ({0, 0, 1}, 0)
-        default:
-                error("Unknown axis " + to_string(axis));
-        }
 }
 
 template <typename T>
