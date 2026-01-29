@@ -57,19 +57,22 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::vector<T> normalize_weights(std::vector<T> weights)
+[[nodiscard]] std::vector<T> square_and_normalize_weights(const std::vector<T>& weights)
 {
+        std::vector<T> res;
+        res.reserve(weights.size());
         T sum = 0;
-        for (T& v : weights)
+        for (const T w : weights)
         {
-                v *= v;
-                sum += v;
+                const T w2 = w * w;
+                sum += w2;
+                res.push_back(w2);
         }
-        for (T& v : weights)
+        for (T& w : res)
         {
-                v /= sum;
+                w /= sum;
         }
-        return weights;
+        return res;
 }
 
 template <typename T>
@@ -233,7 +236,7 @@ template <typename T>
 
         const std::vector<numerical::Vector<3, T>> obs_n = normalize_vectors(observations);
         const std::vector<numerical::Vector<3, T>> ref_n = normalize_vectors(references);
-        const std::vector<T> w_2 = normalize_weights(weights);
+        const std::vector<T> w_2 = square_and_normalize_weights(weights);
 
         const std::array s{
                 Solve<T>{obs_n, rotate_axis<0>(ref_n), w_2},
