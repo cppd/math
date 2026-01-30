@@ -193,29 +193,16 @@ public:
                 det_ = determinant(m, adj_);
         }
 
-        [[nodiscard]] T det() const
-        {
-                return det_;
-        }
-
         [[nodiscard]] Quaternion<T> compute() const
         {
                 return Quaternion<T>(adj_ * z_, det_).normalized();
         }
+
+        [[nodiscard]] bool operator<(const Solve& s) const
+        {
+                return std::abs(det_) < std::abs(s.det_);
+        }
 };
-
-template <typename T>
-[[nodiscard]] std::size_t max_det_index(const std::array<Solve<T>, 4>& s)
-{
-        const std::array<T, 4> dets{
-                std::abs(s[0].det()),
-                std::abs(s[1].det()),
-                std::abs(s[2].det()),
-                std::abs(s[3].det()),
-        };
-
-        return std::ranges::max_element(dets) - dets.cbegin();
-}
 }
 
 template <typename T>
@@ -245,7 +232,7 @@ template <typename T>
                 Solve<T>{obs_n,                 ref_n, w_2},
         };
 
-        const std::size_t index = max_det_index(s);
+        const std::size_t index = std::max_element(s.begin(), s.end()) - s.cbegin();
         ASSERT(index >= 0 && index <= 3);
 
         const Quaternion<T> attitude = s[index].compute();
