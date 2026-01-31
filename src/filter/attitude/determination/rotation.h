@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
-#include <src/com/print.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
 
@@ -67,7 +65,7 @@ template <typename T>
                 // q * ({0, 0, 1}, 0)
                 return Q({-q.y(), q.x(), q.w()}, -q.z());
         default:
-                error("Unknown axis " + to_string(axis));
+                return q;
         }
 }
 }

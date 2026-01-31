@@ -223,21 +223,19 @@ template <typename T>
 
         const std::vector<numerical::Vector<3, T>> obs_n = normalize_vectors(observations);
         const std::vector<numerical::Vector<3, T>> ref_n = normalize_vectors(references);
-        const std::vector<T> w_2 = square_and_normalize_weights(weights);
+        const std::vector<T> w_sn = square_and_normalize_weights(weights);
 
         const std::array s{
-                Solve<T>{obs_n, rotate_axis<0>(ref_n), w_2},
-                Solve<T>{obs_n, rotate_axis<1>(ref_n), w_2},
-                Solve<T>{obs_n, rotate_axis<2>(ref_n), w_2},
-                Solve<T>{obs_n,                 ref_n, w_2},
+                Solve<T>{obs_n, rotate_axis<0>(ref_n), w_sn},
+                Solve<T>{obs_n, rotate_axis<1>(ref_n), w_sn},
+                Solve<T>{obs_n, rotate_axis<2>(ref_n), w_sn},
+                Solve<T>{obs_n,                 ref_n, w_sn},
         };
 
-        const std::size_t index = std::max_element(s.begin(), s.end()) - s.cbegin();
-        ASSERT(index >= 0 && index <= 3);
+        const std::size_t s_index = std::max_element(s.begin(), s.end()) - s.cbegin();
+        const Quaternion<T> attitude = s[s_index].compute();
 
-        const Quaternion<T> attitude = s[index].compute();
-
-        return (index < 3) ? rotate_axis(attitude, index) : attitude;
+        return rotate_axis(attitude, s_index);
 }
 
 #define TEMPLATE(T)                                                                                       \
