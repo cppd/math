@@ -56,14 +56,11 @@ template <typename T>
         switch (axis)
         {
         case 0:
-                // q * ({1, 0, 0}, 0)
-                return Q({q.w(), -q.z(), q.y()}, -q.x());
+                return Q({q.w(), -q.z(), q.y()}, -q.x()); // q * ({1, 0, 0}, 0)
         case 1:
-                // q * ({0, 1, 0}, 0)
-                return Q({q.z(), q.w(), -q.x()}, -q.y());
+                return Q({q.z(), q.w(), -q.x()}, -q.y()); // q * ({0, 1, 0}, 0)
         case 2:
-                // q * ({0, 0, 1}, 0)
-                return Q({-q.y(), q.x(), q.w()}, -q.z());
+                return Q({-q.y(), q.x(), q.w()}, -q.z()); // q * ({0, 0, 1}, 0)
         default:
                 return q;
         }
