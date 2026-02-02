@@ -28,20 +28,26 @@ namespace ns::filter::attitude::determination
 template <std::size_t AXIS, typename T>
 [[nodiscard]] std::vector<numerical::Vector<3, T>> rotate_axis(const std::vector<numerical::Vector<3, T>>& values)
 {
-        static_assert(AXIS >= 0 && AXIS <= 2);
-
         std::vector<numerical::Vector<3, T>> res;
         res.reserve(values.size());
-        for (auto v : values)
+        for (const auto& v : values)
         {
-                for (std::size_t i = 0; i < 3; ++i)
+                if constexpr (AXIS == 0)
                 {
-                        if (i != AXIS)
-                        {
-                                v[i] = -v[i];
-                        }
+                        res.emplace_back(v[0], -v[1], -v[2]);
                 }
-                res.push_back(v);
+                else if constexpr (AXIS == 1)
+                {
+                        res.emplace_back(-v[0], v[1], -v[2]);
+                }
+                else if constexpr (AXIS == 2)
+                {
+                        res.emplace_back(-v[0], -v[1], v[2]);
+                }
+                else
+                {
+                        static_assert(false);
+                }
         }
         return res;
 }
