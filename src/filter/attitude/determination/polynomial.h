@@ -17,10 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/print.h>
-
 #include <array>
-#include <cmath>
 #include <string>
 
 namespace ns::filter::attitude::determination
@@ -51,38 +48,6 @@ public:
                 return (4 * x * x + d_[0]) * x + d_[1];
         }
 
-        [[nodiscard]] std::string str() const
-        {
-                const auto s = [](const T v)
-                {
-                        return (v < 0 ? " - " : " + ") + to_string(std::abs(v));
-                };
-
-                std::string res;
-                res += "f = x^4";
-                if (!(f_[0] == 0))
-                {
-                        res += s(f_[0]) + " * x^2";
-                }
-                if (!(f_[1] == 0))
-                {
-                        res += s(f_[1]) + " * x";
-                }
-                if (!(f_[2] == 0))
-                {
-                        res += s(f_[2]);
-                }
-                res += ", ";
-                res += "d = 4 * x^3";
-                if (!(d_[0] == 0))
-                {
-                        res += s(d_[0]) + " * x";
-                }
-                if (!(d_[1] == 0))
-                {
-                        res += s(d_[1]);
-                }
-                return res;
-        }
+        [[nodiscard]] std::string str() const;
 };
 }
