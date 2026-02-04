@@ -153,8 +153,8 @@ void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
 
 template <typename T>
 void test_random(
-        const T max_diff,
-        const T max_cosine,
+        const T max_norm_diff,
+        const T max_reference_cosine,
         const std::vector<T>& errors,
         const numerical::QuaternionHJ<T, true>& q,
         PCG& pcg)
@@ -162,7 +162,8 @@ void test_random(
         ASSERT(errors.size() >= 2);
         ASSERT(q.is_normalized());
 
-        const std::vector<numerical::Vector<3, T>> references = create_references(errors.size(), max_cosine, pcg);
+        const std::vector<numerical::Vector<3, T>> references =
+                create_references(errors.size(), max_reference_cosine, pcg);
         const std::vector<numerical::Vector<3, T>> observations = create_observations(references, errors, q, pcg);
         const std::vector<T> weights = errors_to_weights(errors);
 
@@ -174,7 +175,7 @@ void test_random(
         const T diff_1 = (av - qv).norm();
         const T diff_2 = (av + qv).norm();
 
-        if (diff_1 < max_diff || diff_2 < max_diff)
+        if (diff_1 < max_norm_diff || diff_2 < max_norm_diff)
         {
                 return;
         }
@@ -184,7 +185,7 @@ void test_random(
 }
 
 template <typename T>
-void test_random(PCG& pcg, const T max_diff, const T max_cosine, std::vector<T> errors)
+void test_random(PCG& pcg, const T max_norm_diff, const T max_reference_cosine, std::vector<T> errors)
 {
         const std::vector<numerical::QuaternionHJ<T, true>> quaternions{
                 { {1, -2, 3}, 4},
@@ -198,7 +199,7 @@ void test_random(PCG& pcg, const T max_diff, const T max_cosine, std::vector<T> 
         for (const auto& q : quaternions)
         {
                 std::ranges::shuffle(errors, pcg);
-                test_random<T>(max_diff, max_cosine, errors, q.normalized(), pcg);
+                test_random<T>(max_norm_diff, max_reference_cosine, errors, q.normalized(), pcg);
         }
 
         for (int i = 0; i < 100; ++i)
@@ -206,7 +207,7 @@ void test_random(PCG& pcg, const T max_diff, const T max_cosine, std::vector<T> 
                 const numerical::Vector<4, T> v = sampling::uniform_on_sphere<4, T>(pcg);
                 const numerical::QuaternionHJ<T, true> q({v[0], v[1], v[2]}, v[3]);
                 std::ranges::shuffle(errors, pcg);
-                test_random<T>(max_diff, max_cosine, errors, q.normalized(), pcg);
+                test_random<T>(max_norm_diff, max_reference_cosine, errors, q.normalized(), pcg);
         }
 }
 
@@ -222,15 +223,18 @@ void test_impl(const T precision)
 
         PCG pcg;
 
-        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.03});
-        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.1});
-        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.05, 0.2});
-        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.05, 10.0});
-        test_random<T>(pcg, 0.11, 0.98, {0.01, 0.02, 0.05, 0.2, 10.0});
+        constexpr T MAX_DIFF = 0.11;
+        constexpr T MAX_COSINE = 0.98;
+
+        test_random<T>(pcg, MAX_DIFF, MAX_COSINE, {0.01, 0.03});
+        test_random<T>(pcg, MAX_DIFF, MAX_COSINE, {0.01, 0.02, 0.1});
+        test_random<T>(pcg, MAX_DIFF, MAX_COSINE, {0.01, 0.02, 0.05, 0.2});
+        test_random<T>(pcg, MAX_DIFF, MAX_COSINE, {0.01, 0.02, 0.05, 10.0});
+        test_random<T>(pcg, MAX_DIFF, MAX_COSINE, {0.01, 0.02, 0.05, 0.2, 10.0});
 }
 
 template <typename T>
-void test_quest_performance(PCG& pcg, const T max_cosine, std::vector<T> errors)
+void test_quest_performance(PCG& pcg, const T max_reference_cosine, std::vector<T> errors)
 {
         static constexpr int DATA_COUNT = 5'000;
         static constexpr int ITERATION_COUNT = 100;
@@ -246,7 +250,7 @@ void test_quest_performance(PCG& pcg, const T max_cosine, std::vector<T> errors)
 
         for (int i = 0; i < DATA_COUNT; ++i)
         {
-                references.push_back(create_references(errors.size(), max_cosine, pcg));
+                references.push_back(create_references(errors.size(), max_reference_cosine, pcg));
                 observations.push_back(create_observations(references.back(), errors, q, pcg));
         }
 
@@ -267,10 +271,12 @@ void test_quest_performance(PCG& pcg, const T max_cosine, std::vector<T> errors)
 template <typename T>
 void test_quest_performance(PCG& pcg)
 {
-        test_quest_performance<T>(pcg, 0.98, {0.01, 0.03});
-        test_quest_performance<T>(pcg, 0.98, {0.01, 0.02, 0.1});
-        test_quest_performance<T>(pcg, 0.98, {0.01, 0.02, 0.05, 0.2});
-        test_quest_performance<T>(pcg, 0.98, {0.01, 0.02, 0.05, 0.2, 10.0});
+        constexpr T MAX_COSINE = 0.98;
+
+        test_quest_performance<T>(pcg, MAX_COSINE, {0.01, 0.03});
+        test_quest_performance<T>(pcg, MAX_COSINE, {0.01, 0.02, 0.1});
+        test_quest_performance<T>(pcg, MAX_COSINE, {0.01, 0.02, 0.05, 0.2});
+        test_quest_performance<T>(pcg, MAX_COSINE, {0.01, 0.02, 0.05, 0.2, 10.0});
 }
 
 void test()
