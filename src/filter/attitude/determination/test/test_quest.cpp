@@ -43,6 +43,9 @@ namespace ns::filter::attitude::determination::test
 namespace
 {
 template <typename T>
+using Quaternion = numerical::QuaternionHJ<T, true>;
+
+template <typename T>
 bool check_angles(const std::vector<numerical::Vector<3, T>>& r, const T max_cosine)
 {
         const T size = r.size();
@@ -92,7 +95,7 @@ template <typename T>
 std::vector<numerical::Vector<3, T>> create_observations(
         const std::vector<numerical::Vector<3, T>>& references,
         const std::vector<T>& errors,
-        const numerical::QuaternionHJ<T, true>& q,
+        const Quaternion<T>& q,
         PCG& pcg)
 {
         ASSERT(references.size() == errors.size());
@@ -121,7 +124,7 @@ std::vector<T> errors_to_weights(const std::vector<T>& errors)
 }
 
 template <typename T>
-void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
+void test_const(const Quaternion<T>& q, const T precision)
 {
         ASSERT(q.is_normalized());
 
@@ -131,7 +134,7 @@ void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
                 const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
                 const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
 
-                const numerical::QuaternionHJ<T, true> a = quest_attitude<T>({s1, s2}, {r1, r2}, {0.5, 0.5});
+                const Quaternion<T> a = quest_attitude<T>({s1, s2}, {r1, r2}, {0.5, 0.5});
 
                 test_equal(a, q, precision);
         }
@@ -144,8 +147,7 @@ void test_const(const numerical::QuaternionHJ<T, true>& q, const T precision)
                 const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
                 const numerical::Vector<3, T> s3 = numerical::rotate_vector(q, r3);
 
-                const numerical::QuaternionHJ<T, true> a =
-                        quest_attitude<T>({s1, s2, s3}, {r1, r2, r3}, {0.5, 0.5, 0.5});
+                const Quaternion<T> a = quest_attitude<T>({s1, s2, s3}, {r1, r2, r3}, {0.5, 0.5, 0.5});
 
                 test_equal(a, q, precision);
         }
@@ -156,7 +158,7 @@ void test_random(
         const T max_norm_diff,
         const T max_reference_cosine,
         const std::vector<T>& errors,
-        const numerical::QuaternionHJ<T, true>& q,
+        const Quaternion<T>& q,
         PCG& pcg)
 {
         ASSERT(errors.size() >= 2);
@@ -167,7 +169,7 @@ void test_random(
         const std::vector<numerical::Vector<3, T>> observations = create_observations(references, errors, q, pcg);
         const std::vector<T> weights = errors_to_weights(errors);
 
-        const numerical::QuaternionHJ<T, true> a = quest_attitude<T>(observations, references, weights);
+        const Quaternion<T> a = quest_attitude<T>(observations, references, weights);
 
         const numerical::Vector<4, T> av(a.x(), a.y(), a.z(), a.w());
         const numerical::Vector<4, T> qv(q.x(), q.y(), q.z(), q.w());
@@ -187,7 +189,7 @@ void test_random(
 template <typename T>
 void test_random(PCG& pcg, const T max_norm_diff, const T max_reference_cosine, std::vector<T> errors)
 {
-        const std::vector<numerical::QuaternionHJ<T, true>> quaternions{
+        const std::vector<Quaternion<T>> quaternions{
                 { {1, -2, 3}, 4},
                 {{-4, 3, -2}, 1},
                 {  {1, 0, 0}, 0},
@@ -205,7 +207,7 @@ void test_random(PCG& pcg, const T max_norm_diff, const T max_reference_cosine, 
         for (int i = 0; i < 100; ++i)
         {
                 const numerical::Vector<4, T> v = sampling::uniform_on_sphere<4, T>(pcg);
-                const numerical::QuaternionHJ<T, true> q({v[0], v[1], v[2]}, v[3]);
+                const Quaternion<T> q({v[0], v[1], v[2]}, v[3]);
                 std::ranges::shuffle(errors, pcg);
                 test_random<T>(max_norm_diff, max_reference_cosine, errors, q.normalized(), pcg);
         }
@@ -214,12 +216,12 @@ void test_random(PCG& pcg, const T max_norm_diff, const T max_reference_cosine, 
 template <typename T>
 void test_impl(const T precision)
 {
-        test_const(numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized(), precision);
+        test_const(Quaternion<T>({1, -2, 3}, 4).normalized(), precision);
 
-        test_const(numerical::QuaternionHJ<T, true>({1, 0, 0}, 0), precision);
-        test_const(numerical::QuaternionHJ<T, true>({0, 1, 0}, 0), precision);
-        test_const(numerical::QuaternionHJ<T, true>({0, 0, 1}, 0), precision);
-        test_const(numerical::QuaternionHJ<T, true>({0, 0, 0}, 1), precision);
+        test_const(Quaternion<T>({1, 0, 0}, 0), precision);
+        test_const(Quaternion<T>({0, 1, 0}, 0), precision);
+        test_const(Quaternion<T>({0, 0, 1}, 0), precision);
+        test_const(Quaternion<T>({0, 0, 0}, 1), precision);
 
         PCG pcg;
 
@@ -240,7 +242,7 @@ void test_quest_performance(PCG& pcg, const T max_reference_cosine, std::vector<
         static constexpr int ITERATION_COUNT = 100;
 
         const numerical::Vector<4, T> v = sampling::uniform_on_sphere<4, T>(pcg);
-        const numerical::QuaternionHJ<T, true> q({v[0], v[1], v[2]}, v[3]);
+        const Quaternion<T> q({v[0], v[1], v[2]}, v[3]);
         std::ranges::shuffle(errors, pcg);
 
         const std::vector<T> weights = errors_to_weights(errors);
