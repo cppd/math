@@ -23,21 +23,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
+#include <array>
+
 namespace ns::filter::attitude::determination::test
 {
 namespace
 {
 template <typename T>
+using Quaternion = numerical::QuaternionHJ<T, true>;
+
+template <typename T>
 void test_impl(const T precision)
 {
-        const numerical::QuaternionHJ<T, true> q = numerical::QuaternionHJ<T, true>({1, -2, 3}, 4).normalized();
+        const Quaternion<T> q = Quaternion<T>({1, -2, 3}, 4).normalized();
 
-        const numerical::Vector<3, T> r1(-2, 3, -4);
-        const numerical::Vector<3, T> r2(2, 3, -4);
-        const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
-        const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
+        const std::array references{
+                numerical::Vector<3, T>(-2, 3, -4),
+                numerical::Vector<3, T>(2, 3, -4),
+        };
 
-        const numerical::QuaternionHJ<T, true> a = triad_attitude<T>({s1, s2}, {r1, r2});
+        const std::array observations{
+                numerical::rotate_vector(q, references[0]),
+                numerical::rotate_vector(q, references[1]),
+        };
+
+        const Quaternion<T> a = triad_attitude<T>(observations, references);
 
         test_equal(a, q, precision);
 }
