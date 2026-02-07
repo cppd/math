@@ -131,6 +131,7 @@ void test_const(const Quaternion<T>& q, const T precision)
         {
                 const numerical::Vector<3, T> r1(-2, 3, -4);
                 const numerical::Vector<3, T> r2(2, 3, -4);
+
                 const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
                 const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
 
@@ -143,6 +144,7 @@ void test_const(const Quaternion<T>& q, const T precision)
                 const numerical::Vector<3, T> r1(-2, 3, -4);
                 const numerical::Vector<3, T> r2(2, 3, -4);
                 const numerical::Vector<3, T> r3(-2, -3, -4);
+
                 const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
                 const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
                 const numerical::Vector<3, T> s3 = numerical::rotate_vector(q, r3);
@@ -166,24 +168,14 @@ void test_random(
 
         const std::vector<numerical::Vector<3, T>> references =
                 create_references(errors.size(), max_reference_cosine, pcg);
+
         const std::vector<numerical::Vector<3, T>> observations = create_observations(references, errors, q, pcg);
+
         const std::vector<T> weights = errors_to_weights(errors);
 
         const Quaternion<T> a = quest_attitude<T>(observations, references, weights);
 
-        const numerical::Vector<4, T> av(a.x(), a.y(), a.z(), a.w());
-        const numerical::Vector<4, T> qv(q.x(), q.y(), q.z(), q.w());
-
-        const T diff_1 = (av - qv).norm();
-        const T diff_2 = (av + qv).norm();
-
-        if (diff_1 < max_norm_diff || diff_2 < max_norm_diff)
-        {
-                return;
-        }
-
-        error(to_string(a) + " is not similar to " + to_string(q) + ", diff 1 = " + to_string(diff_1)
-              + ", diff 2 = " + to_string(diff_2));
+        test_similar(a, q, max_norm_diff);
 }
 
 template <typename T>

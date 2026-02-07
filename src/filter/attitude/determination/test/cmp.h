@@ -75,4 +75,19 @@ void test_equal(const numerical::QuaternionHJ<T, JPL>& a, const numerical::Quate
                 error(to_string(a) + " is not equal to " + to_string(b));
         }
 }
+
+template <typename T, bool JPL>
+void test_similar(const numerical::QuaternionHJ<T, JPL>& a, const numerical::QuaternionHJ<T, JPL>& b, const T precision)
+{
+        const T d_1 = (a - b).norm();
+        const T d_2 = (a + b).norm();
+
+        if (d_1 < precision || d_2 < precision)
+        {
+                return;
+        }
+
+        error(to_string(a) + " is not similar to " + to_string(b) + ", diff 1 = " + to_string(d_1)
+              + ", diff 2 = " + to_string(d_2));
+}
 }
