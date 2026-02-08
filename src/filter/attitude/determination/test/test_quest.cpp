@@ -112,6 +112,20 @@ std::vector<numerical::Vector<3, T>> create_observations(
 }
 
 template <typename T>
+std::vector<numerical::Vector<3, T>> create_observations(
+        const std::vector<numerical::Vector<3, T>>& references,
+        const Quaternion<T>& q)
+{
+        std::vector<numerical::Vector<3, T>> res;
+        res.reserve(references.size());
+        for (const numerical::Vector<3, T>& reference : references)
+        {
+                res.push_back(numerical::rotate_vector(q, reference));
+        }
+        return res;
+}
+
+template <typename T>
 std::vector<T> errors_to_weights(const std::vector<T>& errors)
 {
         std::vector<T> weights;
@@ -128,31 +142,27 @@ void test_const(const Quaternion<T>& q, const T precision)
 {
         ASSERT(q.is_normalized());
 
+        const auto test = [&](const std::vector<numerical::Vector<3, T>>& references)
         {
-                const numerical::Vector<3, T> r1(-2, 3, -4);
-                const numerical::Vector<3, T> r2(2, 3, -4);
+                const std::vector<numerical::Vector<3, T>> observations = create_observations(references, q);
 
-                const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
-                const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
+                const std::vector<T> weights(observations.size(), 0.5);
 
-                const Quaternion<T> a = quest_attitude<T>({s1, s2}, {r1, r2}, {0.5, 0.5});
+                const Quaternion<T> a = quest_attitude<T>(observations, references, weights);
 
                 test_equal(a, q, precision);
-        }
+        };
 
-        {
-                const numerical::Vector<3, T> r1(-2, 3, -4);
-                const numerical::Vector<3, T> r2(2, 3, -4);
-                const numerical::Vector<3, T> r3(-2, -3, -4);
+        test({
+                {-2, 3, -4},
+                { 2, 3, -4},
+        });
 
-                const numerical::Vector<3, T> s1 = numerical::rotate_vector(q, r1);
-                const numerical::Vector<3, T> s2 = numerical::rotate_vector(q, r2);
-                const numerical::Vector<3, T> s3 = numerical::rotate_vector(q, r3);
-
-                const Quaternion<T> a = quest_attitude<T>({s1, s2, s3}, {r1, r2, r3}, {0.5, 0.5, 0.5});
-
-                test_equal(a, q, precision);
-        }
+        test({
+                {-2,  3, -4},
+                { 2,  3, -4},
+                {-2, -3, -4},
+        });
 }
 
 template <typename T>
