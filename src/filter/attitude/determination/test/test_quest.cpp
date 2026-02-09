@@ -245,17 +245,18 @@ void test_quest_performance(PCG& pcg, const T max_reference_cosine, std::vector<
 
         const numerical::Vector<4, T> v = sampling::uniform_on_sphere<4, T>(pcg);
         const Quaternion<T> q({v[0], v[1], v[2]}, v[3]);
-        std::ranges::shuffle(errors, pcg);
-
-        const std::vector<T> weights = errors_to_weights(errors);
 
         std::vector<std::vector<numerical::Vector<3, T>>> references;
         std::vector<std::vector<numerical::Vector<3, T>>> observations;
+        std::vector<std::vector<T>> weights;
 
         for (int i = 0; i < DATA_COUNT; ++i)
         {
+                std::ranges::shuffle(errors, pcg);
+
                 references.push_back(create_references(errors.size(), max_reference_cosine, pcg));
                 observations.push_back(create_observations(references.back(), errors, q, pcg));
+                weights.push_back(errors_to_weights(errors));
         }
 
         const Clock::time_point start_time = Clock::now();
@@ -263,7 +264,7 @@ void test_quest_performance(PCG& pcg, const T max_reference_cosine, std::vector<
         {
                 for (int j = 0; j < ITERATION_COUNT; ++j)
                 {
-                        do_not_optimize(quest_attitude<T>(observations[i], references[i], weights));
+                        do_not_optimize(quest_attitude<T>(observations[i], references[i], weights[i]));
                 }
         }
         const auto performance = std::llround(DATA_COUNT * (ITERATION_COUNT / duration_from(start_time)));
