@@ -20,64 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/numerical/quaternion.h>
-#include <src/numerical/vector.h>
-
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
 
 namespace ns::filter::attitude::determination::test
 {
-namespace cmp_implementation
-{
-template <typename T>
-bool equal(const T a, const T b, const T precision)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        if (a == b)
-        {
-                return true;
-        }
-
-        const T abs = std::abs(a - b);
-        if (abs < precision)
-        {
-                return true;
-        }
-
-        const T rel = abs / std::max(std::abs(a), std::abs(b));
-        return (rel < precision);
-}
-
-template <std::size_t N, typename T>
-bool equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>& b, const T precision)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (!equal(a[i], b[i], precision))
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-}
-
 template <typename T, bool JPL>
 void test_equal(const numerical::QuaternionHJ<T, JPL>& a, const numerical::QuaternionHJ<T, JPL>& b, const T precision)
-{
-        namespace impl = cmp_implementation;
-
-        if (!(impl::equal(a.w(), b.w(), precision) && impl::equal(a.vec(), b.vec(), precision))
-            && !(impl::equal(a.w(), -b.w(), precision) && impl::equal(a.vec(), -b.vec(), precision)))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
-}
-
-template <typename T, bool JPL>
-void test_similar(const numerical::QuaternionHJ<T, JPL>& a, const numerical::QuaternionHJ<T, JPL>& b, const T precision)
 {
         const T d_1 = (a - b).norm();
         const T d_2 = (a + b).norm();
@@ -87,7 +34,7 @@ void test_similar(const numerical::QuaternionHJ<T, JPL>& a, const numerical::Qua
                 return;
         }
 
-        error(to_string(a) + " is not similar to " + to_string(b) + ", diff 1 = " + to_string(d_1)
+        error(to_string(a) + " is not equal to " + to_string(b) + ", diff 1 = " + to_string(d_1)
               + ", diff 2 = " + to_string(d_2));
 }
 }

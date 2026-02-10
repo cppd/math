@@ -185,7 +185,7 @@ void test_random(
 
         const Quaternion<T> a = quest_attitude<T>(observations, references, weights);
 
-        test_similar(a, q, max_norm_diff);
+        test_equal(a, q, max_norm_diff);
 }
 
 template <typename T>
