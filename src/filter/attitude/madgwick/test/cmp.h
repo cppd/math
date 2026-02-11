@@ -79,7 +79,8 @@ void test_equal(const numerical::Quaternion<T>& a, const numerical::Quaternion<T
 {
         namespace impl = cmp_implementation;
 
-        if (!impl::equal(a.w(), b.w(), precision) || !impl::equal(a.vec(), b.vec(), precision))
+        if (!(impl::equal(a.w(), b.w(), precision) && impl::equal(a.vec(), b.vec(), precision))
+            && !(impl::equal(a.w(), -b.w(), precision) && impl::equal(a.vec(), -b.vec(), precision)))
         {
                 error(to_string(a) + " is not equal to " + to_string(b));
         }
