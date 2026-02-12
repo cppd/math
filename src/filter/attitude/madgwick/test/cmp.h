@@ -77,12 +77,14 @@ void test_equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>&
 template <typename T>
 void test_equal(const numerical::Quaternion<T>& a, const numerical::Quaternion<T>& b, const T precision)
 {
-        namespace impl = cmp_implementation;
+        const T d_1 = (a - b).norm();
+        const T d_2 = (a + b).norm();
 
-        if (!(impl::equal(a.w(), b.w(), precision) && impl::equal(a.vec(), b.vec(), precision))
-            && !(impl::equal(a.w(), -b.w(), precision) && impl::equal(a.vec(), -b.vec(), precision)))
+        if (d_1 <= precision || d_2 <= precision)
         {
-                error(to_string(a) + " is not equal to " + to_string(b));
+                return;
         }
+
+        error(to_string(a) + " is not equal to " + to_string(b));
 }
 }

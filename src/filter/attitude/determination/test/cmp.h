@@ -29,7 +29,7 @@ void test_equal(const numerical::QuaternionHJ<T, JPL>& a, const numerical::Quate
         const T d_1 = (a - b).norm();
         const T d_2 = (a + b).norm();
 
-        if (d_1 < precision || d_2 < precision)
+        if (d_1 <= precision || d_2 <= precision)
         {
                 return;
         }
