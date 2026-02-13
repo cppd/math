@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/filter/attitude/kalman/quaternion.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/quaternion.h>
 #include <src/numerical/vector.h>
@@ -89,26 +88,19 @@ void test_equal(const numerical::Vector<N, T>& a, const numerical::Vector<N, T>&
         }
 }
 
-template <typename T>
-void test_equal(const Quaternion<T>& a, const Quaternion<T>& b, const T precision)
+template <template <typename, bool...> typename Q, typename T, bool JPL>
+void test_equal(const Q<T, JPL>& a, const Q<T, JPL>& b, const T precision)
+        requires (std::is_same_v<Q<T, JPL>, numerical::QuaternionHJ<T, JPL>>)
 {
-        namespace impl = cmp_implementation;
+        const T d_1 = (a - b).norm();
+        const T d_2 = (a + b).norm();
 
-        if (!impl::equal(a.w(), b.w(), precision) || !impl::equal(a.vec(), b.vec(), precision))
+        if (d_1 <= precision || d_2 <= precision)
         {
-                error(to_string(a) + " is not equal to " + to_string(b));
+                return;
         }
-}
 
-template <typename T>
-void test_equal(const numerical::Quaternion<T>& a, const numerical::Quaternion<T>& b, const T precision)
-{
-        namespace impl = cmp_implementation;
-
-        if (!impl::equal(a.w(), b.w(), precision) || !impl::equal(a.vec(), b.vec(), precision))
-        {
-                error(to_string(a) + " is not equal to " + to_string(b));
-        }
+        error(to_string(a) + " is not equal to " + to_string(b));
 }
 
 template <std::size_t R, std::size_t C, typename T>
