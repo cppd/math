@@ -60,7 +60,7 @@ std::vector<unsigned char> Fonts::data(const std::string_view name) const
         const auto iter = fonts_.find(name);
         if (iter != fonts_.cend())
         {
-                return {iter->second.cbegin(), iter->second.cend()};
+                return {iter->second.begin(), iter->second.end()};
         }
         error("Font not found: " + std::string(name));
 }
