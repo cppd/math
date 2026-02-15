@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 4.2)
 
 ##################################################
 
