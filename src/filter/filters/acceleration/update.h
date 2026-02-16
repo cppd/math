@@ -28,59 +28,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::acceleration
 {
+namespace update_implementation
+{
 template <typename Filter, typename T>
-void update_position(
+void update_position_with_speed(
         Filter* const filter,
         const Measurement<2, T>& position,
         const std::optional<Measurement<2, T>>& acceleration,
         const std::optional<Measurement<1, T>>& direction,
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
-        const T dt,
-        const NoiseModel<T>& position_noise_model,
-        const NoiseModel<T>& angle_noise_model,
-        const NoiseModel<T>& angle_r_noise_model,
-        const T fading_memory_alpha,
         Nis<T>& nis)
 {
-        filter->predict(dt, position_noise_model, angle_noise_model, angle_r_noise_model, fading_memory_alpha);
-
-        if (speed)
+        if (direction)
         {
-                if (direction)
-                {
-                        if (acceleration)
-                        {
-                                const core::UpdateInfo<6, T> update =
-                                        filter->update_position_speed_direction_acceleration(
-                                                position, *speed, *direction, *acceleration, gate);
-                                update_nis_position_speed_direction_acceleration(update, nis);
-                                update_nis(update, nis);
-                                return;
-                        }
-
-                        const core::UpdateInfo<4, T> update =
-                                filter->update_position_speed_direction(position, *speed, *direction, gate);
-                        update_nis_position(update, nis);
-                        update_nis(update, nis);
-                        return;
-                }
-
                 if (acceleration)
                 {
-                        const core::UpdateInfo<5, T> update =
-                                filter->update_position_speed_acceleration(position, *speed, *acceleration, gate);
-                        update_nis_position(update, nis);
+                        const core::UpdateInfo<6, T> update = filter->update_position_speed_direction_acceleration(
+                                position, *speed, *direction, *acceleration, gate);
+                        update_nis_position_speed_direction_acceleration(update, nis);
                         update_nis(update, nis);
                         return;
                 }
 
-                const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
+                const core::UpdateInfo<4, T> update =
+                        filter->update_position_speed_direction(position, *speed, *direction, gate);
                 update_nis_position(update, nis);
                 update_nis(update, nis);
                 return;
         }
 
+        if (acceleration)
+        {
+                const core::UpdateInfo<5, T> update =
+                        filter->update_position_speed_acceleration(position, *speed, *acceleration, gate);
+                update_nis_position(update, nis);
+                update_nis(update, nis);
+                return;
+        }
+
+        const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
+        update_nis_position(update, nis);
+        update_nis(update, nis);
+}
+
+template <typename Filter, typename T>
+void update_position_without_speed(
+        Filter* const filter,
+        const Measurement<2, T>& position,
+        const std::optional<Measurement<2, T>>& acceleration,
+        const std::optional<Measurement<1, T>>& direction,
+        const std::optional<T> gate,
+        Nis<T>& nis)
+{
         if (direction)
         {
                 if (acceleration)
@@ -113,51 +113,48 @@ void update_position(
 }
 
 template <typename Filter, typename T>
-void update_non_position(
+void update_non_position_with_speed(
         Filter* const filter,
         const std::optional<Measurement<2, T>>& acceleration,
         const std::optional<Measurement<1, T>>& direction,
         const std::optional<Measurement<1, T>>& speed,
         const std::optional<T> gate,
-        const T dt,
-        const NoiseModel<T>& position_noise_model,
-        const NoiseModel<T>& angle_noise_model,
-        const NoiseModel<T>& angle_r_noise_model,
-        const T fading_memory_alpha,
         Nis<T>& nis)
 {
-        filter->predict(dt, position_noise_model, angle_noise_model, angle_r_noise_model, fading_memory_alpha);
-
-        if (speed)
+        if (direction)
         {
-                if (direction)
-                {
-                        if (acceleration)
-                        {
-                                const core::UpdateInfo<4, T> update = filter->update_speed_direction_acceleration(
-                                        *speed, *direction, *acceleration, gate);
-                                update_nis(update, nis);
-                                return;
-                        }
-
-                        const core::UpdateInfo<2, T> update = filter->update_speed_direction(*speed, *direction, gate);
-                        update_nis(update, nis);
-                        return;
-                }
-
                 if (acceleration)
                 {
-                        const core::UpdateInfo<3, T> update =
-                                filter->update_speed_acceleration(*speed, *acceleration, gate);
+                        const core::UpdateInfo<4, T> update =
+                                filter->update_speed_direction_acceleration(*speed, *direction, *acceleration, gate);
                         update_nis(update, nis);
                         return;
                 }
 
-                const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
+                const core::UpdateInfo<2, T> update = filter->update_speed_direction(*speed, *direction, gate);
                 update_nis(update, nis);
                 return;
         }
 
+        if (acceleration)
+        {
+                const core::UpdateInfo<3, T> update = filter->update_speed_acceleration(*speed, *acceleration, gate);
+                update_nis(update, nis);
+                return;
+        }
+
+        const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
+        update_nis(update, nis);
+}
+
+template <typename Filter, typename T>
+void update_non_position_without_speed(
+        Filter* const filter,
+        const std::optional<Measurement<2, T>>& acceleration,
+        const std::optional<Measurement<1, T>>& direction,
+        const std::optional<T> gate,
+        Nis<T>& nis)
+{
         if (direction)
         {
                 if (acceleration)
@@ -181,5 +178,63 @@ void update_non_position(
         }
 
         ASSERT(false);
+}
+}
+
+template <typename Filter, typename T>
+void update_position(
+        Filter* const filter,
+        const Measurement<2, T>& position,
+        const std::optional<Measurement<2, T>>& acceleration,
+        const std::optional<Measurement<1, T>>& direction,
+        const std::optional<Measurement<1, T>>& speed,
+        const std::optional<T> gate,
+        const T dt,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
+        const T fading_memory_alpha,
+        Nis<T>& nis)
+{
+        filter->predict(dt, position_noise_model, angle_noise_model, angle_r_noise_model, fading_memory_alpha);
+
+        namespace impl = update_implementation;
+
+        if (speed)
+        {
+                impl::update_position_with_speed(filter, position, acceleration, direction, speed, gate, nis);
+        }
+        else
+        {
+                impl::update_position_without_speed(filter, position, acceleration, direction, gate, nis);
+        }
+}
+
+template <typename Filter, typename T>
+void update_non_position(
+        Filter* const filter,
+        const std::optional<Measurement<2, T>>& acceleration,
+        const std::optional<Measurement<1, T>>& direction,
+        const std::optional<Measurement<1, T>>& speed,
+        const std::optional<T> gate,
+        const T dt,
+        const NoiseModel<T>& position_noise_model,
+        const NoiseModel<T>& angle_noise_model,
+        const NoiseModel<T>& angle_r_noise_model,
+        const T fading_memory_alpha,
+        Nis<T>& nis)
+{
+        filter->predict(dt, position_noise_model, angle_noise_model, angle_r_noise_model, fading_memory_alpha);
+
+        namespace impl = update_implementation;
+
+        if (speed)
+        {
+                impl::update_non_position_with_speed(filter, acceleration, direction, speed, gate, nis);
+        }
+        else
+        {
+                impl::update_non_position_without_speed(filter, acceleration, direction, gate, nis);
+        }
 }
 }
