@@ -31,6 +31,50 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::core
 {
+namespace delaunay_implementation
+{
+template <std::size_t N>
+class SimplexIndex final
+{
+        std::unordered_map<const DelaunaySimplex<N>*, int> map_;
+
+public:
+        explicit SimplexIndex(const std::vector<DelaunaySimplex<N>>* const simplices)
+        {
+                ASSERT(simplices);
+
+                map_.reserve(simplices->size());
+
+                int i = 0;
+                for (const DelaunaySimplex<N>& simplex : *simplices)
+                {
+                        map_.emplace(&simplex, i++);
+                }
+        }
+
+        [[nodiscard]] int find(const DelaunaySimplex<N>* const simplex) const
+        {
+                const auto iter = map_.find(simplex);
+                ASSERT(iter != map_.cend());
+                return iter->second;
+        }
+};
+
+template <std::size_t N>
+std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> create_ridge_to_facets_map(
+        const std::vector<DelaunaySimplex<N>>* const simplices)
+{
+        ASSERT(simplices);
+
+        std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> res(simplices->size());
+        for (const DelaunaySimplex<N>& simplex : *simplices)
+        {
+                add_to_ridges(&simplex, &res);
+        }
+        return res;
+}
+}
+
 template <std::size_t N>
 class DelaunayFacet final
 {
@@ -118,32 +162,12 @@ template <std::size_t N>
 template <std::size_t N>
 [[nodiscard]] std::vector<DelaunayFacet<N>> create_delaunay_facets(const std::vector<DelaunaySimplex<N>>& simplices)
 {
-        const std::unordered_map<const DelaunaySimplex<N>*, int> simplex_to_delaunay_map = [&]
-        {
-                std::unordered_map<const DelaunaySimplex<N>*, int> res(simplices.size());
-                for (int i = 0; const DelaunaySimplex<N>& simplex : simplices)
-                {
-                        res.emplace(&simplex, i++);
-                }
-                return res;
-        }();
+        namespace impl = delaunay_implementation;
 
-        const auto simplex_to_delaunay = [&simplex_to_delaunay_map](const DelaunaySimplex<N>* const simplex)
-        {
-                const auto iter = simplex_to_delaunay_map.find(simplex);
-                ASSERT(iter != simplex_to_delaunay_map.cend());
-                return iter->second;
-        };
+        const impl::SimplexIndex<N> simplex_index(&simplices);
 
-        const std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> ridges = [&]
-        {
-                std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> res(simplices.size());
-                for (const DelaunaySimplex<N>& simplex : simplices)
-                {
-                        add_to_ridges(&simplex, &res);
-                }
-                return res;
-        }();
+        const std::unordered_map<Ridge<N + 1>, RidgeFacets2<DelaunaySimplex<N>>> ridges =
+                impl::create_ridge_to_facets_map(&simplices);
 
         std::vector<DelaunayFacet<N>> res;
         res.reserve(ridges.size());
@@ -154,7 +178,7 @@ template <std::size_t N>
 
                 const DelaunaySimplex<N>* const simplex_0 = ridge_facets.f0().facet();
                 const numerical::Vector<N, double> ortho = simplex_0->ortho(ridge_facets.f0().vertex_index());
-                const int delaunay_0 = simplex_to_delaunay(simplex_0);
+                const int delaunay_0 = simplex_index.find(simplex_0);
 
                 if (!ridge_facets.f1().facet())
                 {
@@ -165,7 +189,7 @@ template <std::size_t N>
                 const DelaunaySimplex<N>* const simplex_1 = ridge_facets.f1().facet();
                 ASSERT(ortho == -simplex_1->ortho(ridge_facets.f1().vertex_index()));
 
-                const int delaunay_1 = simplex_to_delaunay(simplex_1);
+                const int delaunay_1 = simplex_index.find(simplex_1);
                 res.emplace_back(ridge.vertices(), ortho, delaunay_0, delaunay_1);
         }
 
