@@ -202,50 +202,52 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
+        requires (N == 2)
 [[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
 {
-        if constexpr (N == 2)
-        {
-                return {
-                        Vector<2, T>{unit_vector[1], -unit_vector[0]}
-                };
-        }
-        else if constexpr (N == 3)
-        {
-                static constexpr T LIMIT = 0.5;
-                static constexpr Vector<3, T> X(1, 0, 0);
-                static constexpr Vector<3, T> Y(0, 1, 0);
-                const Vector<3, T>& v = std::abs(unit_vector[0]) > LIMIT ? Y : X;
-                const Vector<3, T> e0 = cross(unit_vector, v).normalized();
-                const Vector<3, T> e1 = cross(unit_vector, e0);
-                return {e0, e1};
-        }
-        else if constexpr (N >= 4)
-        {
-                const std::size_t excluded_axis = closest_axis(unit_vector);
+        return {
+                Vector<2, T>{unit_vector[1], -unit_vector[0]}
+        };
+}
 
-                std::array<Vector<N, T>, N - 1> basis;
-                for (std::size_t i = 0, num = 0; num < N - 2; ++i)
+template <std::size_t N, typename T>
+        requires (N == 3)
+[[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
+{
+        static constexpr T LIMIT = 0.5;
+        static constexpr Vector<3, T> X(1, 0, 0);
+        static constexpr Vector<3, T> Y(0, 1, 0);
+
+        const Vector<3, T>& v = std::abs(unit_vector[0]) > LIMIT ? Y : X;
+        const Vector<3, T> e0 = cross(unit_vector, v).normalized();
+        const Vector<3, T> e1 = cross(unit_vector, e0);
+
+        return {e0, e1};
+}
+
+template <std::size_t N, typename T>
+        requires (N >= 4)
+[[nodiscard]] std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
+{
+        const std::size_t excluded_axis = closest_axis(unit_vector);
+
+        std::array<Vector<N, T>, N - 1> basis;
+        for (std::size_t i = 0, num = 0; num < N - 2; ++i)
+        {
+                if (i != excluded_axis)
                 {
-                        if (i != excluded_axis)
-                        {
-                                basis[num++] = IDENTITY_ARRAY<N, T>[i];
-                        }
+                        basis[num++] = IDENTITY_ARRAY<N, T>[i];
                 }
-                basis[N - 2] = unit_vector;
-
-                for (std::size_t i = 0; i < N - 2; ++i)
-                {
-                        basis[i] = orthogonal_complement(basis).normalized();
-                }
-                basis[N - 2] = orthogonal_complement(basis);
-
-                return basis;
         }
-        else
+        basis[N - 2] = unit_vector;
+
+        for (std::size_t i = 0; i < N - 2; ++i)
         {
-                static_assert(false);
+                basis[i] = orthogonal_complement(basis).normalized();
         }
+        basis[N - 2] = orthogonal_complement(basis);
+
+        return basis;
 }
 
 template <std::size_t N, typename T>
