@@ -257,30 +257,34 @@ void compare(
         ASSERT(matrices.size() == row_reduction.size());
         ASSERT(matrices.size() == determinants.size());
 
+        const auto compare = [&](const std::size_t i, const std::size_t c)
+        {
+                if (!are_equal(cofactor_expansion[i][c], row_reduction[i][c], precision))
+                {
+                        std::string s;
+                        s += "Determinants are not equal:\n";
+                        s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
+                        s += "row_reduction = " + to_string(row_reduction[i]) + "\n";
+                        s += to_string(matrices[i]);
+                        error(s);
+                }
+
+                if (!(determinants[i][c] == cofactor_expansion[i][c] || determinants[i][c] == row_reduction[i][c]))
+                {
+                        std::string s;
+                        s += "Determinant error:\n";
+                        s += "determinant = " + to_string(determinants[i]) + "\n";
+                        s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
+                        s += "row_reduction = " + to_string(row_reduction[i]);
+                        error(s);
+                }
+        };
+
         for (std::size_t i = 0; i < matrices.size(); ++i)
         {
                 for (std::size_t c = 0; c < N; ++c)
                 {
-                        if (!are_equal(cofactor_expansion[i][c], row_reduction[i][c], precision))
-                        {
-                                std::string s;
-                                s += "Determinants are not equal:\n";
-                                s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
-                                s += "row_reduction = " + to_string(row_reduction[i]) + "\n";
-                                s += to_string(matrices[i]);
-                                error(s);
-                        }
-
-                        if (!(determinants[i][c] == cofactor_expansion[i][c]
-                              || determinants[i][c] == row_reduction[i][c]))
-                        {
-                                std::string s;
-                                s += "Determinant error:\n";
-                                s += "determinant = " + to_string(determinants[i]) + "\n";
-                                s += "cofactor_expansion = " + to_string(cofactor_expansion[i]) + "\n";
-                                s += "row_reduction = " + to_string(row_reduction[i]);
-                                error(s);
-                        }
+                        compare(i, c);
                 }
         }
 }
