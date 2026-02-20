@@ -59,6 +59,28 @@ struct Info final
         T units_per_pixel;
 };
 
+template <std::size_t CAMERA_DIRECTION, std::size_t N, typename T>
+T compute_max_view_size(const numerical::Vector<N, T>& view_size)
+{
+        static_assert(N >= 2);
+        static_assert(CAMERA_DIRECTION < N);
+
+        T res = 0;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (i == CAMERA_DIRECTION)
+                {
+                        continue;
+                }
+                if (!(view_size[i] > 0))
+                {
+                        error("Object projection size " + to_string(view_size[i]) + " is not positive");
+                }
+                res = std::max(view_size[i], res);
+        }
+        return res;
+}
+
 template <typename T>
 Info<3, T> create_info(
         const int screen_width,
@@ -68,13 +90,13 @@ Info<3, T> create_info(
         const numerical::Vector<3, T>& light_direction,
         const T view_width)
 {
-        Info<3, T> info;
-        info.light_direction = light_direction;
-        info.camera_direction = camera_direction;
-        info.screen_axes = {cross(camera_direction, camera_up), camera_up};
-        info.screen_size = {screen_width, screen_height};
-        info.units_per_pixel = view_width / screen_width;
-        return info;
+        return {
+                .light_direction = light_direction,
+                .camera_direction = camera_direction,
+                .screen_axes = {cross(camera_direction, camera_up), camera_up},
+                .screen_size = {screen_width, screen_height},
+                .units_per_pixel = view_width / screen_width,
+        };
 }
 
 template <std::size_t N, typename T>
@@ -92,31 +114,16 @@ Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box,
 
         const numerical::Vector<N, T> view_size = bounding_box.diagonal();
 
-        const T max_view_size = [&]
-        {
-                static_assert(N >= 2);
-                T res = 0;
-                // excluding camera direction N - 1
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        if (!(view_size[i] > 0))
-                        {
-                                error("Object projection size " + to_string(view_size[i]) + " is not positive");
-                        }
-                        res = std::max(view_size[i], res);
-                }
-                return res;
-        }();
+        const T max_view_size = compute_max_view_size<N - 1>(view_size);
 
-        Info<N, T> info;
-        info.light_direction = -bounding_box.diagonal();
-        info.camera_direction = []
+        const auto camera_direction = []
         {
                 numerical::Vector<N, T> res(0);
                 res[N - 1] = -1;
                 return res;
-        }();
-        info.screen_axes = []
+        };
+
+        const auto screen_axes = []
         {
                 std::array<numerical::Vector<N, T>, N - 1> res;
                 for (std::size_t i = 0; i < N - 1; ++i)
@@ -125,8 +132,9 @@ Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box,
                         res[i][i] = 1;
                 }
                 return res;
-        }();
-        info.screen_size = [&]
+        };
+
+        const auto screen_size = [&]
         {
                 std::array<int, N - 1> res;
                 for (std::size_t i = 0; i < N - 1; ++i)
@@ -136,9 +144,15 @@ Info<N, T> create_info(const geometry::spatial::BoundingBox<N, T>& bounding_box,
                         res[i] = std::max(1, size_in_pixels) + 2 * BORDER_SIZE;
                 }
                 return res;
-        }();
-        info.units_per_pixel = max_view_size / max_view_screen_size;
-        return info;
+        };
+
+        return {
+                .light_direction = -bounding_box.diagonal(),
+                .camera_direction = camera_direction(),
+                .screen_axes = screen_axes(),
+                .screen_size = screen_size(),
+                .units_per_pixel = max_view_size / max_view_screen_size,
+        };
 }
 
 template <std::size_t N, typename T, typename Color>
