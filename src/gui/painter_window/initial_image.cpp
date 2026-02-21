@@ -31,25 +31,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::painter_window
 {
-std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, const image::ColorFormat color_format)
+namespace
 {
-        constexpr std::array<std::uint8_t, 4> LIGHT = {100, 150, 200, 255};
-        constexpr std::array<std::uint8_t, 4> DARK = {0, 0, 0, 255};
+std::vector<std::byte> make_image(
+        const std::vector<int>& screen_size,
+        const std::vector<std::byte>& light,
+        const std::vector<std::byte>& dark)
+{
+        ASSERT(light.size() == dark.size());
 
-        const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
+        const std::size_t pixel_size = light.size();
+        const long long pixel_count = multiply_all<long long>(screen_size);
 
-        std::vector<std::byte> light;
-        std::vector<std::byte> dark;
-        image::format_conversion(
-                image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(LIGHT)), color_format, &light);
-        image::format_conversion(
-                image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(DARK)), color_format, &dark);
-        ASSERT(pixel_size == light.size());
-        ASSERT(pixel_size == dark.size());
+        const int slice_count = pixel_count / screen_size[0] / screen_size[1];
 
-        const int slice_count = multiply_all<long long>(screen_size) / screen_size[0] / screen_size[1];
-
-        std::vector<std::byte> image(pixel_size * multiply_all<long long>(screen_size));
+        std::vector<std::byte> image(pixel_size * pixel_count);
 
         std::size_t index = 0;
         for (int i = 0; i < slice_count; ++i)
@@ -68,5 +64,28 @@ std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, c
         ASSERT(index == image.size());
 
         return image;
+}
+}
+
+std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, const image::ColorFormat color_format)
+{
+        constexpr std::array<std::uint8_t, 4> LIGHT = {100, 150, 200, 255};
+        constexpr std::array<std::uint8_t, 4> DARK = {0, 0, 0, 255};
+
+        const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
+
+        std::vector<std::byte> light;
+        std::vector<std::byte> dark;
+
+        image::format_conversion(
+                image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(LIGHT)), color_format, &light);
+
+        image::format_conversion(
+                image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(DARK)), color_format, &dark);
+
+        ASSERT(pixel_size == light.size());
+        ASSERT(pixel_size == dark.size());
+
+        return make_image(screen_size, light, dark);
 }
 }
