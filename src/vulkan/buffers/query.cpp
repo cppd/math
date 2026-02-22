@@ -37,33 +37,25 @@ VkFormat find_supported_format(
         const VkImageTiling tiling,
         const VkFormatFeatureFlags features)
 {
-        if (tiling == VK_IMAGE_TILING_OPTIMAL)
-        {
-                for (const VkFormat format : candidates)
-                {
-                        VkFormatProperties properties;
-                        vkGetPhysicalDeviceFormatProperties(device, format, &properties);
-                        if ((properties.optimalTilingFeatures & features) == features)
-                        {
-                                return format;
-                        }
-                }
-        }
-        else if (tiling == VK_IMAGE_TILING_LINEAR)
-        {
-                for (const VkFormat format : candidates)
-                {
-                        VkFormatProperties properties;
-                        vkGetPhysicalDeviceFormatProperties(device, format, &properties);
-                        if ((properties.linearTilingFeatures & features) == features)
-                        {
-                                return format;
-                        }
-                }
-        }
-        else
+        if (!(tiling == VK_IMAGE_TILING_OPTIMAL || tiling == VK_IMAGE_TILING_LINEAR))
         {
                 error("Unknown image tiling " + to_string(enum_to_int(tiling)));
+        }
+
+        for (const VkFormat format : candidates)
+        {
+                VkFormatProperties properties;
+                vkGetPhysicalDeviceFormatProperties(device, format, &properties);
+
+                const auto* const found_features =
+                        (tiling == VK_IMAGE_TILING_OPTIMAL)
+                                ? &properties.optimalTilingFeatures
+                                : &properties.linearTilingFeatures;
+
+                if ((*found_features & features) == features)
+                {
+                        return format;
+                }
         }
 
         std::ostringstream oss;
@@ -86,28 +78,24 @@ VkFormat find_supported_image_format(
         const VkImageUsageFlags usage,
         const VkSampleCountFlags sample_count)
 {
+        if (!(tiling == VK_IMAGE_TILING_OPTIMAL || tiling == VK_IMAGE_TILING_LINEAR))
+        {
+                error("Unknown image tiling " + to_string(enum_to_int(tiling)));
+        }
+
         for (const VkFormat format : candidates)
         {
                 VkFormatProperties properties;
                 vkGetPhysicalDeviceFormatProperties(device, format, &properties);
 
-                if (tiling == VK_IMAGE_TILING_OPTIMAL)
+                const auto* const found_features =
+                        (tiling == VK_IMAGE_TILING_OPTIMAL)
+                                ? &properties.optimalTilingFeatures
+                                : &properties.linearTilingFeatures;
+
+                if ((*found_features & features) != features)
                 {
-                        if ((properties.optimalTilingFeatures & features) != features)
-                        {
-                                continue;
-                        }
-                }
-                else if (tiling == VK_IMAGE_TILING_LINEAR)
-                {
-                        if ((properties.linearTilingFeatures & features) != features)
-                        {
-                                continue;
-                        }
-                }
-                else
-                {
-                        error("Unknown image tiling " + to_string(enum_to_int(tiling)));
+                        continue;
                 }
 
                 VkImageFormatProperties image_properties;
