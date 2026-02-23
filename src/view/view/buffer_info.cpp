@@ -31,6 +31,101 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view::view
 {
+namespace
+{
+bool check_sample_count(const std::vector<vulkan::ImageWithMemory>& color)
+{
+        return std::ranges::all_of(
+                color,
+                [&](const vulkan::ImageWithMemory& c)
+                {
+                        return c.image().sample_count() == color[0].image().sample_count();
+                });
+}
+
+bool check_format(const std::vector<vulkan::ImageWithMemory>& color)
+{
+        return std::ranges::all_of(
+                color,
+                [&](const vulkan::ImageWithMemory& c)
+                {
+                        return c.image().format() == color[0].image().format();
+                });
+}
+
+bool check_sample_count(const std::vector<vulkan::DepthImageWithMemory>& depth)
+{
+        return std::ranges::all_of(
+                depth,
+                [&](const vulkan::DepthImageWithMemory& d)
+                {
+                        return d.image().sample_count() == depth[0].image().sample_count();
+                });
+}
+
+bool check_format(const std::vector<vulkan::DepthImageWithMemory>& depth)
+{
+        return std::ranges::all_of(
+                depth,
+                [&](const vulkan::DepthImageWithMemory& d)
+                {
+                        return d.image().format() == depth[0].image().format();
+                });
+}
+
+bool check_sample_count(
+        const std::vector<vulkan::ImageWithMemory>& color,
+        const std::vector<vulkan::DepthImageWithMemory>& depth)
+{
+        ASSERT(!depth.empty());
+
+        return std::ranges::all_of(
+                color,
+                [&](const vulkan::ImageWithMemory& c)
+                {
+                        return c.image().sample_count() == depth[0].image().sample_count();
+                });
+}
+
+bool check_sample_count(
+        const std::vector<vulkan::DepthImageWithMemory>& depth,
+        const VkSampleCountFlagBits sample_count)
+{
+        return std::ranges::all_of(
+                depth,
+                [&](const vulkan::DepthImageWithMemory& d)
+                {
+                        return d.image().sample_count() == sample_count;
+                });
+}
+
+bool check_color_attachment_sizes(
+        const std::vector<vulkan::ImageWithMemory>& color,
+        const std::vector<vulkan::DepthImageWithMemory>& depth)
+{
+        ASSERT(!depth.empty());
+
+        return std::ranges::all_of(
+                color,
+                [&](const vulkan::ImageWithMemory& d)
+                {
+                        return d.image().extent().width == depth[0].image().extent().width
+                               && d.image().extent().height == depth[0].image().extent().height;
+                });
+}
+
+bool check_depth_attachment_sizes(const std::vector<vulkan::DepthImageWithMemory>& depth)
+{
+        return std::ranges::all_of(
+                depth,
+                [&](const vulkan::DepthImageWithMemory& d)
+                {
+                        return d.image().extent().width == depth[0].image().extent().width
+                               && d.image().extent().height == depth[0].image().extent().height;
+                });
+}
+}
+
 void render_buffer_check(
         const std::vector<vulkan::ImageWithMemory>& color,
         const std::vector<vulkan::DepthImageWithMemory>& depth)
@@ -40,87 +135,45 @@ void render_buffer_check(
                 error("No depth attachment");
         }
 
-        if (!std::ranges::all_of(
-                    color,
-                    [&](const vulkan::ImageWithMemory& c)
-                    {
-                            return c.image().sample_count() == color[0].image().sample_count();
-                    }))
+        if (!check_sample_count(color))
         {
                 error("Color attachments must have the same sample count");
         }
 
-        if (!std::ranges::all_of(
-                    color,
-                    [&](const vulkan::ImageWithMemory& c)
-                    {
-                            return c.image().format() == color[0].image().format();
-                    }))
+        if (!check_format(color))
         {
                 error("Color attachments must have the same format");
         }
 
-        if (!std::ranges::all_of(
-                    depth,
-                    [&](const vulkan::DepthImageWithMemory& d)
-                    {
-                            return d.image().sample_count() == depth[0].image().sample_count();
-                    }))
+        if (!check_sample_count(depth))
         {
                 error("Depth attachments must have the same sample count");
         }
 
-        if (!std::ranges::all_of(
-                    depth,
-                    [&](const vulkan::DepthImageWithMemory& d)
-                    {
-                            return d.image().format() == depth[0].image().format();
-                    }))
+        if (!check_format(depth))
         {
                 error("Depth attachments must have the same format");
         }
 
-        if (!std::ranges::all_of(
-                    color,
-                    [&](const vulkan::ImageWithMemory& c)
-                    {
-                            return c.image().sample_count() == depth[0].image().sample_count();
-                    }))
+        if (!check_sample_count(color, depth))
         {
                 error("Color attachment sample count is not equal to depth attachment sample count");
         }
 
         if (color.empty())
         {
-                if (!std::ranges::all_of(
-                            depth,
-                            [&](const vulkan::DepthImageWithMemory& d)
-                            {
-                                    return d.image().sample_count() == VK_SAMPLE_COUNT_1_BIT;
-                            }))
+                if (!check_sample_count(depth, VK_SAMPLE_COUNT_1_BIT))
                 {
                         error("There are no color attachments, but depth attachment sample count is not equal to 1");
                 }
         }
 
-        if (!std::ranges::all_of(
-                    color,
-                    [&](const vulkan::ImageWithMemory& d)
-                    {
-                            return d.image().extent().width == depth[0].image().extent().width
-                                   && d.image().extent().height == depth[0].image().extent().height;
-                    }))
+        if (!check_color_attachment_sizes(color, depth))
         {
                 error("Color attachments size is not equal to the required size");
         }
 
-        if (!std::ranges::all_of(
-                    depth,
-                    [&](const vulkan::DepthImageWithMemory& d)
-                    {
-                            return d.image().extent().width == depth[0].image().extent().width
-                                   && d.image().extent().height == depth[0].image().extent().height;
-                    }))
+        if (!check_depth_attachment_sizes(depth))
         {
                 error("Depth attachments size is not equal to the required size");
         }
