@@ -142,6 +142,19 @@ bool minimum_properties_supported(const PhysicalDevice& physical_device)
         return limits.maxStorageBufferRange >= MIN_STORAGE_BUFFER_RANGE;
 }
 
+bool has_presentation_family_index(const PhysicalDevice& physical_device)
+{
+        try
+        {
+                static_cast<void>(physical_device.presentation_family_index());
+        }
+        catch (...)
+        {
+                return false;
+        }
+        return true;
+}
+
 bool suitable_physical_device(
         const PhysicalDevice& physical_device,
         const VkSurfaceKHR surface,
@@ -178,21 +191,11 @@ bool suitable_physical_device(
                 return false;
         }
 
-        if (surface != VK_NULL_HANDLE)
+        if (surface != VK_NULL_HANDLE
+            && (!has_presentation_family_index(physical_device)
+                || !surface_suitable(physical_device.device(), surface)))
         {
-                try
-                {
-                        static_cast<void>(physical_device.presentation_family_index());
-                }
-                catch (...)
-                {
-                        return false;
-                }
-
-                if (!surface_suitable(physical_device.device(), surface))
-                {
-                        return false;
-                }
+                return false;
         }
 
         return true;
