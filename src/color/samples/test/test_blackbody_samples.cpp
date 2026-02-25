@@ -49,6 +49,33 @@ public:
         }
 };
 
+void compare_a_and_blackbody(const double a, const double blackbody)
+{
+        if (!(a >= 0))
+        {
+                error("A " + to_string(a) + " is not positive and not zero");
+        }
+
+        if (!(blackbody >= 0))
+        {
+                error("Blackbody " + to_string(blackbody) + " is not positive and not zero");
+        }
+
+        if (a == blackbody)
+        {
+                return;
+        }
+
+        const double abs = std::abs(a - blackbody);
+        const double rel = abs / std::max(std::abs(a), std::abs(blackbody));
+        if (!(rel < 2.5e-5))
+        {
+                throw Exception(
+                        "A " + to_string(a) + " and blackbody " + to_string(blackbody)
+                        + " are not equal, relative error " + to_string(rel));
+        }
+}
+
 void compare_a(const double t, const int min, const int max, const unsigned count)
 {
         if (!(max > min))
@@ -71,29 +98,7 @@ void compare_a(const double t, const int min, const int max, const unsigned coun
 
         for (std::size_t i = 0; i < a.size(); ++i)
         {
-                if (!(a[i] >= 0))
-                {
-                        error("A " + to_string(a[i]) + " is not positive and not zero");
-                }
-
-                if (!(blackbody[i] >= 0))
-                {
-                        error("Blackbody " + to_string(blackbody[i]) + " is not positive and not zero");
-                }
-
-                if (a[i] == blackbody[i])
-                {
-                        continue;
-                }
-
-                const double abs = std::abs(a[i] - blackbody[i]);
-                const double rel = abs / std::max(std::abs(a[i]), std::abs(blackbody[i]));
-                if (!(rel < 2.5e-5))
-                {
-                        throw Exception(
-                                "A " + to_string(a[i]) + " and blackbody " + to_string(blackbody[i])
-                                + " are not equal, relative error " + to_string(rel));
-                }
+                compare_a_and_blackbody(a[i], blackbody[i]);
         }
 }
 
