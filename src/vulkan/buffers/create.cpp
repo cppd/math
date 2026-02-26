@@ -34,13 +34,7 @@ namespace ns::vulkan::buffers
 {
 namespace
 {
-void check_image_size(
-        const VkPhysicalDevice physical_device,
-        const VkImageType type,
-        const VkExtent3D extent,
-        const VkFormat format,
-        const VkImageTiling tiling,
-        const VkImageUsageFlags usage)
+void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -71,23 +65,48 @@ void check_image_size(
                 error("Unknown image type " + strings::image_type_to_string(type));
         }
 #pragma GCC diagnostic pop
+}
 
+void check_image_max_size(
+        const VkPhysicalDevice physical_device,
+        const VkImageType type,
+        const VkExtent3D extent,
+        const VkFormat format,
+        const VkImageTiling tiling,
+        const VkImageUsageFlags usage)
+{
         const VkExtent3D max_extent = find_max_image_extent(physical_device, format, type, tiling, usage);
+
         if (extent.width > max_extent.width)
         {
                 error("Image " + strings::format_to_string(format) + " extent width " + to_string(extent.width)
                       + " is out of range [1, " + to_string(max_extent.width) + "]");
         }
+
         if (extent.height > max_extent.height)
         {
                 error("Image " + strings::format_to_string(format) + " extent height " + to_string(extent.height)
                       + " is out of range [1, " + to_string(max_extent.height) + "]");
         }
+
         if (extent.depth > max_extent.depth)
         {
                 error("Image " + strings::format_to_string(format) + " extent depth " + to_string(extent.depth)
                       + " is out of range [1, " + to_string(max_extent.depth) + "]");
         }
+}
+
+void check_image_size(
+        const VkPhysicalDevice physical_device,
+        const VkImageType type,
+        const VkExtent3D extent,
+        const VkFormat format,
+        const VkImageTiling tiling,
+        const VkImageUsageFlags usage)
+{
+        check_image_dimension_size(type, extent);
+
+        check_image_max_size(physical_device, type, extent, format, tiling, usage);
 }
 }
 
