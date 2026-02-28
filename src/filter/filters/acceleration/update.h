@@ -36,7 +36,7 @@ void update_position_with_speed(
         const Measurement<2, T>& position,
         const std::optional<Measurement<2, T>>& acceleration,
         const std::optional<Measurement<1, T>>& direction,
-        const std::optional<Measurement<1, T>>& speed,
+        const Measurement<1, T>& speed,
         const std::optional<T> gate,
         Nis<T>& nis)
 {
@@ -45,14 +45,14 @@ void update_position_with_speed(
                 if (acceleration)
                 {
                         const core::UpdateInfo<6, T> update = filter->update_position_speed_direction_acceleration(
-                                position, *speed, *direction, *acceleration, gate);
+                                position, speed, *direction, *acceleration, gate);
                         update_nis_position_speed_direction_acceleration(update, nis);
                         update_nis(update, nis);
                         return;
                 }
 
                 const core::UpdateInfo<4, T> update =
-                        filter->update_position_speed_direction(position, *speed, *direction, gate);
+                        filter->update_position_speed_direction(position, speed, *direction, gate);
                 update_nis_position(update, nis);
                 update_nis(update, nis);
                 return;
@@ -61,13 +61,13 @@ void update_position_with_speed(
         if (acceleration)
         {
                 const core::UpdateInfo<5, T> update =
-                        filter->update_position_speed_acceleration(position, *speed, *acceleration, gate);
+                        filter->update_position_speed_acceleration(position, speed, *acceleration, gate);
                 update_nis_position(update, nis);
                 update_nis(update, nis);
                 return;
         }
 
-        const core::UpdateInfo<3, T> update = filter->update_position_speed(position, *speed, gate);
+        const core::UpdateInfo<3, T> update = filter->update_position_speed(position, speed, gate);
         update_nis_position(update, nis);
         update_nis(update, nis);
 }
@@ -117,7 +117,7 @@ void update_non_position_with_speed(
         Filter* const filter,
         const std::optional<Measurement<2, T>>& acceleration,
         const std::optional<Measurement<1, T>>& direction,
-        const std::optional<Measurement<1, T>>& speed,
+        const Measurement<1, T>& speed,
         const std::optional<T> gate,
         Nis<T>& nis)
 {
@@ -126,24 +126,24 @@ void update_non_position_with_speed(
                 if (acceleration)
                 {
                         const core::UpdateInfo<4, T> update =
-                                filter->update_speed_direction_acceleration(*speed, *direction, *acceleration, gate);
+                                filter->update_speed_direction_acceleration(speed, *direction, *acceleration, gate);
                         update_nis(update, nis);
                         return;
                 }
 
-                const core::UpdateInfo<2, T> update = filter->update_speed_direction(*speed, *direction, gate);
+                const core::UpdateInfo<2, T> update = filter->update_speed_direction(speed, *direction, gate);
                 update_nis(update, nis);
                 return;
         }
 
         if (acceleration)
         {
-                const core::UpdateInfo<3, T> update = filter->update_speed_acceleration(*speed, *acceleration, gate);
+                const core::UpdateInfo<3, T> update = filter->update_speed_acceleration(speed, *acceleration, gate);
                 update_nis(update, nis);
                 return;
         }
 
-        const core::UpdateInfo<1, T> update = filter->update_speed(*speed, gate);
+        const core::UpdateInfo<1, T> update = filter->update_speed(speed, gate);
         update_nis(update, nis);
 }
 
@@ -202,7 +202,7 @@ void update_position(
 
         if (speed)
         {
-                impl::update_position_with_speed(filter, position, acceleration, direction, speed, gate, nis);
+                impl::update_position_with_speed(filter, position, acceleration, direction, *speed, gate, nis);
         }
         else
         {
@@ -230,7 +230,7 @@ void update_non_position(
 
         if (speed)
         {
-                impl::update_non_position_with_speed(filter, acceleration, direction, speed, gate, nis);
+                impl::update_non_position_with_speed(filter, acceleration, direction, *speed, gate, nis);
         }
         else
         {
