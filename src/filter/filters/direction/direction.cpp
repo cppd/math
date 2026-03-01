@@ -105,7 +105,9 @@ class Direction final : public Filter<2, T>
         void update_standing(const Measurements<2, T>& m);
         void update_standing_velocity();
 
-        void reset();
+        [[nodiscard]] std::optional<UpdateInfo<2, T>> init(
+                const Measurements<2, T>& m,
+                const Estimation<2, T>& estimation);
 
         void update_filter(const Measurements<2, T>& m);
 
@@ -197,19 +199,39 @@ void Direction<T, F>::update_standing_velocity()
 }
 
 template <typename T, template <typename> typename F>
-void Direction<T, F>::reset()
+std::optional<UpdateInfo<2, T>> Direction<T, F>::init(const Measurements<2, T>& m, const Estimation<2, T>& estimation)
 {
-        queue_.update_filter(
-                [&]
-                {
-                        filter_->reset(queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
-                },
-                [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
-                {
-                        update_position(
-                                filter_.get(), position, measurements.direction, measurements.speed, gate_, dt,
-                                position_noise_model_, angle_noise_model_, fading_memory_alpha_, nis_);
-                });
+        if (!(m.position && m.position->variance))
+        {
+                return {};
+        }
+
+        if (!queue_.empty())
+        {
+                ASSERT(queue_.last_time() == m.time);
+
+                queue_.update_filter(
+                        [&]
+                        {
+                                filter_->reset(
+                                        queue_.init_position_velocity(), queue_.init_position_velocity_p(), init_);
+                        },
+                        [&](const Measurement<2, T>& position, const Measurements<2, T>& measurements, const T dt)
+                        {
+                                update_position(
+                                        filter_.get(), position, measurements.direction, measurements.speed, gate_, dt,
+                                        position_noise_model_, angle_noise_model_, fading_memory_alpha_, nis_);
+                        });
+
+                last_time_ = m.time;
+        }
+
+        return {
+                {.position = estimation.position(),
+                 .position_p = estimation.position_p().diagonal(),
+                 .speed = estimation.speed(),
+                 .speed_p = estimation.speed_p()}
+        };
 }
 
 template <typename T, template <typename> typename F>
@@ -267,22 +289,7 @@ std::optional<UpdateInfo<2, T>> Direction<T, F>::update(const Measurements<2, T>
 
         if (!last_time_ || !(m.time - *last_time_ < reset_dt_))
         {
-                if (!(m.position && m.position->variance))
-                {
-                        return {};
-                }
-                if (!queue_.empty())
-                {
-                        ASSERT(queue_.last_time() == m.time);
-                        reset();
-                        last_time_ = m.time;
-                }
-                return {
-                        {.position = estimation.position(),
-                         .position_p = estimation.position_p().diagonal(),
-                         .speed = estimation.speed(),
-                         .speed_p = estimation.speed_p()}
-                };
+                return init(m, estimation);
         }
 
         update_standing_velocity();
