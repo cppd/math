@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/alg.h>
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -26,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <vector>
 
@@ -36,34 +34,6 @@ template <std::size_t N, typename T>
 class Facet final
 {
         static_assert(N >= 3);
-
-        static constexpr T MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
-
-        [[nodiscard]] static std::array<T, N> compute_dots(
-                const std::vector<numerical::Vector<N, T>>& normals,
-                const std::array<int, N>& normal_indices,
-                const numerical::Vector<N, T>& simplex_normal)
-        {
-                std::array<T, N> res;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        res[i] = dot(normals[normal_indices[i]], simplex_normal);
-                }
-                return res;
-        }
-
-        [[nodiscard]] static bool all_unidirectional(const std::array<T, N>& dots)
-        {
-                static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (!(std::isfinite(dots[i]) && std::abs(dots[i]) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
 
         enum class NormalType : char
         {
@@ -79,64 +49,23 @@ class Facet final
         NormalType normal_type_;
         std::array<bool, N> reverse_normal_;
 
+        void set_texcoords(bool has_texcoords, const std::array<int, N>& texcoord_indices);
+
+        void set_normals(
+                const std::vector<numerical::Vector<N, T>>& normals,
+                bool has_normals,
+                const std::array<int, N>& normal_indices);
+
 public:
         Facet(const std::array<numerical::Vector<N, T>, N>& vertices,
               const std::vector<numerical::Vector<N, T>>& normals,
-              const bool has_normals,
+              bool has_normals,
               const std::array<int, N>& normal_indices,
-              const bool has_texcoords,
+              bool has_texcoords,
               const std::array<int, N>& texcoord_indices,
-              const int material)
-                : simplex_(vertices),
-                  material_(material)
-        {
-                ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);
-                ASSERT((has_texcoords && all_non_negative(texcoord_indices)) || !has_texcoords);
+              int material);
 
-                if (has_texcoords)
-                {
-                        t_ = texcoord_indices;
-                }
-                else
-                {
-                        t_[0] = -1;
-                }
-
-                if (!has_normals)
-                {
-                        normal_type_ = NormalType::NONE;
-                        return;
-                }
-
-                n_ = normal_indices;
-
-                const std::array<T, N> dots = compute_dots(normals, normal_indices, simplex_.normal());
-
-                if (!all_unidirectional(dots))
-                {
-                        normal_type_ = NormalType::NONE;
-                        return;
-                }
-
-                if (all_positive(dots))
-                {
-                        normal_type_ = NormalType::USE;
-                        return;
-                }
-
-                if (all_negative(dots))
-                {
-                        normal_type_ = NormalType::USE;
-                        simplex_.reverse_normal();
-                        return;
-                }
-
-                normal_type_ = NormalType::REVERSE;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        reverse_normal_[i] = dots[i] < 0;
-                }
-        }
+        //
 
         [[nodiscard]] int material() const
         {
