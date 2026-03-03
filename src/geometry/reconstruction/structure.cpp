@@ -80,6 +80,50 @@ bool is_unbounded(
 
 // Definition 4.1 (Poles).
 template <std::size_t N>
+numerical::Vector<N, double> voronoi_positive_norm_unbounded(
+        const std::vector<core::DelaunayFacet<N>>& delaunay_facets,
+        const VertexConnections& vertex_connections)
+{
+        numerical::Vector<N, double> sum(0);
+
+        for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
+        {
+                if (delaunay_facets[vertex_facet.facet_index].one_sided())
+                {
+                        sum += delaunay_facets[vertex_facet.facet_index].ortho();
+                }
+        }
+
+        return sum.normalized();
+}
+
+// Definition 4.1 (Poles).
+template <std::size_t N>
+numerical::Vector<N, double> voronoi_positive_norm_bounded(
+        const numerical::Vector<N, double>& vertex,
+        const std::vector<core::DelaunayObject<N>>& delaunay_objects,
+        const VertexConnections& vertex_connections)
+{
+        double max_distance = Limits<double>::lowest();
+        numerical::Vector<N, double> max_vector(0);
+
+        for (const auto object_index : vertex_connections.objects)
+        {
+                const numerical::Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
+                const numerical::Vector<N, double> vp = voronoi_vertex - vertex;
+                const double distance = vp.norm_squared();
+                if (distance > max_distance)
+                {
+                        max_distance = distance;
+                        max_vector = vp;
+                }
+        }
+
+        return max_vector.normalized();
+}
+
+// Definition 4.1 (Poles).
+template <std::size_t N>
 numerical::Vector<N, double> voronoi_positive_norm(
         const numerical::Vector<N, double>& vertex,
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
@@ -88,38 +132,9 @@ numerical::Vector<N, double> voronoi_positive_norm(
 {
         const bool unbounded = is_unbounded(delaunay_facets, vertex_connections);
 
-        numerical::Vector<N, double> positive_norm;
-
-        if (unbounded)
-        {
-                numerical::Vector<N, double> sum(0);
-                for (const VertexConnections::Facet& vertex_facet : vertex_connections.facets)
-                {
-                        if (delaunay_facets[vertex_facet.facet_index].one_sided())
-                        {
-                                sum += delaunay_facets[vertex_facet.facet_index].ortho();
-                        }
-                }
-                positive_norm = sum.normalized();
-        }
-        else
-        {
-                double max_distance = Limits<double>::lowest();
-                numerical::Vector<N, double> max_vector(0);
-                for (const auto object_index : vertex_connections.objects)
-                {
-                        const numerical::Vector<N, double> voronoi_vertex =
-                                delaunay_objects[object_index].voronoi_vertex();
-                        const numerical::Vector<N, double> vp = voronoi_vertex - vertex;
-                        const double distance = vp.norm_squared();
-                        if (distance > max_distance)
-                        {
-                                max_distance = distance;
-                                max_vector = vp;
-                        }
-                }
-                positive_norm = max_vector.normalized();
-        }
+        const numerical::Vector<N, double> positive_norm =
+                unbounded ? voronoi_positive_norm_unbounded(delaunay_facets, vertex_connections)
+                          : voronoi_positive_norm_bounded(vertex, delaunay_objects, vertex_connections);
 
         if (!is_finite(positive_norm))
         {
