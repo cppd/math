@@ -310,14 +310,10 @@ double cocone_facets_and_voronoi_radius_impl(
 
                 const EdgePoint pa = compute_edge_point(0, vertex, delaunay_objects, positive_pole, facet);
 
-                const EdgePoint pb = [&]
-                {
-                        if (facet.one_sided())
-                        {
-                                return EdgePoint<N>{.v = {}, .length = 0, .cos = dot(positive_pole, facet.ortho())};
-                        }
-                        return compute_edge_point(1, vertex, delaunay_objects, positive_pole, facet);
-                }();
+                const EdgePoint pb =
+                        (facet.one_sided())
+                                ? EdgePoint<N>{.v = {}, .length = 0, .cos = dot(positive_pole, facet.ortho())}
+                                : compute_edge_point(1, vertex, delaunay_objects, positive_pole, facet);
 
                 if (!voronoi_edge_intersects_cocone(pa.cos, pb.cos))
                 {
