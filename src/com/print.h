@@ -68,6 +68,21 @@ using LongLongType = std::conditional_t<
         std::conditional_t<USE_UNSIGNED_LONG_LONG<T>, unsigned long long, void>>;
 
 template <unsigned DIGIT_GROUP_SIZE, typename T>
+void make_digit(const T& value, [[maybe_unused]] const char separator, int& index, std::string& str)
+{
+        if constexpr (DIGIT_GROUP_SIZE > 0)
+        {
+                ++index;
+                if ((index % DIGIT_GROUP_SIZE) == 0 && index != 0)
+                {
+                        str += separator;
+                }
+        }
+
+        str += digit(value);
+}
+
+template <unsigned DIGIT_GROUP_SIZE, typename T>
 void make_string(T value, int index, [[maybe_unused]] const char separator, std::string& str)
 {
         do
@@ -82,16 +97,7 @@ void make_string(T value, int index, [[maybe_unused]] const char separator, std:
                         }
                 }
 
-                if constexpr (DIGIT_GROUP_SIZE > 0)
-                {
-                        ++index;
-                        if ((index % DIGIT_GROUP_SIZE) == 0 && index != 0)
-                        {
-                                str += separator;
-                        }
-                }
-
-                str += digit(value);
+                make_digit<DIGIT_GROUP_SIZE>(value, separator, index, str);
 
         } while ((value /= 10) != 0);
 }
