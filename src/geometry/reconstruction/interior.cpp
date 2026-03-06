@@ -92,6 +92,32 @@ void initial_phase(
 }
 
 template <std::size_t N>
+void expansion_phase_neighbors(
+        const std::size_t vertex_index,
+        const double cosine_of_alpha,
+        const std::vector<ManifoldVertex<N>>& vertices,
+        std::vector<bool>* const interior_vertices,
+        std::size_t* const interior_count)
+{
+        const ManifoldVertex<N>& vertex = vertices[vertex_index];
+
+        for (const auto neighbor_index : vertex.cocone_neighbors)
+        {
+                if (!(*interior_vertices)[neighbor_index])
+                {
+                        continue;
+                }
+
+                if (normal_condition(vertex, vertices[neighbor_index], cosine_of_alpha))
+                {
+                        (*interior_vertices)[vertex_index] = true;
+                        ++(*interior_count);
+                        break;
+                }
+        }
+}
+
+template <std::size_t N>
 void expansion_phase(
         const double rho,
         const double cosine_of_alpha,
@@ -99,34 +125,19 @@ void expansion_phase(
         std::vector<bool>* const interior_vertices,
         std::size_t* const interior_count)
 {
-        for (std::size_t v = 0; v < vertices.size(); ++v)
+        for (std::size_t i = 0; i < vertices.size(); ++i)
         {
-                if ((*interior_vertices)[v])
+                if ((*interior_vertices)[i])
                 {
                         continue;
                 }
 
-                const ManifoldVertex<N>& vertex = vertices[v];
-
-                if (!ratio_condition(vertex, rho))
+                if (!ratio_condition(vertices[i], rho))
                 {
                         continue;
                 }
 
-                for (const auto index : vertex.cocone_neighbors)
-                {
-                        if (!(*interior_vertices)[index])
-                        {
-                                continue;
-                        }
-
-                        if (normal_condition(vertex, vertices[index], cosine_of_alpha))
-                        {
-                                (*interior_vertices)[v] = true;
-                                ++(*interior_count);
-                                break;
-                        }
-                }
+                expansion_phase_neighbors(i, cosine_of_alpha, vertices, interior_vertices, interior_count);
         }
 }
 
