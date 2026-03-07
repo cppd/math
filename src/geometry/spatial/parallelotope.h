@@ -73,6 +73,9 @@ class Parallelotope final
         };
 
         template <IntersectionType INTERSECTION_TYPE>
+        [[nodiscard]] static T intersect_type(const T& near, const T& far);
+
+        template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, T max_distance) const;
 
         template <int INDEX, typename F>
@@ -232,6 +235,25 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 
 template <std::size_t N, typename T>
 template <Parallelotope<N, T>::IntersectionType INTERSECTION_TYPE>
+T Parallelotope<N, T>::intersect_type(const T& near, const T& far)
+{
+        static_assert(
+                INTERSECTION_TYPE == IntersectionType::FARTHEST || INTERSECTION_TYPE == IntersectionType::NEAREST
+                || INTERSECTION_TYPE == IntersectionType::VOLUME);
+
+        switch (INTERSECTION_TYPE)
+        {
+        case IntersectionType::FARTHEST:
+                return far;
+        case IntersectionType::NEAREST:
+                return near > 0 ? near : far;
+        case IntersectionType::VOLUME:
+                return near;
+        }
+}
+
+template <std::size_t N, typename T>
+template <Parallelotope<N, T>::IntersectionType INTERSECTION_TYPE>
 std::optional<T> Parallelotope<N, T>::intersect_impl(const numerical::Ray<N, T>& ray, const T max_distance) const
 {
         T near = 0;
@@ -260,19 +282,7 @@ std::optional<T> Parallelotope<N, T>::intersect_impl(const numerical::Ray<N, T>&
                 }
         }
 
-        static_assert(
-                INTERSECTION_TYPE == IntersectionType::FARTHEST || INTERSECTION_TYPE == IntersectionType::NEAREST
-                || INTERSECTION_TYPE == IntersectionType::VOLUME);
-
-        switch (INTERSECTION_TYPE)
-        {
-        case IntersectionType::FARTHEST:
-                return far;
-        case IntersectionType::NEAREST:
-                return near > 0 ? near : far;
-        case IntersectionType::VOLUME:
-                return near;
-        }
+        return intersect_type<INTERSECTION_TYPE>(near, far);
 }
 
 template <std::size_t N, typename T>
