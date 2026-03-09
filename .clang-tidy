@@ -90,7 +90,7 @@ CheckOptions:
 - key:   modernize-use-scoped-lock.WarnOnSingleLocks
   value: '0'
 - key:   readability-function-cognitive-complexity.Threshold
-  value: '13'
+  value: '12'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
   value: '1'
 - key:   readability-implicit-bool-conversion.AllowPointerConditions
