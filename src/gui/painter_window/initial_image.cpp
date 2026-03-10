@@ -72,8 +72,6 @@ std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, c
         constexpr std::array<std::uint8_t, 4> LIGHT = {100, 150, 200, 255};
         constexpr std::array<std::uint8_t, 4> DARK = {0, 0, 0, 255};
 
-        const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
-
         std::vector<std::byte> light;
         std::vector<std::byte> dark;
 
@@ -83,8 +81,8 @@ std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, c
         image::format_conversion(
                 image::ColorFormat::R8G8B8A8_SRGB, std::as_bytes(std::span(DARK)), color_format, &dark);
 
-        ASSERT(pixel_size == light.size());
-        ASSERT(pixel_size == dark.size());
+        ASSERT(light.size() == image::format_pixel_size_in_bytes(color_format));
+        ASSERT(light.size() == dark.size());
 
         return make_image(screen_size, light, dark);
 }
