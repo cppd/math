@@ -48,7 +48,7 @@ private:
 
         std::optional<TestSelectionParameters> parameters_;
 
-        TestSelectionParametersDialog(std::string_view title, std::vector<std::string> test_names);
+        TestSelectionParametersDialog(std::string_view title, std::vector<std::string>&& test_names);
 
         void filter(const QString& text);
 

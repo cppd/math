@@ -196,7 +196,7 @@ public:
 
 TestSelectionParametersDialog::TestSelectionParametersDialog(
         const std::string_view title,
-        std::vector<std::string> test_names)
+        std::vector<std::string>&& test_names)
         : QDialog(com::parent_for_dialog())
 {
         ui_.setupUi(this);
