@@ -89,6 +89,8 @@ CheckOptions:
   value: '0'
 - key:   modernize-use-scoped-lock.WarnOnSingleLocks
   value: '0'
+- key:   readability-function-cognitive-complexity.IgnoreMacros
+  value: '1'
 - key:   readability-function-cognitive-complexity.Threshold
   value: '12'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
