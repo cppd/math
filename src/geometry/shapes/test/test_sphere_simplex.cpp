@@ -43,6 +43,17 @@ namespace ns::geometry::shapes::test
 namespace
 {
 template <std::size_t N, typename T>
+std::array<numerical::Vector<N, T>, N> create_simplex(PCG& engine)
+{
+        std::array<numerical::Vector<N, T>, N> res;
+        for (numerical::Vector<N, T>& v : res)
+        {
+                v = sampling::uniform_on_sphere<N, T>(engine);
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
 void test_integrate(progress::Ratio* const progress, const double progress_min, const double progress_max)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -55,15 +66,7 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
 
         PCG engine;
 
-        const std::array<numerical::Vector<N, T>, N> simplex_vertices = [&]
-        {
-                std::array<numerical::Vector<N, T>, N> res;
-                for (numerical::Vector<N, T>& v : res)
-                {
-                        v = sampling::uniform_on_sphere<N, T>(engine);
-                }
-                return res;
-        }();
+        const std::array<numerical::Vector<N, T>, N> simplex_vertices = create_simplex<N, T>(engine);
 
         const T sphere_area = SPHERE_AREA<N, T>;
         const T simplex_area = sphere_simplex_area(simplex_vertices);
