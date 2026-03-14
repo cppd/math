@@ -43,6 +43,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling::testing
 {
+namespace test_implementation
+{
+template <std::size_t N, typename T, typename RandomVector>
+void test_unit(const long long count_per_thread, const RandomVector& random_vector, progress::Ratio* const progress)
+{
+        const double count_per_thread_reciprocal = 1.0 / count_per_thread;
+
+        PCG engine;
+
+        for (long long i = 0; i < count_per_thread; ++i)
+        {
+                if ((i & 0xfff) == 0xfff)
+                {
+                        progress->set(i * count_per_thread_reciprocal);
+                }
+
+                const numerical::Vector<N, T> v = random_vector(engine);
+                if (!(v.is_unit()))
+                {
+                        error("Vector " + to_string(v) + " is not unit " + to_string(v.norm()));
+                }
+        }
+}
+}
+
 template <std::size_t N, typename T, typename RandomVector>
 void test_unit(
         const std::string_view description,
@@ -66,23 +91,10 @@ void test_unit(
 
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
-        const double count_per_thread_reciprocal = 1.0 / count_per_thread;
 
         const auto f = [&]
         {
-                PCG engine;
-                for (long long i = 0; i < count_per_thread; ++i)
-                {
-                        if ((i & 0xfff) == 0xfff)
-                        {
-                                progress->set(i * count_per_thread_reciprocal);
-                        }
-                        const numerical::Vector<N, T> v = random_vector(engine);
-                        if (!(v.is_unit()))
-                        {
-                                error("Vector " + to_string(v) + " is not unit " + to_string(v.norm()));
-                        }
-                }
+                test_implementation::test_unit<N, T>(count_per_thread, random_vector, progress);
         };
 
         std::vector<std::future<void>> futures;
