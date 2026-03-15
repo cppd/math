@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan_core.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -97,19 +98,15 @@ VkPresentModeKHR choose_present_mode(
         case PresentMode::PREFER_SYNC:
                 return VK_PRESENT_MODE_FIFO_KHR;
         case PresentMode::PREFER_FAST:
-                for (const VkPresentModeKHR present_mode : present_modes)
+                if (const auto iter = std::ranges::find(present_modes, VK_PRESENT_MODE_MAILBOX_KHR);
+                    iter != present_modes.cend())
                 {
-                        if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
-                        {
-                                return present_mode;
-                        }
+                        return *iter;
                 }
-                for (const VkPresentModeKHR present_mode : present_modes)
+                if (const auto iter = std::ranges::find(present_modes, VK_PRESENT_MODE_IMMEDIATE_KHR);
+                    iter != present_modes.cend())
                 {
-                        if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
-                        {
-                                return present_mode;
-                        }
+                        return *iter;
                 }
                 return VK_PRESENT_MODE_FIFO_KHR;
         }
