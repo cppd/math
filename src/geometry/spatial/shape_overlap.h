@@ -45,25 +45,31 @@ bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = Shape1::DataType;
 
-        if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
+        const auto vertex_inside = [](const auto& s1, const auto& s2)
         {
-                for (const numerical::Vector<N, T>& v : shape_1.vertices())
+                for (const numerical::Vector<N, T>& v : s1.vertices())
                 {
-                        if (shape_2.inside(v))
+                        if (s2.inside(v))
                         {
                                 return true;
                         }
+                }
+                return false;
+        };
+
+        if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
+        {
+                if (vertex_inside(shape_1, shape_2))
+                {
+                        return true;
                 }
         }
 
         if constexpr (Shape1::SPACE_DIMENSION == Shape1::SHAPE_DIMENSION)
         {
-                for (const numerical::Vector<N, T>& v : shape_2.vertices())
+                if (vertex_inside(shape_2, shape_1))
                 {
-                        if (shape_1.inside(v))
-                        {
-                                return true;
-                        }
+                        return true;
                 }
         }
 
