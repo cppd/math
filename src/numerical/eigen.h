@@ -56,6 +56,21 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
+[[nodiscard]] T compute_t(const Matrix<N, N, T>& a, const std::size_t k, const std::size_t l)
+{
+        const T diff = a[l, l] - a[k, k];
+        const T phi = diff / (2 * a[k, l]);
+        const T phi_s = phi * phi + 1;
+
+        if (phi_s <= Limits<T>::max())
+        {
+                const T t = 1 / (std::abs(phi) + std::sqrt(phi_s));
+                return std::copysign(t, phi);
+        }
+        return 1 / (2 * phi);
+}
+
+template <std::size_t N, typename T>
 void rotate(
         const std::size_t k,
         const std::size_t l,
@@ -64,21 +79,7 @@ void rotate(
 {
         Matrix<N, N, T>& a = *m;
 
-        T t;
-        {
-                const T diff = a[l, l] - a[k, k];
-                const T phi = diff / (2 * a[k, l]);
-                const T phi_s = phi * phi + 1;
-                if (phi_s <= Limits<T>::max())
-                {
-                        t = 1 / (std::abs(phi) + std::sqrt(phi_s));
-                        t = std::copysign(t, phi);
-                }
-                else
-                {
-                        t = 1 / (2 * phi);
-                }
-        }
+        const T t = compute_t(a, k, l);
 
         const T c = 1 / std::sqrt(t * t + 1);
         const T s = t * c;
@@ -121,6 +122,25 @@ void rotate(
                 (*eigenvectors)[l][i] = p_il + s * (p_ik - tau * p_il);
         }
 }
+
+template <std::size_t N, typename T>
+[[nodiscard]] bool iteration(const T& tolerance, Matrix<N, N, T>* const a, std::array<Vector<N, T>, N>* const vectors)
+{
+        const T mu = threshold(*a);
+
+        for (std::size_t k = 0; k < N - 1; ++k)
+        {
+                for (std::size_t l = k + 1; l < N; ++l)
+                {
+                        if (std::abs((*a)[k, l]) >= mu)
+                        {
+                                rotate(k, l, a, vectors);
+                        }
+                }
+        }
+
+        return mu <= tolerance;
+}
 }
 
 class EigenException final : public std::exception
@@ -151,20 +171,7 @@ template <std::size_t N, typename T>
 
         for (int n = 0; n < 20; ++n)
         {
-                const T mu = impl::threshold(a);
-
-                for (std::size_t k = 0; k < N - 1; ++k)
-                {
-                        for (std::size_t l = k + 1; l < N; ++l)
-                        {
-                                if (std::abs(a[k, l]) >= mu)
-                                {
-                                        impl::rotate(k, l, &a, &vectors);
-                                }
-                        }
-                }
-
-                if (mu <= tolerance)
+                if (impl::iteration(tolerance, &a, &vectors))
                 {
                         return {.values = a.diagonal(), .vectors = vectors};
                 }
