@@ -79,12 +79,41 @@ void check_facet_dimension(
 }
 
 template <std::size_t N>
+void check_facets_without_boundary(
+        const std::string_view name,
+        const std::unordered_map<std::array<int, N>, int, RidgeHash>& ridge_facet_count)
+{
+        for (const auto& [ridge, count] : ridge_facet_count)
+        {
+                if (count != 2)
+                {
+                        error(std::string(name) + " ridge facet count " + to_string(count) + " is not equal to 2");
+                }
+        }
+}
+
+template <std::size_t N>
+void check_facets_with_boundary(
+        const std::string_view name,
+        const std::unordered_map<std::array<int, N>, int, RidgeHash>& ridge_facet_count)
+{
+        for (const auto& [ridge, count] : ridge_facet_count)
+        {
+                if (count > 2)
+                {
+                        error(std::string(name) + " ridge facet count " + to_string(count) + " is greater than 2");
+                }
+        }
+}
+
+template <std::size_t N>
 void check_manifoldness(
         const std::string_view name,
         const std::vector<std::array<int, N>>& facets,
         const bool has_boundary)
 {
         std::unordered_map<std::array<int, N - 1>, int, RidgeHash> ridges;
+
         for (const std::array<int, N>& facet : facets)
         {
                 for (std::size_t r = 0; r < N; ++r)
@@ -96,24 +125,11 @@ void check_manifoldness(
 
         if (!has_boundary)
         {
-                for (const auto& [ridge, count] : ridges)
-                {
-                        if (count != 2)
-                        {
-                                error(std::string(name) + " ridge facet count " + to_string(count)
-                                      + " is not equal to 2");
-                        }
-                }
+                check_facets_without_boundary(name, ridges);
                 return;
         }
 
-        for (const auto& [ridge, count] : ridges)
-        {
-                if (count > 2)
-                {
-                        error(std::string(name) + " ridge facet count " + to_string(count) + " is greater than 2");
-                }
-        }
+        check_facets_with_boundary(name, ridges);
 }
 
 template <std::size_t N>
