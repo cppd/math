@@ -28,49 +28,56 @@ namespace ns::process
 {
 namespace dimension_implementation
 {
+template <template <std::size_t> typename Dimension, typename F, std::size_t... N>
+using ReturnType = std::common_type_t<decltype(std::declval<F>()(Dimension<N>()))...>;
+
 [[noreturn]] void dimension_not_supported_error(unsigned dimension);
 
-template <template <std::size_t> typename Dimension, typename T, std::size_t... N>
-auto apply(const std::size_t dimension, const T& f, std::index_sequence<N...>&&)
+template <template <std::size_t> typename Dimension, typename F, std::size_t... N>
+        requires (std::is_same_v<void, ReturnType<Dimension, F, N...>>)
+void apply(const std::size_t dimension, const F& f, std::index_sequence<N...>&&)
 {
-        using ReturnType = std::common_type_t<decltype(f(Dimension<N>()))...>;
+        const bool r = ((
+                [&]
+                {
+                        if (N == dimension)
+                        {
+                                f(Dimension<N>());
+                                return true;
+                        }
+                        return false;
+                }()
+                || ...));
 
-        if constexpr (std::is_same_v<void, ReturnType>)
+        if (r)
         {
-                const bool r = ((
-                        [&]
-                        {
-                                if (N == dimension)
-                                {
-                                        f(Dimension<N>());
-                                        return true;
-                                }
-                                return false;
-                        }()
-                        || ...));
-                if (r)
-                {
-                        return;
-                }
+                return;
         }
-        else
-        {
-                std::optional<ReturnType> r;
-                static_cast<void>((
-                        [&]
-                        {
-                                if (N == dimension)
-                                {
-                                        r.emplace(f(Dimension<N>()));
-                                        return true;
-                                }
-                                return false;
-                        }()
-                        || ...));
-                if (r)
+
+        dimension_not_supported_error(dimension);
+}
+
+template <template <std::size_t> typename Dimension, typename F, std::size_t... N>
+        requires (!std::is_same_v<void, ReturnType<Dimension, F, N...>>)
+auto apply(const std::size_t dimension, const F& f, std::index_sequence<N...>&&)
+{
+        std::optional<ReturnType<Dimension, F, N...>> r;
+
+        static_cast<void>((
+                [&]
                 {
-                        return std::move(*r);
-                }
+                        if (N == dimension)
+                        {
+                                r.emplace(f(Dimension<N>()));
+                                return true;
+                        }
+                        return false;
+                }()
+                || ...));
+
+        if (r)
+        {
+                return std::move(*r);
         }
 
         dimension_not_supported_error(dimension);
