@@ -73,30 +73,38 @@ public:
 };
 
 template <std::size_t N>
+std::array<int, 2> sorted_vertices(const std::array<int, N>& object, const std::size_t p1, const std::size_t p2)
+{
+        const int v1 = object[p1];
+        const int v2 = object[p2];
+
+        if (v1 < v2)
+        {
+                return {v1, v2};
+        }
+
+        if (v2 < v1)
+        {
+                return {v2, v1};
+        }
+
+        error("Double vertex in Delaunay " + to_string(object));
+}
+
+template <std::size_t N>
 std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<int, N>>& delaunay_objects)
 {
         static_assert(N >= 3);
 
         std::vector<Edge2> edges;
 
-        for (const std::array<int, N>& indices : delaunay_objects)
+        for (const std::array<int, N>& object : delaunay_objects)
         {
-                for (std::size_t p1 = 0; p1 < indices.size() - 1; ++p1)
+                for (std::size_t p1 = 0; p1 < object.size() - 1; ++p1)
                 {
-                        for (std::size_t p2 = p1 + 1; p2 < indices.size(); ++p2)
+                        for (std::size_t p2 = p1 + 1; p2 < object.size(); ++p2)
                         {
-                                if (indices[p1] < indices[p2])
-                                {
-                                        edges.emplace_back(std::array<int, 2>{indices[p1], indices[p2]});
-                                }
-                                else if (indices[p1] > indices[p2])
-                                {
-                                        edges.emplace_back(std::array<int, 2>{indices[p2], indices[p1]});
-                                }
-                                else
-                                {
-                                        error("Double vertex in Delaunay " + to_string(indices));
-                                }
+                                edges.emplace_back(sorted_vertices(object, p1, p2));
                         }
                 }
         }
