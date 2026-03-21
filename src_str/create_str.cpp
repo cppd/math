@@ -63,6 +63,19 @@ template <typename T>
         return static_cast<unsigned char>(c);
 }
 
+[[nodiscard]] bool spr_byte_order_reversed(const std::uint32_t magic_number)
+{
+        if (magic_number == SPR_MAGIC_NUMBER)
+        {
+                return false;
+        }
+        if (std::byteswap(magic_number) == SPR_MAGIC_NUMBER)
+        {
+                return true;
+        }
+        error("Error reading SPIR-V (no magic number)");
+}
+
 [[nodiscard]] std::ifstream create_ifstream(
         const char* const name,
         const std::ios_base::openmode mode = std::ios_base::in)
@@ -193,18 +206,7 @@ void spr(const char* const input_name, const char* const output_name)
                 error("Error reading SPIR-V magic number");
         }
 
-        const bool reverse_byte_order = [n]
-        {
-                if (n == SPR_MAGIC_NUMBER)
-                {
-                        return false;
-                }
-                if (std::byteswap(n) == SPR_MAGIC_NUMBER)
-                {
-                        return true;
-                }
-                error("Error reading SPIR-V (no magic number)");
-        }();
+        const bool reverse_byte_order = spr_byte_order_reversed(n);
 
         write(ofs, reverse_byte_order, n);
         for (long long i = 1; read(ifs, &n); ++i)
