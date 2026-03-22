@@ -31,19 +31,18 @@ namespace ns::model::mesh::file
 namespace mesh_check_implementation
 {
 template <std::size_t N>
-void check_facet_indices(
-        const unsigned index,
-        const int vertex_count,
-        const int texcoord_count,
-        const int normal_count,
-        const typename Mesh<N>::Facet& facet)
+void check_vertex_indices(const unsigned index, const int vertex_count, const typename Mesh<N>::Facet& facet)
 {
         if (facet.vertices[index] < 0 || facet.vertices[index] >= vertex_count)
         {
                 error("Vertex index " + to_string(facet.vertices[index]) + " is out of bounds [0, "
                       + to_string(vertex_count) + ")");
         }
+}
 
+template <std::size_t N>
+void check_texcoord_indices(const unsigned index, const int texcoord_count, const typename Mesh<N>::Facet& facet)
+{
         if (facet.has_texcoord)
         {
                 if (facet.texcoords[index] < 0 || facet.texcoords[index] >= texcoord_count)
@@ -56,7 +55,11 @@ void check_facet_indices(
         {
                 error("No texture but texture coordinate index is not set to -1");
         }
+}
 
+template <std::size_t N>
+void check_normal_indices(const unsigned index, const int normal_count, const typename Mesh<N>::Facet& facet)
+{
         if (facet.has_normal)
         {
                 if (facet.normals[index] < 0 || facet.normals[index] >= normal_count)
@@ -82,7 +85,9 @@ void check_facet_indices(const Mesh<N>& mesh)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        check_facet_indices<N>(i, vertex_count, texcoord_count, normal_count, facet);
+                        check_vertex_indices<N>(i, vertex_count, facet);
+                        check_texcoord_indices<N>(i, texcoord_count, facet);
+                        check_normal_indices<N>(i, normal_count, facet);
                 }
         }
 }
