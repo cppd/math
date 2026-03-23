@@ -177,6 +177,32 @@ class AngleDistribution final
                 return compute_buckets_threads(thread_count, f);
         }
 
+        static T distribution_max(const std::vector<Distribution>& distribution)
+        {
+                T max = Limits<T>::lowest();
+                for (const Distribution& d : distribution)
+                {
+                        max = std::max(max, d.distribution);
+                }
+                return max;
+        }
+
+        static void write_histogram_distribution_value(const T distribution_value, const T max, std::ostringstream& oss)
+        {
+                constexpr int BAR_SIZE = 100;
+                constexpr int DIVISION_SIZE = 10;
+
+                const int count = std::round(distribution_value / max * BAR_SIZE);
+                for (int i = 0; i < count; i += DIVISION_SIZE)
+                {
+                        oss << '+';
+                        for (int j = i + 1; j < i + DIVISION_SIZE && j < count; ++j)
+                        {
+                                oss << '*';
+                        }
+                }
+        }
+
         std::vector<Distribution> distribution_;
 
 public:
@@ -242,37 +268,27 @@ public:
         template <typename PDF>
         [[nodiscard]] std::string histogram(const PDF& pdf) const
         {
-                constexpr int BAR_SIZE = 100;
-                constexpr int DIVISION_SIZE = 10;
-
                 if (distribution_.empty())
                 {
                         error("There is no distribution");
                 }
 
-                T max = Limits<T>::lowest();
-                for (const Distribution& d : distribution_)
-                {
-                        max = std::max(max, d.distribution);
-                }
+                const T max = distribution_max(distribution_);
 
                 std::ostringstream oss;
 
-                bool new_line = false;
-                for (const Distribution& d : distribution_)
+                for (std::size_t i = 0; i < distribution_.size(); ++i)
                 {
+                        const Distribution& d = distribution_[i];
+
                         const T distribution_value = d.distribution;
                         const T pdf_mean_value = mean_pdf(d, pdf);
 
                         check_pdf_and_distribution(pdf_mean_value, distribution_value);
 
-                        if (new_line)
+                        if (i > 0)
                         {
                                 oss << '\n';
-                        }
-                        else
-                        {
-                                new_line = true;
                         }
 
                         oss << std::fixed << std::setprecision(1) << std::setw(5) << radians_to_degrees(d.angle_from);
@@ -281,15 +297,7 @@ public:
                         oss << " (" << pdf_mean_value << ")";
                         oss << " ";
 
-                        const int count = std::round(distribution_value / max * BAR_SIZE);
-                        for (int i = 0; i < count; i += DIVISION_SIZE)
-                        {
-                                oss << '+';
-                                for (int j = i + 1; j < i + DIVISION_SIZE && j < count; ++j)
-                                {
-                                        oss << '*';
-                                }
-                        }
+                        write_histogram_distribution_value(distribution_value, max, oss);
                 }
 
                 return oss.str();
