@@ -122,6 +122,23 @@ class SpatialSubdivisionTree final
                 }
         }
 
+        template <typename ObjectIntersect>
+        std::invoke_result_t<ObjectIntersect, const std::vector<int>&> find_object_intersection(
+                const numerical::Ray<N, T>& ray,
+                const ObjectIntersect& object_intersect,
+                const Box& box)
+        {
+                if (!box.object_indices.empty())
+                {
+                        const auto info = object_intersect(box.object_indices);
+                        if (info && box.parallelotope.inside(ray.point(std::get<0>(*info))))
+                        {
+                                return info;
+                        }
+                }
+                return std::nullopt;
+        }
+
 public:
         class Objects
         {
@@ -177,13 +194,9 @@ public:
 
                 while (true)
                 {
-                        if (!box->object_indices.empty())
+                        if (const auto intersection = find_object_intersection(ray, object_intersect, *box))
                         {
-                                const auto info = object_intersect(box->object_indices);
-                                if (info && box->parallelotope.inside(ray.point(std::get<0>(*info))))
-                                {
-                                        return info;
-                                }
+                                return intersection;
                         }
 
                         const T next = box->parallelotope.intersect_farthest(local_ray).value_or(0);
