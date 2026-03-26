@@ -46,6 +46,20 @@ namespace ns::painter::integrators::bpt
 namespace
 {
 template <std::size_t N, typename T, typename Color>
+[[nodiscard]] std::optional<Color> connect_s_0_surface(const vertex::Surface<N, T, Color>& surface)
+{
+        if (!surface.is_light())
+        {
+                return std::nullopt;
+        }
+        if (const auto& radiance = surface.light_radiance())
+        {
+                return *radiance * surface.beta();
+        }
+        return std::nullopt;
+}
+
+template <std::size_t N, typename T, typename Color>
 [[nodiscard]] std::optional<Color> connect_s_0_infinite_light(
         const Scene<N, T, Color>& scene,
         const vertex::InfiniteLight<N, T, Color>& infinite_light)
@@ -73,15 +87,7 @@ template <std::size_t N, typename T, typename Color>
         const Visitors visitors{
                 [](const vertex::Surface<N, T, Color>& surface) -> std::optional<Color>
                 {
-                        if (!surface.is_light())
-                        {
-                                return std::nullopt;
-                        }
-                        if (const auto& radiance = surface.light_radiance())
-                        {
-                                return *radiance * surface.beta();
-                        }
-                        return std::nullopt;
+                        return connect_s_0_surface(surface);
                 },
                 [](const vertex::Camera<N, T, Color>&) -> std::optional<Color>
                 {
