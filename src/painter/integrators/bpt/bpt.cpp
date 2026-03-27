@@ -112,8 +112,8 @@ void add_sample(
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void walk(
         const bool camera_path,
-        const Scene<N, T, Color>& scene,
-        const LightDistribution<N, T, Color>& light_distribution,
+        const Scene<N, T, Color>* const scene,
+        const LightDistribution<N, T, Color>* const light_distribution,
         Color beta,
         const T pdf,
         numerical::Ray<N, T> ray,
@@ -128,7 +128,7 @@ void walk(
         std::tie(surface, normals) = [&]
         {
                 static constexpr std::optional<numerical::Vector<N, T>> GEOMETRIC_NORMAL;
-                return com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, GEOMETRIC_NORMAL, ray);
+                return com::scene_intersect<FLAT_SHADING, N, T, Color>(*scene, GEOMETRIC_NORMAL, ray);
         }();
 
         T pdf_forward = pdf;
@@ -140,8 +140,8 @@ void walk(
                         if (camera_path)
                         {
                                 path->emplace_back(
-                                        std::in_place_type<vertex::InfiniteLight<N, T, Color>>, &scene,
-                                        &light_distribution, ray, beta, pdf_forward);
+                                        std::in_place_type<vertex::InfiniteLight<N, T, Color>>, scene,
+                                        light_distribution, ray, beta, pdf_forward);
                         }
                         return;
                 }
@@ -170,14 +170,14 @@ void walk(
 
                 ray = {surface.point(), sample->l};
                 std::tie(surface, normals) =
-                        com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
+                        com::scene_intersect<FLAT_SHADING, N, T, Color>(*scene, normals.geometric, ray);
         }
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void generate_camera_path(
-        const Scene<N, T, Color>& scene,
-        const LightDistribution<N, T, Color>& light_distribution,
+        const Scene<N, T, Color>* const scene,
+        const LightDistribution<N, T, Color>* const light_distribution,
         const numerical::Ray<N, T>& ray,
         PCG& engine,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
@@ -195,14 +195,14 @@ void generate_camera_path(
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void generate_light_path(
-        const Scene<N, T, Color>& scene,
-        LightDistribution<N, T, Color>& light_distribution,
+        const Scene<N, T, Color>* const scene,
+        LightDistribution<N, T, Color>* const light_distribution,
         PCG& engine,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
         path->clear();
 
-        const LightDistributionSample distribution = light_distribution.sample(engine);
+        const LightDistributionSample distribution = light_distribution->sample(engine);
         const LightSourceLeaveSample sample = distribution.light->leave_sample(engine);
 
         if (!(sample.pdf_pos > 0 && sample.pdf_dir > 0 && !sample.radiance.is_black()))
@@ -236,7 +236,7 @@ std::optional<Color> bpt(
         thread_local std::vector<vertex::Vertex<N, T, Color>> camera_path;
         thread_local std::vector<vertex::Vertex<N, T, Color>> light_path;
 
-        generate_camera_path<FLAT_SHADING>(scene, light_distribution, ray, engine, &camera_path);
+        generate_camera_path<FLAT_SHADING>(&scene, &light_distribution, ray, engine, &camera_path);
 
         if (camera_path.size() == 1)
         {
@@ -248,7 +248,7 @@ std::optional<Color> bpt(
                 return {};
         }
 
-        generate_light_path<FLAT_SHADING>(scene, light_distribution, engine, &light_path);
+        generate_light_path<FLAT_SHADING>(&scene, &light_distribution, engine, &light_path);
 
         const int camera_size = camera_path.size();
         const int light_size = light_path.size();
