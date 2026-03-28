@@ -83,7 +83,7 @@ template <std::size_t N, typename T>
 
 template <std::size_t N, typename T, typename Color>
 void add_sample(
-        const std::optional<com::SurfaceSamplePdf<N, T, Color>>& sample,
+        const com::SurfaceSamplePdf<N, T, Color>& sample,
         const Color& beta,
         const T pdf_forward,
         const numerical::Ray<N, T>& ray,
@@ -91,21 +91,10 @@ void add_sample(
         const com::Normals<N, T>& normals,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
 {
-        if (!sample)
-        {
-                if (surface.light_source())
-                {
-                        vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
-                        set_forward_pdf(path->back(), &next, pdf_forward);
-                        path->push_back(std::move(next));
-                }
-                return;
-        }
-
         vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
         vertex::Vertex<N, T, Color>& prev = path->back();
         set_forward_pdf(prev, &next, pdf_forward);
-        set_reversed_pdf(&prev, std::as_const(next), sample->pdf_reversed);
+        set_reversed_pdf(&prev, std::as_const(next), sample.pdf_reversed);
         path->push_back(std::move(next));
 }
 
@@ -148,12 +137,18 @@ void walk(
 
                 const auto sample = com::surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
 
-                add_sample(sample, beta, pdf_forward, ray, surface, normals, path);
-
                 if (!sample)
                 {
+                        if (surface.light_source())
+                        {
+                                vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                                set_forward_pdf(path->back(), &next, pdf_forward);
+                                path->push_back(std::move(next));
+                        }
                         return;
                 }
+
+                add_sample(*sample, beta, pdf_forward, ray, surface, normals, path);
 
                 pdf_forward = sample->pdf_forward;
                 beta *= sample->beta;
