@@ -82,6 +82,41 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T, typename Color>
+void surface_not_found(
+        const bool camera_path,
+        const Scene<N, T, Color>* const scene,
+        const LightDistribution<N, T, Color>* const light_distribution,
+        const Color& beta,
+        const T pdf_forward,
+        const numerical::Ray<N, T>& ray,
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
+{
+        if (camera_path)
+        {
+                path->emplace_back(
+                        std::in_place_type<vertex::InfiniteLight<N, T, Color>>, scene, light_distribution, ray, beta,
+                        pdf_forward);
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
+void sample_not_found(
+        const Color& beta,
+        const T pdf_forward,
+        const numerical::Ray<N, T>& ray,
+        const SurfaceIntersection<N, T, Color>& surface,
+        const com::Normals<N, T>& normals,
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
+{
+        if (surface.light_source())
+        {
+                vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
+                set_forward_pdf(path->back(), &next, pdf_forward);
+                path->push_back(std::move(next));
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
 void add_sample(
         const com::SurfaceSamplePdf<N, T, Color>& sample,
         const Color& beta,
@@ -126,12 +161,7 @@ void walk(
         {
                 if (!surface_found(ray, surface, normals))
                 {
-                        if (camera_path)
-                        {
-                                path->emplace_back(
-                                        std::in_place_type<vertex::InfiniteLight<N, T, Color>>, scene,
-                                        light_distribution, ray, beta, pdf_forward);
-                        }
+                        surface_not_found(camera_path, scene, light_distribution, beta, pdf_forward, ray, path);
                         return;
                 }
 
@@ -139,12 +169,7 @@ void walk(
 
                 if (!sample)
                 {
-                        if (surface.light_source())
-                        {
-                                vertex::Surface<N, T, Color> next(surface, normals, beta, -ray.dir());
-                                set_forward_pdf(path->back(), &next, pdf_forward);
-                                path->push_back(std::move(next));
-                        }
+                        sample_not_found(beta, pdf_forward, ray, surface, normals, path);
                         return;
                 }
 
