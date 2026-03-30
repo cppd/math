@@ -270,30 +270,7 @@ std::optional<Color> bpt(
 
         generate_light_path<FLAT_SHADING>(&scene, &light_distribution, engine, &light_path);
 
-        const int camera_size = camera_path.size();
-        const int light_size = light_path.size();
-
-        Color color(0);
-
-        for (int t = 2; t <= camera_size; ++t)
-        {
-                for (int s = 0; s <= light_size; ++s)
-                {
-                        const int depth = t + s - 2;
-                        if (depth > MAX_DEPTH)
-                        {
-                                continue;
-                        }
-
-                        const auto c = connect(scene, light_path, camera_path, s, t, light_distribution, engine);
-                        if (c)
-                        {
-                                color += *c;
-                        }
-                }
-        }
-
-        return color;
+        return connect(MAX_DEPTH, scene, light_path, camera_path, light_distribution, engine);
 }
 
 #define TEMPLATE(N, T, C)                                                                                   \
