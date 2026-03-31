@@ -42,6 +42,20 @@ inline int hardware_concurrency()
 
 class Threads final
 {
+        static void add_message(const char* const message, std::optional<std::string>& res)
+        {
+                if (!res)
+                {
+                        res = message;
+                        return;
+                }
+                if (!res->empty())
+                {
+                        *res += '\n';
+                }
+                *res += message;
+        }
+
         struct Thread final
         {
                 std::future<void> future;
@@ -62,20 +76,6 @@ class Threads final
         {
                 std::optional<std::string> res;
 
-                const auto add_message = [&](const char* const message)
-                {
-                        if (!res)
-                        {
-                                res = message;
-                                return;
-                        }
-                        if (!res->empty())
-                        {
-                                *res += '\n';
-                        }
-                        *res += message;
-                };
-
                 for (Thread& thread : threads_)
                 {
                         thread.thread.join();
@@ -88,11 +88,11 @@ class Threads final
                         }
                         catch (const std::exception& e)
                         {
-                                add_message(e.what());
+                                add_message(e.what(), res);
                         }
                         catch (...)
                         {
-                                add_message("Unknown error in thread");
+                                add_message("Unknown error in thread", res);
                         }
                 }
 
