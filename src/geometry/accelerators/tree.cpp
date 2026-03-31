@@ -143,6 +143,50 @@ void insert_child_box_indices(const Objects& objects, const std::vector<int>& bo
 }
 
 template <typename Box, typename Objects>
+bool extend_iteration(
+        const Objects& objects,
+        const unsigned max_depth,
+        const unsigned min_objects,
+        const unsigned max_boxes,
+        std::mutex* const boxes_lock,
+        std::deque<Box>* const boxes,
+        ThreadTaskManager<Task<Box>>* const task_manager,
+        progress::Ratio* const progress)
+{
+        const auto task = task_manager->get();
+        if (!task)
+        {
+                return false;
+        }
+
+        if (task->depth >= max_depth || task->box->object_indices.size() <= min_objects)
+        {
+                task->box->childs[0] = -1;
+                return true;
+        }
+
+        const std::array child_boxes = create_child_boxes(task->box->parallelotope, boxes_lock, boxes);
+        for (std::size_t i = 0; i < child_boxes.size(); ++i)
+        {
+                if ((child_boxes[i].index & 0xfff) == 0xfff)
+                {
+                        progress->set(child_boxes[i].index, max_boxes);
+                }
+
+                task->box->childs[i] = child_boxes[i].index;
+
+                Box* const child_box = child_boxes[i].box;
+                insert_child_box_indices(objects, task->box->object_indices, child_box);
+                task_manager->emplace(child_box, task->depth + 1);
+        }
+
+        task->box->object_indices.clear();
+        task->box->object_indices.shrink_to_fit();
+
+        return true;
+}
+
+template <typename Box, typename Objects>
 void extend(
         const Objects& objects,
         const unsigned max_depth,
@@ -155,35 +199,11 @@ void extend(
 {
         while (true)
         {
-                const auto task = task_manager->get();
-                if (!task)
+                if (!extend_iteration(
+                            objects, max_depth, min_objects, max_boxes, boxes_lock, boxes, task_manager, progress))
                 {
-                        break;
+                        return;
                 }
-
-                if (task->depth >= max_depth || task->box->object_indices.size() <= min_objects)
-                {
-                        task->box->childs[0] = -1;
-                        continue;
-                }
-
-                const std::array child_boxes = create_child_boxes(task->box->parallelotope, boxes_lock, boxes);
-                for (std::size_t i = 0; i < child_boxes.size(); ++i)
-                {
-                        if ((child_boxes[i].index & 0xfff) == 0xfff)
-                        {
-                                progress->set(child_boxes[i].index, max_boxes);
-                        }
-
-                        task->box->childs[i] = child_boxes[i].index;
-
-                        Box* const child_box = child_boxes[i].box;
-                        insert_child_box_indices(objects, task->box->object_indices, child_box);
-                        task_manager->emplace(child_box, task->depth + 1);
-                }
-
-                task->box->object_indices.clear();
-                task->box->object_indices.shrink_to_fit();
         }
 }
 
