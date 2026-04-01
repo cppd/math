@@ -84,55 +84,76 @@ std::vector<Measurements<T>> reset_position_measurements(
 }
 
 template <typename T>
-std::vector<Measurements<T>> add_bad_measurements(
-        const std::vector<Measurements<T>>& measurements,
-        const MeasurementConfig<T>& config)
+class BadMeasurements final
 {
-        constexpr T X = 2000;
-        constexpr T X_AFTER_RESET = 500;
-        constexpr T V = 30;
-        constexpr T PROBABILITY = T{1} / 20;
-        constexpr int COUNT_AFTER_RESET = 2;
+        static constexpr T X = 2000;
+        static constexpr T X_AFTER_RESET = 500;
+        static constexpr T V = 30;
+        static constexpr T PROBABILITY = T{1} / 20;
+        static constexpr int COUNT_AFTER_RESET = 2;
 
-        PCG engine;
+        const MeasurementConfig<T>* const config_;
 
-        int count_after_reset = 0;
+        PCG engine_;
+        int count_after_reset_ = 0;
 
-        const auto x = [&](Measurements<T>& m)
+        void update_position(Measurements<T>& m)
         {
                 if (!m.position)
                 {
                         return;
                 }
-                if (m.time >= config.reset_max_time && count_after_reset < COUNT_AFTER_RESET)
-                {
-                        ++count_after_reset;
-                        m.position->value += random_sign(X_AFTER_RESET, engine);
-                }
-                else if (std::bernoulli_distribution(PROBABILITY)(engine))
-                {
-                        m.position->value += random_sign(X, engine);
-                }
-        };
 
-        const auto v = [&](Measurements<T>& m)
+                if (m.time >= config_->reset_max_time && count_after_reset_ < COUNT_AFTER_RESET)
+                {
+                        ++count_after_reset_;
+                        m.position->value += random_sign(X_AFTER_RESET, engine_);
+                }
+                else if (std::bernoulli_distribution(PROBABILITY)(engine_))
+                {
+                        m.position->value += random_sign(X, engine_);
+                }
+        }
+
+        void update_speed(Measurements<T>& m)
         {
                 if (!m.speed)
                 {
                         return;
                 }
-                m.speed->value *= config.speed_factor;
-                if (std::bernoulli_distribution(PROBABILITY)(engine))
+
+                m.speed->value *= config_->speed_factor;
+                if (std::bernoulli_distribution(PROBABILITY)(engine_))
                 {
                         m.speed->value += V;
                 }
-        };
+        }
+
+public:
+        explicit BadMeasurements(const MeasurementConfig<T>* const config)
+                : config_(config)
+        {
+                ASSERT(config_);
+        }
+
+        void update(Measurements<T>& m)
+        {
+                update_position(m);
+                update_speed(m);
+        }
+};
+
+template <typename T>
+std::vector<Measurements<T>> add_bad_measurements(
+        const std::vector<Measurements<T>>& measurements,
+        const MeasurementConfig<T>& config)
+{
+        BadMeasurements<T> bm(&config);
 
         std::vector<Measurements<T>> res(measurements);
         for (Measurements<T>& m : std::ranges::drop_view(res, 5))
         {
-                x(m);
-                v(m);
+                bm.update(m);
         }
         return res;
 }
@@ -184,10 +205,14 @@ template <typename T>
 SimulatorMeasurements<T> prepare_measurements(const std::vector<Measurements<T>>& measurements)
 {
         const MeasurementConfig<T> config = measurement_config<T>();
+
         const std::vector<Measurements<T>> v = reset_position_measurements(measurements, config);
-        return {.variance_correction = std::make_unique<VarianceCorrectionImpl<T>>(),
+
+        return {
+                .variance_correction = std::make_unique<VarianceCorrectionImpl<T>>(),
                 .config = config,
-                .measurements = add_bad_measurements(v, config)};
+                .measurements = add_bad_measurements(v, config),
+        };
 }
 
 #define INSTANTIATION(T)                      \
