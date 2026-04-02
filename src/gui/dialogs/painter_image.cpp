@@ -115,7 +115,13 @@ void PainterImageDialog::done(const int r)
 
         std::optional<std::string> path_string;
 
-        if (path_type_ == PainterImagePathType::DIRECTORY)
+        switch (path_type_)
+        {
+        case PainterImagePathType::NONE:
+        {
+                break;
+        }
+        case PainterImagePathType::DIRECTORY:
         {
                 path_string = ui_.line_edit_path->text().toStdString();
                 const std::filesystem::path path = path_from_utf8(*path_string);
@@ -125,8 +131,9 @@ void PainterImageDialog::done(const int r)
                         dialogs::message_critical(msg);
                         return;
                 }
+                break;
         }
-        else if (path_type_ == PainterImagePathType::FILE)
+        case PainterImagePathType::FILE:
         {
                 path_string = ui_.line_edit_path->text().toStdString();
                 const std::filesystem::path path = path_from_utf8(*path_string);
@@ -136,6 +143,8 @@ void PainterImageDialog::done(const int r)
                         dialogs::message_critical(msg);
                         return;
                 }
+                break;
+        }
         }
 
         parameters_.emplace();
