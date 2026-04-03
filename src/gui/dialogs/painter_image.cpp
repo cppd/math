@@ -105,6 +105,48 @@ void PainterImageDialog::set_checkboxes(const bool use_all)
         }
 }
 
+bool PainterImageDialog::make_path_string(std::optional<std::string>* const path_string) const
+{
+        ASSERT(path_string);
+
+        switch (path_type_)
+        {
+        case PainterImagePathType::NONE:
+        {
+                path_string->reset();
+                return true;
+        }
+        case PainterImagePathType::DIRECTORY:
+        {
+                const std::string s = ui_.line_edit_path->text().toStdString();
+                const std::filesystem::path path = path_from_utf8(s);
+                if (!std::filesystem::is_directory(path))
+                {
+                        const std::string msg = "Directory is not selected";
+                        dialogs::message_critical(msg);
+                        return false;
+                }
+                *path_string = s;
+                return true;
+        }
+        case PainterImagePathType::FILE:
+        {
+                const std::string s = ui_.line_edit_path->text().toStdString();
+                const std::filesystem::path path = path_from_utf8(s);
+                if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
+                {
+                        const std::string msg = "File is not selected";
+                        dialogs::message_critical(msg);
+                        return false;
+                }
+                *path_string = s;
+                return true;
+        }
+        }
+
+        error("Unknown path type " + to_string(enum_to_int(path_type_)));
+}
+
 void PainterImageDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
@@ -115,36 +157,9 @@ void PainterImageDialog::done(const int r)
 
         std::optional<std::string> path_string;
 
-        switch (path_type_)
+        if (!make_path_string(&path_string))
         {
-        case PainterImagePathType::NONE:
-        {
-                break;
-        }
-        case PainterImagePathType::DIRECTORY:
-        {
-                path_string = ui_.line_edit_path->text().toStdString();
-                const std::filesystem::path path = path_from_utf8(*path_string);
-                if (!std::filesystem::is_directory(path))
-                {
-                        const std::string msg = "Directory is not selected";
-                        dialogs::message_critical(msg);
-                        return;
-                }
-                break;
-        }
-        case PainterImagePathType::FILE:
-        {
-                path_string = ui_.line_edit_path->text().toStdString();
-                const std::filesystem::path path = path_from_utf8(*path_string);
-                if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
-                {
-                        const std::string msg = "File is not selected";
-                        dialogs::message_critical(msg);
-                        return;
-                }
-                break;
-        }
+                return;
         }
 
         parameters_.emplace();

@@ -58,6 +58,8 @@ private:
         void set_path();
         void set_checkboxes(bool use_all);
 
+        [[nodiscard]] bool make_path_string(std::optional<std::string>* path_string) const;
+
         void done(int r) override;
 
         void on_select_path_clicked();
