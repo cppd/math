@@ -39,6 +39,34 @@ namespace ns::color::samples
 namespace
 {
 template <typename T>
+void compare(const T& a, const T& b)
+{
+        if (a == b)
+        {
+                return;
+        }
+
+        const T absolute = std::abs(a - b);
+        if (!(absolute <= T{0.01}))
+        {
+                error(to_string(a) + " and " + to_string(b)
+                      + " are not equal, absolute error = " + to_string(absolute));
+        }
+
+        if (std::abs(a) <= T{0.1} || std::abs(b) <= T{0.1})
+        {
+                return;
+        }
+
+        const T relative = absolute / std::max(std::abs(a), std::abs(b));
+        if (!(relative <= T{0.01}))
+        {
+                error(to_string(a) + " and " + to_string(b)
+                      + " are not equal, relative error = " + to_string(relative));
+        }
+}
+
+template <typename T>
 void compare(const std::vector<T>& a, const std::vector<T>& b)
 {
         if (a.size() != b.size())
@@ -48,29 +76,7 @@ void compare(const std::vector<T>& a, const std::vector<T>& b)
 
         for (std::size_t i = 0; i < a.size(); ++i)
         {
-                if (a[i] == b[i])
-                {
-                        continue;
-                }
-
-                const T absolute = std::abs(a[i] - b[i]);
-                if (!(absolute <= T{0.01}))
-                {
-                        error(to_string(a[i]) + " and " + to_string(b[i])
-                              + " are not equal, absolute error = " + to_string(absolute));
-                }
-
-                if (std::abs(a[i]) <= T{0.1} || std::abs(b[i]) <= T{0.1})
-                {
-                        continue;
-                }
-
-                const T relative = absolute / std::max(std::abs(a[i]), std::abs(b[i]));
-                if (!(relative <= T{0.01}))
-                {
-                        error(to_string(a[i]) + " and " + to_string(b[i])
-                              + " are not equal, relative error = " + to_string(relative));
-                }
+                compare(a[i], b[i]);
         }
 }
 
