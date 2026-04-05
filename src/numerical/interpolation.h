@@ -57,6 +57,27 @@ class Interpolation final
         std::array<int, N> max_;
         std::span<const DataType> data_;
 
+        [[nodiscard]] DataType compute_interpolation(
+                const std::array<int, N>& x0,
+                const std::array<int, N>& x1,
+                const std::array<InterpolationType, N>& x) const
+        {
+                std::array<DataType, (1 << N)> data;
+
+                for (std::size_t i = 0; i < data.size(); ++i)
+                {
+                        long long index = 0;
+                        for (std::size_t n = 0; n < N; ++n)
+                        {
+                                const int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
+                                index += global_index_.stride(n) * coordinate;
+                        }
+                        data[i] = data_[index];
+                }
+
+                return interpolation(data, x);
+        }
+
 public:
         constexpr Interpolation(const std::array<int, N>& size, const std::span<const DataType> data)
                 : global_index_(size),
@@ -114,20 +135,7 @@ public:
                         }
                 }
 
-                std::array<DataType, (1 << N)> data;
-
-                for (std::size_t i = 0; i < data.size(); ++i)
-                {
-                        long long index = 0;
-                        for (std::size_t n = 0; n < N; ++n)
-                        {
-                                const int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
-                                index += global_index_.stride(n) * coordinate;
-                        }
-                        data[i] = data_[index];
-                }
-
-                return interpolation(data, x);
+                return compute_interpolation(x0, x1, x);
         }
 };
 }
