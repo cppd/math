@@ -25,6 +25,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::filter::filters::com
 {
+namespace variance_implementation
+{
+template <std::size_t N, typename T>
+[[nodiscard]] T subvector_norm(const numerical::Vector<N, T>& v, const std::size_t index)
+{
+        numerical::Vector<N - 1, T> n;
+        std::size_t j = 0;
+        for (std::size_t i = 0; i < index; ++i)
+        {
+                n[j++] = v[i];
+        }
+        for (std::size_t i = index + 1; i < N; ++i)
+        {
+                n[j++] = v[i];
+        }
+        return n.norm();
+}
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] bool check_variance(const numerical::Vector<N, T>& v)
 {
@@ -85,19 +104,7 @@ template <std::size_t N, typename T>
         // (x0*x1)/(Sqrt[x1^2 + x2^2]*(x0^2 + x1^2 + x2^2)),
         // (x0*x2)/(Sqrt[x1^2 + x2^2]*(x0^2 + x1^2 + x2^2))
 
-        const auto norm_exclude_i = [&](const std::size_t i)
-        {
-                numerical::Vector<N - 1, T> v;
-                std::size_t n = 0;
-                for (std::size_t j = 0; j < N; ++j)
-                {
-                        if (i != j)
-                        {
-                                v[n++] = velocity[j];
-                        }
-                }
-                return v.norm();
-        };
+        namespace impl = variance_implementation;
 
         const T norm_squared = velocity.norm_squared();
 
@@ -105,7 +112,7 @@ template <std::size_t N, typename T>
 
         for (std::size_t i = 0; i < N; ++i)
         {
-                const T norm_i = norm_exclude_i(i);
+                const T norm_i = impl::subvector_norm(velocity, i);
                 const T denominator = norm_i * norm_squared;
 
                 numerical::Matrix<1, N, T> error_propagation;
