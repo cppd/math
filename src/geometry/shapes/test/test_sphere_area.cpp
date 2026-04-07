@@ -68,7 +68,9 @@ template struct Test<long double>;
 template <typename T>
 void test_sphere_relative_area_1(const T precision)
 {
-        LOG(std::string("Test sphere area 1, ") + type_name<T>());
+        const std::string name = std::string("Test sphere area 1, ") + type_name<T>();
+
+        LOG(name);
 
         const auto cmp = [&](const T v1, const T v2)
         {
@@ -95,13 +97,15 @@ void test_sphere_relative_area_1(const T precision)
         cmp(sphere_relative_area<14, T>(A, B), 6.2971708851622969919328243435987148096048176384326e-24L);
         cmp(sphere_relative_area<15, T>(A, B), 1.1693985788590365916906420253926137382086446806823e-25L);
 
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 template <typename T>
 void test_sphere_relative_area_2(const T precision)
 {
-        LOG(std::string("Test sphere area 2, ") + type_name<T>());
+        const std::string name = std::string("Test sphere area 2, ") + type_name<T>();
+
+        LOG(name);
 
         const auto cmp = [&](const T v1, const T v2)
         {
@@ -128,7 +132,7 @@ void test_sphere_relative_area_2(const T precision)
         cmp(sphere_relative_area<14, T>(A, B), 0.013313970393473262087067334544828366956211559294135L);
         cmp(sphere_relative_area<15, T>(A, B), 0.010473262061717212781929422559521292732168015614157L);
 
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 void test_sphere_area()
