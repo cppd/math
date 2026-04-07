@@ -70,71 +70,51 @@ template <unsigned N, typename T>
 T sphere_relative_area(const std::type_identity_t<T> a, const std::type_identity_t<T> b)
 {
         static_assert(std::is_floating_point_v<T>);
+        static_assert(N >= 2);
 
         // Assuming[Element[n,Integers]&&n>=0,Integrate[Sin[x]^n,x]]
         // -Cos[x] Hypergeometric2F1[1/2,(1-n)/2,3/2,Cos[x]^2] Sin[x]^(1+n) (Sin[x]^2)^(1/2 (-1-n))
         // For[i=2,i<=10,++i,f=Integrate[Sin[x]^(i-2),{x, a, b}];Print[i];Print[f]]
         // For[i=2,i<=10,++i,f=Simplify[Integrate[Sin[x]^(i-2),x]];Print[i];Print[f]]
 
-        if constexpr (N == 2)
+        switch (N)
         {
+        case 2:
                 return b - a;
-        }
-        else if constexpr (N == 3)
-        {
+        case 3:
                 return std::cos(a) - std::cos(b);
-        }
-        else if constexpr (N == 4)
-        {
+        case 4:
                 return (2 * b - 2 * a - std::sin(2 * b) + std::sin(2 * a)) / 4;
-        }
-        else if constexpr (N == 5)
-        {
+        case 5:
                 return (9 * std::cos(a) - std::cos(3 * a) - 9 * std::cos(b) + std::cos(3 * b)) / 12;
-        }
-        else if constexpr (N == 6)
-        {
+        case 6:
                 return (-12 * a + 12 * b + 8 * std::sin(2 * a) - std::sin(4 * a) - 8 * std::sin(2 * b)
                         + std::sin(4 * b))
                        / 32;
-        }
-        else if constexpr (N == 7)
-        {
+        case 7:
                 return (150 * std::cos(a) - 25 * std::cos(3 * a) + 3 * std::cos(5 * a) - 150 * std::cos(b)
                         + 25 * std::cos(3 * b) - 3 * std::cos(5 * b))
                        / 240;
-        }
-        else if constexpr (N == 8)
-        {
+        case 8:
                 return (-60 * a + 60 * b + 45 * std::sin(2 * a) - 9 * std::sin(4 * a) + std::sin(6 * a)
                         - 45 * std::sin(2 * b) + 9 * std::sin(4 * b) - std::sin(6 * b))
                        / 192;
-        }
-        else if constexpr (N == 9)
-        {
+        case 9:
                 return (1225 * std::cos(a) - 245 * std::cos(3 * a) + 49 * std::cos(5 * a) - 5 * std::cos(7 * a)
                         - 1225 * std::cos(b) + 245 * std::cos(3 * b) - 49 * std::cos(5 * b) + 5 * std::cos(7 * b))
                        / 2240;
-        }
-        else if constexpr (N == 10)
-        {
+        case 10:
                 return (-840 * a + 840 * b + 672 * std::sin(2 * a) - 168 * std::sin(4 * a) + 32 * std::sin(6 * a)
                         - 3 * std::sin(8 * a) - 672 * std::sin(2 * b) + 168 * std::sin(4 * b) - 32 * std::sin(6 * b)
                         + 3 * std::sin(8 * b))
                        / 3072;
-        }
-        else if constexpr (N >= 11)
-        {
+        default:
                 return ns::numerical::integrate<T>(
                         [](const T x)
                         {
                                 return std::pow(std::sin(x), static_cast<T>(N - 2));
                         },
                         a, b, /*count=*/100);
-        }
-        else
-        {
-                static_assert(false);
         }
 }
 }
