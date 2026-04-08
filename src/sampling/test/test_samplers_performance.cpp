@@ -60,6 +60,47 @@ constexpr int one_dimension_sample_count()
         }
 }
 
+template <std::size_t N, typename T, typename RandomEngine, int ITER_COUNT, int SAMPLE_COUNT, long long COUNT>
+long long test_sjs(const bool shuffle, RandomEngine& engine)
+{
+        std::vector<numerical::Vector<N, T>> data;
+        const StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < ITER_COUNT; ++i)
+        {
+                sampler.generate(engine, &data);
+        }
+        return std::llround(COUNT / duration_from(start_time));
+}
+
+template <std::size_t N, typename T, typename RandomEngine, int ITER_COUNT, int SAMPLE_COUNT, long long COUNT>
+long long test_lhs(const bool shuffle, RandomEngine& engine)
+{
+        std::vector<numerical::Vector<N, T>> data;
+        const LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < ITER_COUNT; ++i)
+        {
+                sampler.generate(engine, &data);
+        }
+        return std::llround(COUNT / duration_from(start_time));
+}
+
+template <std::size_t N, typename T, int ITER_COUNT, int SAMPLE_COUNT, long long COUNT>
+long long test_hs()
+{
+        HaltonSampler<N, T> sampler;
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < ITER_COUNT; ++i)
+        {
+                for (int j = 0; j < SAMPLE_COUNT; ++j)
+                {
+                        do_not_optimize(sampler.generate());
+                }
+        }
+        return std::llround(COUNT / duration_from(start_time));
+}
+
 template <std::size_t N, typename T, typename RandomEngine>
 void test_performance(const bool shuffle)
 {
@@ -69,43 +110,11 @@ void test_performance(const bool shuffle)
         constexpr int SAMPLE_COUNT = power<N>(one_dimension_sample_count<N>());
         constexpr long long COUNT = static_cast<long long>(ITER_COUNT) * SAMPLE_COUNT;
 
-        const long long sjs = [&]
-        {
-                std::vector<numerical::Vector<N, T>> data;
-                const StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < ITER_COUNT; ++i)
-                {
-                        sampler.generate(engine, &data);
-                }
-                return std::llround(COUNT / duration_from(start_time));
-        }();
+        const long long sjs = test_sjs<N, T, RandomEngine, ITER_COUNT, SAMPLE_COUNT, COUNT>(shuffle, engine);
 
-        const long long lhs = [&]
-        {
-                std::vector<numerical::Vector<N, T>> data;
-                const LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < ITER_COUNT; ++i)
-                {
-                        sampler.generate(engine, &data);
-                }
-                return std::llround(COUNT / duration_from(start_time));
-        }();
+        const long long lhs = test_lhs<N, T, RandomEngine, ITER_COUNT, SAMPLE_COUNT, COUNT>(shuffle, engine);
 
-        const long long hs = [&]
-        {
-                HaltonSampler<N, T> sampler;
-                const Clock::time_point start_time = Clock::now();
-                for (int i = 0; i < ITER_COUNT; ++i)
-                {
-                        for (int j = 0; j < SAMPLE_COUNT; ++j)
-                        {
-                                do_not_optimize(sampler.generate());
-                        }
-                }
-                return std::llround(COUNT / duration_from(start_time));
-        }();
+        const long long hs = test_hs<N, T, ITER_COUNT, SAMPLE_COUNT, COUNT>();
 
         std::ostringstream oss;
         oss << "Samplers <" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">";
