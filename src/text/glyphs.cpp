@@ -89,6 +89,40 @@ struct RenderedGlyph final
         std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
 };
 
+void render_code_point(const char32_t code_point, const Font& font, RenderedGlyph& res)
+{
+        const std::optional<Char> font_char = font.render(code_point);
+
+        if (!font_char)
+        {
+                return;
+        }
+
+        if (font_char->width < 0 || font_char->height < 0)
+        {
+                error("Negative character size");
+        }
+
+        if ((font_char->width <= 0 && font_char->height > 0) || (font_char->width > 0 && font_char->height <= 0))
+        {
+                error("One-dimensional character image");
+        }
+
+        FontGlyph& font_glyph = res.font_glyphs.try_emplace(code_point).first->second;
+
+        font_glyph.left = font_char->left;
+        font_glyph.top = font_char->top;
+        font_glyph.width = font_char->width;
+        font_glyph.height = font_char->height;
+        font_glyph.advance_x = font_char->advance_x;
+
+        static_assert(std::is_same_v<const unsigned char*, decltype(font_char->image)>);
+
+        std::vector<std::byte>& pixels = res.glyph_pixels.try_emplace(code_point).first->second;
+        pixels.resize(1ull * font_char->width * font_char->height);
+        std::memcpy(data_pointer(pixels), font_char->image, data_size(pixels));
+}
+
 RenderedGlyph render_glyphs(const std::vector<char32_t>& code_points, const Font& font)
 {
         RenderedGlyph res;
@@ -98,37 +132,7 @@ RenderedGlyph render_glyphs(const std::vector<char32_t>& code_points, const Font
 
         for (const char32_t code_point : code_points)
         {
-                const std::optional<Char> font_char = font.render(code_point);
-
-                if (!font_char)
-                {
-                        continue;
-                }
-
-                if (font_char->width < 0 || font_char->height < 0)
-                {
-                        error("Negative character size");
-                }
-
-                if ((font_char->width <= 0 && font_char->height > 0)
-                    || (font_char->width > 0 && font_char->height <= 0))
-                {
-                        error("One-dimensional character image");
-                }
-
-                FontGlyph& font_glyph = res.font_glyphs.try_emplace(code_point).first->second;
-
-                font_glyph.left = font_char->left;
-                font_glyph.top = font_char->top;
-                font_glyph.width = font_char->width;
-                font_glyph.height = font_char->height;
-                font_glyph.advance_x = font_char->advance_x;
-
-                static_assert(std::is_same_v<const unsigned char*, decltype(font_char->image)>);
-
-                std::vector<std::byte>& pixels = res.glyph_pixels.try_emplace(code_point).first->second;
-                pixels.resize(1ull * font_char->width * font_char->height);
-                std::memcpy(data_pointer(pixels), font_char->image, data_size(pixels));
+                render_code_point(code_point, font, res);
         }
 
         return res;
