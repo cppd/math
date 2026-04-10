@@ -40,23 +40,24 @@ constexpr std::size_t size()
 }
 
 template <typename Shape1, typename Shape2>
-bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
+bool vertex_inside(const Shape1& s1, const Shape2& s2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = Shape1::DataType;
 
-        const auto vertex_inside = [](const auto& s1, const auto& s2)
+        for (const numerical::Vector<N, T>& v : s1.vertices())
         {
-                for (const numerical::Vector<N, T>& v : s1.vertices())
+                if (s2.inside(v))
                 {
-                        if (s2.inside(v))
-                        {
-                                return true;
-                        }
+                        return true;
                 }
-                return false;
-        };
+        }
+        return false;
+}
 
+template <typename Shape1, typename Shape2>
+bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
+{
         if constexpr (Shape2::SPACE_DIMENSION == Shape2::SHAPE_DIMENSION)
         {
                 if (vertex_inside(shape_1, shape_2))
