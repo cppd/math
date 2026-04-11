@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "obj/counters.h"
 #include "obj/data_read.h"
 #include "obj/line.h"
+#include "obj/line_process.h"
 #include "obj/load_lib.h"
 #include "obj/name.h"
 

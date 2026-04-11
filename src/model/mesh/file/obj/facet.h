@@ -193,7 +193,7 @@ void read_facets(
 
         const unsigned group_count = impl::read_digit_groups(first, last, &groups);
 
-        if (group_count < static_cast<int>(N))
+        if (group_count < N)
         {
                 error("Error facet vertex count " + to_string(group_count) + " (min = " + to_string(N) + ")");
         }
