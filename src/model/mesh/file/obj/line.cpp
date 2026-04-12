@@ -19,19 +19,57 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "facet.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/model/mesh/file/data_read.h>
 #include <src/model/mesh/file/obj/counters.h>
 #include <src/numerical/vector_object.h>
 #include <src/settings/instantiation.h>
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ns::model::mesh::file::obj
 {
+namespace
+{
+enum class LineType
+{
+        V,
+        VT,
+        VN,
+        F,
+        USEMTL,
+        MTLLIB
+};
+
+constexpr std::array LINE_TYPES = std::to_array<std::pair<std::string_view, LineType>>({
+        {     "v",      LineType::V},
+        {    "vt",     LineType::VT},
+        {    "vn",     LineType::VN},
+        {     "f",      LineType::F},
+        {"usemtl", LineType::USEMTL},
+        {"mtllib", LineType::MTLLIB},
+});
+
+std::optional<LineType> find_line_type(const std::string_view& first)
+{
+        for (const auto& p : LINE_TYPES)
+        {
+                if (p.first == first)
+                {
+                        return p.second;
+                }
+        }
+        return std::nullopt;
+}
+}
+
 template <std::size_t N, typename T>
 std::optional<Line<N, T>> read_line(
         const std::string_view first,
@@ -39,15 +77,22 @@ std::optional<Line<N, T>> read_line(
         const char* const second_e,
         Counters* const counters)
 {
-        if (first == "v")
+        const auto line_type = find_line_type(first);
+        if (!line_type)
+        {
+                return std::nullopt;
+        }
+
+        switch (*line_type)
+        {
+        case LineType::V:
         {
                 Vertex<N, T> data;
                 read(second_b, &data.v);
                 ++counters->vertex;
                 return data;
         }
-
-        if (first == "vt")
+        case LineType::VT:
         {
                 TextureVertex<N, T> data;
                 std::optional<T> t;
@@ -59,8 +104,7 @@ std::optional<Line<N, T>> read_line(
                 ++counters->texcoord;
                 return data;
         }
-
-        if (first == "vn")
+        case LineType::VN:
         {
                 Normal<N, T> data;
                 read(second_b, &data.v);
@@ -72,32 +116,30 @@ std::optional<Line<N, T>> read_line(
                 ++counters->normal;
                 return data;
         }
-
-        if (first == "f")
+        case LineType::F:
         {
                 Face<N> data;
                 read_facets<N>(second_b, second_e, &data.facets, &data.count);
                 ++counters->facet;
                 return data;
         }
-
-        if (first == "usemtl")
+        case LineType::USEMTL:
         {
                 UseMaterial data;
                 data.second_b = second_b;
                 data.second_e = second_e;
                 return data;
         }
-
-        if (first == "mtllib")
+        case LineType::MTLLIB:
         {
                 MaterialLibrary data;
                 data.second_b = second_b;
                 data.second_e = second_e;
                 return data;
         }
+        }
 
-        return std::nullopt;
+        error_fatal("Unknown line type " + to_string(enum_to_int(*line_type)));
 }
 
 #define TEMPLATE(N, T) \
