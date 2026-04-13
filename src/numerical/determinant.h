@@ -31,6 +31,7 @@ namespace ns::numerical
 namespace determinant_implementation
 {
 template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
+        requires (SIZE == 1)
 [[nodiscard]] constexpr T determinant_cofactor_expansion(
         const std::array<Vector<N_H, T>, N_V>& vectors,
         const std::array<unsigned char, SIZE>& v_map,
@@ -39,61 +40,81 @@ template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
         static_assert(N_V >= SIZE);
         static_assert(N_H >= SIZE);
 
-        if constexpr (SIZE == 1)
-        {
-                return vectors[v_map[0]][h_map[0]];
-        }
-        else if constexpr (SIZE == 2)
-        {
-                return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]]
-                       - vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
-        }
-        else if constexpr (SIZE == 3)
-        {
-                const T& v00 = vectors[v_map[0]][h_map[0]];
-                const T& v01 = vectors[v_map[0]][h_map[1]];
-                const T& v02 = vectors[v_map[0]][h_map[2]];
-                const T& v10 = vectors[v_map[1]][h_map[0]];
-                const T& v11 = vectors[v_map[1]][h_map[1]];
-                const T& v12 = vectors[v_map[1]][h_map[2]];
-                const T& v20 = vectors[v_map[2]][h_map[0]];
-                const T& v21 = vectors[v_map[2]][h_map[1]];
-                const T& v22 = vectors[v_map[2]][h_map[2]];
+        return vectors[v_map[0]][h_map[0]];
+}
 
-                const T& d0 = v00 * (v11 * v22 - v12 * v21);
-                const T& d1 = v01 * (v10 * v22 - v12 * v20);
-                const T& d2 = v02 * (v10 * v21 - v11 * v20);
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
+        requires (SIZE == 2)
+[[nodiscard]] constexpr T determinant_cofactor_expansion(
+        const std::array<Vector<N_H, T>, N_V>& vectors,
+        const std::array<unsigned char, SIZE>& v_map,
+        const std::array<unsigned char, SIZE>& h_map)
+{
+        static_assert(N_V >= SIZE);
+        static_assert(N_H >= SIZE);
 
-                return d0 - d1 + d2;
-        }
-        else if constexpr (SIZE >= 4)
+        return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]]
+               - vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
+}
+
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
+        requires (SIZE == 3)
+[[nodiscard]] constexpr T determinant_cofactor_expansion(
+        const std::array<Vector<N_H, T>, N_V>& vectors,
+        const std::array<unsigned char, SIZE>& v_map,
+        const std::array<unsigned char, SIZE>& h_map)
+{
+        static_assert(N_V >= SIZE);
+        static_assert(N_H >= SIZE);
+
+        const T& v00 = vectors[v_map[0]][h_map[0]];
+        const T& v01 = vectors[v_map[0]][h_map[1]];
+        const T& v02 = vectors[v_map[0]][h_map[2]];
+        const T& v10 = vectors[v_map[1]][h_map[0]];
+        const T& v11 = vectors[v_map[1]][h_map[1]];
+        const T& v12 = vectors[v_map[1]][h_map[2]];
+        const T& v20 = vectors[v_map[2]][h_map[0]];
+        const T& v21 = vectors[v_map[2]][h_map[1]];
+        const T& v22 = vectors[v_map[2]][h_map[2]];
+
+        const T& d0 = v00 * (v11 * v22 - v12 * v21);
+        const T& d1 = v01 * (v10 * v22 - v12 * v20);
+        const T& d2 = v02 * (v10 * v21 - v11 * v20);
+
+        return d0 - d1 + d2;
+}
+
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
+        requires (SIZE >= 4)
+[[nodiscard]] constexpr T determinant_cofactor_expansion(
+        const std::array<Vector<N_H, T>, N_V>& vectors,
+        const std::array<unsigned char, SIZE>& v_map,
+        const std::array<unsigned char, SIZE>& h_map)
+{
+        static_assert(N_V >= SIZE);
+        static_assert(N_H >= SIZE);
+
+        T det = 0;
+
+        const unsigned char row = v_map[0];
+        const std::array<unsigned char, SIZE - 1> map = del_elem(v_map, 0);
+
+        for (std::size_t i = 0; i < SIZE; ++i)
         {
-                T det = 0;
+                const T& entry = vectors[row][h_map[i]];
+                const T& minor = determinant_cofactor_expansion(vectors, map, del_elem(h_map, i));
 
-                const unsigned char row = v_map[0];
-                const std::array<unsigned char, SIZE - 1> map = del_elem(v_map, 0);
-
-                for (std::size_t i = 0; i < SIZE; ++i)
+                if (i & 1)
                 {
-                        const T& entry = vectors[row][h_map[i]];
-                        const T& minor = determinant_cofactor_expansion(vectors, map, del_elem(h_map, i));
-
-                        if (i & 1)
-                        {
-                                det -= entry * minor;
-                        }
-                        else
-                        {
-                                det += entry * minor;
-                        }
+                        det -= entry * minor;
                 }
+                else
+                {
+                        det += entry * minor;
+                }
+        }
 
-                return det;
-        }
-        else
-        {
-                static_assert(false);
-        }
+        return det;
 }
 }
 
