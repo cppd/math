@@ -36,61 +36,94 @@ namespace ns::text::unicode
 {
 namespace
 {
-char32_t utf8_2_to_utf32(const std::string& s, std::size_t* const i)
+char32_t replacement(std::size_t* const i)
 {
-        const unsigned char s1 = s[*i + 1];
-        if ((s1 & 0b1100'0000) == 0b1000'0000)
-        {
-                const unsigned char s0 = s[*i];
-                *i += 2;
-                return (s0 & 0b1'1111) << 6 | (s1 & 0b11'1111);
-        }
         *i += 1;
         return unicode::REPLACEMENT_CHARACTER;
+}
+
+char32_t utf8_2_to_utf32(const std::string& s, std::size_t* const i)
+{
+        ASSERT(*i < s.size());
+
+        if (*i + 1 >= s.size())
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s1 = s[*i + 1];
+        if ((s1 & 0b1100'0000) != 0b1000'0000)
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s0 = s[*i];
+        *i += 2;
+        return (s0 & 0b1'1111) << 6 | (s1 & 0b11'1111);
 }
 
 char32_t utf8_3_to_utf32(const std::string& s, std::size_t* const i)
 {
-        const unsigned char s1 = s[*i + 1];
-        if ((s1 & 0b1100'0000) == 0b1000'0000)
+        ASSERT(*i < s.size());
+
+        if (*i + 2 >= s.size())
         {
-                const unsigned char s2 = s[*i + 2];
-                if ((s2 & 0b1100'0000) == 0b1000'0000)
-                {
-                        const unsigned char s0 = s[*i];
-                        *i += 3;
-                        return (s0 & 0b1111) << 12 | (s1 & 0b11'1111) << 6 | (s2 & 0b11'1111);
-                }
+                return replacement(i);
         }
-        *i += 1;
-        return unicode::REPLACEMENT_CHARACTER;
+
+        const unsigned char s1 = s[*i + 1];
+        if ((s1 & 0b1100'0000) != 0b1000'0000)
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s2 = s[*i + 2];
+        if ((s2 & 0b1100'0000) != 0b1000'0000)
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s0 = s[*i];
+        *i += 3;
+        return (s0 & 0b1111) << 12 | (s1 & 0b11'1111) << 6 | (s2 & 0b11'1111);
 }
 
 char32_t utf8_4_to_utf32(const std::string& s, std::size_t* const i)
 {
-        const unsigned char s1 = s[*i + 1];
-        if ((s1 & 0b1100'0000) == 0b1000'0000)
+        ASSERT(*i < s.size());
+
+        if (*i + 3 >= s.size())
         {
-                const unsigned char s2 = s[*i + 2];
-                if ((s2 & 0b1100'0000) == 0b1000'0000)
-                {
-                        const unsigned char s3 = s[*i + 3];
-                        if ((s3 & 0b1100'0000) == 0b1000'0000)
-                        {
-                                const unsigned char s0 = s[*i];
-                                const char32_t res =
-                                        (s0 & 0b111) << 18 | (s1 & 0b11'1111) << 12 | (s2 & 0b11'1111) << 6
-                                        | (s3 & 0b11'1111);
-                                if (res <= 0x10FFFF)
-                                {
-                                        *i += 4;
-                                        return res;
-                                }
-                        }
-                }
+                return replacement(i);
         }
-        *i += 1;
-        return unicode::REPLACEMENT_CHARACTER;
+
+        const unsigned char s1 = s[*i + 1];
+        if ((s1 & 0b1100'0000) != 0b1000'0000)
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s2 = s[*i + 2];
+        if ((s2 & 0b1100'0000) != 0b1000'0000)
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s3 = s[*i + 3];
+        if ((s3 & 0b1100'0000) != 0b1000'0000)
+        {
+                return replacement(i);
+        }
+
+        const unsigned char s0 = s[*i];
+        const char32_t res = (s0 & 0b111) << 18 | (s1 & 0b11'1111) << 12 | (s2 & 0b11'1111) << 6 | (s3 & 0b11'1111);
+        if (res <= 0x10FFFF)
+        {
+                *i += 4;
+                return res;
+        }
+
+        return replacement(i);
 }
 }
 
@@ -181,28 +214,20 @@ char32_t utf8_to_utf32(const std::string& s, std::size_t* const i)
 
         if ((s0 & 0b1110'0000) == 0b1100'0000)
         {
-                if (*i + 1 < s.size())
-                {
-                        return utf8_2_to_utf32(s, i);
-                }
-        }
-        else if ((s0 & 0b1111'0000) == 0b1110'0000)
-        {
-                if (*i + 2 < s.size())
-                {
-                        return utf8_3_to_utf32(s, i);
-                }
-        }
-        else if ((s0 & 0b1111'1000) == 0b1111'0000)
-        {
-                if (*i + 3 < s.size())
-                {
-                        return utf8_4_to_utf32(s, i);
-                }
+                return utf8_2_to_utf32(s, i);
         }
 
-        *i += 1;
-        return unicode::REPLACEMENT_CHARACTER;
+        if ((s0 & 0b1111'0000) == 0b1110'0000)
+        {
+                return utf8_3_to_utf32(s, i);
+        }
+
+        if ((s0 & 0b1111'1000) == 0b1111'0000)
+        {
+                return utf8_4_to_utf32(s, i);
+        }
+
+        return replacement(i);
 }
 
 char32_t utf8_to_utf32(const std::string& s)
