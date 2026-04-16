@@ -91,7 +91,7 @@ State estimation                                        | The Kalman filter<br/>
 
 Property                  | Value
 --------------------------|--------------------------------------------
-Programming languages     | C++23, GLSL 4.60
+Programming languages     | C++26, GLSL 4.60
 C++ compilers             | GCC 15, Clang 21
 Platforms                 | Linux
 Graphics and compute APIs | Vulkan 1.3 with ray tracing extensions
