@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/type/limit.h>
 #include <src/numerical/integrate.h>
 
 #include <cmath>
@@ -67,28 +68,26 @@ constexpr std::optional<long double> integer_computation()
 {
         static_assert(N >= 2);
 
-        unsigned long long divident = 1;
-        unsigned long long divisor = (N & 1) == 0 ? 2 : 1;
+        using T = unsigned long long;
+
+        T divident = 1;
+        T divisor = (N & 1) == 0 ? 2 : 1;
 
         for (int i = N - 1; i > 1; i -= 2)
         {
-                const unsigned long long new_divident = divident * i;
-                if (new_divident <= divident)
+                divident = std::mul_sat<T>(divident, i);
+                if (divident == Limits<T>::max())
                 {
                         return std::nullopt;
                 }
 
-                divident = new_divident;
-
-                const unsigned long long new_divisor = divisor * (i - 1);
-                if (new_divisor < divisor)
+                divisor = std::mul_sat<T>(divisor, i - 1);
+                if (divisor == Limits<T>::max())
                 {
                         return std::nullopt;
                 }
 
-                divisor = new_divisor;
-
-                const unsigned long long gcd = std::gcd(divident, divisor);
+                const T gcd = std::gcd(divident, divisor);
                 if (gcd > 1)
                 {
                         divident /= gcd;
