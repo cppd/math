@@ -75,17 +75,17 @@ constexpr std::optional<long double> integer_computation()
 
         for (int i = N - 1; i > 1; i -= 2)
         {
-                divident = std::mul_sat<T>(divident, i);
-                if (divident == Limits<T>::max())
+                if (divident > Limits<T>::max() / i)
                 {
                         return std::nullopt;
                 }
+                divident *= i;
 
-                divisor = std::mul_sat<T>(divisor, i - 1);
-                if (divisor == Limits<T>::max())
+                if (divisor > Limits<T>::max() / (i - 1))
                 {
                         return std::nullopt;
                 }
+                divisor *= (i - 1);
 
                 const T gcd = std::gcd(divident, divisor);
                 if (gcd > 1)
