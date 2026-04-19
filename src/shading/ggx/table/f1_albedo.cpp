@@ -228,6 +228,24 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
         return res;
 }
 
+void write_separator(const std::size_t i, std::ostringstream& oss)
+{
+        if (i == 0)
+        {
+                return;
+        }
+
+        oss << ",";
+        if (i % ROW_SIZE == 0)
+        {
+                oss << "\n" << INDENT;
+        }
+        else
+        {
+                oss << " ";
+        }
+}
+
 template <std::size_t N, typename T, std::size_t COUNT>
 void write_albedo(const std::array<std::array<T, COUNT>, COUNT>& data, std::ostringstream& oss)
 {
@@ -240,18 +258,7 @@ void write_albedo(const std::array<std::array<T, COUNT>, COUNT>& data, std::ostr
         {
                 for (std::size_t angle_i = 0; angle_i < COUNT; ++angle_i, ++i)
                 {
-                        if (i > 0)
-                        {
-                                oss << ",";
-                                if (i % ROW_SIZE == 0)
-                                {
-                                        oss << "\n" << INDENT;
-                                }
-                                else
-                                {
-                                        oss << " ";
-                                }
-                        }
+                        write_separator(i, oss);
                         oss << data[roughness_i][angle_i];
                 }
         }
@@ -268,18 +275,7 @@ void write_cosine_weighted_average(const std::array<T, COUNT>& data, std::ostrin
         oss << INDENT;
         for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
         {
-                if (roughness_i > 0)
-                {
-                        oss << ",";
-                        if (roughness_i % ROW_SIZE == 0)
-                        {
-                                oss << "\n" << INDENT;
-                        }
-                        else
-                        {
-                                oss << " ";
-                        }
-                }
+                write_separator(roughness_i, oss);
                 oss << data[roughness_i];
         }
         oss << "\n});\n";
