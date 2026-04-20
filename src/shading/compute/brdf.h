@@ -28,6 +28,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading::compute
 {
+namespace brdf_implementation
+{
+template <typename Color>
+void check_black(const Color& color)
+{
+        if (color.is_black())
+        {
+                return;
+        }
+        error("BRDF color is not black when dot(n, l) <= 0 " + to_string(color));
+}
+}
+
 template <std::size_t N, typename T, typename Color>
 class BRDF
 {
@@ -59,6 +72,8 @@ Color directional_albedo_uniform_sampling(
         const long long sample_count,
         RandomEngine& engine)
 {
+        namespace impl = brdf_implementation;
+
         if (sample_count <= 0)
         {
                 error("Sample count " + to_string(sample_count) + " must be positive");
@@ -72,20 +87,18 @@ Color directional_albedo_uniform_sampling(
         while (i < sample_count)
         {
                 const numerical::Vector<N, T> l = sampling::uniform_on_sphere<N, T>(engine);
-                const T n_l = dot(n, l);
 
+                const Color color = brdf.f(n, v, l);
+
+                const T n_l = dot(n, l);
                 if (n_l <= 0)
                 {
-                        const Color c = brdf.f(n, v, l);
-                        if (!c.is_black())
-                        {
-                                error("BRDF color is not black when dot(n, l) <= 0 " + to_string(c));
-                        }
+                        impl::check_black(color);
                         continue;
                 }
 
                 ++i;
-                sum += brdf.f(n, v, l) * (n_l / UNIFORM_ON_HEMISPHERE_PDF);
+                sum += color * (n_l / UNIFORM_ON_HEMISPHERE_PDF);
         }
 
         return sum / sample_count;
@@ -99,6 +112,8 @@ Color directional_albedo_importance_sampling(
         const long long sample_count,
         RandomEngine& engine)
 {
+        namespace impl = brdf_implementation;
+
         if (sample_count <= 0)
         {
                 error("Sample count " + to_string(sample_count) + " must be positive");
@@ -124,10 +139,7 @@ Color directional_albedo_importance_sampling(
                 const T n_l = dot(n, sample.l);
                 if (n_l <= 0)
                 {
-                        if (!sample.brdf.is_black())
-                        {
-                                error("BRDF color is not black when dot(n, l) <= 0 " + to_string(sample.brdf));
-                        }
+                        impl::check_black(sample.brdf);
                         continue;
                 }
 
