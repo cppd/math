@@ -130,53 +130,37 @@ void render_buffer_check(
         const std::vector<vulkan::ImageWithMemory>& color,
         const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
-        if (depth.empty())
+        const auto assertion = [](const bool condition, const char* const error_message)
         {
-                error("No depth attachment");
-        }
+                if (!condition)
+                {
+                        error(error_message);
+                }
+        };
 
-        if (!check_sample_count(color))
-        {
-                error("Color attachments must have the same sample count");
-        }
+        assertion(!depth.empty(), "No depth attachment");
 
-        if (!check_format(color))
-        {
-                error("Color attachments must have the same format");
-        }
+        assertion(check_sample_count(color), "Color attachments must have the same sample count");
+        assertion(check_format(color), "Color attachments must have the same format");
 
-        if (!check_sample_count(depth))
-        {
-                error("Depth attachments must have the same sample count");
-        }
+        assertion(check_sample_count(depth), "Depth attachments must have the same sample count");
+        assertion(check_format(depth), "Depth attachments must have the same format");
 
-        if (!check_format(depth))
-        {
-                error("Depth attachments must have the same format");
-        }
-
-        if (!check_sample_count(color, depth))
-        {
-                error("Color attachment sample count is not equal to depth attachment sample count");
-        }
+        assertion(
+                check_sample_count(color, depth),
+                "Color attachment sample count is not equal to depth attachment sample count");
 
         if (color.empty())
         {
-                if (!check_sample_count(depth, VK_SAMPLE_COUNT_1_BIT))
-                {
-                        error("There are no color attachments, but depth attachment sample count is not equal to 1");
-                }
+                assertion(
+                        check_sample_count(depth, VK_SAMPLE_COUNT_1_BIT),
+                        "There are no color attachments, but depth attachment sample count is not equal to 1");
         }
 
-        if (!check_color_attachment_sizes(color, depth))
-        {
-                error("Color attachments size is not equal to the required size");
-        }
+        assertion(
+                check_color_attachment_sizes(color, depth), "Color attachments size is not equal to the required size");
 
-        if (!check_depth_attachment_sizes(depth))
-        {
-                error("Depth attachments size is not equal to the required size");
-        }
+        assertion(check_depth_attachment_sizes(depth), "Depth attachments size is not equal to the required size");
 }
 
 std::string render_buffer_info(
