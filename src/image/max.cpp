@@ -49,6 +49,16 @@ template <typename T>
         }
 }
 
+template <std::size_t PIXEL_SIZE, typename T, std::size_t COMPONENT_COUNT>
+void check_size(const std::span<const std::byte> bytes)
+{
+        if (bytes.size() % PIXEL_SIZE != 0)
+        {
+                error("Error size " + to_string(bytes.size()) + " for finding maximum in " + to_string(COMPONENT_COUNT)
+                      + "-component pixels with component size " + to_string(sizeof(T)));
+        }
+}
+
 template <typename T, std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
 [[nodiscard]] std::optional<T> max(const std::span<const std::byte> bytes)
 {
@@ -57,18 +67,14 @@ template <typename T, std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
         static constexpr std::size_t COLOR_SIZE = COLOR_COUNT * sizeof(T);
         static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(T);
 
-        if (bytes.size() % PIXEL_SIZE != 0)
-        {
-                error("Error size " + to_string(bytes.size()) + " for finding maximum in " + to_string(COMPONENT_COUNT)
-                      + "-component pixels with component size " + to_string(sizeof(T)));
-        }
+        static constexpr T MIN = Limits<T>::lowest();
 
         if (bytes.empty())
         {
                 return std::nullopt;
         }
 
-        static constexpr T MIN = Limits<T>::lowest();
+        check_size<PIXEL_SIZE, T, COMPONENT_COUNT>(bytes);
 
         T max = MIN;
         const std::byte* ptr = bytes.data();
