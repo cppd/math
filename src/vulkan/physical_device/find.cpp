@@ -155,9 +155,8 @@ bool has_presentation_family_index(const PhysicalDevice& physical_device)
         return true;
 }
 
-bool suitable_physical_device(
+bool check_features_and_expensions(
         const PhysicalDevice& physical_device,
-        const VkSurfaceKHR surface,
         const DeviceFunctionality& device_functionality,
         const bool optional_as_required)
 {
@@ -181,6 +180,11 @@ bool suitable_physical_device(
                 return false;
         }
 
+        return true;
+}
+
+bool check_device(const PhysicalDevice& physical_device, const VkSurfaceKHR surface)
+{
         if (!minimum_properties_supported(physical_device))
         {
                 return false;
@@ -194,6 +198,25 @@ bool suitable_physical_device(
         if (surface != VK_NULL_HANDLE
             && (!has_presentation_family_index(physical_device)
                 || !surface_suitable(physical_device.device(), surface)))
+        {
+                return false;
+        }
+
+        return true;
+}
+
+bool suitable_physical_device(
+        const PhysicalDevice& physical_device,
+        const VkSurfaceKHR surface,
+        const DeviceFunctionality& device_functionality,
+        const bool optional_as_required)
+{
+        if (!check_features_and_expensions(physical_device, device_functionality, optional_as_required))
+        {
+                return false;
+        }
+
+        if (!check_device(physical_device, surface))
         {
                 return false;
         }
