@@ -73,6 +73,53 @@ template <typename Color>
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+[[nodiscard]] bool pt(
+        const Scene<N, T, Color>& scene,
+        const int depth,
+        PCG& engine,
+        numerical::Ray<N, T>& ray,
+        SurfaceIntersection<N, T, Color>& surface,
+        com::Normals<N, T>& normals,
+        Color& color,
+        Color& beta)
+{
+        const numerical::Vector<N, T> v = -ray.dir();
+
+        if (dot(normals.shading, v) <= 0)
+        {
+                return false;
+        }
+
+        if (const auto& c = direct_lighting(scene, surface, v, normals, engine))
+        {
+                color.multiply_add(beta, *c);
+        }
+
+        const auto& sample = com::surface_sample(surface, v, normals, engine);
+        if (!sample)
+        {
+                return false;
+        }
+
+        beta *= sample->beta;
+
+        if (terminate(depth, &beta, engine))
+        {
+                return false;
+        }
+
+        ray = {surface.point(), sample->l};
+        std::tie(surface, normals) = com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
+
+        if (!surface)
+        {
+                return false;
+        }
+
+        return true;
+}
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 [[nodiscard]] Color pt(
         PCG& engine,
         const Scene<N, T, Color>& scene,
@@ -85,36 +132,7 @@ template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 
         for (int depth = 0;; ++depth)
         {
-                const numerical::Vector<N, T> v = -ray.dir();
-
-                if (dot(normals.shading, v) <= 0)
-                {
-                        break;
-                }
-
-                if (const auto& c = direct_lighting(scene, surface, v, normals, engine))
-                {
-                        color.multiply_add(beta, *c);
-                }
-
-                const auto& sample = com::surface_sample(surface, v, normals, engine);
-                if (!sample)
-                {
-                        break;
-                }
-
-                beta *= sample->beta;
-
-                if (terminate(depth, &beta, engine))
-                {
-                        break;
-                }
-
-                ray = {surface.point(), sample->l};
-                std::tie(surface, normals) =
-                        com::scene_intersect<FLAT_SHADING, N, T, Color>(scene, normals.geometric, ray);
-
-                if (!surface)
+                if (!pt<FLAT_SHADING>(scene, depth, engine, ray, surface, normals, color, beta))
                 {
                         break;
                 }
