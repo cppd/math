@@ -100,6 +100,15 @@ constexpr bool solve_u(RowMatrix<UN, UN, T>& m)
 {
         constexpr int N = UN;
 
+        const auto reduce = [&](const int i, const int k)
+        {
+                const T l_ik = m[i, k] / m[k, k];
+                for (int j = k + 1; j < N; ++j)
+                {
+                        m[i, j] -= l_ik * m[k, j];
+                }
+        };
+
         bool sign = false;
 
         for (int k = 0; k < N - 1; ++k)
@@ -113,11 +122,7 @@ constexpr bool solve_u(RowMatrix<UN, UN, T>& m)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        const T l_ik = m[i, k] / m[k, k];
-                        for (int j = k + 1; j < N; ++j)
-                        {
-                                m[i, j] -= l_ik * m[k, j];
-                        }
+                        reduce(i, k);
                 }
         }
 
@@ -128,6 +133,16 @@ template <std::size_t UN, typename T>
 constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, Vector<UN, T>& b)
 {
         constexpr int N = UN;
+
+        const auto reduce = [&](const int i, const int k)
+        {
+                const T l_ik = a[i, k] / a[k, k];
+                for (int j = k; j < N; ++j)
+                {
+                        a[i, j] -= l_ik * a[k, j];
+                }
+                b[i] -= l_ik * b[k];
+        };
 
         for (int k = 0; k < N - 1; ++k)
         {
@@ -140,12 +155,7 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, Vector<UN, T>& b)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        const T l_ik = a[i, k] / a[k, k];
-                        for (int j = k; j < N; ++j)
-                        {
-                                a[i, j] -= l_ik * a[k, j];
-                        }
-                        b[i] -= l_ik * b[k];
+                        reduce(i, k);
                 }
         }
 }
@@ -155,6 +165,19 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, RowMatrix<UN, UM, T>& b)
 {
         constexpr int N = UN;
         constexpr int M = UM;
+
+        const auto reduce = [&](const int i, const int k)
+        {
+                const T l_ik = a[i, k] / a[k, k];
+                for (int j = k; j < N; ++j)
+                {
+                        a[i, j] -= l_ik * a[k, j];
+                }
+                for (int m = 0; m < M; ++m)
+                {
+                        b[i, m] -= l_ik * b[k, m];
+                }
+        };
 
         for (int k = 0; k < N - 1; ++k)
         {
@@ -167,15 +190,7 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, RowMatrix<UN, UM, T>& b)
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        const T l_ik = a[i, k] / a[k, k];
-                        for (int j = k; j < N; ++j)
-                        {
-                                a[i, j] -= l_ik * a[k, j];
-                        }
-                        for (int m = 0; m < M; ++m)
-                        {
-                                b[i, m] -= l_ik * b[k, m];
-                        }
+                        reduce(i, k);
                 }
         }
 }
