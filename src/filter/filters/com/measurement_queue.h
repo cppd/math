@@ -54,6 +54,31 @@ class MeasurementQueue final
                 measurements_.clear();
         }
 
+        void add_measurement(const Measurements<N, T>& m, const Estimation<N, T>& estimation)
+        {
+                const numerical::Vector<N, T> direction = estimation.velocity().normalized();
+
+                if (!(inits_.empty() || dot(direction, inits_.back().direction) >= min_cosine_))
+                {
+                        clear();
+                        return;
+                }
+
+                auto iter = inits_.begin();
+                while (iter != inits_.end() && !(dot(direction, iter->direction) >= min_cosine_))
+                {
+                        iter = inits_.erase(inits_.begin());
+                        measurements_.pop_front();
+                }
+
+                inits_.push_back(
+                        {.direction = direction,
+                         .position_velocity = estimation.position_velocity(),
+                         .position_velocity_p = estimation.position_velocity_p()});
+
+                measurements_.push_back(m);
+        }
+
 public:
         MeasurementQueue(const std::size_t size, const T reset_dt, const T angle_estimation_variance)
                 : size_(size),
@@ -85,30 +110,7 @@ public:
                         return;
                 }
 
-                const numerical::Vector<N, T> direction = estimation.velocity().normalized();
-
-                if (!inits_.empty())
-                {
-                        if (!(dot(direction, inits_.back().direction) >= min_cosine_))
-                        {
-                                clear();
-                                return;
-                        }
-
-                        auto iter = inits_.begin();
-                        while (iter != inits_.end() && !(dot(direction, iter->direction) >= min_cosine_))
-                        {
-                                iter = inits_.erase(inits_.begin());
-                                measurements_.pop_front();
-                        }
-                }
-
-                inits_.push_back(
-                        {.direction = direction,
-                         .position_velocity = estimation.position_velocity(),
-                         .position_velocity_p = estimation.position_velocity_p()});
-
-                measurements_.push_back(m);
+                add_measurement(m, estimation);
         }
 
         [[nodiscard]] std::size_t empty() const
