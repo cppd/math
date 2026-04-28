@@ -29,6 +29,16 @@ namespace ns::statistics
 {
 namespace median_sorted_implementation
 {
+template <typename T>
+T median(const std::size_t s1, const std::size_t s2, const T& l1, const T& l2, const T& r1, const T& r2)
+{
+        if ((s1 + s2) % 2 == 1)
+        {
+                return std::max(l1, l2);
+        }
+        return (std::max(l1, l2) + std::min(r1, r2)) / 2;
+}
+
 template <typename T, typename F1, typename F2>
 std::optional<T> compute(
         const F1& f1,
@@ -51,11 +61,7 @@ std::optional<T> compute(
 
         if (l1 <= r2 && l2 <= r1)
         {
-                if ((s1 + s2) % 2 == 0)
-                {
-                        return (std::max(l1, l2) + std::min(r1, r2)) / 2;
-                }
-                return std::max(l1, l2);
+                return median(s1, s2, l1, l2, r1, r2);
         }
 
         if (l1 > r2)
