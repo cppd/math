@@ -58,18 +58,20 @@ class MeasurementQueue final
         {
                 const numerical::Vector<N, T> direction = estimation.velocity().normalized();
 
-                if (!(inits_.empty() || dot(direction, inits_.back().direction) >= min_cosine_))
+                auto iter = inits_.crbegin();
+
+                for (; iter != inits_.crend(); ++iter)
                 {
-                        clear();
-                        return;
+                        if (!(dot(direction, iter->direction) >= min_cosine_))
+                        {
+                                break;
+                        }
                 }
 
-                auto iter = inits_.begin();
-                while (iter != inits_.end() && !(dot(direction, iter->direction) >= min_cosine_))
-                {
-                        iter = inits_.erase(inits_.begin());
-                        measurements_.pop_front();
-                }
+                const std::size_t distance = iter - inits_.crbegin();
+
+                inits_.erase(inits_.cbegin(), inits_.cend() - distance);
+                measurements_.erase(measurements_.cbegin(), measurements_.cend() - distance);
 
                 inits_.push_back(
                         {.direction = direction,
