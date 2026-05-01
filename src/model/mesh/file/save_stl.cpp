@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 namespace ns::model::mesh::file
@@ -211,6 +212,27 @@ void write_facet(
         }
 }
 
+std::tuple<numerical::Vector<3, double>, std::array<int, 3>> make_3d_facet(const Mesh<3>& mesh, const Mesh<3>::Facet& f)
+{
+        std::array<int, 3> v = f.vertices;
+
+        const numerical::Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+        const numerical::Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+        const numerical::Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
+
+        numerical::Vector<3, double> normal = cross(v1 - v0, v2 - v0);
+
+        if (dot(to_vector<double>(mesh.normals[f.normals[0]]), normal) < 0
+            && dot(to_vector<double>(mesh.normals[f.normals[1]]), normal) < 0
+            && dot(to_vector<double>(mesh.normals[f.normals[2]]), normal) < 0)
+        {
+                std::swap(v[1], v[2]);
+                normal = -normal;
+        }
+
+        return {normal, v};
+}
+
 template <bool ASCII, bool BYTE_SWAP, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<numerical::Vector<N, float>>& vertices)
 {
@@ -220,35 +242,20 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<num
         {
                 if (!f.has_normal)
                 {
-                        const numerical::Vector<N, double> normal =
-                                numerical::orthogonal_complement<double>(vertices, f.vertices);
-                        write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
+                        const auto f_normal = numerical::orthogonal_complement<double>(vertices, f.vertices);
+                        write_facet<ASCII, BYTE_SWAP>(file, f_normal, f.vertices, vertices);
+                        continue;
                 }
-                else if constexpr (N != 3)
+
+                if constexpr (N != 3)
                 {
-                        const numerical::Vector<N, double> normal =
-                                numerical::orthogonal_complement<double>(vertices, f.vertices);
-                        write_facet<ASCII, BYTE_SWAP>(file, normal, f.vertices, vertices);
+                        const auto f_normal = numerical::orthogonal_complement<double>(vertices, f.vertices);
+                        write_facet<ASCII, BYTE_SWAP>(file, f_normal, f.vertices, vertices);
                 }
                 else
                 {
-                        std::array<int, 3> v = f.vertices;
-
-                        const numerical::Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
-                        const numerical::Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
-                        const numerical::Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
-
-                        numerical::Vector<3, double> normal = cross(v1 - v0, v2 - v0);
-
-                        if (dot(to_vector<double>(mesh.normals[f.normals[0]]), normal) < 0
-                            && dot(to_vector<double>(mesh.normals[f.normals[1]]), normal) < 0
-                            && dot(to_vector<double>(mesh.normals[f.normals[2]]), normal) < 0)
-                        {
-                                std::swap(v[1], v[2]);
-                                normal = -normal;
-                        }
-
-                        write_facet<ASCII, BYTE_SWAP>(file, normal, v, vertices);
+                        const auto [f_normal, f_vertices] = make_3d_facet(mesh, f);
+                        write_facet<ASCII, BYTE_SWAP>(file, f_normal, f_vertices, vertices);
                 }
         }
 }
