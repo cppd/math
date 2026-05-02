@@ -59,59 +59,65 @@ template <typename T, typename F>
 }
 
 template <std::size_t N, typename T, typename F>
+        requires (N == 1)
 [[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 {
-        if constexpr (N == 1)
-        {
-                return interpolation(data[0], data[1], p[0]);
-        }
-        else if constexpr (N == 2)
-        {
-                const T t0 = interpolation(data[0], data[1], p[0]);
-                const T t1 = interpolation(data[2], data[3], p[0]);
-                return interpolation(t0, t1, p[1]);
-        }
-        else if constexpr (N == 3)
-        {
-                const T t0 = interpolation(data[0], data[1], p[0]);
-                const T t1 = interpolation(data[2], data[3], p[0]);
-                const T t2 = interpolation(data[4], data[5], p[0]);
-                const T t3 = interpolation(data[6], data[7], p[0]);
-                return interpolation(t0, t1, t2, t3, p[1], p[2]);
-        }
-        else if constexpr (N == 4)
-        {
-                const T t0 = interpolation(data[0], data[1], p[0]);
-                const T t1 = interpolation(data[2], data[3], p[0]);
-                const T t2 = interpolation(data[4], data[5], p[0]);
-                const T t3 = interpolation(data[6], data[7], p[0]);
-                const T t4 = interpolation(data[8], data[9], p[0]);
-                const T t5 = interpolation(data[10], data[11], p[0]);
-                const T t6 = interpolation(data[12], data[13], p[0]);
-                const T t7 = interpolation(data[14], data[15], p[0]);
-                return interpolation(t0, t1, t2, t3, t4, t5, t6, t7, p[1], p[2], p[3]);
-        }
-        else if constexpr (N >= 5)
-        {
-                constexpr std::size_t NEXT_N = N - 1;
-                std::array<T, (1 << NEXT_N)> tmp_data;
-                std::array<F, NEXT_N> tmp_p;
+        return interpolation(data[0], data[1], p[0]);
+}
 
-                for (std::size_t i = 0; i < data.size(); i += 2)
-                {
-                        tmp_data[i >> 1] = interpolation(data[i], data[i + 1], p[0]);
-                }
+template <std::size_t N, typename T, typename F>
+        requires (N == 2)
+[[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
+{
+        const T t0 = interpolation(data[0], data[1], p[0]);
+        const T t1 = interpolation(data[2], data[3], p[0]);
+        return interpolation(t0, t1, p[1]);
+}
 
-                for (std::size_t i = 1; i < p.size(); ++i)
-                {
-                        tmp_p[i - 1] = p[i];
-                }
+template <std::size_t N, typename T, typename F>
+        requires (N == 3)
+[[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
+{
+        const T t0 = interpolation(data[0], data[1], p[0]);
+        const T t1 = interpolation(data[2], data[3], p[0]);
+        const T t2 = interpolation(data[4], data[5], p[0]);
+        const T t3 = interpolation(data[6], data[7], p[0]);
+        return interpolation(t0, t1, t2, t3, p[1], p[2]);
+}
 
-                return interpolation(tmp_data, tmp_p);
-        }
-        else
+template <std::size_t N, typename T, typename F>
+        requires (N == 4)
+[[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
+{
+        const T t0 = interpolation(data[0], data[1], p[0]);
+        const T t1 = interpolation(data[2], data[3], p[0]);
+        const T t2 = interpolation(data[4], data[5], p[0]);
+        const T t3 = interpolation(data[6], data[7], p[0]);
+        const T t4 = interpolation(data[8], data[9], p[0]);
+        const T t5 = interpolation(data[10], data[11], p[0]);
+        const T t6 = interpolation(data[12], data[13], p[0]);
+        const T t7 = interpolation(data[14], data[15], p[0]);
+        return interpolation(t0, t1, t2, t3, t4, t5, t6, t7, p[1], p[2], p[3]);
+}
+
+template <std::size_t N, typename T, typename F>
+        requires (N >= 5)
+[[nodiscard]] constexpr T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
+{
+        constexpr std::size_t NEXT_N = N - 1;
+        std::array<T, (1 << NEXT_N)> tmp_data;
+        std::array<F, NEXT_N> tmp_p;
+
+        for (std::size_t i = 0; i < data.size(); i += 2)
         {
-                static_assert(false);
+                tmp_data[i >> 1] = interpolation(data[i], data[i + 1], p[0]);
         }
+
+        for (std::size_t i = 1; i < p.size(); ++i)
+        {
+                tmp_p[i - 1] = p[i];
+        }
+
+        return interpolation(tmp_data, tmp_p);
 }
 }
