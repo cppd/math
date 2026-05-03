@@ -28,6 +28,12 @@ namespace ns
 {
 namespace min_max_implementation
 {
+template <bool COMPUTE_MIN, typename T>
+constexpr T f(const T& a, const T& b)
+{
+        return COMPUTE_MIN ? std::min(a, b) : std::max(a, b);
+}
+
 template <bool COMPUTE_MIN, unsigned COUNT, typename T>
 constexpr T min_max_value_array(const std::span<const T> p)
 {
@@ -50,14 +56,14 @@ constexpr T min_max_value_array(const std::span<const T> p)
         {
                 for (unsigned i = 0; i < COUNT; ++i)
                 {
-                        m[i] = COMPUTE_MIN ? std::min(m[i], ptr[i]) : std::max(m[i], ptr[i]);
+                        m[i] = f<COMPUTE_MIN>(m[i], ptr[i]);
                 }
         }
 
         T res = m[0];
         for (unsigned i = 1; i < COUNT; ++i)
         {
-                res = COMPUTE_MIN ? std::min(res, m[i]) : std::max(res, m[i]);
+                res = f<COMPUTE_MIN>(res, m[i]);
         }
         return res;
 }
@@ -89,7 +95,7 @@ constexpr T min_max_value(const std::span<const T> p)
         const T* const end = p.data() + p.size();
         for (; ptr != end; ++ptr)
         {
-                res = COMPUTE_MIN ? std::min(res, *ptr) : std::max(res, *ptr);
+                res = f<COMPUTE_MIN>(res, *ptr);
         }
 
         return res;
