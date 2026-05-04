@@ -44,6 +44,29 @@ namespace
 {
 const auto* const MULTIPLICATION_SIGN = reinterpret_cast<const char*>(u8"\u00d7");
 
+[[noreturn]] void error_format_not_found(
+        const VkSurfaceFormatKHR required_surface_format,
+        const std::vector<VkSurfaceFormatKHR>& surface_formats)
+{
+        std::string s;
+
+        s += "Failed to find surface format ";
+        s += strings::format_to_string(required_surface_format.format);
+        s += ", ";
+        s += strings::color_space_to_string(required_surface_format.colorSpace);
+        s += ".\nSupported surface formats:";
+
+        for (const VkSurfaceFormatKHR format : surface_formats)
+        {
+                s += '\n';
+                s += strings::format_to_string(format.format);
+                s += ", ";
+                s += strings::color_space_to_string(format.colorSpace);
+        }
+
+        error(s);
+}
+
 VkSurfaceFormatKHR choose_surface_format(
         const VkSurfaceFormatKHR required_surface_format,
         const std::vector<VkSurfaceFormatKHR>& surface_formats)
@@ -67,19 +90,7 @@ VkSurfaceFormatKHR choose_surface_format(
                 }
         }
 
-        std::string s;
-        for (const VkSurfaceFormatKHR format : surface_formats)
-        {
-                if (!s.empty())
-                {
-                        s += '\n';
-                }
-                s += strings::format_to_string(format.format) + ", "
-                     + strings::color_space_to_string(format.colorSpace);
-        }
-        error("Failed to find surface format " + strings::format_to_string(required_surface_format.format) + ", "
-              + strings::color_space_to_string(required_surface_format.colorSpace) + ".\nSupported surface formats:\n"
-              + s);
+        error_format_not_found(required_surface_format, surface_formats);
 }
 
 VkPresentModeKHR choose_present_mode(
