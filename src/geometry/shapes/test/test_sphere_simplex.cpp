@@ -53,6 +53,41 @@ std::array<numerical::Vector<N, T>, N> create_simplex(PCG& engine)
         return res;
 }
 
+template <unsigned RAY_COUNT, std::size_t N, typename T>
+T ray_coverage_area(
+        const std::array<numerical::Vector<N, T>, N>& simplex_vertices,
+        PCG& engine,
+        progress::Ratio* const progress,
+        const double progress_min,
+        const double progress_max)
+{
+        const spatial::HyperplaneSimplex<N, T> simplex(simplex_vertices);
+
+        constexpr double RAY_COUNT_R = 1.0 / RAY_COUNT;
+        unsigned intersect_count = 0;
+
+        progress->set(progress_min);
+
+        for (unsigned i = 0; i < RAY_COUNT; ++i)
+        {
+                if ((i & 0xfff) == 0xfff)
+                {
+                        progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
+                }
+
+                const numerical::Ray<N, T> ray(numerical::Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
+
+                if (simplex.intersect(ray))
+                {
+                        ++intersect_count;
+                }
+        }
+
+        const T coverage_area = static_cast<T>(intersect_count) / RAY_COUNT;
+
+        return coverage_area;
+}
+
 template <std::size_t N, typename T>
 void test_integrate(progress::Ratio* const progress, const double progress_min, const double progress_max)
 {
@@ -77,31 +112,15 @@ void test_integrate(progress::Ratio* const progress, const double progress_min, 
                 error("Relative area " + to_string(relative_area) + " is not finite, sphere area = "
                       + to_string(sphere_area) + ", simplex area = " + to_string(simplex_area));
         }
+
         if (!(relative_area > 0))
         {
                 error("Relative area " + to_string(relative_area) + " is not positive, sphere area = "
                       + to_string(sphere_area) + ", simplex area = " + to_string(simplex_area));
         }
 
-        const spatial::HyperplaneSimplex<N, T> simplex(simplex_vertices);
-
-        constexpr double RAY_COUNT_R = 1.0 / RAY_COUNT;
-        unsigned intersect_count = 0;
-        progress->set(progress_min);
-        for (unsigned i = 0; i < RAY_COUNT; ++i)
-        {
-                if ((i & 0xfff) == 0xfff)
-                {
-                        progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
-                }
-                const numerical::Ray<N, T> ray(numerical::Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
-                if (simplex.intersect(ray))
-                {
-                        ++intersect_count;
-                }
-        }
-
-        const T coverage_area = static_cast<T>(intersect_count) / RAY_COUNT;
+        const T coverage_area =
+                ray_coverage_area<RAY_COUNT>(simplex_vertices, engine, progress, progress_min, progress_max);
 
         if (coverage_area < MIN_RELATIVE_AREA && relative_area < MIN_RELATIVE_AREA)
         {
