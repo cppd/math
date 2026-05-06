@@ -71,29 +71,31 @@ template <bool ANY, std::size_t N, typename T, typename Color>
 }
 
 template <bool ANY, std::size_t N, typename T, typename Color>
+void test_f(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<numerical::Ray<N, T>>& rays)
+{
+        for (std::size_t i = 0; i < rays.size();)
+        {
+                MemoryArena::thread_local_instance().clear();
+
+                const std::size_t r = rays.size() - i;
+                const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
+
+                for (; i < c; ++i)
+                {
+                        do_not_optimize(scene_intersect<ANY>(*mesh.scene.scene, rays[i]));
+                }
+        }
+}
+
+template <bool ANY, std::size_t N, typename T, typename Color>
 void test(const test::SphericalMesh<N, T, Color>& mesh, const std::vector<numerical::Ray<N, T>>& rays)
 {
-        const auto f = [&]
-        {
-                for (std::size_t i = 0; i < rays.size();)
-                {
-                        MemoryArena::thread_local_instance().clear();
-
-                        const std::size_t r = rays.size() - i;
-                        const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
-                        for (; i < c; ++i)
-                        {
-                                do_not_optimize(scene_intersect<ANY>(*mesh.scene.scene, rays[i]));
-                        }
-                }
-        };
-
         const long long start_ray_count = mesh.scene.scene->thread_ray_count();
         const Clock::time_point start_time = Clock::now();
 
         for (int i = 0; i < 10; ++i)
         {
-                f();
+                test_f<ANY>(mesh, rays);
         }
 
         const double duration = duration_from(start_time);
