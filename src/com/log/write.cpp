@@ -40,6 +40,26 @@ namespace
 {
 constexpr const char* LOG_DIRECTORY_NAME = "log";
 
+void write_description(const std::string_view description, std::string& s)
+{
+        for (const char c : description)
+        {
+                s += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
+        }
+}
+
+void write_text(const std::string& line_beginning, const std::string_view text, std::string& s)
+{
+        for (const char c : text)
+        {
+                s += c;
+                if (c == '\n')
+                {
+                        s += line_beginning;
+                }
+        }
+}
+
 class Format final
 {
         static constexpr unsigned MAX_THREADS = 1'000'000;
@@ -99,24 +119,14 @@ public:
                 else
                 {
                         line_beginning_ += "(";
-                        for (const char c : description)
-                        {
-                                line_beginning_ += std::isalpha(static_cast<unsigned char>(c)) ? c : ' ';
-                        }
+                        write_description(description, line_beginning_);
                         line_beginning_ += "): ";
                 }
 
                 result_.clear();
                 result_.reserve(line_beginning_.size() + text.size() + 1);
                 result_ = line_beginning_;
-                for (const char c : text)
-                {
-                        result_ += c;
-                        if (c == '\n')
-                        {
-                                result_ += line_beginning_;
-                        }
-                }
+                write_text(line_beginning_, text, result_);
                 result_ += '\n';
                 return result_;
         }
