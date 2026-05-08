@@ -153,17 +153,16 @@ class BvhBuild final
                                 *task->node = BvhBuildNode<N, T>(task->bounds, s->axis, min.index, max.index);
                                 task_manager->emplace(s->objects_min, s->bounds_min, min.node);
                                 task_manager->emplace(s->objects_max, s->bounds_max, max.node);
+                                continue;
                         }
-                        else
+
+                        const unsigned count = task->objects.size();
+                        const unsigned offset = create_indices(count);
+                        *task->node = BvhBuildNode<N, T>(task->bounds, offset, count);
+                        for (auto iter = object_indices_.begin() + offset;
+                             const BvhObject<N, T>& object : task->objects)
                         {
-                                const unsigned count = task->objects.size();
-                                const unsigned offset = create_indices(count);
-                                *task->node = BvhBuildNode<N, T>(task->bounds, offset, count);
-                                for (auto iter = object_indices_.begin() + offset;
-                                     const BvhObject<N, T>& object : task->objects)
-                                {
-                                        *iter++ = object.index();
-                                }
+                                *iter++ = object.index();
                         }
                 }
         }
