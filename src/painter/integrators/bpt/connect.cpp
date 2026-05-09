@@ -290,11 +290,7 @@ std::optional<Color> connect(
         if (s == 1)
         {
                 auto connection = connect_s_1(scene, camera_path[t - 1], light_distribution, engine);
-                if (!connection)
-                {
-                        return {};
-                }
-                if (connection->color.is_black())
+                if (!connection || connection->color.is_black())
                 {
                         return {};
                 }
