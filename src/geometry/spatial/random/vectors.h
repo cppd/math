@@ -32,11 +32,31 @@ namespace ns::geometry::spatial::random
 namespace vectors_implementation
 {
 template <std::size_t M, std::size_t N, typename T>
-bool check_vectors(const T& min_length, const T& max_length, const std::array<numerical::Vector<N, T>, M>& vectors)
+bool check_vector_angles(const std::array<numerical::Vector<N, T>, M>& unit_vectors)
 {
         constexpr T MAX_DOT_PRODUCT = 0.9;
 
+        for (std::size_t i = 0; i < M; ++i)
+        {
+                for (std::size_t j = i + 1; j < M; ++j)
+                {
+                        const T abs_dot = std::abs(dot(unit_vectors[i], unit_vectors[j]));
+
+                        if (!(abs_dot < MAX_DOT_PRODUCT))
+                        {
+                                return false;
+                        }
+                }
+        }
+
+        return true;
+}
+
+template <std::size_t M, std::size_t N, typename T>
+bool check_vectors(const T& min_length, const T& max_length, const std::array<numerical::Vector<N, T>, M>& vectors)
+{
         std::array<numerical::Vector<N, T>, M> unit_vectors = vectors;
+
         for (numerical::Vector<N, T>& v : unit_vectors)
         {
                 const T length = v.norm();
@@ -47,18 +67,7 @@ bool check_vectors(const T& min_length, const T& max_length, const std::array<nu
                 v /= length;
         }
 
-        for (std::size_t i = 0; i < M; ++i)
-        {
-                for (std::size_t j = i + 1; j < M; ++j)
-                {
-                        if (!(std::abs(dot(unit_vectors[i], unit_vectors[j])) < MAX_DOT_PRODUCT))
-                        {
-                                return false;
-                        }
-                }
-        }
-
-        return true;
+        return check_vector_angles(unit_vectors);
 }
 }
 
