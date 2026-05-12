@@ -32,12 +32,14 @@ namespace ns::geometry::spatial::random
 namespace vectors_implementation
 {
 template <std::size_t M, std::size_t N, typename T>
-bool check_vector_angles(const std::array<numerical::Vector<N, T>, M>& unit_vectors)
+bool check_unit_vector_angles(const std::array<numerical::Vector<N, T>, M>& unit_vectors)
 {
         constexpr T MAX_DOT_PRODUCT = 0.9;
 
         for (std::size_t i = 0; i < M; ++i)
         {
+                ASSERT(unit_vectors[i].is_unit());
+
                 for (std::size_t j = i + 1; j < M; ++j)
                 {
                         const T abs_dot = std::abs(dot(unit_vectors[i], unit_vectors[j]));
@@ -67,7 +69,7 @@ bool check_vectors(const T& min_length, const T& max_length, const std::array<nu
                 v /= length;
         }
 
-        return check_vector_angles(unit_vectors);
+        return check_unit_vector_angles(unit_vectors);
 }
 }
 
