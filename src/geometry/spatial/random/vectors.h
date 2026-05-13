@@ -53,24 +53,6 @@ bool check_unit_vector_angles(const std::array<numerical::Vector<N, T>, M>& unit
 
         return true;
 }
-
-template <std::size_t M, std::size_t N, typename T>
-bool check_vectors(const T& min_length, const T& max_length, const std::array<numerical::Vector<N, T>, M>& vectors)
-{
-        std::array<numerical::Vector<N, T>, M> unit_vectors = vectors;
-
-        for (numerical::Vector<N, T>& v : unit_vectors)
-        {
-                const T length = v.norm();
-                if (!(length >= min_length && length <= max_length))
-                {
-                        return false;
-                }
-                v /= length;
-        }
-
-        return check_unit_vector_angles(unit_vectors);
-}
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -95,24 +77,28 @@ std::array<numerical::Vector<N, T>, M> vectors(
         RandomEngine& engine)
 {
         static_assert(M > 0 && M <= N);
+        namespace impl = vectors_implementation;
 
         ASSERT(min_length > 0 && min_length < max_length);
 
-        std::uniform_real_distribution<T> urd(min_length, max_length);
         std::array<numerical::Vector<N, T>, M> vectors;
 
-        while (true)
+        do
         {
                 for (numerical::Vector<N, T>& v : vectors)
                 {
-                        v = urd(engine) * sampling::uniform_on_sphere<N, T>(engine);
+                        v = sampling::uniform_on_sphere<N, T>(engine);
                 }
 
-                if (vectors_implementation::check_vectors(min_length, max_length, vectors))
-                {
-                        return vectors;
-                }
+        } while (!impl::check_unit_vector_angles(vectors));
+
+        std::uniform_real_distribution<T> urd(min_length, max_length);
+        for (numerical::Vector<N, T>& v : vectors)
+        {
+                v *= urd(engine);
         }
+
+        return vectors;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
