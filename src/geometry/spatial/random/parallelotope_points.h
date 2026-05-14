@@ -167,12 +167,13 @@ std::vector<numerical::Vector<N, T>> parallelotope_cover_points(
         const auto plane_point = [&](const std::size_t n)
         {
                 numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < n; ++i)
                 {
-                        if (i != n)
-                        {
-                                res.multiply_add(vectors[i], len_urd(engine));
-                        }
+                        res.multiply_add(vectors[i], len_urd(engine));
+                }
+                for (std::size_t i = n + 1; i < N; ++i)
+                {
+                        res.multiply_add(vectors[i], len_urd(engine));
                 }
                 return res;
         };
