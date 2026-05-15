@@ -68,6 +68,25 @@ void test_simplex(const std::array<numerical::Vector<N, T>, N + 1>& vertices)
 }
 
 template <std::size_t N, typename T>
+void check_facet_equal_distances(const std::string& name, const std::array<numerical::Vector<N, T>, N>& vertices)
+{
+        static_assert(N >= 2);
+
+        const T d = (vertices[0] - vertices[1]).norm();
+        for (std::size_t i = 0; i < vertices.size(); ++i)
+        {
+                for (std::size_t j = i + 1; j < vertices.size(); ++j)
+                {
+                        const T l = (vertices[j] - vertices[i]).norm();
+                        if (!(std::abs(d - l) < ABS_ERROR<T>))
+                        {
+                                error(name + " facet is not a simplex with equidistant vertices");
+                        }
+                }
+        }
+}
+
+template <std::size_t N, typename T>
 void check_facet_equal_distances(
         const std::string& name,
         const std::vector<std::array<numerical::Vector<N, T>, N>>& facets)
@@ -76,17 +95,7 @@ void check_facet_equal_distances(
 
         for (const std::array<numerical::Vector<N, T>, N>& vertices : facets)
         {
-                const T d = (vertices[0] - vertices[1]).norm();
-                for (std::size_t i = 0; i < vertices.size(); ++i)
-                {
-                        for (std::size_t j = i + 1; j < vertices.size(); ++j)
-                        {
-                                if (!(std::abs(d - (vertices[j] - vertices[i]).norm()) < ABS_ERROR<T>))
-                                {
-                                        error(name + " facet is not a simplex with equidistant vertices");
-                                }
-                        }
-                }
+                check_facet_equal_distances(name, vertices);
         }
 }
 
