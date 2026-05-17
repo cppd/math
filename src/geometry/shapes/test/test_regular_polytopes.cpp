@@ -42,6 +42,19 @@ template <typename T>
 constexpr T ABS_ERROR = 10 * Limits<T>::epsilon();
 
 template <std::size_t N, std::size_t M, typename T>
+bool origin_centered(const std::array<numerical::Vector<N, T>, M>& vertices)
+{
+        for (const numerical::Vector<N, T>& v : vertices)
+        {
+                if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+template <std::size_t N, std::size_t M, typename T>
 bool equidistant_vertices(const std::array<numerical::Vector<N, T>, M>& vertices)
 {
         static_assert(M >= 2);
@@ -66,12 +79,9 @@ bool equidistant_vertices(const std::array<numerical::Vector<N, T>, M>& vertices
 template <std::size_t N, typename T>
 void test_simplex(const std::array<numerical::Vector<N, T>, N + 1>& vertices)
 {
-        for (const numerical::Vector<N, T>& v : vertices)
+        if (!origin_centered(vertices))
         {
-                if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
-                {
-                        error("Regular simplex is not origin-centered");
-                }
+                error("Regular simplex is not origin-centered");
         }
 
         if (!equidistant_vertices(vertices))
@@ -101,12 +111,9 @@ void check_unit_distance_from_origin(
 {
         for (const std::array<numerical::Vector<N, T>, N>& vertices : facets)
         {
-                for (const numerical::Vector<N, T>& v : vertices)
+                if (!origin_centered(vertices))
                 {
-                        if (!(std::abs(1 - v.norm()) < ABS_ERROR<T>))
-                        {
-                                error(name + " is not origin-centered");
-                        }
+                        error(name + " is not origin-centered");
                 }
         }
 }
