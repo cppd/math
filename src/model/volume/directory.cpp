@@ -38,43 +38,39 @@ struct DirectoryContent final
         std::vector<std::string> entries;
 };
 
-struct ReadInfo final
-{
-        std::optional<bool> contains_files;
-};
-
-std::string entry_name(
+bool directory_contains_files(
         const std::filesystem::path& directory,
         const std::filesystem::directory_entry& entry,
-        ReadInfo* const info)
+        const std::optional<bool> contains_files)
 {
         if (entry.is_directory())
         {
-                if (info->contains_files && *info->contains_files)
+                if (contains_files && *contains_files)
                 {
                         error("Mixed content found in directory " + generic_utf8_filename(directory));
                 }
-                info->contains_files = false;
-        }
-        else if (entry.is_regular_file())
-        {
-                if (info->contains_files && !*info->contains_files)
-                {
-                        error("Mixed content found in directory " + generic_utf8_filename(directory));
-                }
-                info->contains_files = true;
-        }
-        else
-        {
-                error("Neither directory nor regular file found " + generic_utf8_filename(entry.path()));
+                return false;
         }
 
+        if (entry.is_regular_file())
+        {
+                if (contains_files && !*contains_files)
+                {
+                        error("Mixed content found in directory " + generic_utf8_filename(directory));
+                }
+                return true;
+        }
+
+        error("Neither directory nor regular file found " + generic_utf8_filename(entry.path()));
+}
+
+std::string entry_name(const std::filesystem::directory_entry& entry)
+{
         std::string name = generic_utf8_filename(entry.path().filename());
         if (!ascii::is_ascii(name))
         {
                 error("Directory entry does not have only ASCII encoding " + generic_utf8_filename(entry.path()));
         }
-
         return name;
 }
 
@@ -87,11 +83,12 @@ DirectoryContent read_directory(const Path& directory)
         }
 
         std::vector<std::string> entries;
-        ReadInfo info;
+        std::optional<bool> contains_files;
 
         for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory))
         {
-                entries.push_back(entry_name(directory, entry, &info));
+                contains_files = directory_contains_files(directory, entry, contains_files);
+                entries.push_back(entry_name(entry));
         }
 
         if (entries.empty())
@@ -99,10 +96,12 @@ DirectoryContent read_directory(const Path& directory)
                 return {};
         }
 
-        ASSERT(info.contains_files.has_value());
+        ASSERT(contains_files.has_value());
 
-        return {.type = (*info.contains_files ? ContentType::FILES : ContentType::DIRECTORIES),
-                .entries = std::move(entries)};
+        return {
+                .type = (*contains_files ? ContentType::FILES : ContentType::DIRECTORIES),
+                .entries = std::move(entries),
+        };
 }
 }
 
