@@ -86,25 +86,29 @@ std::vector<numerical::Ray<N, T>> rays_for_intersections(
         return rays;
 }
 
-template <bool VOLUME, std::size_t N, typename T>
+template <std::size_t N, typename T>
 std::size_t intersection_count(const BoundingBox<N, T>& box, const std::vector<numerical::Ray<N, T>>& rays)
 {
         std::size_t res = 0;
         for (const numerical::Ray<N, T>& ray : rays)
         {
-                if constexpr (!VOLUME)
+                if (box.intersect(ray))
                 {
-                        if (box.intersect(ray))
-                        {
-                                ++res;
-                        }
+                        ++res;
                 }
-                else
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+std::size_t intersection_count_volume(const BoundingBox<N, T>& box, const std::vector<numerical::Ray<N, T>>& rays)
+{
+        std::size_t res = 0;
+        for (const numerical::Ray<N, T>& ray : rays)
+        {
+                if (box.intersect_volume(ray))
                 {
-                        if (box.intersect_volume(ray))
-                        {
-                                ++res;
-                        }
+                        ++res;
                 }
         }
         return res;
@@ -118,7 +122,7 @@ void check_intersection_count(const BoundingBox<N, T>& box, const std::vector<nu
                 error("Ray count " + to_string(rays.size()) + " is not a multiple of 3");
         }
 
-        const std::size_t count = intersection_count<VOLUME>(box, rays);
+        const std::size_t count = VOLUME ? intersection_count_volume(box, rays) : intersection_count(box, rays);
 
         const std::size_t expected_count = (rays.size() / 3) * 2;
 
