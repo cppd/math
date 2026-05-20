@@ -299,25 +299,13 @@ template <std::size_t N, typename T>
 
         if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>)
         {
-                if constexpr (N <= 4)
-                {
-                        return impl::orthogonal_complement_by_subspace(unit_vector);
-                }
-                else
-                {
-                        return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
-                }
+                return (N <= 4) ? impl::orthogonal_complement_by_subspace(unit_vector)
+                                : impl::orthogonal_complement_by_gram_schmidt(unit_vector);
         }
         else if constexpr (std::is_same_v<T, long double>)
         {
-                if constexpr (N <= 6)
-                {
-                        return impl::orthogonal_complement_by_subspace(unit_vector);
-                }
-                else
-                {
-                        return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
-                }
+                return (N <= 6) ? impl::orthogonal_complement_by_subspace(unit_vector)
+                                : impl::orthogonal_complement_by_gram_schmidt(unit_vector);
         }
         else
         {
