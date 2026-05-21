@@ -59,6 +59,18 @@ void check_size(const std::span<const std::byte> bytes)
         }
 }
 
+template <typename T, std::size_t COLOR_COUNT>
+void update_max(const std::array<T, COLOR_COUNT>& pixel, T& max)
+{
+        for (std::size_t i = 0; i < COLOR_COUNT; ++i)
+        {
+                if (finite(pixel[i]))
+                {
+                        max = std::max(max, pixel[i]);
+                }
+        }
+}
+
 template <typename T, std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
 [[nodiscard]] std::optional<T> max(const std::span<const std::byte> bytes)
 {
@@ -85,13 +97,9 @@ template <typename T, std::size_t COLOR_COUNT, std::size_t COMPONENT_COUNT>
                 std::array<T, COLOR_COUNT> pixel;
                 static_assert(std::span<T>(pixel).size_bytes() == COLOR_SIZE);
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
-                for (std::size_t i = 0; i < COLOR_COUNT; ++i)
-                {
-                        if (finite(pixel[i]))
-                        {
-                                max = std::max(max, pixel[i]);
-                        }
-                }
+
+                update_max(pixel, max);
+
                 ptr += PIXEL_SIZE;
         }
 
