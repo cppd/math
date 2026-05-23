@@ -53,39 +53,51 @@ public:
 };
 
 template <std::size_t N, typename T>
-[[nodiscard]] Matrix<N, N, T> cholesky_decomposition_lower_triangular(const Matrix<N, N, T>& a)
+[[nodiscard]] Matrix<N, N, T> cholesky_decomposition_lower_triangular(const Matrix<N, N, T>& m)
 {
-        Matrix<N, N, T> l{ZERO_MATRIX};
+        static_assert(N > 0);
 
-        for (std::size_t k = 0; k < N; ++k)
+        Matrix<N, N, T> res{ZERO_MATRIX};
+
+        const auto sqrt = [&](const T& v)
         {
-                for (std::size_t i = 0; i < k; ++i)
+                if (v >= 0)
                 {
-                        T sum = 0;
-                        for (std::size_t j = 0; j < i; ++j)
-                        {
-                                sum += l[i, j] * l[k, j];
-                        }
-                        l[k, i] = (a[k, i] - sum) / l[i, i];
+                        return std::sqrt(v);
                 }
+                throw CholeskyException("sqrt(" + to_string(v) + ")\n" + to_string(m) + "\n" + to_string(res));
+        };
 
+        const auto set_non_diagonal = [&](const std::size_t r, const std::size_t c)
+        {
                 T sum = 0;
-                for (std::size_t j = 0; j < k; ++j)
+                for (std::size_t i = 0; i < c; ++i)
                 {
-                        const T v = l[k, j];
+                        sum += res[c, i] * res[r, i];
+                }
+                res[r, c] = (m[r, c] - sum) / res[c, c];
+        };
+
+        const auto set_diagonal = [&](const std::size_t r)
+        {
+                T sum = 0;
+                for (std::size_t i = 0; i < r; ++i)
+                {
+                        const T v = res[r, i];
                         sum += v * v;
                 }
+                res[r, r] = sqrt(m[r, r] - sum);
+        };
 
-                const T v = a[k, k] - sum;
-
-                if (!(v >= 0))
+        for (std::size_t r = 0; r < N; ++r)
+        {
+                for (std::size_t c = 0; c < r; ++c)
                 {
-                        throw CholeskyException("sqrt(" + to_string(v) + ")\n" + to_string(a) + "\n" + to_string(l));
+                        set_non_diagonal(r, c);
                 }
-
-                l[k, k] = std::sqrt(v);
+                set_diagonal(r);
         }
 
-        return l;
+        return res;
 }
 }
