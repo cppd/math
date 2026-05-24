@@ -101,6 +101,24 @@ void test(const Matrix<N, N, T>& matrix, const std::type_identity_t<T> precision
 }
 
 template <std::size_t N, typename T>
+void test_non_positive(const Matrix<N, N, T>& matrix)
+{
+        try
+        {
+                static_cast<void>(cholesky_decomposition_lower_triangular(matrix));
+        }
+        catch (const CholeskyException&)
+        {
+                return;
+        }
+        catch (...)
+        {
+                error("Unknown exception for non-positive matrix\n" + to_string(matrix));
+        }
+        error("No exception for non-positive matrix\n" + to_string(matrix));
+}
+
+template <std::size_t N, typename T>
 [[nodiscard]] Matrix<N, N, T> random_matrix(PCG& pcg)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
@@ -128,10 +146,33 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
+[[nodiscard]] Matrix<N, N, T> non_positive_diagonal_matrix(PCG& pcg)
+{
+        std::uniform_real_distribution<T> urd(1, 10);
+        Matrix<N, N, T> res(ZERO_MATRIX);
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i, i] = urd(pcg);
+        }
+        std::uniform_int_distribution<int> uid(0, N - 1);
+        const std::size_t i = uid(pcg);
+        res[i, i] = -res[i, i];
+        return res;
+}
+
+template <std::size_t N, typename T>
 [[nodiscard]] Matrix<N, N, T> positive_definite_matrix(PCG& pcg)
 {
         const Matrix<N, N, T> r = random_matrix<N, T>(pcg);
         const Matrix<N, N, T> d = positive_diagonal_matrix<N, T>(pcg);
+        return r * d * r.transposed();
+}
+
+template <std::size_t N, typename T>
+[[nodiscard]] Matrix<N, N, T> non_positive_definite_matrix(PCG& pcg)
+{
+        const Matrix<N, N, T> r = random_matrix<N, T>(pcg);
+        const Matrix<N, N, T> d = non_positive_diagonal_matrix<N, T>(pcg);
         return r * d * r.transposed();
 }
 
@@ -141,6 +182,11 @@ void test(const std::type_identity_t<T> precision, PCG& pcg)
         [&]<unsigned... I>(std::integer_sequence<unsigned, I...>&&)
         {
                 (test(positive_definite_matrix<1 + I, T>(pcg), precision), ...);
+        }(std::make_integer_sequence<unsigned, 10>());
+
+        [&]<unsigned... I>(std::integer_sequence<unsigned, I...>&&)
+        {
+                (test_non_positive(non_positive_definite_matrix<1 + I, T>(pcg)), ...);
         }(std::make_integer_sequence<unsigned, 10>());
 }
 

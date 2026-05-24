@@ -33,6 +33,7 @@ McGraw-Hill Education, 2015.
 #include <cstddef>
 #include <exception>
 #include <string>
+#include <utility>
 
 namespace ns::numerical
 {
@@ -41,8 +42,8 @@ class CholeskyException final : public std::exception
         std::string msg_;
 
 public:
-        explicit CholeskyException(const std::string& msg)
-                : msg_("The Cholesky decomposition: matrix is not positive definite, " + msg)
+        explicit CholeskyException(std::string&& msg)
+                : msg_(std::move(msg))
         {
         }
 
@@ -65,7 +66,9 @@ template <std::size_t N, typename T>
                 {
                         return std::sqrt(v);
                 }
-                throw CholeskyException("sqrt(" + to_string(v) + ")\n" + to_string(m) + "\n" + to_string(res));
+                throw CholeskyException(
+                        "The Cholesky decomposition: matrix is not positive definite, sqrt(" + to_string(v) + ")\n"
+                        + to_string(m) + "\n" + to_string(res));
         };
 
         const auto set_non_diagonal = [&](const std::size_t r, const std::size_t c)
