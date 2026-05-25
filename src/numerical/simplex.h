@@ -247,6 +247,20 @@ void pivot(
         pivot_objective_function(b, a, v, c, l, e);
 }
 
+template <std::size_t N, typename T>
+T find_max_reciprocal(const Vector<N, T>& v)
+{
+        static_assert(N > 0);
+
+        T max = std::abs(v[0]);
+        for (std::size_t i = 1; i < N; ++i)
+        {
+                max = std::max(max, std::abs(v[i]));
+        }
+        max = (max != 0) ? max : 1;
+        return 1 / max;
+}
+
 template <std::size_t N_SOURCE, std::size_t M, typename T>
 void make_aux_and_maps(
         const std::array<Vector<N_SOURCE, T>, M>& a_input,
@@ -259,15 +273,7 @@ void make_aux_and_maps(
 {
         for (std::size_t m = 0; m < M; ++m)
         {
-                T max = std::abs(a_input[m][0]);
-                for (std::size_t n = 1; n < N_SOURCE; ++n)
-                {
-                        max = std::max(max, std::abs(a_input[m][n]));
-                }
-
-                max = (max != 0) ? max : 1;
-
-                const T max_reciprocal = 1 / max;
+                const T max_reciprocal = find_max_reciprocal(a_input[m]);
 
                 (*b)[m] *= max_reciprocal;
                 (*a)[m][0] = 1;
