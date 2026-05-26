@@ -247,20 +247,6 @@ void pivot(
         pivot_objective_function(b, a, v, c, l, e);
 }
 
-template <std::size_t N, typename T>
-T find_max_reciprocal(const Vector<N, T>& v)
-{
-        static_assert(N > 0);
-
-        T max = std::abs(v[0]);
-        for (std::size_t i = 1; i < N; ++i)
-        {
-                max = std::max(max, std::abs(v[i]));
-        }
-        max = (max != 0) ? max : 1;
-        return 1 / max;
-}
-
 template <std::size_t N_SOURCE, std::size_t M, typename T>
 void make_aux_and_maps(
         const std::array<Vector<N_SOURCE, T>, M>& a_input,
@@ -273,7 +259,8 @@ void make_aux_and_maps(
 {
         for (std::size_t m = 0; m < M; ++m)
         {
-                const T max_reciprocal = find_max_reciprocal(a_input[m]);
+                const T max_abs = a_input[m].norm_infinity();
+                const T max_reciprocal = (max_abs != 0) ? (1 / max_abs) : 1;
 
                 (*b)[m] *= max_reciprocal;
                 (*a)[m][0] = 1;
@@ -337,21 +324,12 @@ bool variable_x0_is_zero(
 template <std::size_t N, typename T>
 std::optional<std::size_t> find_positive_index(const Vector<N, T>& c)
 {
-        const T max_abs_c = [&]
-        {
-                T res = std::abs(c[0]);
-                for (std::size_t i = 1; i < N; ++i)
-                {
-                        res = std::max(res, std::abs(c[i]));
-                }
-                return res;
-        }();
-
-        const T eps_c = max_abs_c * (2 * Limits<T>::epsilon());
+        const T max_abs = c.norm_infinity();
+        const T eps = max_abs * (2 * Limits<T>::epsilon());
 
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (c[i] > eps_c)
+                if (c[i] > eps)
                 {
                         return i;
                 }
