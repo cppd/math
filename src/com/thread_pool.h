@@ -187,7 +187,7 @@ class ThreadPool final
 
 public:
         explicit ThreadPool(const unsigned thread_count)
-                : thread_count_(thread_count)
+                : thread_count_(thread_count > 1 ? thread_count : 0)
         {
                 for (unsigned i = 0; i < thread_count_; ++i)
                 {
@@ -201,12 +201,20 @@ public:
 
         [[nodiscard]] unsigned thread_count() const
         {
-                return thread_count_;
+                return thread_count_ > 0 ? thread_count_ : 1;
         }
 
         void run(std::function<void(unsigned, unsigned)>&& function)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
+
+                if (thread_count_ == 0)
+                {
+                        constexpr unsigned THREAD_ID = 0;
+                        constexpr unsigned THREAD_COUNT = 1;
+                        function(THREAD_ID, THREAD_COUNT);
+                        return;
+                }
 
                 function_ = std::move(function);
 
