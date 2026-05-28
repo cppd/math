@@ -17,16 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "error.h"
-#include "exception.h"
-
 #include <atomic>
 #include <barrier>
-#include <exception>
 #include <functional>
 #include <string>
 #include <thread>
-#include <utility>
 #include <vector>
 
 namespace ns
@@ -74,173 +69,23 @@ class ThreadPool final
 
         std::function<void(unsigned, unsigned)> function_;
 
-        void process(const unsigned thread_num) noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                try
-                                {
-                                        function_(thread_num, thread_count_);
-                                }
-                                catch (const TerminateQuietlyException&)
-                                {
-                                }
-                                catch (const std::exception& e)
-                                {
-                                        thread_errors_[thread_num].set(e.what());
-                                }
-                                catch (...)
-                                {
-                                        thread_errors_[thread_num].set("Unknown error in a thread of thread pool");
-                                }
-                        }
-                        catch (const std::exception& e)
-                        {
-                                error_fatal(
-                                        std::string("Exception in thread pool while working with exception: ")
-                                        + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Exception in thread pool while working with exception");
-                }
-        }
+        void process(unsigned thread_num) noexcept;
 
-        void thread(const unsigned thread_num) noexcept
-        {
-                try
-                {
-                        while (true)
-                        {
-                                barrier_.arrive_and_wait();
+        void thread(unsigned thread_num) noexcept;
 
-                                if (exit_)
-                                {
-                                        return;
-                                }
+        void start_and_wait() noexcept;
 
-                                process(thread_num);
+        void clear_errors();
 
-                                barrier_.arrive_and_wait();
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Exception in thread pool while proccessing thread");
-                }
-        }
-
-        void start_and_wait() noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                barrier_.arrive_and_wait();
-                                barrier_.arrive_and_wait();
-                        }
-                        catch (const std::exception& e)
-                        {
-                                error_fatal(std::string("Error start and wait threads: ") + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Error start and wait threads");
-                }
-        }
-
-        void clear_errors()
-        {
-                for (ThreadError& thread_error : thread_errors_)
-                {
-                        thread_error.clear();
-                }
-        }
-
-        void find_errors() const
-        {
-                bool there_is_error = false;
-                std::string error_message;
-
-                for (const ThreadError& thread_error : thread_errors_)
-                {
-                        if (thread_error.has_error())
-                        {
-                                there_is_error = true;
-                                if (!error_message.empty())
-                                {
-                                        error_message += '\n';
-                                }
-                                error_message += thread_error.error_message();
-                        }
-                }
-
-                if (there_is_error)
-                {
-                        error(error_message);
-                }
-        }
+        void find_errors() const;
 
 public:
-        explicit ThreadPool(const unsigned thread_count)
-                : thread_count_(thread_count > 1 ? thread_count : 0)
-        {
-                for (unsigned i = 0; i < thread_count_; ++i)
-                {
-                        threads_[i] = std::thread(
-                                [this, i]
-                                {
-                                        thread(i);
-                                });
-                }
-        }
+        explicit ThreadPool(unsigned thread_count);
 
-        [[nodiscard]] unsigned thread_count() const
-        {
-                return thread_count_ > 0 ? thread_count_ : 1;
-        }
+        [[nodiscard]] unsigned thread_count() const;
 
-        void run(std::function<void(unsigned, unsigned)>&& function)
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
+        void run(std::function<void(unsigned, unsigned)>&& function);
 
-                if (thread_count_ == 0)
-                {
-                        constexpr unsigned THREAD_ID = 0;
-                        constexpr unsigned THREAD_COUNT = 1;
-                        function(THREAD_ID, THREAD_COUNT);
-                        return;
-                }
-
-                function_ = std::move(function);
-
-                clear_errors();
-                start_and_wait();
-                find_errors();
-        }
-
-        ~ThreadPool()
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                try
-                {
-                        exit_ = true;
-                        barrier_.arrive_and_wait();
-
-                        for (std::thread& t : threads_)
-                        {
-                                t.join();
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Error in thread pool destructor");
-                }
-        }
+        ~ThreadPool();
 };
 }
