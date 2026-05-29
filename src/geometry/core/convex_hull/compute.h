@@ -295,6 +295,23 @@ std::size_t calculate_facet_count(const std::vector<T>& facets)
 }
 
 template <std::size_t N, typename S, typename C>
+void connect_facets(const int exclude_point, std::vector<FacetList<Facet<N, S, C>>>* const new_facets)
+{
+        const std::size_t facet_count = calculate_facet_count(*new_facets);
+        const std::size_t ridge_count = (N - 1) * facet_count / 2;
+
+        FacetConnector<N, Facet<N, S, C>> facet_connector(ridge_count);
+
+        for (FacetList<Facet<N, S, C>>& facet_list : *new_facets)
+        {
+                for (Facet<N, S, C>& facet : facet_list)
+                {
+                        facet_connector.connect(&facet, exclude_point);
+                }
+        }
+}
+
+template <std::size_t N, typename S, typename C>
 void add_point_to_convex_hull(
         const std::vector<numerical::Vector<N, S>>& points,
         const int point,
@@ -322,25 +339,13 @@ void add_point_to_convex_hull(
 
         std::vector<FacetList<Facet<N, S, C>>> new_facets(thread_pool->thread_count());
 
-        if (thread_pool->thread_count() > 1)
-        {
-                thread_pool->run(
-                        [&](const unsigned thread_id, const unsigned thread_count)
-                        {
-                                create_horizon_facets(
-                                        thread_id, thread_count, points, point, point_conflicts, unique_points_work,
-                                        &new_facets, barrier);
-                        });
-        }
-        else
-        {
-                constexpr unsigned THREAD_ID = 0;
-                constexpr unsigned THREAD_COUNT = 1;
-
-                create_horizon_facets(
-                        THREAD_ID, THREAD_COUNT, points, point, point_conflicts, unique_points_work, &new_facets,
-                        barrier);
-        }
+        thread_pool->run(
+                [&](const unsigned thread_id, const unsigned thread_count)
+                {
+                        create_horizon_facets(
+                                thread_id, thread_count, points, point, point_conflicts, unique_points_work,
+                                &new_facets, barrier);
+                });
 
         // Erase visible facets
         for (const Facet<N, S, C>* const facet : (*point_conflicts)[point])
@@ -350,20 +355,8 @@ void add_point_to_convex_hull(
 
         (*point_conflicts)[point].clear();
 
-        {
-                // Connect facets, excluding horizon facets
-                const std::size_t facet_count = calculate_facet_count(new_facets);
-                const std::size_t ridge_count = (N - 1) * facet_count / 2;
-
-                FacetConnector<N, Facet<N, S, C>> facet_connector(ridge_count);
-                for (FacetList<Facet<N, S, C>>& facet_list : new_facets)
-                {
-                        for (Facet<N, S, C>& facet : facet_list)
-                        {
-                                facet_connector.connect(&facet, point);
-                        }
-                }
-        }
+        // Connect facets, excluding horizon facets
+        connect_facets(point, &new_facets);
 
         for (std::size_t i = 0; i < new_facets.size(); ++i)
         {
