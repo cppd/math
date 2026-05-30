@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 #include <barrier>
+#include <cstddef>
 #include <functional>
 #include <string>
 #include <thread>
@@ -60,12 +61,10 @@ class ThreadPool final
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const unsigned thread_count_;
-
-        std::barrier<> barrier_{thread_count_ + 1};
         std::atomic_bool exit_{false};
-
-        std::vector<std::thread> threads_{thread_count_};
-        std::vector<ThreadError> thread_errors_{thread_count_};
+        std::vector<std::thread> threads_;
+        std::vector<ThreadError> thread_errors_{threads_.size()};
+        std::barrier<> barrier_{static_cast<std::ptrdiff_t>(threads_.size() + 1)};
 
         std::function<void(unsigned, unsigned)> function_;
 

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 #include <barrier>
+#include <cstddef>
 #include <exception>
 #include <functional>
 #include <string>
@@ -141,9 +142,10 @@ void ThreadPool::find_errors() const
 }
 
 ThreadPool::ThreadPool(const unsigned thread_count)
-        : thread_count_(thread_count > 1 ? thread_count : 0)
+        : thread_count_(thread_count),
+          threads_(thread_count > 1 ? thread_count : 0)
 {
-        for (unsigned i = 0; i < thread_count_; ++i)
+        for (std::size_t i = 0; i < threads_.size(); ++i)
         {
                 threads_[i] = std::thread(
                         [this, i]
@@ -155,17 +157,18 @@ ThreadPool::ThreadPool(const unsigned thread_count)
 
 unsigned ThreadPool::thread_count() const
 {
-        return thread_count_ > 0 ? thread_count_ : 1;
+        return thread_count_;
 }
 
 void ThreadPool::run(std::function<void(unsigned, unsigned)>&& function)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        if (thread_count_ == 0)
+        if (threads_.empty())
         {
                 constexpr unsigned THREAD_ID = 0;
                 constexpr unsigned THREAD_COUNT = 1;
+
                 function(THREAD_ID, THREAD_COUNT);
                 return;
         }
