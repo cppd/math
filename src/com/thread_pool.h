@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <barrier>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -29,41 +30,12 @@ namespace ns
 {
 class ThreadPool final
 {
-        class ThreadError final
-        {
-                bool has_error_;
-                std::string error_message_;
-
-        public:
-                void set(const char* const s)
-                {
-                        has_error_ = true;
-                        error_message_ = s;
-                }
-
-                void clear()
-                {
-                        has_error_ = false;
-                        error_message_.clear();
-                }
-
-                [[nodiscard]] bool has_error() const
-                {
-                        return has_error_;
-                }
-
-                [[nodiscard]] const std::string& error_message() const
-                {
-                        return error_message_;
-                }
-        };
-
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const unsigned thread_count_;
         std::atomic_bool exit_{false};
         std::vector<std::thread> threads_;
-        std::vector<ThreadError> thread_errors_{threads_.size()};
+        std::vector<std::optional<std::string>> thread_errors_{threads_.size()};
         std::barrier<> barrier_{static_cast<std::ptrdiff_t>(threads_.size() + 1)};
 
         std::function<void(unsigned, unsigned)> function_;

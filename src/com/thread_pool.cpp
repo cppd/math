@@ -47,11 +47,11 @@ void ThreadPool::process(const unsigned thread_num) noexcept
                         }
                         catch (const std::exception& e)
                         {
-                                thread_errors_[thread_num].set(e.what());
+                                thread_errors_[thread_num] = e.what();
                         }
                         catch (...)
                         {
-                                thread_errors_[thread_num].set("Unknown error in a thread of thread pool");
+                                thread_errors_[thread_num] = "Unknown error in a thread of thread pool";
                         }
                 }
                 catch (const std::exception& e)
@@ -111,31 +111,31 @@ void ThreadPool::start_and_wait() noexcept
 
 void ThreadPool::clear_errors()
 {
-        for (ThreadError& thread_error : thread_errors_)
+        for (auto& thread_error : thread_errors_)
         {
-                thread_error.clear();
+                thread_error.reset();
         }
 }
 
 void ThreadPool::find_errors() const
 {
-        bool there_is_error = false;
+        bool found = false;
         std::string error_message;
 
-        for (const ThreadError& thread_error : thread_errors_)
+        for (const auto& thread_error : thread_errors_)
         {
-                if (thread_error.has_error())
+                if (thread_error)
                 {
-                        there_is_error = true;
+                        found = true;
                         if (!error_message.empty())
                         {
                                 error_message += '\n';
                         }
-                        error_message += thread_error.error_message();
+                        error_message += *thread_error;
                 }
         }
 
-        if (there_is_error)
+        if (found)
         {
                 error(error_message);
         }
