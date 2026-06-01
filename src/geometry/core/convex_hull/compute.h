@@ -175,6 +175,22 @@ void erase_visible_facets_from_conflict_points(
 }
 
 template <typename Facet>
+void add_new_facet_to_conflict_points(
+        const unsigned thread_id,
+        const unsigned thread_count,
+        const Facet& facet,
+        std::vector<FacetStorage<Facet>>* const point_conflicts)
+{
+        for (const int p : facet.conflict_points())
+        {
+                if ((p % thread_count) == thread_id)
+                {
+                        (*point_conflicts)[p].insert(&facet);
+                }
+        }
+}
+
+template <typename Facet>
 void add_new_facets_to_conflict_points(
         const unsigned thread_id,
         const unsigned thread_count,
@@ -185,13 +201,7 @@ void add_new_facets_to_conflict_points(
         {
                 for (const Facet& facet : facet_list)
                 {
-                        for (const int p : facet.conflict_points())
-                        {
-                                if ((p % thread_count) == thread_id)
-                                {
-                                        (*point_conflicts)[p].insert(&facet);
-                                }
-                        }
+                        add_new_facet_to_conflict_points(thread_id, thread_count, facet, point_conflicts);
                 }
         }
 }
