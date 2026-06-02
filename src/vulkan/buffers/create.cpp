@@ -28,12 +28,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vulkan/vulkan_core.h>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace ns::vulkan::buffers
 {
 namespace
 {
+[[noreturn]] void image_size_error(const std::string& name, const VkExtent3D extent)
+{
+        error(name + " image size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
+              + to_string(extent.depth) + ")");
+}
+
 void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
 {
 #pragma GCC diagnostic push
@@ -43,22 +50,19 @@ void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
         case VK_IMAGE_TYPE_1D:
                 if (extent.width < 1 || extent.height != 1 || extent.depth != 1)
                 {
-                        error("Image 1D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                              + to_string(extent.depth) + ")");
+                        image_size_error("1D", extent);
                 }
                 break;
         case VK_IMAGE_TYPE_2D:
                 if (extent.width < 1 || extent.height < 1 || extent.depth != 1)
                 {
-                        error("Image 2D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                              + to_string(extent.depth) + ")");
+                        image_size_error("2D", extent);
                 }
                 break;
         case VK_IMAGE_TYPE_3D:
                 if (extent.width < 1 || extent.height < 1 || extent.depth < 1)
                 {
-                        error("Image 3D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                              + to_string(extent.depth) + ")");
+                        image_size_error("3D", extent);
                 }
                 break;
         default:
