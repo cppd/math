@@ -35,9 +35,10 @@ namespace ns::vulkan::buffers
 {
 namespace
 {
-[[noreturn]] void image_size_error(const std::string& name, const VkExtent3D extent)
+template <unsigned N>
+[[noreturn]] void image_size_error(const VkExtent3D extent)
 {
-        error(name + " image size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
+        error(to_string(N) + "D image size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
               + to_string(extent.depth) + ")");
 }
 
@@ -50,19 +51,19 @@ void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
         case VK_IMAGE_TYPE_1D:
                 if (extent.width < 1 || extent.height != 1 || extent.depth != 1)
                 {
-                        image_size_error("1D", extent);
+                        image_size_error<1>(extent);
                 }
                 break;
         case VK_IMAGE_TYPE_2D:
                 if (extent.width < 1 || extent.height < 1 || extent.depth != 1)
                 {
-                        image_size_error("2D", extent);
+                        image_size_error<2>(extent);
                 }
                 break;
         case VK_IMAGE_TYPE_3D:
                 if (extent.width < 1 || extent.height < 1 || extent.depth < 1)
                 {
-                        image_size_error("3D", extent);
+                        image_size_error<3>(extent);
                 }
                 break;
         default:
