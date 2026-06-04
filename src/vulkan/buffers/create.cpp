@@ -49,23 +49,23 @@ void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
         switch (type)
         {
         case VK_IMAGE_TYPE_1D:
-                if (extent.width < 1 || extent.height != 1 || extent.depth != 1)
+                if (extent.width >= 1 && extent.height == 1 && extent.depth == 1)
                 {
-                        image_size_error<1>(extent);
+                        return;
                 }
-                break;
+                image_size_error<1>(extent);
         case VK_IMAGE_TYPE_2D:
-                if (extent.width < 1 || extent.height < 1 || extent.depth != 1)
+                if (extent.width >= 1 && extent.height >= 1 && extent.depth == 1)
                 {
-                        image_size_error<2>(extent);
+                        return;
                 }
-                break;
+                image_size_error<2>(extent);
         case VK_IMAGE_TYPE_3D:
-                if (extent.width < 1 || extent.height < 1 || extent.depth < 1)
+                if (extent.width >= 1 && extent.height >= 1 && extent.depth >= 1)
                 {
-                        image_size_error<3>(extent);
+                        return;
                 }
-                break;
+                image_size_error<3>(extent);
         default:
                 error("Unknown image type " + strings::image_type_to_string(type));
         }
