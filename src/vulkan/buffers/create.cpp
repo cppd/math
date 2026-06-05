@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan_core.h>
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -42,6 +43,34 @@ template <unsigned N>
               + to_string(extent.depth) + ")");
 }
 
+template <unsigned N>
+void check_image_dimension_size(const VkExtent3D extent)
+{
+        static_assert(N >= 1 && N <= 3);
+
+        const std::array d = std::to_array({
+                extent.width,
+                extent.height,
+                extent.depth,
+        });
+
+        for (unsigned i = 0; i < N; ++i)
+        {
+                if (!(d[i] >= 1))
+                {
+                        image_size_error<N>(extent);
+                }
+        }
+
+        for (unsigned i = N; i < d.size(); ++i)
+        {
+                if (!(d[i] == 1))
+                {
+                        image_size_error<N>(extent);
+                }
+        }
+}
+
 void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
 {
 #pragma GCC diagnostic push
@@ -49,23 +78,14 @@ void check_image_dimension_size(const VkImageType type, const VkExtent3D extent)
         switch (type)
         {
         case VK_IMAGE_TYPE_1D:
-                if (extent.width >= 1 && extent.height == 1 && extent.depth == 1)
-                {
-                        return;
-                }
-                image_size_error<1>(extent);
+                check_image_dimension_size<1>(extent);
+                break;
         case VK_IMAGE_TYPE_2D:
-                if (extent.width >= 1 && extent.height >= 1 && extent.depth == 1)
-                {
-                        return;
-                }
-                image_size_error<2>(extent);
+                check_image_dimension_size<2>(extent);
+                break;
         case VK_IMAGE_TYPE_3D:
-                if (extent.width >= 1 && extent.height >= 1 && extent.depth >= 1)
-                {
-                        return;
-                }
-                image_size_error<3>(extent);
+                check_image_dimension_size<3>(extent);
+                break;
         default:
                 error("Unknown image type " + strings::image_type_to_string(type));
         }
