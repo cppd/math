@@ -35,6 +35,45 @@ Kalman and Bayesian Filters in Python.
 
 namespace ns::filter::core
 {
+namespace ukf_transform_implementation
+{
+template <std::size_t N, typename T, std::size_t COUNT>
+[[nodiscard]] numerical::Vector<N, T> mean(
+        const std::array<numerical::Vector<N, T>, COUNT>& points,
+        const numerical::Vector<COUNT, T>& wm)
+{
+        static_assert(COUNT > 0);
+
+        numerical::Vector<N, T> res = points[0] * wm[0];
+        for (std::size_t i = 1; i < COUNT; ++i)
+        {
+                res.multiply_add(points[i], wm[i]);
+        }
+        return res;
+}
+
+template <std::size_t N, typename T, std::size_t COUNT>
+[[nodiscard]] numerical::Matrix<N, N, T> covariance(
+        const std::array<numerical::Vector<N, T>, COUNT>& points,
+        const numerical::Vector<COUNT, T>& wc,
+        const numerical::Vector<N, T>& mean)
+{
+        numerical::Matrix<N, N, T> res(numerical::ZERO_MATRIX);
+        for (std::size_t i = 0; i < COUNT; ++i)
+        {
+                const numerical::Vector<N, T> v = points[i] - mean;
+                for (std::size_t r = 0; r < N; ++r)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                res[r, c] += wc[i] * v[r] * v[c];
+                        }
+                }
+        }
+        return res;
+}
+}
+
 template <std::size_t N, typename T, std::size_t COUNT, typename NoiseCovariance>
 [[nodiscard]] std::tuple<numerical::Vector<N, T>, numerical::Matrix<N, N, T>> unscented_transform(
         const std::array<numerical::Vector<N, T>, COUNT>& points,
@@ -47,29 +86,11 @@ template <std::size_t N, typename T, std::size_t COUNT, typename NoiseCovariance
                 std::is_same_v<NoiseCovariance, numerical::Matrix<N, N, T>>
                 || std::is_same_v<NoiseCovariance, numerical::Vector<N, T>>);
 
-        const numerical::Vector<N, T> mean = [&]
-        {
-                static_assert(COUNT > 0);
-                numerical::Vector<N, T> res = points[0] * wm[0];
-                for (std::size_t i = 1; i < COUNT; ++i)
-                {
-                        res.multiply_add(points[i], wm[i]);
-                }
-                return res;
-        }();
+        namespace impl = ukf_transform_implementation;
 
-        numerical::Matrix<N, N, T> covariance(numerical::ZERO_MATRIX);
-        for (std::size_t i = 0; i < COUNT; ++i)
-        {
-                const numerical::Vector<N, T> v = points[i] - mean;
-                for (std::size_t r = 0; r < N; ++r)
-                {
-                        for (std::size_t c = 0; c < N; ++c)
-                        {
-                                covariance[r, c] += wc[i] * v[r] * v[c];
-                        }
-                }
-        }
+        const numerical::Vector<N, T> mean = impl::mean(points, wm);
+
+        const numerical::Matrix<N, N, T> covariance = impl::covariance(points, wc, mean);
 
         if (fading_memory_alpha == 1)
         {
