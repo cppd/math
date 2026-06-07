@@ -32,6 +32,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::model::mesh::file::obj
 {
+namespace
+{
+[[nodiscard]] bool is_comment(const char c)
+{
+        return c == '#';
+}
+
+[[nodiscard]] const char* skip_space(const char* index, const char* const last)
+{
+        while (index < last && ascii::is_space(*index))
+        {
+                ++index;
+        }
+        return index;
+}
+
+[[nodiscard]] const char* skip_not_space(const char* index, const char* const last)
+{
+        while (index < last && !ascii::is_space(*index) && !is_comment(*index))
+        {
+                ++index;
+        }
+        return index;
+}
+
+[[nodiscard]] const char* skip_not_comment(const char* index, const char* const last)
+{
+        while (index < last && !is_comment(*index))
+        {
+                ++index;
+        }
+        return index;
+}
+}
+
 // split string into two parts
 // 1. not space characters
 // 2. all other characters before a comment or the end of the string
@@ -40,17 +75,7 @@ Split split_string(const std::array<const char*, 2> str)
         const char* const first = str[0];
         const char* const last = str[1];
 
-        const auto is_comment = [](const char c)
-        {
-                return c == '#';
-        };
-
-        const char* i = first;
-
-        while (i < last && ascii::is_space(*i))
-        {
-                ++i;
-        }
+        const char* i = skip_space(first, last);
 
         if (i == last || is_comment(*i))
         {
@@ -61,11 +86,7 @@ Split split_string(const std::array<const char*, 2> str)
                 };
         }
 
-        const char* i2 = i + 1;
-        while (i2 < last && !ascii::is_space(*i2) && !is_comment(*i2))
-        {
-                ++i2;
-        }
+        const char* i2 = skip_not_space(i + 1, last);
 
         const std::string_view split_first{i, i2};
 
@@ -83,11 +104,7 @@ Split split_string(const std::array<const char*, 2> str)
         // skip the first space
         ++i;
 
-        i2 = i;
-        while (i2 < last && !is_comment(*i2))
-        {
-                ++i2;
-        }
+        i2 = skip_not_comment(i, last);
 
         return {
                 .first = split_first,
