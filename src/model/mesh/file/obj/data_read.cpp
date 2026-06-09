@@ -75,34 +75,32 @@ Split split_string(const std::array<const char*, 2> str)
         const char* const first = str[0];
         const char* const last = str[1];
 
-        const char* i = skip_space(first, last);
+        const char* const i1 = skip_space(first, last);
 
-        if (i == last || is_comment(*i))
+        if (i1 == last || is_comment(*i1))
         {
                 return {
-                        .first = {i, i},
-                        .second_b = i,
-                        .second_e = i
+                        .first = {i1, i1},
+                        .second_b = i1,
+                        .second_e = i1,
                 };
         }
 
-        const char* const i2 = skip_not_space(i + 1, last);
+        const char* const i2 = skip_not_space(i1 + 1, last);
 
-        const std::string_view split_first{i, i2};
+        const std::string_view split_first{i1, i2};
 
-        i = i2;
-
-        if (i == last || is_comment(*i))
+        if (i2 == last || is_comment(*i2))
         {
                 return {
                         .first = split_first,
-                        .second_b = i,
-                        .second_e = i,
+                        .second_b = i2,
+                        .second_e = i2,
                 };
         }
 
         // skip the first space
-        const char* const i3 = i + 1;
+        const char* const i3 = i2 + 1;
 
         const char* const i4 = skip_not_comment(i3, last);
 
