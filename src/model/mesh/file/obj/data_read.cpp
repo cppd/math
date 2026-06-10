@@ -99,9 +99,7 @@ Split split_string(const std::array<const char*, 2> str)
                 };
         }
 
-        // skip the first space
-        const char* const i3 = i2 + 1;
-
+        const char* const i3 = i2 + 1; // skip the first space
         const char* const i4 = skip_not_comment(i3, last);
 
         return {
