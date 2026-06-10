@@ -38,6 +38,11 @@ std::vector<std::byte> make_image(
         const std::vector<std::byte>& light,
         const std::vector<std::byte>& dark)
 {
+        const auto color_ptr = [&](const int x, const int y)
+        {
+                return ((x + y) & 1) ? light.data() : dark.data();
+        };
+
         ASSERT(light.size() == dark.size());
 
         const std::size_t pixel_size = light.size();
@@ -54,8 +59,7 @@ std::vector<std::byte> make_image(
                 {
                         for (int x = 0; x < screen_size[0]; ++x)
                         {
-                                const std::byte* const pixel = ((x + y) & 1) ? light.data() : dark.data();
-                                std::memcpy(&image[index], pixel, pixel_size);
+                                std::memcpy(&image[index], color_ptr(x, y), pixel_size);
                                 index += pixel_size;
                         }
                 }
