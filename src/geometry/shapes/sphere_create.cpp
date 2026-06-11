@@ -313,28 +313,38 @@ std::unordered_set<numerical::Vector<N, float>> create_initial_vertex_set(
 }
 
 template <std::size_t N>
-void add_vertices(
-        const std::vector<core::ConvexHullSimplex<N>>& facets,
+void add_facet_vertices(
+        const core::ConvexHullSimplex<N>& facet,
         std::vector<numerical::Vector<N, float>>* const vertices,
         std::unordered_set<numerical::Vector<N, float>>* const vertex_set)
 {
         static_assert(N >= 4);
 
-        for (const core::ConvexHullSimplex<N>& facet : facets)
+        for (std::size_t i = 0; i < N; ++i)
         {
-                for (std::size_t i = 0; i < N; ++i)
+                for (std::size_t j = i + 1; j < N; ++j)
                 {
-                        for (std::size_t j = i + 1; j < N; ++j)
+                        const numerical::Vector<N, float>& v1 = (*vertices)[facet.vertices()[i]];
+                        const numerical::Vector<N, float>& v2 = (*vertices)[facet.vertices()[j]];
+                        const numerical::Vector<N, float> v = (v1 + v2).normalized();
+
+                        if (vertex_set->insert(v).second)
                         {
-                                const numerical::Vector<N, float>& v1 = (*vertices)[facet.vertices()[i]];
-                                const numerical::Vector<N, float>& v2 = (*vertices)[facet.vertices()[j]];
-                                const numerical::Vector<N, float> v = (v1 + v2).normalized();
-                                if (vertex_set->insert(v).second)
-                                {
-                                        vertices->push_back(v);
-                                }
+                                vertices->push_back(v);
                         }
                 }
+        }
+}
+
+template <std::size_t N>
+void add_vertices(
+        const std::vector<core::ConvexHullSimplex<N>>& facets,
+        std::vector<numerical::Vector<N, float>>* const vertices,
+        std::unordered_set<numerical::Vector<N, float>>* const vertex_set)
+{
+        for (const core::ConvexHullSimplex<N>& facet : facets)
+        {
+                add_facet_vertices(facet, vertices, vertex_set);
         }
 }
 
