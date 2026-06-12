@@ -1,0 +1,51 @@
+/*
+Copyright (C) 2017-2026 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include <src/numerical/matrix.h>
+
+#include <cstddef>
+
+namespace ns::filter::filters::acceleration
+{
+template <typename T, std::size_t M>
+void copy_position_velocity_p(
+        const numerical::Matrix<4, 4, T>& position_velocity_p,
+        numerical::Matrix<M, M, T>& position_velocity_acceleration_p)
+{
+        static_assert(M >= 6);
+        static constexpr std::size_t N = 2;
+
+        const numerical::Matrix<4, 4, T>& p = position_velocity_p;
+        numerical::Matrix<M, M, T>& res = position_velocity_acceleration_p;
+
+        for (std::size_t r = 0; r < N; ++r)
+        {
+                for (std::size_t i = 0; i < 2; ++i)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                for (std::size_t j = 0; j < 2; ++j)
+                                {
+                                        res[3 * r + i, 3 * c + j] = p[2 * r + i, 2 * c + j];
+                                }
+                        }
+                }
+        }
+}
+}
