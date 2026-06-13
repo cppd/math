@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 
-namespace ns::filter::filters::acceleration
+namespace ns::filter::filters::com
 {
 template <typename T, std::size_t M>
 void copy_position_velocity_p(

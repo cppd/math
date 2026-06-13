@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "init.h"
-#include "matrix_copy.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/variant.h>
 #include <src/filter/core/kinematic_models.h>
 #include <src/filter/filters/com/angle.h>
+#include <src/filter/filters/com/matrix_copy.h>
 #include <src/filter/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -57,7 +57,7 @@ numerical::Matrix<8, 8, T> p(const numerical::Matrix<4, 4, T>& position_velocity
 
         numerical::Matrix<8, 8, T> res(numerical::ZERO_MATRIX);
 
-        copy_position_velocity_p(position_velocity_p, res);
+        com::copy_position_velocity_p(position_velocity_p, res);
 
         res[2, 2] = init.acceleration_variance;
         res[5, 5] = init.acceleration_variance;
