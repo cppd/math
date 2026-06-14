@@ -24,11 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/variant.h>
 #include <src/filter/core/kinematic_models.h>
 #include <src/filter/filters/com/angle.h>
+#include <src/filter/filters/com/matrix_copy.h>
 #include <src/filter/filters/noise_model.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
-
-#include <cstddef>
 
 namespace ns::filter::filters::direction::filter_2_1_model
 {
@@ -56,24 +55,9 @@ numerical::Matrix<8, 8, T> p(const numerical::Matrix<4, 4, T>& position_velocity
 {
         ASSERT(is_finite(position_velocity_p));
 
-        const numerical::Matrix<4, 4, T>& p = position_velocity_p;
-        static constexpr std::size_t N = 2;
-
         numerical::Matrix<8, 8, T> res(numerical::ZERO_MATRIX);
 
-        for (std::size_t r = 0; r < N; ++r)
-        {
-                for (std::size_t i = 0; i < 2; ++i)
-                {
-                        for (std::size_t c = 0; c < N; ++c)
-                        {
-                                for (std::size_t j = 0; j < 2; ++j)
-                                {
-                                        res[3 * r + i, 3 * c + j] = p[2 * r + i, 2 * c + j];
-                                }
-                        }
-                }
-        }
+        com::copy_position_velocity_p(position_velocity_p, res);
 
         res[2, 2] = init.acceleration_variance;
         res[5, 5] = init.acceleration_variance;
