@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/filter/filters/com/matrix_copy.h>
 #include <src/filter/filters/com/variance.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vector.h>
@@ -80,22 +81,6 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] numerical::Matrix<2 * (N / 3), 2 * (N / 3), T> position_velocity_p(const numerical::Matrix<N, N, T>& p)
 {
-        static constexpr std::size_t S = N / 3;
-
-        numerical::Matrix<2 * S, 2 * S, T> res;
-        for (std::size_t r = 0; r < S; ++r)
-        {
-                for (std::size_t i = 0; i < 2; ++i)
-                {
-                        for (std::size_t c = 0; c < S; ++c)
-                        {
-                                for (std::size_t j = 0; j < 2; ++j)
-                                {
-                                        res[2 * r + i, 2 * c + j] = p[3 * r + i, 3 * c + j];
-                                }
-                        }
-                }
-        }
-        return res;
+        return com::copy_position_velocity_from_p(p);
 }
 }

@@ -48,4 +48,29 @@ void copy_position_velocity_p(
                 }
         }
 }
+
+template <std::size_t N, typename T>
+[[nodiscard]] numerical::Matrix<2 * (N / 3), 2 * (N / 3), T> copy_position_velocity_from_p(
+        const numerical::Matrix<N, N, T>& p)
+{
+        static_assert(N >= 3);
+        static_assert(N % 3 == 0);
+        static constexpr std::size_t S = N / 3;
+
+        numerical::Matrix<2 * S, 2 * S, T> res;
+        for (std::size_t r = 0; r < S; ++r)
+        {
+                for (std::size_t i = 0; i < 2; ++i)
+                {
+                        for (std::size_t c = 0; c < S; ++c)
+                        {
+                                for (std::size_t j = 0; j < 2; ++j)
+                                {
+                                        res[2 * r + i, 2 * c + j] = p[3 * r + i, 3 * c + j];
+                                }
+                        }
+                }
+        }
+        return res;
+}
 }
