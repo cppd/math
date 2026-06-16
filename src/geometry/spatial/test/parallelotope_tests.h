@@ -79,6 +79,40 @@ bool point_is_in_feasible_region(const numerical::Vector<N, T>& point, const std
         return true;
 }
 
+template <typename Parallelotope, std::size_t N, typename T>
+void test_external_point(
+        const Parallelotope& p,
+        const Constraints<N, T, 2 * N, 0>& constraints,
+        const numerical::Vector<N, T>& point)
+{
+        if (p.inside(point))
+        {
+                error("Inside. Point must be outside\n" + to_string(point));
+        }
+
+        if (point_is_in_feasible_region(point, constraints.c))
+        {
+                error("Constraints. Point must be outside\n" + to_string(point));
+        }
+}
+
+template <typename Parallelotope, std::size_t N, typename T>
+void test_internal_point(
+        const Parallelotope& p,
+        const Constraints<N, T, 2 * N, 0>& constraints,
+        const numerical::Vector<N, T>& point)
+{
+        if (!p.inside(point))
+        {
+                error("Inside. Point must be inside\n" + to_string(point));
+        }
+
+        if (!point_is_in_feasible_region(point, constraints.c))
+        {
+                error("Constraints. Point must be inside\n" + to_string(point));
+        }
+}
+
 template <typename RandomEngine, typename Parallelotope>
 void test_constraints(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
@@ -90,27 +124,13 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
         for (const numerical::Vector<N, T>& point :
              random::parallelotope_external_points(p.org(), p.vectors(), point_count, engine))
         {
-                if (p.inside(point))
-                {
-                        error("Inside. Point must be outside\n" + to_string(point));
-                }
-                if (point_is_in_feasible_region(point, constraints.c))
-                {
-                        error("Constraints. Point must be outside\n" + to_string(point));
-                }
+                test_external_point(p, constraints, point);
         }
 
-        for (const numerical::Vector<N, T>& origin :
+        for (const numerical::Vector<N, T>& point :
              random::parallelotope_internal_points(p.org(), p.vectors(), point_count, engine))
         {
-                if (!p.inside(origin))
-                {
-                        error("Inside. Point must be inside\n" + to_string(origin));
-                }
-                if (!point_is_in_feasible_region(origin, constraints.c))
-                {
-                        error("Constraints. Point must be inside\n" + to_string(origin));
-                }
+                test_internal_point(p, constraints, point);
         }
 }
 
