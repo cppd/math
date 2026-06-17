@@ -134,6 +134,40 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
         }
 }
 
+template <typename Parallelotope, std::size_t N, typename T>
+void test_ray(const Parallelotope& p, const T length, const numerical::Ray<N, T>& ray)
+{
+        {
+                const numerical::Ray<N, T> r = ray;
+                const auto t = p.intersect(r);
+                if (!t)
+                {
+                        error("Ray must intersect\n" + to_string(r));
+                }
+                if (!(*t < length))
+                {
+                        error("Intersection out of parallelotope.\ndistance = " + to_string(*t) + ", "
+                              + "max distance = " + to_string(length) + "\n" + to_string(r));
+                }
+        }
+        {
+                const numerical::Ray<N, T> r = ray.moved(-10 * length);
+                const auto t = p.intersect(r);
+                if (!t)
+                {
+                        error("Ray must intersect\n" + to_string(r));
+                }
+        }
+        {
+                const numerical::Ray<N, T> r = ray.moved(10 * length);
+                const auto t = p.intersect(r);
+                if (t)
+                {
+                        error("Ray must not intersect\n" + to_string(r));
+                }
+        }
+}
+
 template <typename RandomEngine, typename Parallelotope>
 void test_overlap(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
@@ -147,35 +181,7 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
         {
                 const numerical::Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
 
-                {
-                        const numerical::Ray<N, T> r = ray;
-                        const auto t = p.intersect(r);
-                        if (!t)
-                        {
-                                error("Ray must intersect\n" + to_string(r));
-                        }
-                        if (!(*t < length))
-                        {
-                                error("Intersection out of parallelotope.\ndistance = " + to_string(*t) + ", "
-                                      + "max distance = " + to_string(length) + "\n" + to_string(r));
-                        }
-                }
-                {
-                        const numerical::Ray<N, T> r = ray.moved(-10 * length);
-                        const auto t = p.intersect(r);
-                        if (!t)
-                        {
-                                error("Ray must intersect\n" + to_string(r));
-                        }
-                }
-                {
-                        const numerical::Ray<N, T> r = ray.moved(10 * length);
-                        const auto t = p.intersect(r);
-                        if (t)
-                        {
-                                error("Ray must not intersect\n" + to_string(r));
-                        }
-                }
+                test_ray(p, length, ray);
         }
 }
 
