@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/matrix.h>
+#include <src/numerical/vector.h>
 
 #include <cstddef>
 
@@ -29,6 +30,7 @@ void copy_position_velocity_p(
         numerical::Matrix<M, M, T>& position_velocity_acceleration_p)
 {
         static_assert(M >= 6);
+
         static constexpr std::size_t N = 2;
 
         const numerical::Matrix<4, 4, T>& p = position_velocity_p;
@@ -38,11 +40,14 @@ void copy_position_velocity_p(
         {
                 for (std::size_t i = 0; i < 2; ++i)
                 {
+                        const numerical::Vector<4, T>& row_p = p.row(2 * r + i);
+                        numerical::Vector<M, T>& row_res = res.row(3 * r + i);
+
                         for (std::size_t c = 0; c < N; ++c)
                         {
                                 for (std::size_t j = 0; j < 2; ++j)
                                 {
-                                        res[3 * r + i, 3 * c + j] = p[2 * r + i, 2 * c + j];
+                                        row_res[3 * c + j] = row_p[2 * c + j];
                                 }
                         }
                 }
@@ -55,6 +60,7 @@ template <std::size_t N, typename T>
 {
         static_assert(N >= 3);
         static_assert(N % 3 == 0);
+
         static constexpr std::size_t S = N / 3;
 
         numerical::Matrix<2 * S, 2 * S, T> res;
@@ -62,11 +68,14 @@ template <std::size_t N, typename T>
         {
                 for (std::size_t i = 0; i < 2; ++i)
                 {
+                        const numerical::Vector<N, T>& row_p = p.row(3 * r + i);
+                        numerical::Vector<2 * S, T>& row_res = res.row(2 * r + i);
+
                         for (std::size_t c = 0; c < S; ++c)
                         {
                                 for (std::size_t j = 0; j < 2; ++j)
                                 {
-                                        res[2 * r + i, 2 * c + j] = p[3 * r + i, 3 * c + j];
+                                        row_res[2 * c + j] = row_p[3 * c + j];
                                 }
                         }
                 }
