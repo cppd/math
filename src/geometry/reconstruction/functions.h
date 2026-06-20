@@ -33,6 +33,37 @@ namespace functions_implementation
 // cos(3 * PI / 8)
 template <typename T>
 inline constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS = 0.38268343236508977172845998403039886676134456248563L;
+
+template <std::size_t N, typename T>
+[[nodiscard]] std::optional<T> maximum_length(
+        const numerical::Vector<N, T>& vec_a,
+        const numerical::Vector<N, T>& vec_ab,
+        const T& t1,
+        const T& t2)
+{
+        const bool t1_ok = (t1 >= 0 && t1 <= Limits<T>::max());
+        const bool t2_ok = (t2 >= 0 && t2 <= Limits<T>::max());
+
+        if (!t1_ok && !t2_ok)
+        {
+                return std::nullopt;
+        }
+
+        if (t1_ok && !t2_ok)
+        {
+                return (vec_a + t1 * vec_ab).norm();
+        }
+
+        if (!t1_ok && t2_ok)
+        {
+                return (vec_a + t2 * vec_ab).norm();
+        }
+
+        const T d_1 = (vec_a + t1 * vec_ab).norm_squared();
+        const T d_2 = (vec_a + t2 * vec_ab).norm_squared();
+
+        return (d_1 > d_2) ? std::sqrt(d_1) : std::sqrt(d_2);
+}
 }
 
 // Check if a Voronoi edge e = (a, b) intersects the cocone of p,
@@ -97,8 +128,10 @@ std::optional<T> intersect_cocone_max_distance(
         const numerical::Vector<N, T>& from_apex_to_point_a,
         const numerical::Vector<N, T>& vector_from_point_a)
 {
+        namespace impl = functions_implementation;
+
         static_assert(std::is_floating_point_v<T>);
-        static constexpr auto COS_SQUARED = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
+        static constexpr auto COS_SQUARED = square(impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
         const numerical::Vector<N, T>& vec_a = from_apex_to_point_a;
         const numerical::Vector<N, T>& vec_ab = vector_from_point_a;
@@ -122,25 +155,6 @@ std::optional<T> intersect_cocone_max_distance(
                 return std::nullopt;
         }
 
-        const bool t1_ok = t1 >= 0 && t1 <= Limits<T>::max();
-        const bool t2_ok = t2 >= 0 && t2 <= Limits<T>::max();
-
-        if (!t1_ok && !t2_ok)
-        {
-                return std::nullopt;
-        }
-        if (t1_ok && !t2_ok)
-        {
-                return (vec_a + t1 * vec_ab).norm();
-        }
-        if (!t1_ok && t2_ok)
-        {
-                return (vec_a + t2 * vec_ab).norm();
-        }
-
-        const T d_1 = (vec_a + t1 * vec_ab).norm_squared();
-        const T d_2 = (vec_a + t2 * vec_ab).norm_squared();
-
-        return (d_1 > d_2) ? std::sqrt(d_1) : std::sqrt(d_2);
+        return impl::maximum_length(vec_a, vec_ab, t1, t2);
 }
 }
