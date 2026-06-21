@@ -126,6 +126,16 @@ template <std::size_t N, typename T>
         return std::nullopt;
 }
 
+template <std::size_t N, typename T>
+void copy_plane_vector(numerical::Vector<N, T>& dst, const numerical::Vector<N - 1, T>& src)
+{
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                dst[i] = src[i];
+        }
+        dst[N - 1] = 0;
+}
+
 // Section 4.1: orthonormal basis
 template <std::size_t N, typename T>
 [[nodiscard]] std::array<numerical::Vector<N, T>, N - 1> compute_orthonormal_basis(const numerical::Vector<N, T>& vh)
@@ -139,11 +149,7 @@ template <std::size_t N, typename T>
 
                 for (std::size_t i = 0; i < N - 2; ++i)
                 {
-                        for (std::size_t j = 0; j < N - 1; ++j)
-                        {
-                                res[i][j] = plane_basis[i][j];
-                        }
-                        res[i][N - 1] = 0;
+                        copy_plane_vector(res[i], plane_basis[i]);
                 }
         }
         else
