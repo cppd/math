@@ -44,19 +44,18 @@ template <std::size_t N, typename T>
         const bool t1_ok = (t1 >= 0 && t1 <= Limits<T>::max());
         const bool t2_ok = (t2 >= 0 && t2 <= Limits<T>::max());
 
-        if (!t1_ok && !t2_ok)
+        if (!t1_ok)
         {
-                return std::nullopt;
+                if (!t2_ok)
+                {
+                        return std::nullopt;
+                }
+                return (vec_a + t2 * vec_ab).norm();
         }
 
-        if (t1_ok && !t2_ok)
+        if (!t2_ok)
         {
                 return (vec_a + t1 * vec_ab).norm();
-        }
-
-        if (!t1_ok && t2_ok)
-        {
-                return (vec_a + t2 * vec_ab).norm();
         }
 
         const T d_1 = (vec_a + t1 * vec_ab).norm_squared();
