@@ -102,6 +102,20 @@ std::optional<int> delaunay_for_facet(
         return std::nullopt;
 }
 
+void add_facets(
+        const std::vector<int>& delaunay_object_facets,
+        const int exclude_facet,
+        std::stack<int>* const next_facets)
+{
+        for (const int facet : delaunay_object_facets)
+        {
+                if (facet != exclude_facet)
+                {
+                        next_facets->push(facet);
+                }
+        }
+}
+
 template <std::size_t N>
 std::vector<bool> traverse_delaunay_facets(
         const std::vector<core::DelaunayObject<N>>& delaunay_objects,
@@ -134,13 +148,7 @@ std::vector<bool> traverse_delaunay_facets(
                         continue;
                 }
 
-                for (const int f : delaunay_object_facets[*delaunay])
-                {
-                        if (f != facet)
-                        {
-                                next_facets.push(f);
-                        }
-                }
+                add_facets(delaunay_object_facets[*delaunay], facet, &next_facets);
         }
 
         return visited_cocone_facets;
