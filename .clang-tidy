@@ -92,7 +92,7 @@ CheckOptions:
 - key:   readability-function-cognitive-complexity.IgnoreMacros
   value: '1'
 - key:   readability-function-cognitive-complexity.Threshold
-  value: '10'
+  value: '9'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
   value: '1'
 - key:   readability-implicit-bool-conversion.AllowPointerConditions
