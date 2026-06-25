@@ -150,28 +150,23 @@ UpdateInfoPosition<N, T, ORDER> Position<N, T, ORDER, F>::update_info(
                 speed_p = filter_->speed_p();
         }
 
-        return [&]<std::size_t U>(const numerical::Vector<U, T>& update_x, const numerical::Matrix<U, U, T>& update_p)
-        {
-                const UpdateInfo<N, T> info{
-                        .position = filter_->position(),
-                        .position_p = filter_->position_p().diagonal(),
-                        .speed = speed,
-                        .speed_p = speed_p,
-                };
-
-                const UpdateDetails<U, T> details{
-                        .predict_f = predict_f,
-                        .predict_x = predict_x,
-                        .predict_p = predict_p,
-                        .update_x = update_x,
-                        .update_p = update_p,
-                };
-
-                return UpdateInfoPosition<N, T, ORDER>{
-                        .info = info,
-                        .details = details,
-                };
-        }(filter_->x(), filter_->p());
+        return UpdateInfoPosition<N, T, ORDER>{
+                .info =
+                        {
+                               .position = filter_->position(),
+                               .position_p = filter_->position_p().diagonal(),
+                               .speed = speed,
+                               .speed_p = speed_p,
+                               },
+                .details =
+                        {
+                               .predict_f = predict_f,
+                               .predict_x = predict_x,
+                               .predict_p = predict_p,
+                               .update_x = filter_->x(),
+                               .update_p = filter_->p(),
+                               },
+        };
 }
 
 template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
