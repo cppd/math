@@ -64,6 +64,8 @@ class Position final : public FilterPosition<N, T, ORDER>
                 const auto& predict_x,
                 const auto& predict_p) const;
 
+        [[nodiscard]] std::optional<UpdateInfoPosition<N, T, ORDER>> init(const Measurements<N, T>& m);
+
 public:
         Position(
                 T reset_dt,
@@ -170,6 +172,24 @@ UpdateInfoPosition<N, T, ORDER> Position<N, T, ORDER, F>::update_info(
 }
 
 template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
+std::optional<UpdateInfoPosition<N, T, ORDER>> Position<N, T, ORDER, F>::init(const Measurements<N, T>& m)
+{
+        if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
+        {
+                filter_->reset(m.position->value, *m.position->variance);
+        }
+        else
+        {
+                filter_->reset(m.position->value, *m.position->variance, init_);
+        }
+
+        last_predict_time_ = m.time;
+        last_update_time_ = m.time;
+
+        return update_info(std::nullopt, std::nullopt, std::nullopt);
+}
+
+template <std::size_t N, typename T, std::size_t ORDER, template <std::size_t, typename> typename F>
 std::optional<UpdateInfoPosition<N, T, ORDER>> Position<N, T, ORDER, F>::update(const Measurements<N, T>& m)
 {
         check_time(m.time);
@@ -181,19 +201,7 @@ std::optional<UpdateInfoPosition<N, T, ORDER>> Position<N, T, ORDER, F>::update(
 
         if (!last_predict_time_ || !last_update_time_ || !(m.time - *last_update_time_ < reset_dt_))
         {
-                if constexpr (std::is_same_v<F<N, T>, Filter0<N, T>>)
-                {
-                        filter_->reset(m.position->value, *m.position->variance);
-                }
-                else
-                {
-                        filter_->reset(m.position->value, *m.position->variance, init_);
-                }
-
-                last_predict_time_ = m.time;
-                last_update_time_ = m.time;
-
-                return update_info(std::nullopt, std::nullopt, std::nullopt);
+                return init(m);
         }
 
         const auto predict_f = filter_->predict(m.time - *last_predict_time_, noise_model_, fading_memory_alpha_);
