@@ -60,6 +60,32 @@ constexpr int FACET_COUNT_MAXIMUM = 100'000'000;
 constexpr int VOLUME_IMAGE_SIZE_MINIMUM = 10;
 constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;
+
+std::filesystem::path path_for_action_load_mesh()
+{
+        const std::vector<gui::dialogs::FileFilter> filters = []
+        {
+                std::vector<gui::dialogs::FileFilter> res;
+                for (const model::mesh::FileFormat& v : model::mesh::load_formats(settings::supported_dimensions()))
+                {
+                        gui::dialogs::FileFilter& f = res.emplace_back();
+                        f.name = v.format_name;
+                        f.file_extensions = v.file_name_extensions;
+                }
+                return res;
+        }();
+
+        const std::string caption = "Open";
+        const bool read_only = true;
+        const std::optional<std::string> file_name_string = gui::dialogs::open_file(caption, filters, read_only);
+
+        if (!file_name_string)
+        {
+                return {};
+        }
+
+        return path_from_utf8(*file_name_string);
+}
 }
 
 std::function<void(progress::RatioList*)> action_load_mesh(
@@ -69,30 +95,11 @@ std::function<void(progress::RatioList*)> action_load_mesh(
         if (path.empty())
         {
                 ASSERT(use_object_selection_dialog);
-
-                const std::vector<gui::dialogs::FileFilter> filters = []
-                {
-                        std::vector<gui::dialogs::FileFilter> res;
-                        for (const model::mesh::FileFormat& v :
-                             model::mesh::load_formats(settings::supported_dimensions()))
-                        {
-                                gui::dialogs::FileFilter& f = res.emplace_back();
-                                f.name = v.format_name;
-                                f.file_extensions = v.file_name_extensions;
-                        }
-                        return res;
-                }();
-
-                const std::string caption = "Open";
-                const bool read_only = true;
-                const std::optional<std::string> file_name_string =
-                        gui::dialogs::open_file(caption, filters, read_only);
-                if (!file_name_string)
-                {
-                        return nullptr;
-                }
-
-                path = path_from_utf8(*file_name_string);
+                path = path_for_action_load_mesh();
+        }
+        if (path.empty())
+        {
+                return nullptr;
         }
 
         const auto selection_parameters = [&] -> std::optional<gui::dialogs::ObjectSelectionParameters>
