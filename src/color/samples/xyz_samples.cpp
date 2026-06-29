@@ -44,22 +44,39 @@ enum class Function
 template <XYZ TYPE, Function F>
 ComputeType integrate(const ComputeType& from, const ComputeType& to)
 {
-        static_assert(TYPE == XYZ_31 || TYPE == XYZ_64);
         static_assert(F == Function::X || F == Function::Y || F == Function::Z);
 
-        switch (F)
+        if constexpr (TYPE == XYZ_31)
         {
-        case Function::X:
-                return TYPE == XYZ_31 ? cie_x_31_integral(from, to) : cie_x_64_integral(from, to);
-        case Function::Y:
-                return TYPE == XYZ_31 ? cie_y_31_integral(from, to) : cie_y_64_integral(from, to);
-        case Function::Z:
-                return TYPE == XYZ_31 ? cie_z_31_integral(from, to) : cie_z_64_integral(from, to);
+                switch (F)
+                {
+                case Function::X:
+                        return cie_x_31_integral(from, to);
+                case Function::Y:
+                        return cie_y_31_integral(from, to);
+                case Function::Z:
+                        return cie_z_31_integral(from, to);
+                }
+        }
+        else if constexpr (TYPE == XYZ_64)
+        {
+                switch (F)
+                {
+                case Function::X:
+                        return cie_x_64_integral(from, to);
+                case Function::Y:
+                        return cie_y_64_integral(from, to);
+                case Function::Z:
+                        return cie_z_64_integral(from, to);
+                }
+        }
+        else
+        {
+                static_assert(false);
         }
 }
 
-template <XYZ TYPE, Function F>
-std::vector<double> create_samples(const ComputeType& from, const ComputeType& to, const int count)
+void check_sample_parameters(const ComputeType& from, const ComputeType& to, const int count)
 {
         constexpr ComputeType MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
         constexpr ComputeType MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
@@ -81,8 +98,15 @@ std::vector<double> create_samples(const ComputeType& from, const ComputeType& t
                 error("Sample count " + to_string(count) + " must be in the range [" + to_string(MIN_SAMPLE_COUNT)
                       + ", " + to_string(MAX_SAMPLE_COUNT) + "]");
         }
+}
 
-        static const ComputeType y_integral = integrate<TYPE, Function::Y>(MIN, MAX);
+template <XYZ TYPE, Function F>
+std::vector<double> create_samples(const ComputeType& from, const ComputeType& to, const int count)
+{
+        check_sample_parameters(from, to, count);
+
+        static const ComputeType y_integral =
+                integrate<TYPE, Function::Y>(XYZ_SAMPLES_MIN_WAVELENGTH, XYZ_SAMPLES_MAX_WAVELENGTH);
 
         std::vector<double> samples;
         samples.reserve(count);
