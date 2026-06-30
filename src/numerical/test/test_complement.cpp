@@ -104,7 +104,29 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
 }
 
 template <std::size_t N, typename T>
-void check_complement_orthogonality(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
+void check_vector_length(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
+{
+        if (!unit_vector.is_unit())
+        {
+                error("Not unit input vector " + to_string(unit_vector));
+        }
+
+        for (const Vector<N, T>& v : complement)
+        {
+                if (!is_finite(v))
+                {
+                        error("Not finite complement vector " + to_string(v));
+                }
+
+                if (!v.is_unit())
+                {
+                        error("Not unit complement vector " + to_string(v));
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void check_orthogonality(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
 {
         for (std::size_t i = 0; i < complement.size(); ++i)
         {
@@ -128,25 +150,9 @@ void check_complement_orthogonality(const Vector<N, T>& unit_vector, const std::
 template <std::size_t N, typename T>
 void test_complement(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
 {
-        if (!unit_vector.is_unit())
-        {
-                error("Not unit input vector " + to_string(unit_vector));
-        }
+        check_vector_length(unit_vector, complement);
 
-        for (const Vector<N, T>& v : complement)
-        {
-                if (!is_finite(v))
-                {
-                        error("Not finite complement vector " + to_string(v));
-                }
-
-                if (!v.is_unit())
-                {
-                        error("Not unit complement vector " + to_string(v));
-                }
-        }
-
-        check_complement_orthogonality(unit_vector, complement);
+        check_orthogonality(unit_vector, complement);
 
         const Vector<N, T> reconstructed = orthogonal_complement(complement);
 
