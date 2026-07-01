@@ -28,31 +28,29 @@ namespace
 {
 [[noreturn]] void terminate_write()
 {
-        if (std::current_exception())
+        if (!std::current_exception())
+        {
+                ns::error_fatal("terminate called, no exception");
+        }
+
+        try
+        {
+                std::rethrow_exception(std::current_exception());
+        }
+        catch (const std::exception& e)
         {
                 try
                 {
-                        std::rethrow_exception(std::current_exception());
-                }
-                catch (const std::exception& e)
-                {
-                        try
-                        {
-                                ns::error_fatal(std::string("terminate called, exception: ") + e.what());
-                        }
-                        catch (...)
-                        {
-                                ns::error_fatal("terminate called, exception in exception handler");
-                        }
+                        ns::error_fatal(std::string("terminate called, exception: ") + e.what());
                 }
                 catch (...)
                 {
-                        ns::error_fatal("terminate called, unknown exception");
+                        ns::error_fatal("terminate called, exception in exception handler");
                 }
         }
-        else
+        catch (...)
         {
-                ns::error_fatal("terminate called, no exception");
+                ns::error_fatal("terminate called, unknown exception");
         }
 }
 
