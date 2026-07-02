@@ -38,6 +38,40 @@ namespace ns::painter
 {
 namespace
 {
+template <std::size_t N, typename T, typename Color>
+void check_parameters(
+        Notifier<N - 1>* const notifier,
+        const int samples_per_pixel,
+        const std::optional<int> max_pass_count,
+        const Scene<N, T, Color>* const scene,
+        const int thread_count)
+{
+        if (!notifier)
+        {
+                error("Painter notifier is not specified");
+        }
+
+        if (!scene)
+        {
+                error("Painter scene is not specified");
+        }
+
+        if (samples_per_pixel < 1)
+        {
+                error("Painter samples per pixel (" + to_string(samples_per_pixel) + ") must be greater than 0");
+        }
+
+        if (thread_count < 1)
+        {
+                error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
+        }
+
+        if (max_pass_count && *max_pass_count < 1)
+        {
+                error("Painter maximum pass count (" + to_string(*max_pass_count) + ") must be greater than 0");
+        }
+}
+
 class Impl final : public Painter
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -69,31 +103,7 @@ public:
              const int thread_count,
              const bool flat_shading)
         {
-                if (!notifier)
-                {
-                        error("Painter notifier is not specified");
-                }
-
-                if (!scene)
-                {
-                        error("Painter scene is not specified");
-                }
-
-                if (samples_per_pixel < 1)
-                {
-                        error("Painter samples per pixel (" + to_string(samples_per_pixel)
-                              + ") must be greater than 0");
-                }
-
-                if (thread_count < 1)
-                {
-                        error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
-                }
-
-                if (max_pass_count && *max_pass_count < 1)
-                {
-                        error("Painter maximum pass count (" + to_string(*max_pass_count) + ") must be greater than 0");
-                }
+                check_parameters(notifier, samples_per_pixel, max_pass_count, scene, thread_count);
 
                 statistics_ = std::make_unique<painting::Statistics>(
                         multiply_all<long long>(scene->projector().screen_size()));
