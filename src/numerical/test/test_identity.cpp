@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <src/numerical/identity.h>
+#include <src/numerical/vector.h>
 
 #include <cstddef>
 
@@ -24,22 +25,32 @@ namespace ns::numerical
 namespace
 {
 template <std::size_t N, typename T>
+constexpr bool test_row(const Vector<N, T>& v, const std::size_t row)
+{
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (i == row && !(v[i] == 1))
+                {
+                        return false;
+                }
+                if (i != row && !(v[i] == 0))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+template <std::size_t N, typename T>
 constexpr bool test()
 {
         constexpr auto& A = IDENTITY_ARRAY<N, T>;
 
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (!(A[i][i] == 1))
+                if (!test_row(A[i], i))
                 {
                         return false;
-                }
-                for (std::size_t j = 0; j < N; ++j)
-                {
-                        if (i != j && !(A[i][j] == 0))
-                        {
-                                return false;
-                        }
                 }
         }
         return true;
