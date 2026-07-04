@@ -203,39 +203,45 @@ void write_normals(std::ostream& file, const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
+void write_facet(std::ostream& file, const Mesh<N>& mesh, const typename Mesh<N>::Facet& facet)
+{
+        if (!facet.has_normal)
+        {
+                write_face(file, facet.vertices);
+        }
+        else if constexpr (N != 3)
+        {
+                write_face(file, facet.vertices, facet.normals);
+        }
+        else
+        {
+                std::array<int, 3> v = facet.vertices;
+                std::array<int, 3> n = facet.normals;
+
+                const numerical::Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
+                const numerical::Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
+                const numerical::Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
+
+                const numerical::Vector<3, double> normal = cross(v1 - v0, v2 - v0);
+
+                if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0
+                    && dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0
+                    && dot(to_vector<double>(mesh.normals[n[2]]), normal) < 0)
+                {
+                        std::swap(v[1], v[2]);
+                        std::swap(n[1], n[2]);
+                }
+
+                write_face(file, v, n);
+        }
+}
+
+template <std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
-        for (const typename Mesh<N>::Facet& f : mesh.facets)
+        for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
-                if (!f.has_normal)
-                {
-                        write_face(file, f.vertices);
-                }
-                else if constexpr (N != 3)
-                {
-                        write_face(file, f.vertices, f.normals);
-                }
-                else
-                {
-                        std::array<int, 3> v = f.vertices;
-                        std::array<int, 3> n = f.normals;
-
-                        const numerical::Vector<3, double> v0 = to_vector<double>(mesh.vertices[v[0]]);
-                        const numerical::Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
-                        const numerical::Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
-
-                        const numerical::Vector<3, double> normal = cross(v1 - v0, v2 - v0);
-
-                        if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0
-                            && dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0
-                            && dot(to_vector<double>(mesh.normals[n[2]]), normal) < 0)
-                        {
-                                std::swap(v[1], v[2]);
-                                std::swap(n[1], n[2]);
-                        }
-
-                        write_face(file, v, n);
-                }
+                write_facet(file, mesh, facet);
         }
 }
 
