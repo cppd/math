@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/filter/settings/instantiation.h>
 
 #include <string>
+#include <string_view>
 
 namespace ns::filter::filters::acceleration
 {
@@ -28,49 +29,28 @@ std::string make_consistency_string(const Nees<T>& nees, const Nis<T>& nis)
 {
         std::string s;
 
-        const auto add = [&](const auto& text)
+        const auto add = [&](const std::string_view s1, const auto& s2)
         {
+                if (s2.empty())
+                {
+                        return;
+                }
                 if (!s.empty())
                 {
                         s += '\n';
                 }
-                s += text;
+                s += s1;
+                s += "; ";
+                s += s2.check_string();
         };
 
-        if (!nees.position.empty())
-        {
-                add("NEES position; " + nees.position.check_string());
-        }
-
-        if (!nees.speed.empty())
-        {
-                add("NEES speed; " + nees.speed.check_string());
-        }
-
-        if (!nees.angle.empty())
-        {
-                add("NEES angle; " + nees.angle.check_string());
-        }
-
-        if (!nees.angle_r.empty())
-        {
-                add("NEES angle r; " + nees.angle_r.check_string());
-        }
-
-        if (!nis.position.empty())
-        {
-                add("NIS position; " + nis.position.check_string());
-        }
-
-        if (!nis.position_speed_direction_acceleration.empty())
-        {
-                add("NIS position SDA; " + nis.position_speed_direction_acceleration.check_string());
-        }
-
-        if (!nis.nis.empty())
-        {
-                add("NIS; " + nis.nis.check_string());
-        }
+        add("NEES position", nees.position);
+        add("NEES speed", nees.speed);
+        add("NEES angle", nees.angle);
+        add("NEES angle r", nees.angle_r);
+        add("NIS position", nis.position);
+        add("NIS position SDA", nis.position_speed_direction_acceleration);
+        add("NIS", nis.nis);
 
         return s;
 }
