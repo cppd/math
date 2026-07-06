@@ -73,37 +73,32 @@ CommandLineOptions command_line_options()
 
         const QStringList positional_arguments = parser.positionalArguments();
 
-        //
-
-        CommandLineOptions options;
-
-        //
-
         if (positional_arguments.size() > 1)
         {
                 error("Too many file name arguments");
         }
-        else if (positional_arguments.size() == 1)
+
+        if (positional_arguments.size() == 1)
         {
                 if (positional_arguments.value(0).size() < 1)
                 {
                         error("Empty the file name argument");
                 }
 
-                options.file_name = path_from_utf8(positional_arguments.value(0).toStdString());
-                options.no_object_selection_dialog = parser.isSet(no_object_selection_option);
+                return {
+                        .file_name = path_from_utf8(positional_arguments.value(0).toStdString()),
+                        .no_object_selection_dialog = parser.isSet(no_object_selection_option),
+                };
         }
-        else
+
+        if (parser.isSet(no_object_selection_option))
         {
-                if (parser.isSet(no_object_selection_option))
-                {
-                        error("Object selection dialog option without the file name argument");
-                }
-
-                options.file_name = "";
-                options.no_object_selection_dialog = false;
+                error("Object selection dialog option without the file name argument");
         }
 
-        return options;
+        return {
+                .file_name = "",
+                .no_object_selection_dialog = false,
+        };
 }
 }
