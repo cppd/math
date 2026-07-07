@@ -148,7 +148,7 @@ void test_erf_inv(const T arg, const T erf, const T erf_inverse, const T precisi
         {
                 if (!(erf_inverse == -Limits<T>::infinity()))
                 {
-                        error("erf inverse is not inf for erf 1");
+                        error("erf inverse is not -inf for erf -1");
                 }
                 return;
         }
