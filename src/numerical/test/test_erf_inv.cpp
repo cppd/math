@@ -97,6 +97,24 @@ constexpr std::array INVERSE_ERF = std::to_array<std::array<T, 2>>({
         {0.98L,  1.6449763571331870501772034352495116246653430362888e0L}
 });
 
+void check(const bool condition, const char* const error_message)
+{
+        if (!condition)
+        {
+                error(error_message);
+        }
+}
+
+template <typename T>
+T precision_for_relative_error(const T erf, const T precision)
+{
+        if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
+        {
+                return precision * 10;
+        }
+        return precision;
+}
+
 template <typename T>
 void compare_erf_inv(const T arg, const T erf, const T erf_inverse, const T precision)
 {
@@ -116,19 +134,12 @@ void compare_erf_inv(const T arg, const T erf, const T erf_inverse, const T prec
                 return;
         }
 
-        const T p = [&]
-        {
-                if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
-                {
-                        return precision * 10;
-                }
-                return precision;
-        }();
+        const T precision_rel = precision_for_relative_error(erf, precision);
 
         const T rel = abs / std::max(std::abs(arg), std::abs(erf_inverse));
-        if (!(rel < p))
+        if (!(rel < precision_rel))
         {
-                error("Relative erf_inv error " + to_string(rel) + " is greater than " + to_string(p));
+                error("Relative erf_inv error " + to_string(rel) + " is greater than " + to_string(precision_rel));
         }
 }
 
@@ -137,28 +148,19 @@ void test_erf_inv(const T arg, const T erf, const T erf_inverse, const T precisi
 {
         if (erf == 1)
         {
-                if (!(erf_inverse == Limits<T>::infinity()))
-                {
-                        error("erf inverse is not inf for erf 1");
-                }
+                check(erf_inverse == Limits<T>::infinity(), "erf inverse is not inf for erf 1");
                 return;
         }
 
         if (erf == -1)
         {
-                if (!(erf_inverse == -Limits<T>::infinity()))
-                {
-                        error("erf inverse is not -inf for erf -1");
-                }
+                check(erf_inverse == -Limits<T>::infinity(), "erf inverse is not -inf for erf -1");
                 return;
         }
 
         if (erf == 0)
         {
-                if (!(erf_inverse == 0))
-                {
-                        error("erf inverse is not 0 for erf 0");
-                }
+                check(erf_inverse == 0, "erf inverse is not 0 for erf 0");
                 return;
         }
 
@@ -209,30 +211,15 @@ void test_erf_inv_array(const std::type_identity_t<T> precision)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        if (!std::isnan(erf_inv<T>(-2)))
-        {
-                error("erf_inv(-2) is not NAN");
-        }
+        check(std::isnan(erf_inv<T>(-2)), "erf_inv(-2) is not NAN");
 
-        if (!std::isnan(erf_inv<T>(2)))
-        {
-                error("erf_inv(2) is not NAN");
-        }
+        check(std::isnan(erf_inv<T>(2)), "erf_inv(2) is not NAN");
 
-        if (!(erf_inv<T>(-1) == -Limits<T>::infinity()))
-        {
-                error("erf_inv(-1) is not -infinity");
-        }
+        check(erf_inv<T>(-1) == -Limits<T>::infinity(), "erf_inv(-1) is not -infinity");
 
-        if (!(erf_inv<T>(0) == 0))
-        {
-                error("erf_inv(0) is not 0");
-        }
+        check(erf_inv<T>(0) == 0, "erf_inv(0) is not 0");
 
-        if (!(erf_inv<T>(1) == Limits<T>::infinity()))
-        {
-                error("erf_inv(1) is not infinity");
-        }
+        check(erf_inv<T>(1) == Limits<T>::infinity(), "erf_inv(1) is not infinity");
 
         for (const std::array<T, 2>& v : INVERSE_ERF<T>)
         {
