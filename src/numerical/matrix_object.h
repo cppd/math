@@ -283,12 +283,8 @@ public:
         }
 
         [[nodiscard]] bool is_orthogonal() const
+                requires (ROWS == COLUMNS)
         {
-                if (!(ROWS == COLUMNS))
-                {
-                        return false;
-                }
-
                 constexpr T MAX_COS{1e-5};
 
                 for (std::size_t i = 0; i < ROWS; ++i)
