@@ -144,6 +144,18 @@ void compare_vectors(const std::array<std::array<numerical::Vector<N, T>, N>, CO
         }
 }
 
+template <std::size_t N, typename T>
+void compare_lengths(const std::array<T, N>& lengths)
+{
+        for (std::size_t i = 1; i < lengths.size(); ++i)
+        {
+                if (!equal(lengths[i], lengths[0]))
+                {
+                        error("Error diagonal max length.\n" + to_string(lengths[i]) + " and " + to_string(lengths[0]));
+                }
+        }
+}
+
 template <typename RandomEngine, typename... Parallelotope>
 void compare_parallelotopes(RandomEngine& engine, const int point_count, const Parallelotope&... p)
 {
@@ -155,15 +167,9 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
         static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
         static_assert(((std::is_same_v<T, typename Parallelotope::DataType>) && ...));
 
-        std::array<T, sizeof...(Parallelotope)> lengths{p.length()...};
+        const std::array<T, sizeof...(Parallelotope)> lengths{p.length()...};
 
-        for (std::size_t i = 1; i < sizeof...(Parallelotope); ++i)
-        {
-                if (!equal(lengths[i], lengths[0]))
-                {
-                        error("Error diagonal max length.\n" + to_string(lengths[i]) + " and " + to_string(lengths[0]));
-                }
-        }
+        compare_lengths(lengths);
 
         const std::array<numerical::Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
         compare_vectors(orgs, "orgs");
