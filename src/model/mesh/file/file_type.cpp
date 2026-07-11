@@ -153,18 +153,28 @@ std::tuple<int, MeshFileType> dimension_and_file_type(const Path& file_name)
                 error("No file extension found");
         }
 
+        if (extension == OBJ)
+        {
+                return {3, MeshFileType::OBJ};
+        }
+
         if (extension.starts_with(OBJ))
         {
                 return {
-                        (extension == OBJ) ? 3 : read_dimension_number(extension.substr(OBJ.size())),
+                        read_dimension_number(extension.substr(OBJ.size())),
                         MeshFileType::OBJ,
                 };
+        }
+
+        if (extension == STL)
+        {
+                return {3, MeshFileType::STL};
         }
 
         if (extension.starts_with(STL))
         {
                 return {
-                        (extension == STL) ? 3 : read_dimension_number(extension.substr(STL.size())),
+                        read_dimension_number(extension.substr(STL.size())),
                         MeshFileType::STL,
                 };
         }
