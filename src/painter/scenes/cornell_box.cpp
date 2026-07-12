@@ -98,17 +98,26 @@ std::vector<std::unique_ptr<const Shape<N, T, Color>>> create_shapes(
                 std::array<numerical::Vector<N, T>, N> walls_vectors = camera;
                 walls_vectors[N - 1] *= DEPTH;
 
-                for (std::size_t i = 0; i < N - 1; ++i)
+                shapes.push_back(
+                        std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                                METALNESS, ROUGHNESS, Color(color::rgb::RED), ALPHA, org, del_elem(walls_vectors, 0)));
+                shapes.push_back(
+                        std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
+                                METALNESS, ROUGHNESS, Color(color::rgb::GREEN), ALPHA, org + walls_vectors[0],
+                                del_elem(walls_vectors, 0)));
+
+                for (std::size_t i = 1; i < N - 1; ++i)
                 {
                         shapes.push_back(
                                 std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
-                                        METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED),
-                                        ALPHA, org, del_elem(walls_vectors, i)));
+                                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org,
+                                        del_elem(walls_vectors, i)));
                         shapes.push_back(
                                 std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
-                                        METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::GREEN),
-                                        ALPHA, org + walls_vectors[i], del_elem(walls_vectors, i)));
+                                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[i],
+                                        del_elem(walls_vectors, i)));
                 }
+
                 shapes.push_back(
                         std::make_unique<shapes::HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[N - 1],
