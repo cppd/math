@@ -49,69 +49,49 @@ namespace
 template <std::size_t N>
 void compare_obj(const mesh::Mesh<N>& mesh, const std::unique_ptr<const mesh::Mesh<N>>& file_mesh)
 {
-        if (!file_mesh)
+        const auto check = [](const bool condition, const char* const error_message)
         {
-                error("Error writing and reading OBJ files (no mesh)");
-        }
+                if (!condition)
+                {
+                        error(std::string("Error writing and reading OBJ files (") + error_message + ")");
+                }
+        };
 
-        if (!(mesh.vertices.size() == file_mesh->vertices.size()))
-        {
-                error("Error writing and reading OBJ files (vertices)");
-        }
+        check(file_mesh != nullptr, "no mesh");
 
-        if (!(mesh.normals.size() == file_mesh->normals.size()))
-        {
-                error("Error writing and reading OBJ files (normals)");
-        }
+        check(mesh.vertices.size() == file_mesh->vertices.size(), "vertices");
 
-        if (!(mesh.texcoords.size() == file_mesh->texcoords.size()))
-        {
-                error("Error writing and reading OBJ files (texture)");
-        }
+        check(mesh.normals.size() == file_mesh->normals.size(), "normals");
 
-        if (!(mesh.facets.size() == file_mesh->facets.size()))
-        {
-                error("Error writing and reading OBJ files (facets)");
-        }
+        check(mesh.texcoords.size() == file_mesh->texcoords.size(), "texture");
 
-        if (!(mesh.points.size() == file_mesh->points.size()))
-        {
-                error("Error writing and reading OBJ files (points)");
-        }
+        check(mesh.facets.size() == file_mesh->facets.size(), "facets");
 
-        if (!(mesh.lines.size() == file_mesh->lines.size()))
-        {
-                error("Error writing and reading OBJ files (lines)");
-        }
+        check(mesh.points.size() == file_mesh->points.size(), "points");
 
-        if (!(mesh.materials.size() == file_mesh->materials.size()))
-        {
-                error("Error writing and reading OBJ files (materials)");
-        }
+        check(mesh.lines.size() == file_mesh->lines.size(), "lines");
 
-        if (!(mesh.images.size() == file_mesh->images.size()))
-        {
-                error("Error writing and reading OBJ files (images)");
-        }
+        check(mesh.materials.size() == file_mesh->materials.size(), "materials");
+
+        check(mesh.images.size() == file_mesh->images.size(), "images");
 }
 
 template <std::size_t N>
 void compare_stl(const mesh::Mesh<N>& mesh, const std::unique_ptr<const mesh::Mesh<N>>& file_mesh)
 {
-        if (!file_mesh)
+        const auto check = [](const bool condition, const char* const error_message)
         {
-                error("Error writing and reading STL files (no mesh)");
-        }
+                if (!condition)
+                {
+                        error(std::string("Error writing and reading STL files (") + error_message + ")");
+                }
+        };
 
-        if (!(mesh.vertices.size() == file_mesh->vertices.size()))
-        {
-                error("Error writing and reading STL files (vertices)");
-        }
+        check(file_mesh != nullptr, "no mesh");
 
-        if (!(mesh.facets.size() == file_mesh->facets.size()))
-        {
-                error("Error writing and reading STL files (facets)");
-        }
+        check(mesh.vertices.size() == file_mesh->vertices.size(), "vertices");
+
+        check(mesh.facets.size() == file_mesh->facets.size(), "facets");
 }
 
 template <std::size_t N>
