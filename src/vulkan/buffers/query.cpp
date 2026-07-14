@@ -31,6 +31,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan::buffers
 {
+namespace
+{
+VkFormatFeatureFlags format_tiling_features(
+        const VkPhysicalDevice device,
+        const VkFormat format,
+        const VkImageTiling tiling)
+{
+        VkFormatProperties properties;
+        vkGetPhysicalDeviceFormatProperties(device, format, &properties);
+
+        return (tiling == VK_IMAGE_TILING_OPTIMAL) ? properties.optimalTilingFeatures : properties.linearTilingFeatures;
+}
+}
+
 VkFormat find_supported_format(
         const VkPhysicalDevice device,
         const std::vector<VkFormat>& candidates,
@@ -44,15 +58,7 @@ VkFormat find_supported_format(
 
         for (const VkFormat format : candidates)
         {
-                VkFormatProperties properties;
-                vkGetPhysicalDeviceFormatProperties(device, format, &properties);
-
-                const auto* const found_features =
-                        (tiling == VK_IMAGE_TILING_OPTIMAL)
-                                ? &properties.optimalTilingFeatures
-                                : &properties.linearTilingFeatures;
-
-                if ((*found_features & features) == features)
+                if ((format_tiling_features(device, format, tiling) & features) == features)
                 {
                         return format;
                 }
@@ -85,15 +91,7 @@ VkFormat find_supported_image_format(
 
         for (const VkFormat format : candidates)
         {
-                VkFormatProperties properties;
-                vkGetPhysicalDeviceFormatProperties(device, format, &properties);
-
-                const auto* const found_features =
-                        (tiling == VK_IMAGE_TILING_OPTIMAL)
-                                ? &properties.optimalTilingFeatures
-                                : &properties.linearTilingFeatures;
-
-                if ((*found_features & features) != features)
+                if ((format_tiling_features(device, format, tiling) & features) != features)
                 {
                         continue;
                 }
