@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits>
 #include <random>
 #include <tuple>
-#include <type_traits>
 
 namespace ns::numerical
 {
@@ -109,7 +108,6 @@ TEMPLATE(false)
 TEMPLATE(true)
 
 template <typename T>
-        requires (std::is_floating_point_v<T>)
 bool equal(const T a, const T b, const T precision)
 {
         if (a == b)
@@ -125,11 +123,10 @@ bool equal(const T a, const T b, const T precision)
         return (rel < precision);
 }
 
-template <typename T, typename P>
-        requires (!std::is_floating_point_v<T>)
-bool equal(const T& a, const T& b, const P precision)
+template <std::size_t N, typename T>
+bool equal(const Vector<N, T>& a, const Vector<N, T>& b, const T precision)
 {
-        for (std::size_t i = 0; i < std::tuple_size_v<T>; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 if (!equal(a[i], b[i], precision))
                 {
@@ -142,6 +139,13 @@ bool equal(const T& a, const T& b, const P precision)
 template <typename T, bool JPL, typename P>
 bool equal(const QuaternionHJ<T, JPL>& a, const QuaternionHJ<T, JPL>& b, const P precision)
 {
+        if (a.w() == 0 && b.w() == 0)
+        {
+                if (!(equal(a.vec(), b.vec(), precision) || equal(a.vec(), -b.vec(), precision)))
+                {
+                        return false;
+                }
+        }
         if (!equal(a.w(), b.w(), precision))
         {
                 return false;
@@ -169,18 +173,6 @@ bool equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T precision
 template <typename T, typename P>
 void test_equal(const T& a, const T& b, const P precision)
 {
-        if constexpr (requires { a.w(); })
-        {
-                if (a.w() == 0 && b.w() == 0)
-                {
-                        if (!(equal(a.vec(), b.vec(), precision) || equal(a.vec(), -b.vec(), precision)))
-                        {
-                                error(to_string(a) + " is not equal to " + to_string(b));
-                        }
-                        return;
-                }
-        }
-
         if (!equal(a, b, precision))
         {
                 error(to_string(a) + " is not equal to " + to_string(b));
