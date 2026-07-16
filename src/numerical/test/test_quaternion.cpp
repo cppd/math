@@ -141,20 +141,9 @@ bool equal(const QuaternionHJ<T, JPL>& a, const QuaternionHJ<T, JPL>& b, const P
 {
         if (a.w() == 0 && b.w() == 0)
         {
-                if (!(equal(a.vec(), b.vec(), precision) || equal(a.vec(), -b.vec(), precision)))
-                {
-                        return false;
-                }
+                return equal(a.vec(), b.vec(), precision) || equal(a.vec(), -b.vec(), precision);
         }
-        if (!equal(a.w(), b.w(), precision))
-        {
-                return false;
-        }
-        if (!equal(a.vec(), b.vec(), precision))
-        {
-                return false;
-        }
-        return true;
+        return equal(a.w(), b.w(), precision) && equal(a.vec(), b.vec(), precision);
 }
 
 template <std::size_t R, std::size_t C, typename T>
