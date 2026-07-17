@@ -155,13 +155,18 @@ void check_index_consistency(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>
 
         ASSERT(group_count <= static_cast<int>(groups.size()));
 
+        const auto is_index = [](const T index)
+        {
+                return (index != 0) ? 1 : 0;
+        };
+
         int texture = 0;
         int normal = 0;
 
         for (int i = 0; i < group_count; ++i)
         {
-                texture += (groups[i][1] != 0) ? 1 : 0;
-                normal += (groups[i][2] != 0) ? 1 : 0;
+                texture += is_index(groups[i][1]);
+                normal += is_index(groups[i][2]);
         }
 
         if (!(texture == 0 || texture == group_count))
