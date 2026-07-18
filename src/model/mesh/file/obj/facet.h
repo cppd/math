@@ -179,6 +179,38 @@ void check_index_consistency(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>
                 error("Inconsistent facet normal indices");
         }
 }
+
+// Positive OBJ indices indicate absolute vertex numbers.
+// Negative OBJ indices indicate relative vertex numbers.
+// Convert to absolute numbers starting at 0.
+inline int correct_vertex_index(const int index, const int size)
+{
+        if (index > 0)
+        {
+                return index - 1;
+        }
+        if (index < 0)
+        {
+                return size + index;
+        }
+        error("Correct facet indices, vertex index is zero");
+}
+
+// Positive OBJ indices indicate absolute vertex numbers.
+// Negative OBJ indices indicate relative vertex numbers.
+// Convert to absolute numbers starting at 0.
+inline int correct_index(const int index, const int size)
+{
+        if (index > 0)
+        {
+                return index - 1;
+        }
+        if (index < 0)
+        {
+                return size + index;
+        }
+        return -1;
+}
 }
 
 template <std::size_t N, std::size_t MAX_FACETS>
@@ -225,9 +257,6 @@ void read_facets(
         }
 }
 
-// Positive OBJ indices indicate absolute vertex numbers.
-// Negative OBJ indices indicate relative vertex numbers.
-// Convert to absolute numbers starting at 0.
 template <std::size_t N>
 void correct_facet_indices(
         typename Mesh<N>::Facet* const facet,
@@ -235,37 +264,13 @@ void correct_facet_indices(
         const int texcoords_size,
         const int normals_size)
 {
-        const auto correct_vertex_index = [&](const int index)
-        {
-                if (index > 0)
-                {
-                        return index - 1;
-                }
-                if (index < 0)
-                {
-                        return vertices_size + index;
-                }
-                error("Correct facet indices, vertex index is zero");
-        };
-
-        const auto correct_index = [](const int index, const int size)
-        {
-                if (index > 0)
-                {
-                        return index - 1;
-                }
-                if (index < 0)
-                {
-                        return size + index;
-                }
-                return -1;
-        };
+        namespace impl = facet_implementation;
 
         for (std::size_t i = 0; i < N; ++i)
         {
-                facet->vertices[i] = correct_vertex_index(facet->vertices[i]);
-                facet->texcoords[i] = correct_index(facet->texcoords[i], texcoords_size);
-                facet->normals[i] = correct_index(facet->normals[i], normals_size);
+                facet->vertices[i] = impl::correct_vertex_index(facet->vertices[i], vertices_size);
+                facet->texcoords[i] = impl::correct_index(facet->texcoords[i], texcoords_size);
+                facet->normals[i] = impl::correct_index(facet->normals[i], normals_size);
         }
 }
 }
