@@ -257,6 +257,50 @@ public:
 };
 
 template <std::size_t N, typename T>
+void set_measurement(
+        const Config<T>& config,
+        const std::size_t i,
+        Simulator<N, T>& simulator,
+        filters::Measurements<N, T>& m)
+{
+        m.true_data = {
+                .position = simulator.position(),
+                .speed = simulator.speed(),
+                .angle = simulator.angle(),
+                .angle_r = simulator.angle_r()};
+
+        m.time = i * config.measurement_dt;
+
+        if (i % config.measurement_dt_count_acceleration == 0)
+        {
+                m.acceleration = {
+                        .value = simulator.measurement_acceleration(),
+                        .variance = numerical::Vector<N, T>(config.measurement_variance_acceleration)};
+        }
+
+        if (i % config.measurement_dt_count_direction == 0)
+        {
+                m.direction = {
+                        .value = numerical::Vector<1, T>(simulator.measurement_direction()),
+                        .variance = numerical::Vector<1, T>(config.measurement_variance_direction)};
+        }
+
+        if (i % config.measurement_dt_count_position == 0)
+        {
+                m.position = {
+                        .value = simulator.measurement_position(),
+                        .variance = numerical::Vector<N, T>(config.measurement_variance_position)};
+        }
+
+        if (i % config.measurement_dt_count_speed == 0)
+        {
+                m.speed = {
+                        .value = numerical::Vector<1, T>(simulator.measurement_speed()),
+                        .variance = numerical::Vector<1, T>(config.measurement_variance_speed)};
+        }
+}
+
+template <std::size_t N, typename T>
 std::vector<filters::Measurements<N, T>> simulate(const Config<T>& config)
 {
         Simulator<N, T> simulator(config);
@@ -270,41 +314,7 @@ std::vector<filters::Measurements<N, T>> simulate(const Config<T>& config)
 
                 filters::Measurements<N, T>& m = measurements.emplace_back();
 
-                m.true_data = {
-                        .position = simulator.position(),
-                        .speed = simulator.speed(),
-                        .angle = simulator.angle(),
-                        .angle_r = simulator.angle_r()};
-
-                m.time = i * config.measurement_dt;
-
-                if (i % config.measurement_dt_count_acceleration == 0)
-                {
-                        m.acceleration = {
-                                .value = simulator.measurement_acceleration(),
-                                .variance = numerical::Vector<N, T>(config.measurement_variance_acceleration)};
-                }
-
-                if (i % config.measurement_dt_count_direction == 0)
-                {
-                        m.direction = {
-                                .value = numerical::Vector<1, T>(simulator.measurement_direction()),
-                                .variance = numerical::Vector<1, T>(config.measurement_variance_direction)};
-                }
-
-                if (i % config.measurement_dt_count_position == 0)
-                {
-                        m.position = {
-                                .value = simulator.measurement_position(),
-                                .variance = numerical::Vector<N, T>(config.measurement_variance_position)};
-                }
-
-                if (i % config.measurement_dt_count_speed == 0)
-                {
-                        m.speed = {
-                                .value = numerical::Vector<1, T>(simulator.measurement_speed()),
-                                .variance = numerical::Vector<1, T>(config.measurement_variance_speed)};
-                }
+                set_measurement(config, i, simulator, m);
         }
 
         return measurements;
