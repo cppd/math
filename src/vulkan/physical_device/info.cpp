@@ -349,23 +349,25 @@ std::unordered_set<std::string> make_extensions(
         const std::unordered_set<std::string>& optional_extensions,
         const std::unordered_set<std::string>& supported_extensions)
 {
+        const auto check = [&](const auto& extension, const char* const msg)
+        {
+                if (!supported_extensions.contains(extension))
+                {
+                        error("Vulkan physical device does not support required " + std::string(msg) + " " + extension);
+                }
+        };
+
         std::unordered_set<std::string> res;
 
         for (const std::string& extension : required_extensions)
         {
-                if (!supported_extensions.contains(extension))
-                {
-                        error("Vulkan physical device does not support required extension " + extension);
-                }
+                check(extension, "extension");
                 res.insert(extension);
         }
 
         for (const std::string& extension : extensions_for_features(required_features))
         {
-                if (!supported_extensions.contains(extension))
-                {
-                        error("Vulkan physical device does not support required feature extension " + extension);
-                }
+                check(extension, "feature extension");
                 res.insert(extension);
         }
 
