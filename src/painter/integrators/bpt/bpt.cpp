@@ -134,12 +134,60 @@ void add_sample(
 }
 
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
+bool process_intersection(
+        const bool camera_path,
+        const Scene<N, T, Color>* const scene,
+        const LightDistribution<N, T, Color>* const light_distribution,
+        Color& beta,
+        T& pdf_forward,
+        numerical::Ray<N, T>& ray,
+        SurfaceIntersection<N, T, Color>& surface,
+        com::Normals<N, T>& normals,
+        PCG& engine,
+        std::vector<vertex::Vertex<N, T, Color>>* const path)
+{
+        if (!surface_found(ray, surface, normals))
+        {
+                surface_not_found(camera_path, scene, light_distribution, beta, pdf_forward, ray, path);
+                return false;
+        }
+
+        const auto sample = com::surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
+
+        if (!sample)
+        {
+                sample_not_found(beta, pdf_forward, ray, surface, normals, path);
+                return false;
+        }
+
+        add_sample(*sample, beta, pdf_forward, ray, surface, normals, path);
+
+        pdf_forward = sample->pdf_forward;
+        beta *= sample->beta;
+
+        if (!camera_path)
+        {
+                beta *= correct_normals(normals, sample->l, -ray.dir());
+        }
+
+        if (beta.is_black())
+        {
+                return false;
+        }
+
+        ray = {surface.point(), sample->l};
+        std::tie(surface, normals) = com::scene_intersect<FLAT_SHADING, N, T, Color>(*scene, normals.geometric, ray);
+
+        return true;
+}
+
+template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void walk(
         const bool camera_path,
         const Scene<N, T, Color>* const scene,
         const LightDistribution<N, T, Color>* const light_distribution,
         Color beta,
-        const T pdf,
+        T pdf,
         numerical::Ray<N, T> ray,
         PCG& engine,
         std::vector<vertex::Vertex<N, T, Color>>* const path)
@@ -155,45 +203,15 @@ void walk(
                 return com::scene_intersect<FLAT_SHADING, N, T, Color>(*scene, GEOMETRIC_NORMAL, ray);
         }();
 
-        T pdf_forward = pdf;
-
         for (int depth = 0; depth < MAX_DEPTH; ++depth)
         {
-                if (!surface_found(ray, surface, normals))
-                {
-                        surface_not_found(camera_path, scene, light_distribution, beta, pdf_forward, ray, path);
-                        return;
-                }
-
-                const auto sample = com::surface_sample_with_pdf(surface, -ray.dir(), normals, engine);
-
-                if (!sample)
-                {
-                        sample_not_found(beta, pdf_forward, ray, surface, normals, path);
-                        return;
-                }
-
-                add_sample(*sample, beta, pdf_forward, ray, surface, normals, path);
-
-                pdf_forward = sample->pdf_forward;
-                beta *= sample->beta;
-
-                if (!camera_path)
-                {
-                        beta *= correct_normals(normals, sample->l, -ray.dir());
-                }
-
-                if (beta.is_black())
+                if (!process_intersection<FLAT_SHADING>(
+                            camera_path, scene, light_distribution, beta, pdf, ray, surface, normals, engine, path))
                 {
                         return;
                 }
-
-                ray = {surface.point(), sample->l};
-                std::tie(surface, normals) =
-                        com::scene_intersect<FLAT_SHADING, N, T, Color>(*scene, normals.geometric, ray);
         }
 }
-
 template <bool FLAT_SHADING, std::size_t N, typename T, typename Color>
 void generate_camera_path(
         const Scene<N, T, Color>* const scene,
