@@ -49,6 +49,14 @@ constexpr std::optional<numerical::Vector<N, T>> EMPTY_GEOMETRIC_NORMAL;
 
 constexpr std::size_t GROUP_SIZE = 0x1000;
 
+std::size_t group_limit(const std::size_t index, const std::size_t size)
+{
+        ASSERT(size >= index);
+
+        const std::size_t r = size - index;
+        return (r >= GROUP_SIZE) ? index + GROUP_SIZE : size;
+}
+
 template <std::size_t N, typename T, typename Color>
 bool intersections(const Scene<N, T, Color>& scene, numerical::Ray<N, T> ray)
 {
@@ -118,8 +126,7 @@ void test_intersections(
         {
                 MemoryArena::thread_local_instance().clear();
 
-                const std::size_t r = rays.size() - i;
-                const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
+                const std::size_t c = group_limit(i, rays.size());
                 for (; i < c; ++i)
                 {
                         if (!intersections(*mesh.scene.scene, rays[i]))
@@ -158,8 +165,7 @@ void test_surface_ratio(
         {
                 MemoryArena::thread_local_instance().clear();
 
-                const std::size_t r = rays.size() - i;
-                const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
+                const std::size_t c = group_limit(i, rays.size());
                 for (; i < c; ++i)
                 {
                         if (mesh.scene.scene->intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, rays[i]))
