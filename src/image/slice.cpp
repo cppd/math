@@ -41,9 +41,9 @@ void check_image_and_slices(const Image<N>& image, const std::array<Slice, S>& s
 {
         static_assert(S > 0 && S < N);
 
-        for (std::size_t i = 0; i < image.size.size(); ++i)
+        for (const auto& size : image.size)
         {
-                if (!(image.size[i] > 0))
+                if (!(size > 0))
                 {
                         error("Image size is not positive " + to_string(image.size));
                 }
