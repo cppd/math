@@ -36,11 +36,9 @@ namespace ns::image
 {
 namespace
 {
-template <std::size_t N, std::size_t S>
-void check_image_and_slices(const Image<N>& image, const std::array<Slice, S>& slices)
+template <std::size_t N>
+void check_image(const Image<N>& image)
 {
-        static_assert(S > 0 && S < N);
-
         for (const auto& size : image.size)
         {
                 if (!(size > 0))
@@ -48,6 +46,12 @@ void check_image_and_slices(const Image<N>& image, const std::array<Slice, S>& s
                         error("Image size is not positive " + to_string(image.size));
                 }
         }
+}
+
+template <std::size_t N, std::size_t S>
+void check_slices(const Image<N>& image, const std::array<Slice, S>& slices)
+{
+        static_assert(S > 0 && S < N);
 
         for (const Slice& s : slices)
         {
@@ -176,7 +180,8 @@ Image<N - S> slice(const Image<N>& image, const std::array<Slice, S>& slices)
 {
         static_assert(S > 0 && S < N);
 
-        check_image_and_slices(image, slices);
+        check_image(image);
+        check_slices(image, slices);
 
         const std::array<int, N - S> map = create_coordinate_map<N>(slices);
 
