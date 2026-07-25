@@ -30,21 +30,13 @@ namespace ns::view::com
 {
 class Mouse final
 {
-        struct MouseButtonInfo final
-        {
-                bool pressed = false;
-                int pressed_x;
-                int pressed_y;
-                int delta_x;
-                int delta_y;
-        };
+        Camera* const camera_;
 
-        std::unordered_map<MouseButton, MouseButtonInfo> buttons_;
+        std::unordered_map<MouseButton, bool> pressed_;
 
         int x_ = Limits<int>::lowest();
         int y_ = Limits<int>::lowest();
 
-        Camera* camera_;
         numerical::Region<2, int> rectangle_{
                 {Limits<int>::lowest(), Limits<int>::lowest()},
                 {                    0,                     0}
@@ -54,8 +46,6 @@ class Mouse final
         double height_ = -1;
 
         [[nodiscard]] std::tuple<int, int> position(double x, double y) const;
-
-        [[nodiscard]] const MouseButtonInfo& info(MouseButton button) const;
 
         void cmd(const command::MousePress& v);
         void cmd(const command::MouseRelease& v);

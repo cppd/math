@@ -56,17 +56,6 @@ void Mouse::exec(const MouseCommand& command)
                 command);
 }
 
-const Mouse::MouseButtonInfo& Mouse::info(const MouseButton button) const
-{
-        const auto iter = buttons_.find(button);
-        if (iter != buttons_.cend())
-        {
-                return iter->second;
-        }
-        static constexpr MouseButtonInfo INFO{};
-        return INFO;
-}
-
 void Mouse::cmd(const command::MousePress& v)
 {
         const auto [x, y] = position(v.x, v.y);
@@ -74,52 +63,35 @@ void Mouse::cmd(const command::MousePress& v)
         x_ = x;
         y_ = y;
 
-        MouseButtonInfo& m = buttons_[v.button];
-        m.pressed = true;
-        m.pressed_x = x;
-        m.pressed_y = y;
-        m.delta_x = 0;
-        m.delta_y = 0;
+        pressed_[v.button] = rectangle_.is_inside(x, y);
 }
 
 void Mouse::cmd(const command::MouseRelease& v)
 {
         const auto [x, y] = position(v.x, v.y);
 
-        buttons_[v.button].pressed = false;
         x_ = x;
         y_ = y;
+
+        pressed_[v.button] = false;
 }
 
 void Mouse::cmd(const command::MouseMove& v)
 {
         const auto [x, y] = position(v.x, v.y);
 
-        for (auto& [button, info] : buttons_)
+        if (pressed_[MouseButton::RIGHT] && (x != x_ || y != y_))
         {
-                if (info.pressed)
-                {
-                        info.delta_x = x - x_;
-                        info.delta_y = y - y_;
-                }
+                camera_->rotate(x_ - x, y_ - y);
+        }
+
+        if (pressed_[MouseButton::LEFT] && (x != x_ || y != y_))
+        {
+                camera_->move({x_ - x, y - y_});
         }
 
         x_ = x;
         y_ = y;
-
-        const MouseButtonInfo& right = info(MouseButton::RIGHT);
-        if (right.pressed && rectangle_.is_inside(right.pressed_x, right.pressed_y)
-            && (right.delta_x != 0 || right.delta_y != 0))
-        {
-                camera_->rotate(-right.delta_x, -right.delta_y);
-        }
-
-        const MouseButtonInfo& left = info(MouseButton::LEFT);
-        if (left.pressed && rectangle_.is_inside(left.pressed_x, left.pressed_y)
-            && (left.delta_x != 0 || left.delta_y != 0))
-        {
-                camera_->move(numerical::Vector2d(-left.delta_x, left.delta_y));
-        }
 }
 
 void Mouse::cmd(const command::MouseWheel& v)
