@@ -53,54 +53,60 @@ public:
         }
 };
 
+namespace cholesky_implementation
+{
+template <std::size_t N, typename T>
+[[nodiscard]] T sqrt(const T& v, const Matrix<N, N, T>& m, const Matrix<N, N, T>& res)
+{
+        if (v >= 0)
+        {
+                return std::sqrt(v);
+        }
+        throw CholeskyException(
+                "The Cholesky decomposition: matrix is not positive definite, sqrt(" + to_string(v) + ")\n"
+                + to_string(m) + "\n" + to_string(res));
+}
+
+template <std::size_t N, typename T>
+void set_non_diagonal(const Matrix<N, N, T>& m, const std::size_t r, const std::size_t c, Matrix<N, N, T>& res)
+{
+        T sum = 0;
+        for (std::size_t i = 0; i < c; ++i)
+        {
+                sum += res[c, i] * res[r, i];
+        }
+        res[r, c] = (m[r, c] - sum) / res[c, c];
+}
+
+template <std::size_t N, typename T>
+void set_diagonal(const Matrix<N, N, T>& m, const std::size_t r, Matrix<N, N, T>& res)
+{
+        T sum = 0;
+        for (std::size_t i = 0; i < r; ++i)
+        {
+                const T v = res[r, i];
+                sum += v * v;
+        }
+        res[r, r] = sqrt(m[r, r] - sum, m, res);
+}
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] Matrix<N, N, T> cholesky_decomposition_lower_triangular(const Matrix<N, N, T>& m)
 {
         static_assert(N > 0);
 
+        namespace impl = cholesky_implementation;
+
         Matrix<N, N, T> res{ZERO_MATRIX};
-
-        const auto sqrt = [&](const T& v)
-        {
-                if (v >= 0)
-                {
-                        return std::sqrt(v);
-                }
-                throw CholeskyException(
-                        "The Cholesky decomposition: matrix is not positive definite, sqrt(" + to_string(v) + ")\n"
-                        + to_string(m) + "\n" + to_string(res));
-        };
-
-        const auto set_non_diagonal = [&](const std::size_t r, const std::size_t c)
-        {
-                T sum = 0;
-                for (std::size_t i = 0; i < c; ++i)
-                {
-                        sum += res[c, i] * res[r, i];
-                }
-                res[r, c] = (m[r, c] - sum) / res[c, c];
-        };
-
-        const auto set_diagonal = [&](const std::size_t r)
-        {
-                T sum = 0;
-                for (std::size_t i = 0; i < r; ++i)
-                {
-                        const T v = res[r, i];
-                        sum += v * v;
-                }
-                res[r, r] = sqrt(m[r, r] - sum);
-        };
-
         for (std::size_t r = 0; r < N; ++r)
         {
                 for (std::size_t c = 0; c < r; ++c)
                 {
-                        set_non_diagonal(r, c);
+                        impl::set_non_diagonal(m, r, c, res);
                 }
-                set_diagonal(r);
+                impl::set_diagonal(m, r, res);
         }
-
         return res;
 }
 }
