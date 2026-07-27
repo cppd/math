@@ -116,6 +116,29 @@ class ReadLib final
         std::map<std::string, int>* material_index_;
         std::map<std::filesystem::path, int>* image_index_;
 
+        bool read_newmtl(const char* const second_b, const char* const second_e)
+        {
+                if (material_index_->empty())
+                {
+                        return false;
+                }
+
+                const std::string name{read_name("material", second_b, second_e)};
+
+                const auto iter = material_index_->find(name);
+                if (iter != material_index_->end())
+                {
+                        material_ = &(mesh_->materials[iter->second]);
+                        material_index_->erase(name);
+                }
+                else
+                {
+                        material_ = nullptr;
+                }
+
+                return true;
+        }
+
 public:
         ReadLib(const std::filesystem::path* const lib_dir,
                 Mesh<N>* const mesh,
@@ -132,25 +155,7 @@ public:
         {
                 if (first == "newmtl")
                 {
-                        if (material_index_->empty())
-                        {
-                                return false;
-                        }
-
-                        const std::string name{read_name("material", second_b, second_e)};
-
-                        const auto iter = material_index_->find(name);
-                        if (iter != material_index_->end())
-                        {
-                                material_ = &(mesh_->materials[iter->second]);
-                                material_index_->erase(name);
-                        }
-                        else
-                        {
-                                material_ = nullptr;
-                        }
-
-                        return true;
+                        return read_newmtl(second_b, second_e);
                 }
 
                 if (!material_)
