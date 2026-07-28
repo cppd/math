@@ -176,6 +176,28 @@ public:
                 return true;
         }
 };
+
+template <std::size_t N>
+bool read_line(const std::filesystem::path& lib_name, const Lines& lines, const std::size_t line, ReadLib<N>& read_lib)
+{
+        const Split split = split_string(lines.c_str_view(line));
+
+        try
+        {
+                return read_lib.read_line(split.first, split.second_b, split.second_e);
+        }
+        catch (const std::exception& e)
+        {
+                error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line) + ": "
+                      + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n" + e.what());
+        }
+        catch (...)
+        {
+                error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line) + ": "
+                      + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
+                      + "Unknown error");
+        }
+}
 }
 
 template <std::size_t N>
@@ -205,26 +227,9 @@ void read_lib(
                         progress->set(i * count_reciprocal);
                 }
 
-                const Split split = split_string(lines.c_str_view(i));
-
-                try
+                if (!read_line(lib_name, lines, i, read_lib))
                 {
-                        if (!read_lib.read_line(split.first, split.second_b, split.second_e))
-                        {
-                                break;
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(i) + ": "
-                              + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
-                              + e.what());
-                }
-                catch (...)
-                {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(i) + ": "
-                              + std::string(split.first) + " " + std::string(split.second_b, split.second_e) + "\n"
-                              + "Unknown error");
+                        break;
                 }
         }
 }
