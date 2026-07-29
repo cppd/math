@@ -209,17 +209,8 @@ void add_mesh(
 }
 
 template <std::size_t N, typename T, typename Color>
-MeshData<N, T, Color> create_mesh_data(
-        const std::vector<model::mesh::Reading<N>>& mesh_objects,
-        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
+void reserve_mesh_data(const std::vector<model::mesh::Reading<N>>& mesh_objects, MeshData<N, T, Color>& data)
 {
-        if (mesh_objects.empty())
-        {
-                error("No objects to paint");
-        }
-
-        MeshData<N, T, Color> data;
-
         std::size_t vertex_count = 0;
         std::size_t normal_count = 0;
         std::size_t texcoord_count = 0;
@@ -253,6 +244,21 @@ MeshData<N, T, Color> create_mesh_data(
         data.mesh.images.reserve(image_count);
         data.mesh.facets.reserve(facet_count);
         data.facet_vertex_indices.reserve(facet_count);
+}
+
+template <std::size_t N, typename T, typename Color>
+MeshData<N, T, Color> create_mesh_data(
+        const std::vector<model::mesh::Reading<N>>& mesh_objects,
+        const std::optional<numerical::Vector<N + 1, T>>& clip_plane_equation)
+{
+        if (mesh_objects.empty())
+        {
+                error("No objects to paint");
+        }
+
+        MeshData<N, T, Color> data;
+
+        reserve_mesh_data(mesh_objects, data);
 
         for (const model::mesh::Reading<N>& mesh_object : mesh_objects)
         {
