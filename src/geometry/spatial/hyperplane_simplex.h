@@ -44,6 +44,17 @@ class HyperplaneSimplex final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
+        [[nodiscard]] static std::array<numerical::Vector<N, T>, N - 1> create_vectors(
+                const std::array<numerical::Vector<N, T>, N>& vertices)
+        {
+                std::array<numerical::Vector<N, T>, N - 1> res;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        res[i] = vertices[i] - vertices[N - 1];
+                }
+                return res;
+        }
+
         // (N - 1)-dimensional simplex plane.
         Hyperplane<N, T> plane_;
 
@@ -68,26 +79,10 @@ class HyperplaneSimplex final
                 return res;
         }
 
-public:
-        static T intersection_cost();
-
-        HyperplaneSimplex()
+        HyperplaneSimplex(
+                const std::array<numerical::Vector<N, T>, N>& vertices,
+                std::array<numerical::Vector<N, T>, N - 1>&& vectors)
         {
-        }
-
-        explicit HyperplaneSimplex(const std::array<numerical::Vector<N, T>, N>& vertices)
-        {
-                set(vertices);
-        }
-
-        void set(const std::array<numerical::Vector<N, T>, N>& vertices)
-        {
-                std::array<numerical::Vector<N, T>, N - 1> vectors;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        vectors[i] = vertices[i] - vertices[N - 1];
-                }
-
                 plane_.n = numerical::orthogonal_complement(vectors).normalized();
                 if (!is_finite(plane_.n))
                 {
@@ -96,13 +91,14 @@ public:
                 }
                 plane_.d = dot(plane_.n, vertices[N - 1]);
 
-                // create N - 1 planes that pass through vertex N - 1,
+                // Create N - 1 planes that pass through vertex N - 1,
                 // through simples ridges, and that are orthogonal to the simplex.
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        std::swap(plane_.n, vectors[i]);
+                        const numerical::Vector<N, T> vi = vectors[i];
+                        vectors[i] = plane_.n;
                         planes_[i].n = numerical::orthogonal_complement(vectors);
-                        std::swap(plane_.n, vectors[i]);
+                        vectors[i] = vi;
 
                         // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
                         // org = vertices[N - 1]
@@ -112,6 +108,14 @@ public:
                         planes_[i].n /= distance;
                         planes_[i].d /= distance;
                 }
+        }
+
+public:
+        static T intersection_cost();
+
+        explicit HyperplaneSimplex(const std::array<numerical::Vector<N, T>, N>& vertices)
+                : HyperplaneSimplex(vertices, create_vectors(vertices))
+        {
         }
 
         void reverse_normal()
