@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace ns::model::mesh
@@ -43,6 +44,16 @@ void init_min_max(numerical::Vector<N, T>* const min, numerical::Vector<N, T>* c
 {
         *min = numerical::Vector<N, T>(Limits<T>::max());
         *max = numerical::Vector<N, T>(Limits<T>::lowest());
+}
+
+inline void check_index(const int index, const int vertex_count, const char* const name)
+{
+        if (index >= 0 && index < vertex_count)
+        {
+                return;
+        }
+
+        error(std::string(name) + " vertex index out of bounds");
 }
 
 template <std::size_t N, typename T>
@@ -116,10 +127,7 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
                 static_assert(0 < std::tuple_size_v<decltype(face.vertices)>);
                 for (const int index : face.vertices)
                 {
-                        if (index < 0 || index >= vertex_count)
-                        {
-                                error("Facet vertex index out of bounds");
-                        }
+                        impl::check_index(index, vertex_count, "Facet");
 
                         min = numerical::min(min, mesh.vertices[index]);
                         max = numerical::max(max, mesh.vertices[index]);
@@ -158,10 +166,7 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
                 static_assert(0 < std::tuple_size_v<decltype(line.vertices)>);
                 for (const int index : line.vertices)
                 {
-                        if (index < 0 || index >= vertex_count)
-                        {
-                                error("Line vertex index out of bounds");
-                        }
+                        impl::check_index(index, vertex_count, "Line");
 
                         min = numerical::min(min, mesh.vertices[index]);
                         max = numerical::max(max, mesh.vertices[index]);
@@ -199,10 +204,7 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
         {
                 const int index = point.vertex;
 
-                if (index < 0 || index >= vertex_count)
-                {
-                        error("Point vertex index out of bounds");
-                }
+                impl::check_index(index, vertex_count, "Point");
 
                 min = numerical::min(min, mesh.vertices[index]);
                 max = numerical::max(max, mesh.vertices[index]);
