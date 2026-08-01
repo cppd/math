@@ -302,6 +302,31 @@ std::optional<Color> connect(
 
         return make_result(connect(scene, light_path[s - 1], camera_path[t - 1]));
 }
+
+template <std::size_t N, typename T, typename Color>
+void connect(
+        const int max_depth,
+        const Scene<N, T, Color>& scene,
+        const std::vector<vertex::Vertex<N, T, Color>>& light_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
+        const int s,
+        const int t,
+        LightDistribution<N, T, Color>& light_distribution,
+        Color& color,
+        PCG& engine)
+{
+        const int depth = t + s - 2;
+        if (depth > max_depth)
+        {
+                return;
+        }
+
+        const auto c = connect(scene, light_path, camera_path, s, t, light_distribution, engine);
+        if (c)
+        {
+                color += *c;
+        }
+}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -322,17 +347,7 @@ template <std::size_t N, typename T, typename Color>
         {
                 for (int s = 0; s <= light_size; ++s)
                 {
-                        const int depth = t + s - 2;
-                        if (depth > max_depth)
-                        {
-                                continue;
-                        }
-
-                        const auto c = connect(scene, light_path, camera_path, s, t, light_distribution, engine);
-                        if (c)
-                        {
-                                color += *c;
-                        }
+                        connect(max_depth, scene, light_path, camera_path, s, t, light_distribution, color, engine);
                 }
         }
 
