@@ -256,6 +256,40 @@ template <std::size_t N, typename T, typename Color>
 }
 
 template <std::size_t N, typename T, typename Color>
+std::optional<Color> weight_color(
+        const std::vector<vertex::Vertex<N, T, Color>>& light_path,
+        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
+        const int s,
+        const int t,
+        const std::optional<Color>& color)
+{
+        if (!color || color->is_black())
+        {
+                return {};
+        }
+
+        return *color * mis_weight(light_path, camera_path, s, t);
+}
+
+template <std::size_t N, typename T, typename Color>
+std::optional<Color> weight_color_s_1(
+        const std::vector<vertex::Vertex<N, T, Color>>& camera_path,
+        const int s,
+        const int t,
+        const std::optional<ConnectS1<N, T, Color>>& connection)
+{
+        if (!connection || connection->color.is_black())
+        {
+                return {};
+        }
+
+        thread_local std::vector<vertex::Vertex<N, T, Color>> path;
+        path.clear();
+        path.push_back(connection->light_vertex);
+        return connection->color * mis_weight(path, camera_path, s, t);
+}
+
+template <std::size_t N, typename T, typename Color>
 std::optional<Color> connect(
         const Scene<N, T, Color>& scene,
         const std::vector<vertex::Vertex<N, T, Color>>& light_path,
@@ -268,18 +302,10 @@ std::optional<Color> connect(
         ASSERT(s >= 0);
         ASSERT(t >= 2);
 
-        const auto make_result = [&](const std::optional<Color>& color) -> std::optional<Color>
-        {
-                if (!color || color->is_black())
-                {
-                        return {};
-                }
-                return *color * mis_weight(light_path, camera_path, s, t);
-        };
-
         if (s == 0)
         {
-                return make_result(connect_s_0(scene, camera_path[t - 1]));
+                const auto connection = connect_s_0(scene, camera_path[t - 1]);
+                return weight_color(light_path, camera_path, s, t, connection);
         }
 
         if (std::holds_alternative<vertex::InfiniteLight<N, T, Color>>(camera_path[t - 1]))
@@ -289,18 +315,12 @@ std::optional<Color> connect(
 
         if (s == 1)
         {
-                auto connection = connect_s_1(scene, camera_path[t - 1], light_distribution, engine);
-                if (!connection || connection->color.is_black())
-                {
-                        return {};
-                }
-                thread_local std::vector<vertex::Vertex<N, T, Color>> path;
-                path.clear();
-                path.push_back(std::move(connection->light_vertex));
-                return connection->color * mis_weight(path, camera_path, s, t);
+                const auto connection = connect_s_1(scene, camera_path[t - 1], light_distribution, engine);
+                return weight_color_s_1(camera_path, s, t, connection);
         }
 
-        return make_result(connect(scene, light_path[s - 1], camera_path[t - 1]));
+        const auto connection = connect(scene, light_path[s - 1], camera_path[t - 1]);
+        return weight_color(light_path, camera_path, s, t, connection);
 }
 
 template <std::size_t N, typename T, typename Color>
