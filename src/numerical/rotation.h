@@ -120,6 +120,15 @@ template <typename Quaternion>
 
         ASSERT(m.is_rotation());
 
+        const auto result = [](const T& x, const T& y, const T& z, const T& w)
+        {
+                const Quaternion q{
+                        {x, y, z},
+                        GLOBAL_TO_LOCAL ? -w : w
+                };
+                return q.normalized();
+        };
+
         const T m00 = m[0, 0];
         const T m01 = m[0, 1];
         const T m02 = m[0, 2];
@@ -130,51 +139,41 @@ template <typename Quaternion>
         const T m21 = m[2, 1];
         const T m22 = m[2, 2];
 
-        T x;
-        T y;
-        T z;
-        T w;
-
         if (m22 < 0)
         {
                 if (m00 > m11)
                 {
-                        x = 1 + m00 - m11 - m22;
-                        y = m01 + m10;
-                        z = m20 + m02;
-                        w = m21 - m12;
+                        const T x = 1 + m00 - m11 - m22;
+                        const T y = m01 + m10;
+                        const T z = m20 + m02;
+                        const T w = m21 - m12;
+
+                        return result(x, y, z, w);
                 }
-                else
-                {
-                        x = m01 + m10;
-                        y = 1 - m00 + m11 - m22;
-                        z = m12 + m21;
-                        w = m02 - m20;
-                }
+
+                const T x = m01 + m10;
+                const T y = 1 - m00 + m11 - m22;
+                const T z = m12 + m21;
+                const T w = m02 - m20;
+
+                return result(x, y, z, w);
         }
-        else
+
+        if (m00 < -m11)
         {
-                if (m00 < -m11)
-                {
-                        x = m20 + m02;
-                        y = m12 + m21;
-                        z = 1 - m00 - m11 + m22;
-                        w = m10 - m01;
-                }
-                else
-                {
-                        x = m21 - m12;
-                        y = m02 - m20;
-                        z = m10 - m01;
-                        w = 1 + m00 + m11 + m22;
-                }
+                const T x = m20 + m02;
+                const T y = m12 + m21;
+                const T z = 1 - m00 - m11 + m22;
+                const T w = m10 - m01;
+
+                return result(x, y, z, w);
         }
 
-        const Quaternion q{
-                {x, y, z},
-                GLOBAL_TO_LOCAL ? -w : w
-        };
+        const T x = m21 - m12;
+        const T y = m02 - m20;
+        const T z = m10 - m01;
+        const T w = 1 + m00 + m11 + m22;
 
-        return q.normalized();
+        return result(x, y, z, w);
 }
 }
