@@ -126,14 +126,7 @@ template <typename... Matrices>
         static constexpr std::size_t RESULT_R = (impl::ROWS<Matrices> + ...);
         static constexpr std::size_t RESULT_C = (impl::COLUMNS<Matrices> + ...);
 
-        Matrix<RESULT_R, RESULT_C, T> res;
-        for (std::size_t r = 0; r < RESULT_R; ++r)
-        {
-                for (std::size_t c = 0; c < RESULT_C; ++c)
-                {
-                        res[r, c] = 0;
-                }
-        }
+        Matrix<RESULT_R, RESULT_C, T> res(ZERO_MATRIX);
 
         std::size_t base_r = 0;
         std::size_t base_c = 0;
@@ -164,14 +157,7 @@ template <std::size_t COUNT, std::size_t R, std::size_t C, typename T>
         constexpr std::size_t RESULT_R = R * COUNT;
         constexpr std::size_t RESULT_C = C * COUNT;
 
-        Matrix<RESULT_R, RESULT_C, T> res;
-        for (std::size_t r = 0; r < RESULT_R; ++r)
-        {
-                for (std::size_t c = 0; c < RESULT_C; ++c)
-                {
-                        res[r, c] = 0;
-                }
-        }
+        Matrix<RESULT_R, RESULT_C, T> res(ZERO_MATRIX);
 
         for (std::size_t i = 0; i < COUNT; ++i)
         {
