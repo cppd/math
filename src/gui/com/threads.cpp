@@ -300,22 +300,30 @@ class Impl final : public WorkerThreads
                 }
         }
 
+        void show_bar(const unsigned id, QProgressBar* const bar)
+        {
+                if (bar->isVisible())
+                {
+                        return;
+                }
+
+                if (id == permanent_thread_id_)
+                {
+                        status_bar_->addPermanentWidget(bar);
+                }
+                else
+                {
+                        status_bar_->addWidget(bar);
+                }
+
+                bar->show();
+        }
+
         void set_progress_bar(const unsigned id, const progress::RatioInfo& ratio, QProgressBar* const bar)
         {
                 static constexpr unsigned MAX_INT{Limits<int>::max()};
 
-                if (!bar->isVisible())
-                {
-                        if (id == permanent_thread_id_)
-                        {
-                                status_bar_->addPermanentWidget(bar);
-                        }
-                        else
-                        {
-                                status_bar_->addWidget(bar);
-                        }
-                        bar->show();
-                }
+                show_bar(id, bar);
 
                 bar->setFormat(QString::fromStdString(ratio.text));
 
