@@ -208,12 +208,9 @@ template <std::size_t N>
         for (const core::Ridge<N>& r : suspicious_ridges)
         {
                 const auto ridge_iter = ridge_map->find(r);
-                if (ridge_iter == ridge_map->cend())
-                {
-                        continue;
-                }
 
-                if (!sharp_ridge(points, interior_vertices, ridge_iter->first, ridge_iter->second))
+                if (ridge_iter == ridge_map->cend()
+                    || !sharp_ridge(points, interior_vertices, ridge_iter->first, ridge_iter->second))
                 {
                         continue;
                 }
