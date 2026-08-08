@@ -26,6 +26,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::spatial::random
 {
+namespace parallelotope_points_implementation
+{
+template <std::size_t N, typename T, typename Random>
+[[nodiscard]] numerical::Vector<N, T> make_point(
+        const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N>& vectors,
+        const Random& random)
+{
+        numerical::Vector<N, T> res = org;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res.multiply_add(vectors[i], random());
+        }
+        return res;
+}
+}
+
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<numerical::Vector<N, T>> parallelotope_external_points(
         const numerical::Vector<N, T>& org,
@@ -33,19 +50,20 @@ std::vector<numerical::Vector<N, T>> parallelotope_external_points(
         const int count,
         RandomEngine& engine)
 {
+        namespace impl = parallelotope_points_implementation;
+
         std::uniform_real_distribution<T> low_urd(-10, -0.01);
         std::uniform_real_distribution<T> high_urd(1.01, 10);
         std::bernoulli_distribution bd(0.5);
 
         const auto random_point = [&]
         {
-                numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
-                        res.multiply_add(vectors[i], rnd);
-                }
-                return res;
+                return impl::make_point(
+                        org, vectors,
+                        [&]
+                        {
+                                return bd(engine) ? low_urd(engine) : high_urd(engine);
+                        });
         };
 
         std::vector<numerical::Vector<N, T>> res;
@@ -95,16 +113,18 @@ std::vector<numerical::Vector<N, T>> parallelotope_internal_points(
         const int count,
         RandomEngine& engine)
 {
+        namespace impl = parallelotope_points_implementation;
+
         std::uniform_real_distribution<T> urd(0.01, 0.99);
 
         const auto random_point = [&]
         {
-                numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        res.multiply_add(vectors[i], urd(engine));
-                }
-                return res;
+                return impl::make_point(
+                        org, vectors,
+                        [&]
+                        {
+                                return urd(engine);
+                        });
         };
 
         std::vector<numerical::Vector<N, T>> res;
@@ -151,17 +171,19 @@ std::vector<numerical::Vector<N, T>> parallelotope_cover_points(
         const int count,
         RandomEngine& engine)
 {
+        namespace impl = parallelotope_points_implementation;
+
         std::uniform_real_distribution<T> cover_urd(-0.2, 1.2);
         std::uniform_real_distribution<T> len_urd(0, 1);
 
         const auto cover_point = [&]
         {
-                numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        res.multiply_add(vectors[i], cover_urd(engine));
-                }
-                return res;
+                return impl::make_point(
+                        org, vectors,
+                        [&]
+                        {
+                                return cover_urd(engine);
+                        });
         };
 
         const auto plane_point = [&](const std::size_t n)
