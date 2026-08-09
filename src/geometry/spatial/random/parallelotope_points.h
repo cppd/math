@@ -41,6 +41,20 @@ template <std::size_t N, typename T, typename Random>
         }
         return res;
 }
+
+template <std::size_t N, typename T, typename Random>
+[[nodiscard]] numerical::Vector<N, T> make_point(
+        const numerical::Vector<N, T>& org,
+        const numerical::Vector<N, T>& diagonal,
+        const Random& random)
+{
+        numerical::Vector<N, T> res = org;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] += diagonal[i] * random();
+        }
+        return res;
+}
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -82,19 +96,20 @@ std::vector<numerical::Vector<N, T>> parallelotope_external_points(
         const int count,
         RandomEngine& engine)
 {
+        namespace impl = parallelotope_points_implementation;
+
         std::uniform_real_distribution<T> low_urd(-10, -0.01);
         std::uniform_real_distribution<T> high_urd(1.01, 10);
         std::bernoulli_distribution bd(0.5);
 
         const auto random_point = [&]
         {
-                numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
-                        res[i] += diagonal[i] * rnd;
-                }
-                return res;
+                return impl::make_point(
+                        org, diagonal,
+                        [&]
+                        {
+                                return bd(engine) ? low_urd(engine) : high_urd(engine);
+                        });
         };
 
         std::vector<numerical::Vector<N, T>> res;
@@ -143,16 +158,18 @@ std::vector<numerical::Vector<N, T>> parallelotope_internal_points(
         const int count,
         RandomEngine& engine)
 {
+        namespace impl = parallelotope_points_implementation;
+
         std::uniform_real_distribution<T> urd(0.01, 0.99);
 
         const auto random_point = [&]
         {
-                numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        res[i] += diagonal[i] * urd(engine);
-                }
-                return res;
+                return impl::make_point(
+                        org, diagonal,
+                        [&]
+                        {
+                                return urd(engine);
+                        });
         };
 
         std::vector<numerical::Vector<N, T>> res;
