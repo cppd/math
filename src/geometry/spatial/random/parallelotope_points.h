@@ -45,6 +45,25 @@ template <std::size_t N, typename T, typename Random>
 template <std::size_t N, typename T, typename Random>
 [[nodiscard]] numerical::Vector<N, T> make_point(
         const numerical::Vector<N, T>& org,
+        const std::array<numerical::Vector<N, T>, N>& vectors,
+        const std::size_t excluded_axis,
+        const Random& random)
+{
+        numerical::Vector<N, T> res = org;
+        for (std::size_t i = 0; i < excluded_axis; ++i)
+        {
+                res.multiply_add(vectors[i], random());
+        }
+        for (std::size_t i = excluded_axis + 1; i < N; ++i)
+        {
+                res.multiply_add(vectors[i], random());
+        }
+        return res;
+}
+
+template <std::size_t N, typename T, typename Random>
+[[nodiscard]] numerical::Vector<N, T> make_point(
+        const numerical::Vector<N, T>& org,
         const numerical::Vector<N, T>& diagonal,
         const Random& random)
 {
@@ -205,16 +224,12 @@ std::vector<numerical::Vector<N, T>> parallelotope_cover_points(
 
         const auto plane_point = [&](const std::size_t n)
         {
-                numerical::Vector<N, T> res = org;
-                for (std::size_t i = 0; i < n; ++i)
-                {
-                        res.multiply_add(vectors[i], len_urd(engine));
-                }
-                for (std::size_t i = n + 1; i < N; ++i)
-                {
-                        res.multiply_add(vectors[i], len_urd(engine));
-                }
-                return res;
+                return impl::make_point(
+                        org, vectors, n,
+                        [&]
+                        {
+                                return len_urd(engine);
+                        });
         };
 
         std::vector<numerical::Vector<N, T>> res;
