@@ -43,7 +43,7 @@ template <std::size_t N, typename T, typename Random>
 }
 
 template <std::size_t N, typename T, typename Random>
-[[nodiscard]] numerical::Vector<N, T> make_point(
+[[nodiscard]] numerical::Vector<N, T> make_plane_point(
         const numerical::Vector<N, T>& org,
         const std::array<numerical::Vector<N, T>, N>& vectors,
         const std::size_t excluded_axis,
@@ -224,7 +224,7 @@ std::vector<numerical::Vector<N, T>> parallelotope_cover_points(
 
         const auto plane_point = [&](const std::size_t n)
         {
-                return impl::make_point(
+                return impl::make_plane_point(
                         org, vectors, n,
                         [&]
                         {
