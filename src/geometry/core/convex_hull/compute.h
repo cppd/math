@@ -129,11 +129,9 @@ void add_conflict_points_to_new_facet(
         const Facet* const facet_1,
         Facet* const new_facet)
 {
-        std::vector<signed char>& up = *unique_points;
-
         for (const int p : facet_0->conflict_points())
         {
-                up[p] = 1;
+                (*unique_points)[p] = 1;
 
                 if (p != point && new_facet->visible_from_point(points, p))
                 {
@@ -143,7 +141,7 @@ void add_conflict_points_to_new_facet(
 
         for (const int p : facet_1->conflict_points())
         {
-                if (up[p] == 0 && p != point && new_facet->visible_from_point(points, p))
+                if ((*unique_points)[p] == 0 && p != point && new_facet->visible_from_point(points, p))
                 {
                         new_facet->add_conflict_point(p);
                 }
@@ -151,7 +149,7 @@ void add_conflict_points_to_new_facet(
 
         for (const int p : facet_0->conflict_points())
         {
-                up[p] = 0;
+                (*unique_points)[p] = 0;
         }
 }
 
