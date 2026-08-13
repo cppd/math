@@ -76,6 +76,38 @@ int thread_count_for_horizon()
         return std::max(hc - 1, 1);
 }
 
+class PointSet final
+{
+        std::vector<signed char> points_;
+
+public:
+        PointSet(const std::size_t size)
+                : points_(size, 0)
+        {
+        }
+
+        void set(const std::vector<int>& points)
+        {
+                for (const int p : points)
+                {
+                        points_[p] = 1;
+                }
+        }
+
+        void clear(const std::vector<int>& points)
+        {
+                for (const int p : points)
+                {
+                        points_[p] = 0;
+                }
+        }
+
+        [[nodiscard]] bool contains(const int point) const
+        {
+                return points_[point] != 0;
+        }
+};
+
 template <std::size_t N, typename S, typename C>
 void create_initial_convex_hull(
         const std::vector<numerical::Vector<N, S>>& points,
@@ -124,15 +156,15 @@ template <typename Point, typename Facet>
 void add_conflict_points_to_new_facet(
         const std::vector<Point>& points,
         const int point,
-        std::vector<signed char>* const unique_points,
+        PointSet* const point_set,
         const Facet* const facet_0,
         const Facet* const facet_1,
         Facet* const new_facet)
 {
+        point_set->set(facet_0->conflict_points());
+
         for (const int p : facet_0->conflict_points())
         {
-                (*unique_points)[p] = 1;
-
                 if (p != point && new_facet->visible_from_point(points, p))
                 {
                         new_facet->add_conflict_point(p);
@@ -141,16 +173,13 @@ void add_conflict_points_to_new_facet(
 
         for (const int p : facet_1->conflict_points())
         {
-                if ((*unique_points)[p] == 0 && p != point && new_facet->visible_from_point(points, p))
+                if (!point_set->contains(p) && p != point && new_facet->visible_from_point(points, p))
                 {
                         new_facet->add_conflict_point(p);
                 }
         }
 
-        for (const int p : facet_0->conflict_points())
-        {
-                (*unique_points)[p] = 0;
-        }
+        point_set->clear(facet_0->conflict_points());
 }
 
 template <typename Facet>
@@ -211,13 +240,13 @@ void create_facets_for_point_and_horizon(
         const std::vector<Point>& points,
         const int point,
         const std::vector<FacetStorage<Facet>>& point_conflicts,
-        std::vector<std::vector<signed char>>* const unique_points_work,
+        std::vector<PointSet>* const point_set_work,
         std::vector<FacetList<Facet>>* const new_facets_vector)
 {
         ASSERT(new_facets_vector->size() == thread_count);
-        ASSERT(unique_points_work->size() == thread_count);
+        ASSERT(point_set_work->size() == thread_count);
 
-        std::vector<signed char>* const unique_points = &(*unique_points_work)[thread_id];
+        PointSet* const point_set = &(*point_set_work)[thread_id];
         FacetList<Facet>* const new_facets = &(*new_facets_vector)[thread_id];
 
         new_facets->clear();
@@ -256,7 +285,7 @@ void create_facets_for_point_and_horizon(
                         new_facet->set_link(new_facet->find_index_for_point(point), link_facet);
                         link_facet->set_link(link_index, new_facet);
 
-                        add_conflict_points_to_new_facet(points, point, unique_points, facet, link_facet, new_facet);
+                        add_conflict_points_to_new_facet(points, point, point_set, facet, link_facet, new_facet);
                 }
         }
 }
@@ -268,15 +297,14 @@ void create_horizon_facets(
         const std::vector<numerical::Vector<N, S>>& points,
         const int point,
         std::vector<FacetStorage<Facet<N, S, C>>>* const point_conflicts,
-        std::vector<std::vector<signed char>>* const unique_points_work,
+        std::vector<PointSet>* const point_set_work,
         std::vector<FacetList<Facet<N, S, C>>>* const new_facets_vector,
         std::barrier<>* const barrier)
 {
         try
         {
                 create_facets_for_point_and_horizon(
-                        thread_id, thread_count, points, point, *point_conflicts, unique_points_work,
-                        new_facets_vector);
+                        thread_id, thread_count, points, point, *point_conflicts, point_set_work, new_facets_vector);
         }
         catch (...)
         {
@@ -327,7 +355,7 @@ void add_point_to_convex_hull(
         std::vector<FacetStorage<Facet<N, S, C>>>* const point_conflicts,
         ThreadPool* const thread_pool,
         std::barrier<>* const barrier,
-        std::vector<std::vector<signed char>>* const unique_points_work)
+        std::vector<PointSet>* const point_set_work)
 {
         if ((*point_conflicts)[point].size() == 0)
         {
@@ -351,8 +379,8 @@ void add_point_to_convex_hull(
                 [&](const unsigned thread_id, const unsigned thread_count)
                 {
                         create_horizon_facets(
-                                thread_id, thread_count, points, point, point_conflicts, unique_points_work,
-                                &new_facets, barrier);
+                                thread_id, thread_count, points, point, point_conflicts, point_set_work, &new_facets,
+                                barrier);
                 });
 
         // Erase visible facets
@@ -403,11 +431,7 @@ FacetList<Facet<N, S, C>> compute_convex_hull(
         ThreadPool thread_pool(thread_count_for_horizon<S, C>());
         std::barrier<> barrier(thread_pool.thread_count());
 
-        std::vector<std::vector<signed char>> unique_points_work(thread_pool.thread_count());
-        for (std::vector<signed char>& v : unique_points_work)
-        {
-                v.resize(points.size(), 0);
-        }
+        std::vector<PointSet> point_set_work(thread_pool.thread_count(), points.size());
 
         // Initial simplex created, so N + 1 points already processed
         for (std::size_t i = 0, points_processed = N + 1; i < points.size(); ++i, ++points_processed)
@@ -422,8 +446,7 @@ FacetList<Facet<N, S, C>> compute_convex_hull(
                         progress->set(points_processed, points.size());
                 }
 
-                add_point_to_convex_hull(
-                        points, i, &facets, &point_conflicts, &thread_pool, &barrier, &unique_points_work);
+                add_point_to_convex_hull(points, i, &facets, &point_conflicts, &thread_pool, &barrier, &point_set_work);
         }
 
         ASSERT(std::all_of(
