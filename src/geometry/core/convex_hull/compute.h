@@ -45,6 +45,7 @@ The projection to the n-space of the lower convex hull of the points
 #include "facet.h"
 #include "facet_connector.h"
 #include "facet_storage.h"
+#include "point_set.h"
 #include "simplex_points.h"
 
 #include <src/com/arrays.h>
@@ -75,38 +76,6 @@ int thread_count_for_horizon()
         const int hc = hardware_concurrency();
         return std::max(hc - 1, 1);
 }
-
-class PointSet final
-{
-        std::vector<signed char> points_;
-
-public:
-        PointSet(const std::size_t size)
-                : points_(size, 0)
-        {
-        }
-
-        void set(const std::vector<int>& points)
-        {
-                for (const int p : points)
-                {
-                        points_[p] = 1;
-                }
-        }
-
-        void clear(const std::vector<int>& points)
-        {
-                for (const int p : points)
-                {
-                        points_[p] = 0;
-                }
-        }
-
-        [[nodiscard]] bool contains(const int point) const
-        {
-                return points_[point] != 0;
-        }
-};
 
 template <std::size_t N, typename S, typename C>
 void create_initial_convex_hull(
