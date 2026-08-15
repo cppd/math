@@ -39,10 +39,12 @@ void merge_full_low(const A& a, const B& b, const Less less, const Copy copy, co
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
+        static constexpr std::size_t COUNT_2 = COUNT / 2;
+
         std::size_t a_i = 0;
         std::size_t b_i = 0;
 
-        for (std::size_t i = 0; i < COUNT / 2; ++i)
+        for (std::size_t i = 0; i < COUNT_2; ++i)
         {
                 if (less(a_i, b_i))
                 {
@@ -54,12 +56,12 @@ void merge_full_low(const A& a, const B& b, const Less less, const Copy copy, co
                 }
         }
 
-        while (a_i < COUNT / 2)
+        while (a_i < COUNT_2)
         {
                 sum(a_i++, a);
         }
 
-        while (b_i < COUNT / 2)
+        while (b_i < COUNT_2)
         {
                 sum(b_i++, b);
         }
@@ -73,10 +75,12 @@ void merge_full_high(const A& a, const B& b, const Greater greater, const Copy c
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
+        static constexpr std::size_t COUNT_2 = COUNT / 2;
+
         std::size_t a_i = COUNT - 1;
         std::size_t b_i = COUNT - 1;
 
-        for (std::size_t i = COUNT - 1; i >= COUNT / 2; --i)
+        for (std::size_t i = COUNT - 1; i >= COUNT_2; --i)
         {
                 if (greater(a_i, b_i))
                 {
@@ -88,12 +92,12 @@ void merge_full_high(const A& a, const B& b, const Greater greater, const Copy c
                 }
         }
 
-        while (a_i >= COUNT / 2)
+        while (a_i >= COUNT_2)
         {
                 sum(a_i--, a);
         }
 
-        while (b_i >= COUNT / 2)
+        while (b_i >= COUNT_2)
         {
                 sum(b_i--, b);
         }
@@ -113,11 +117,13 @@ template <typename A, typename B, typename Less, typename Copy>
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
+        static constexpr std::size_t COUNT_2 = COUNT / 2;
+
         std::size_t a_i = 0;
         std::size_t b_i = 0;
         std::size_t i = 0;
 
-        while (i < COUNT / 2 && a_i < a_size && b_i < b_size)
+        while (i < COUNT_2 && a_i < a_size && b_i < b_size)
         {
                 if (less(a_i, b_i))
                 {
@@ -129,12 +135,12 @@ template <typename A, typename B, typename Less, typename Copy>
                 }
         }
 
-        while (i < COUNT / 2 && a_i < a_size)
+        while (i < COUNT_2 && a_i < a_size)
         {
                 copy(i++, a_i++, a);
         }
 
-        while (i < COUNT / 2 && b_i < b_size)
+        while (i < COUNT_2 && b_i < b_size)
         {
                 copy(i++, b_i++, b);
         }
@@ -158,11 +164,13 @@ template <typename A, typename B, typename Greater, typename Copy>
         static_assert(COUNT % 2 == 0);
         static_assert(COUNT >= 2);
 
+        static constexpr std::size_t COUNT_2 = COUNT / 2;
+
         Signed a_i = a_size - 1;
         Signed b_i = b_size - 1;
         std::size_t i = COUNT - 1;
 
-        while (i >= COUNT / 2 && a_i >= a_min && b_i >= b_min)
+        while (i >= COUNT_2 && a_i >= a_min && b_i >= b_min)
         {
                 if (greater(a_i, b_i))
                 {
@@ -174,12 +182,12 @@ template <typename A, typename B, typename Greater, typename Copy>
                 }
         }
 
-        while (i >= COUNT / 2 && a_i >= a_min)
+        while (i >= COUNT_2 && a_i >= a_min)
         {
                 copy(i--, a_i--, a);
         }
 
-        while (i >= COUNT / 2 && b_i >= b_min)
+        while (i >= COUNT_2 && b_i >= b_min)
         {
                 copy(i--, b_i--, b);
         }
