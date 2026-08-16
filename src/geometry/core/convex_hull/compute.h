@@ -203,6 +203,49 @@ void add_new_facets_to_conflict_points(
 }
 
 template <typename Point, typename Facet>
+void create_facet_for_point_and_horizon(
+        const unsigned thread_count,
+        const std::vector<Point>& points,
+        const int point,
+        const Facet* const facet,
+        const std::size_t vertex_index,
+        std::size_t& ridge_count,
+        std::size_t& ridge_index,
+        PointSet* const point_set,
+        FacetList<Facet>* const new_facets)
+{
+        Facet* const link_facet = facet->link(vertex_index);
+
+        if (link_facet->marked_as_visible())
+        {
+                return;
+        }
+
+        if (ridge_count != ridge_index)
+        {
+                ++ridge_count;
+                return;
+        }
+
+        ++ridge_count;
+        ridge_index += thread_count;
+
+        const int link_index = link_facet->find_link_index(facet);
+
+        new_facets->emplace_back(
+                points, set_elem(facet->vertices(), vertex_index, point), link_facet->vertices()[link_index],
+                *link_facet);
+
+        Facet* const new_facet = &(*std::prev(new_facets->end()));
+        new_facet->set_iter(std::prev(new_facets->cend()));
+
+        new_facet->set_link(new_facet->find_index_for_point(point), link_facet);
+        link_facet->set_link(link_index, new_facet);
+
+        add_conflict_points_to_new_facet(points, point, point_set, facet, link_facet, new_facet);
+}
+
+template <typename Point, typename Facet>
 void create_facets_for_point_and_horizon(
         const unsigned thread_id,
         const unsigned thread_count,
@@ -221,40 +264,14 @@ void create_facets_for_point_and_horizon(
         new_facets->clear();
 
         std::size_t ridge_count = 0;
-        std::size_t index = thread_id;
+        std::size_t ridge_index = thread_id;
+
         for (const Facet* const facet : point_conflicts[point])
         {
-                for (std::size_t r = 0; r < facet->vertices().size(); ++r)
+                for (std::size_t i = 0; i < facet->vertices().size(); ++i)
                 {
-                        Facet* const link_facet = facet->link(r);
-
-                        if (link_facet->marked_as_visible())
-                        {
-                                continue;
-                        }
-
-                        if (ridge_count != index)
-                        {
-                                ++ridge_count;
-                                continue;
-                        }
-
-                        ++ridge_count;
-                        index += thread_count;
-
-                        const int link_index = link_facet->find_link_index(facet);
-
-                        new_facets->emplace_back(
-                                points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
-                                *link_facet);
-
-                        Facet* const new_facet = &(*std::prev(new_facets->end()));
-                        new_facet->set_iter(std::prev(new_facets->cend()));
-
-                        new_facet->set_link(new_facet->find_index_for_point(point), link_facet);
-                        link_facet->set_link(link_index, new_facet);
-
-                        add_conflict_points_to_new_facet(points, point, point_set, facet, link_facet, new_facet);
+                        create_facet_for_point_and_horizon(
+                                thread_count, points, point, facet, i, ridge_count, ridge_index, point_set, new_facets);
                 }
         }
 }
