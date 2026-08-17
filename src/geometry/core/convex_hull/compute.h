@@ -236,8 +236,10 @@ void create_facet_for_point_and_horizon(
                 points, set_elem(facet->vertices(), vertex_index, point), link_facet->vertices()[link_index],
                 *link_facet);
 
-        Facet* const new_facet = &(*std::prev(new_facets->end()));
-        new_facet->set_iter(std::prev(new_facets->cend()));
+        const auto new_iter = std::prev(new_facets->end());
+
+        Facet* const new_facet = &(*new_iter);
+        new_facet->set_iter(new_iter);
 
         new_facet->set_link(new_facet->find_index_for_point(point), link_facet);
         link_facet->set_link(link_index, new_facet);
