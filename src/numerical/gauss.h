@@ -205,44 +205,34 @@ constexpr void solve_u_and_y(RowMatrix<UN, UN, T>& a, RowMatrix<UN, UM, T>& b)
 }
 
 template <std::size_t UN, typename T>
-constexpr void solve_x(RowMatrix<UN, UN, T>& u, Vector<UN, T>& y)
+constexpr void solve_x(const RowMatrix<UN, UN, T>& u, Vector<UN, T>& y)
 {
         constexpr int N = UN;
 
-        y[N - 1] = y[N - 1] / u[N - 1, N - 1];
+        y[N - 1] /= u[N - 1, N - 1];
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
                         y[k] -= u[k, j] * y[j];
                 }
-                y[k] = y[k] / u[k, k];
+                y[k] /= u[k, k];
         }
 }
 
 template <std::size_t UN, std::size_t UM, typename T>
-constexpr void solve_x(RowMatrix<UN, UN, T>& u, RowMatrix<UN, UM, T>& y)
+constexpr void solve_x(const RowMatrix<UN, UN, T>& u, RowMatrix<UN, UM, T>& y)
 {
         constexpr int N = UN;
-        constexpr int M = UM;
 
-        for (int m = 0; m < M; ++m)
-        {
-                y[N - 1, m] = y[N - 1, m] / u[N - 1, N - 1];
-        }
+        y.row(N - 1) /= u[N - 1, N - 1];
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
-                        for (int m = 0; m < M; ++m)
-                        {
-                                y[k, m] -= u[k, j] * y[j, m];
-                        }
+                        y.row(k).multiply_add(-u[k, j], y.row(j));
                 }
-                for (int m = 0; m < M; ++m)
-                {
-                        y[k, m] = y[k, m] / u[k, k];
-                }
+                y.row(k) /= u[k, k];
         }
 }
 
