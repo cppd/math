@@ -126,9 +126,9 @@ void print_simplex_algorithm_data_impl(
         LOG(oss.str());
 }
 
-template <std::size_t N, std::size_t M, typename T>
-void print_simplex_algorithm_data(
-        const std::string_view text,
+template <bool WITH_PRINT, std::size_t N, std::size_t M, typename T>
+void print_simplex_algorithm_text(
+        const char* const text,
         const std::array<T, M>& b,
         const std::array<Vector<N, T>, M>& a,
         const T& v,
@@ -136,10 +136,39 @@ void print_simplex_algorithm_data(
         const std::array<unsigned, N>& map_n,
         const std::array<unsigned, M>& map_m) noexcept
 {
+        if constexpr (!WITH_PRINT)
+        {
+                return;
+        }
         static_assert(std::is_floating_point_v<T>);
         try
         {
                 print_simplex_algorithm_data_impl(text, b, a, v, c, map_n, map_m);
+        }
+        catch (...)
+        {
+                error_fatal("Error in print simplex algorithm data function");
+        }
+}
+
+template <bool WITH_PRINT, std::size_t N, std::size_t M, typename T>
+void print_simplex_algorithm_iteration(
+        const int iteration,
+        const std::array<T, M>& b,
+        const std::array<Vector<N, T>, M>& a,
+        const T& v,
+        const Vector<N, T>& c,
+        const std::array<unsigned, N>& map_n,
+        const std::array<unsigned, M>& map_m) noexcept
+{
+        if constexpr (!WITH_PRINT)
+        {
+                return;
+        }
+        static_assert(std::is_floating_point_v<T>);
+        try
+        {
+                print_simplex_algorithm_data_impl("iteration " + to_string(iteration), b, a, v, c, map_n, map_m);
         }
         catch (...)
         {
@@ -444,10 +473,7 @@ std::optional<ConstraintSolution> simplex_iterations(
                         return res;
                 }
 
-                if constexpr (WITH_PRINT)
-                {
-                        print_simplex_algorithm_data("iteration " + to_string(i), b, a, v, c, map_n, map_m);
-                }
+                print_simplex_algorithm_iteration<WITH_PRINT>(i, b, a, v, c, map_n, map_m);
         }
 }
 
@@ -477,10 +503,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         make_aux_and_maps(a_input, &b, &a, &v, &c, &map_n, &map_m);
 
-        if constexpr (WITH_PRINT)
-        {
-                print_simplex_algorithm_data("Preprocessed", b, a, v, c, map_n, map_m);
-        }
+        print_simplex_algorithm_text<WITH_PRINT>("Preprocessed", b, a, v, c, map_n, map_m);
 
         //
 
@@ -493,10 +516,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
         pivot(b, a, v, c, k, 0);
         std::swap(map_m[k], map_n[0]);
 
-        if constexpr (WITH_PRINT)
-        {
-                print_simplex_algorithm_data("First pivot", b, a, v, c, map_n, map_m);
-        }
+        print_simplex_algorithm_text<WITH_PRINT>("First pivot", b, a, v, c, map_n, map_m);
 
         //
 
