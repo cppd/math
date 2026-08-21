@@ -277,25 +277,23 @@ void pivot(
 }
 
 template <std::size_t N_SOURCE, std::size_t M, typename T>
-void make_aux_and_maps(
+void make_aux(
         const std::array<Vector<N_SOURCE, T>, M>& a_input,
-        std::array<T, M>* const b,
-        std::array<Vector<N_SOURCE + 1, T>, M>* const a,
-        T* const v,
-        Vector<N_SOURCE + 1, T>* const c,
-        std::array<unsigned, N_SOURCE + 1>* const map_n,
-        std::array<unsigned, M>* const map_m)
+        std::array<T, M>& b,
+        std::array<Vector<N_SOURCE + 1, T>, M>& a,
+        T& v,
+        Vector<N_SOURCE + 1, T>& c)
 {
         for (std::size_t m = 0; m < M; ++m)
         {
                 const T max_abs = a_input[m].norm_infinity();
                 const T max_reciprocal = (max_abs != 0) ? (1 / max_abs) : 1;
 
-                (*b)[m] *= max_reciprocal;
-                (*a)[m][0] = 1;
+                b[m] *= max_reciprocal;
+                a[m][0] = 1;
                 for (std::size_t n = 0; n < N_SOURCE; ++n)
                 {
-                        (*a)[m][n + 1] = a_input[m][n] * max_reciprocal;
+                        a[m][n + 1] = a_input[m][n] * max_reciprocal;
                 }
         }
 
@@ -305,23 +303,25 @@ void make_aux_and_maps(
 
         //
 
-        *v = 0;
+        v = 0;
 
-        (*c)[0] = -1;
+        c[0] = -1;
         for (std::size_t i = 1; i < N; ++i)
         {
-                (*c)[i] = 0;
+                c[i] = 0;
         }
+}
 
-        //
-
+template <std::size_t N, std::size_t M>
+void make_maps(std::array<unsigned, N>& map_n, std::array<unsigned, M>& map_m)
+{
         for (std::size_t i = 0; i < N; ++i)
         {
-                (*map_n)[i] = i;
+                map_n[i] = i;
         }
         for (std::size_t i = 0; i < M; ++i)
         {
-                (*map_m)[i] = i + N;
+                map_m[i] = i + N;
         }
 }
 
@@ -501,7 +501,9 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
         std::array<unsigned, N> map_n;
         std::array<unsigned, M> map_m;
 
-        make_aux_and_maps(a_input, &b, &a, &v, &c, &map_n, &map_m);
+        make_aux(a_input, b, a, v, c);
+
+        make_maps(map_n, map_m);
 
         print_simplex_algorithm_text<WITH_PRINT>("Preprocessed", b, a, v, c, map_n, map_m);
 
