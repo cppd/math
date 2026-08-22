@@ -297,16 +297,10 @@ void make_aux(
                 }
         }
 
-        //
-
-        static constexpr std::size_t N = N_SOURCE + 1;
-
-        //
-
         v = 0;
 
         c[0] = -1;
-        for (std::size_t i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N_SOURCE + 1; ++i)
         {
                 c[i] = 0;
         }
@@ -492,17 +486,14 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         //
 
-        static constexpr std::size_t N = N_SOURCE + 1;
-
         T v;
-        Vector<N, T> c;
-        std::array<Vector<N, T>, M> a;
+        Vector<N_SOURCE + 1, T> c;
+        std::array<Vector<N_SOURCE + 1, T>, M> a;
 
-        std::array<unsigned, N> map_n;
+        std::array<unsigned, N_SOURCE + 1> map_n;
         std::array<unsigned, M> map_m;
 
         make_aux(a_input, b, a, v, c);
-
         make_maps(map_n, map_m);
 
         print_simplex_algorithm_text<WITH_PRINT>("Preprocessed", b, a, v, c, map_n, map_m);
@@ -522,19 +513,15 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         //
 
-        const std::optional<ConstraintSolution> simplex_result =
-                simplex_iterations<WITH_PRINT>(a, b, c, v, map_n, map_m);
-
-        if (simplex_result)
+        if (const auto result = simplex_iterations<WITH_PRINT>(a, b, c, v, map_n, map_m))
         {
-                return *simplex_result;
+                return *result;
         }
 
         if (variable_x0_is_zero(b, map_n, map_m))
         {
                 return ConstraintSolution::FEASIBLE;
         }
-
         return ConstraintSolution::INFEASIBLE;
 }
 
