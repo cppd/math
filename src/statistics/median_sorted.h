@@ -73,11 +73,6 @@ std::optional<T> compute(
                 l = m1 + 1;
         }
 
-        if (l > h)
-        {
-                error("Median not found");
-        }
-
         return std::nullopt;
 }
 }
@@ -115,6 +110,11 @@ template <typename F1, typename F2>
                 if (const auto r = impl::compute<T>(f1, f2, size_1, size_2, l, h))
                 {
                         return *r;
+                }
+
+                if (l > h)
+                {
+                        error("Median not found");
                 }
         }
 }
