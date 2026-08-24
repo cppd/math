@@ -49,11 +49,9 @@ void merge_full_low(const A& a, const B& b, const Less less, const Copy copy, co
                 if (less(a_i, b_i))
                 {
                         copy(i, a_i++, a);
+                        continue;
                 }
-                else
-                {
-                        copy(i, b_i++, b);
-                }
+                copy(i, b_i++, b);
         }
 
         while (a_i < COUNT_2)
@@ -85,11 +83,9 @@ void merge_full_high(const A& a, const B& b, const Greater greater, const Copy c
                 if (greater(a_i, b_i))
                 {
                         copy(i, a_i--, a);
+                        continue;
                 }
-                else
-                {
-                        copy(i, b_i--, b);
-                }
+                copy(i, b_i--, b);
         }
 
         while (a_i >= COUNT_2)
@@ -128,11 +124,9 @@ template <typename A, typename B, typename Less, typename Copy>
                 if (less(a_i, b_i))
                 {
                         copy(i++, a_i++, a);
+                        continue;
                 }
-                else
-                {
-                        copy(i++, b_i++, b);
-                }
+                copy(i++, b_i++, b);
         }
 
         while (i < COUNT_2 && a_i < a_size)
@@ -175,11 +169,9 @@ template <typename A, typename B, typename Greater, typename Copy>
                 if (greater(a_i, b_i))
                 {
                         copy(i--, a_i--, a);
+                        continue;
                 }
-                else
-                {
-                        copy(i--, b_i--, b);
-                }
+                copy(i--, b_i--, b);
         }
 
         while (i >= COUNT_2 && a_i >= a_min)
