@@ -30,8 +30,8 @@ class ThreadTasks final
         template <typename T>
         friend class ThreadTaskManager;
 
-        // If there are no tasks and all thread do nothing, then there will be no more tasks.
-        // If there are no tasks and a thread do something, then new tasks can be created.
+        // If there are no tasks and all threads do nothing, then there will be no more tasks.
+        // If there are no tasks and a thread does something, then new tasks can be created.
         // Instead of counting tasks for each thread, the sum of tasks across all threads is used.
         // A thread requires a new task without having a task - the sum is the same.
         // A thread requires a new task having a task - the sum decreases by 1.
