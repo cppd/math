@@ -247,8 +247,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& obj
         boxes.emplace_back(Parallelotope(root.min(), root.max()));
         boxes.back().object_indices = zero_based_indices(objects.count());
 
-        ThreadTasks<Task<Box>> tasks;
-        tasks.emplace(&boxes.front(), 1 /*depth*/);
+        ThreadTasks<Task<Box>> tasks(&boxes.front(), 1 /*depth*/);
 
         const auto f = [&]
         {

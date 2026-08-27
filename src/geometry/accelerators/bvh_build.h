@@ -180,8 +180,7 @@ public:
 
                 nodes_.emplace_back();
 
-                ThreadTasks<Task> tasks;
-                tasks.emplace(objects, compute_bounds(objects), &nodes_.front());
+                ThreadTasks<Task> tasks(objects, compute_bounds(objects), &nodes_.front());
 
                 const auto f = [&]
                 {

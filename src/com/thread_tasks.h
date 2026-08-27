@@ -80,12 +80,18 @@ class ThreadTasks final
                 }
         }
 
-public:
         template <typename... Ts>
         void emplace(Ts&&... vs)
         {
                 const std::lock_guard lg(lock_);
                 tasks_.emplace(std::forward<Ts>(vs)...);
+        }
+
+public:
+        template <typename... Ts>
+        explicit ThreadTasks(Ts&&... vs)
+        {
+                emplace(std::forward<Ts>(vs)...);
         }
 
         void stop()
