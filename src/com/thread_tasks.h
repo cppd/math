@@ -52,19 +52,16 @@ class ThreadTasks final
                 --task_count_;
         }
 
-        std::optional<Task> get(bool has_task)
+        std::optional<Task> get(const bool has_task)
         {
+                release(has_task);
+
                 while (true)
                 {
                         const std::lock_guard lg(lock_);
                         if (stop_)
                         {
                                 return {};
-                        }
-                        if (has_task)
-                        {
-                                --task_count_;
-                                has_task = false;
                         }
                         if (!tasks_.empty())
                         {
