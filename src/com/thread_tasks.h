@@ -42,14 +42,13 @@ class ThreadTasks final
         std::mutex lock_;
         bool stop_ = false;
 
-        void release(const bool has_task)
+        void release(const bool has_task) noexcept
         {
-                if (!has_task)
+                if (has_task)
                 {
-                        return;
+                        const std::lock_guard lg(lock_);
+                        --task_count_;
                 }
-                const std::lock_guard lg(lock_);
-                --task_count_;
         }
 
         std::optional<Task> get(const bool has_task)
@@ -101,7 +100,7 @@ public:
 template <typename Task>
 class ThreadTaskManager final
 {
-        ThreadTasks<Task>* tasks_;
+        ThreadTasks<Task>* const tasks_;
         bool has_task_ = false;
 
 public:
