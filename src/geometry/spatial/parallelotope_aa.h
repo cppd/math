@@ -95,6 +95,8 @@ public:
 
         using DataType = T;
 
+        static T intersection_cost();
+
         ParallelotopeAA() = default;
 
         ParallelotopeAA(const numerical::Vector<N, T>& org, const std::array<T, N>& sizes);
