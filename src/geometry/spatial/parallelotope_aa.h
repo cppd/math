@@ -83,6 +83,8 @@ class ParallelotopeAA final
         template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] static T intersect_type(const T& near, const T& far);
 
+        [[nodiscard]] bool intersect_impl(const numerical::Ray<N, T>& ray, const std::size_t i, T& near, T& far) const;
+
         template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, T max_distance) const;
 
@@ -227,35 +229,35 @@ T ParallelotopeAA<N, T>::intersect_type(const T& near, const T& far)
 }
 
 template <std::size_t N, typename T>
+bool ParallelotopeAA<N, T>::intersect_impl(const numerical::Ray<N, T>& ray, const std::size_t i, T& near, T& far) const
+{
+        const T s = ray.dir()[i];
+        const T d = ray.org()[i];
+        if (s == 0)
+        {
+                return d < planes_[i].d1 || d > planes_[i].d2;
+        }
+        const bool dir_negative = (s < 0);
+        const T r = 1 / s;
+        const std::array<T, 2> a{(planes_[i].d1 - d) * r, (planes_[i].d2 - d) * r};
+        near = std::max(near, a[dir_negative]);
+        far = std::min(far, a[!dir_negative]);
+        return far < near;
+}
+
+template <std::size_t N, typename T>
 template <ParallelotopeAA<N, T>::IntersectionType INTERSECTION_TYPE>
 std::optional<T> ParallelotopeAA<N, T>::intersect_impl(const numerical::Ray<N, T>& ray, const T max_distance) const
 {
         T near = 0;
         T far = max_distance;
-
         for (std::size_t i = 0; i < N; ++i)
         {
-                const T s = ray.dir()[i];
-                const T d = ray.org()[i];
-                if (s == 0)
+                if (intersect_impl(ray, i, near, far))
                 {
-                        if (d < planes_[i].d1 || d > planes_[i].d2)
-                        {
-                                return {};
-                        }
-                        continue;
-                }
-                const bool dir_negative = (s < 0);
-                const T r = 1 / s;
-                const std::array<T, 2> a{(planes_[i].d1 - d) * r, (planes_[i].d2 - d) * r};
-                near = std::max(near, a[dir_negative]);
-                far = std::min(far, a[!dir_negative]);
-                if (far < near)
-                {
-                        return {};
+                        return std::nullopt;
                 }
         }
-
         return intersect_type<INTERSECTION_TYPE>(near, far);
 }
 
