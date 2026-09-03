@@ -83,7 +83,7 @@ class ParallelotopeAA final
         template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] static T intersect_type(const T& near, const T& far);
 
-        [[nodiscard]] bool intersect_impl(const numerical::Ray<N, T>& ray, const std::size_t i, T& near, T& far) const;
+        [[nodiscard]] bool intersect_impl(const numerical::Ray<N, T>& ray, std::size_t i, T& near, T& far) const;
 
         template <IntersectionType INTERSECTION_TYPE>
         [[nodiscard]] std::optional<T> intersect_impl(const numerical::Ray<N, T>& ray, T max_distance) const;
