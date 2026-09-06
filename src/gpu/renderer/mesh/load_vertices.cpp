@@ -1,0 +1,421 @@
+/*
+Copyright (C) 2017-2026 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "load_vertices.h"
+
+#include "shaders/vertex_triangles.h"
+
+#include <src/com/chrono.h>
+#include <src/com/container.h>
+#include <src/com/error.h>
+#include <src/com/hash.h>
+#include <src/com/log.h>
+#include <src/com/print.h>
+#include <src/com/thread.h>
+#include <src/model/mesh.h>
+#include <src/numerical/vector.h>
+#include <src/vulkan/acceleration_structure.h>
+#include <src/vulkan/buffers.h>
+#include <src/vulkan/device.h>
+#include <src/vulkan/objects.h>
+
+#include <vulkan/vulkan_core.h>
+
+#include <array>
+#include <atomic>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace ns::gpu::renderer
+{
+namespace
+{
+constexpr float MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
+
+constexpr numerical::Vector2f NULL_TEXTURE_COORDINATES = numerical::Vector2f(-1e10);
+
+std::string time_string(const double time)
+{
+        return to_string_fixed(1000.0 * time, 5) + " ms";
+}
+
+class Vertex final
+{
+        numerical::Vector3f p_;
+        numerical::Vector3f n_;
+        numerical::Vector2f t_;
+        std::size_t hash_;
+
+public:
+        void set(const numerical::Vector3f& p, const numerical::Vector3f& n, const numerical::Vector2f& t)
+        {
+                p_ = p;
+                n_ = n;
+                t_ = t;
+                hash_ = compute_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
+        }
+
+        [[nodiscard]] const numerical::Vector3f& p() const
+        {
+                return p_;
+        }
+
+        [[nodiscard]] const numerical::Vector3f& n() const
+        {
+                return n_;
+        }
+
+        [[nodiscard]] const numerical::Vector2f& t() const
+        {
+                return t_;
+        }
+
+        [[nodiscard]] const std::size_t& hash() const
+        {
+                return hash_;
+        }
+};
+
+class MapVertex final
+{
+        const Vertex* data_;
+
+        [[nodiscard]] std::size_t hash() const noexcept
+        {
+                return data_->hash();
+        }
+
+public:
+        explicit MapVertex(const Vertex* const v) noexcept
+                : data_(v)
+        {
+        }
+
+        [[nodiscard]] bool operator==(const MapVertex& v) const noexcept
+        {
+                return data_->p() == v.data_->p() && data_->n() == v.data_->n() && data_->t() == v.data_->t();
+        }
+
+        struct Hash final
+        {
+                [[nodiscard]] static std::size_t operator()(const MapVertex& v)
+                {
+                        return v.hash();
+                }
+        };
+};
+
+std::array<numerical::Vector3f, 3> face_vertices(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet)
+{
+        std::array<numerical::Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = mesh.vertices[mesh_facet.vertices[i]];
+        }
+        return res;
+}
+
+std::array<numerical::Vector3f, 3> copy_normals(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet)
+{
+        std::array<numerical::Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = mesh.normals[mesh_facet.normals[i]];
+        }
+        return res;
+}
+
+std::array<numerical::Vector3f, 3> copy_normal(const numerical::Vector3f& geometric_normal)
+{
+        std::array<numerical::Vector3f, 3> res;
+        for (int i = 0; i < 3; ++i)
+        {
+                res[i] = geometric_normal;
+        }
+        return res;
+}
+
+bool check_facet_normals(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet,
+        const numerical::Vector3f& geometric_normal)
+{
+        static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
+
+        for (int i = 0; i < 3; ++i)
+        {
+                const auto d = dot(mesh.normals[mesh_facet.normals[i]], geometric_normal);
+                if (!(std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+std::array<numerical::Vector3f, 3> face_normals(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet,
+        const std::array<numerical::Vector3f, 3>& vertices)
+{
+        const numerical::Vector3f geometric_normal =
+                cross(vertices[1] - vertices[0], vertices[2] - vertices[0]).normalized();
+
+        if (!is_finite(geometric_normal))
+        {
+                error("Face unit orthogonal vector is not finite for the face with vertices (" + to_string(vertices[0])
+                      + ", " + to_string(vertices[1]) + ", " + to_string(vertices[2]) + ")");
+        }
+
+        if (!mesh_facet.has_normal)
+        {
+                return copy_normal(geometric_normal);
+        }
+
+        if (!check_facet_normals(mesh, mesh_facet, geometric_normal))
+        {
+                return copy_normal(geometric_normal);
+        }
+
+        return copy_normals(mesh, mesh_facet);
+}
+
+std::array<numerical::Vector2f, 3> face_texcoords(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet)
+{
+        std::array<numerical::Vector2f, 3> res;
+
+        if (mesh_facet.has_texcoord)
+        {
+                for (int i = 0; i < 3; ++i)
+                {
+                        res[i] = mesh.texcoords[mesh_facet.texcoords[i]];
+                }
+        }
+        else
+        {
+                for (int i = 0; i < 3; ++i)
+                {
+                        res[i] = NULL_TEXTURE_COORDINATES;
+                }
+        }
+
+        return res;
+}
+
+void set_face_vertices(
+        const model::mesh::Mesh<3>& mesh,
+        const model::mesh::Mesh<3>::Facet& mesh_facet,
+        std::array<Vertex, 3>* const face)
+{
+        const std::array<numerical::Vector3f, 3> v = face_vertices(mesh, mesh_facet);
+        const std::array<numerical::Vector3f, 3> n = face_normals(mesh, mesh_facet, v);
+        const std::array<numerical::Vector2f, 3> t = face_texcoords(mesh, mesh_facet);
+
+        for (int i = 0; i < 3; ++i)
+        {
+                (*face)[i].set(v[i], n[i], t[i]);
+        }
+}
+
+std::vector<std::array<Vertex, 3>> create_faces(
+        const model::mesh::Mesh<3>& mesh,
+        const std::vector<int>& sorted_face_indices)
+{
+        std::vector<std::array<Vertex, 3>> faces(sorted_face_indices.size());
+
+        run_in_threads(
+                [&](std::atomic_size_t& task)
+                {
+                        const std::size_t size = sorted_face_indices.size();
+                        std::size_t index = 0;
+                        while ((index = task++) < size)
+                        {
+                                set_face_vertices(mesh, mesh.facets[sorted_face_indices[index]], &faces[index]);
+                        }
+                },
+                sorted_face_indices.size());
+
+        return faces;
+}
+
+BufferMesh create_buffer_mesh(const std::vector<std::array<Vertex, 3>>& faces)
+{
+        BufferMesh mesh;
+
+        mesh.vertices.reserve(3 * faces.size());
+        mesh.indices.reserve(3 * faces.size());
+
+        std::unordered_map<MapVertex, VertexIndexType, MapVertex::Hash> map;
+        map.reserve(3 * faces.size());
+
+        for (const std::array<Vertex, 3>& face_vertices : faces)
+        {
+                for (int i = 0; i < 3; ++i)
+                {
+                        const auto [iter, inserted] = map.emplace(&face_vertices[i], map.size());
+                        if (inserted)
+                        {
+                                const Vertex& vertex = face_vertices[i];
+                                mesh.vertices.emplace_back(vertex.p(), vertex.n(), vertex.t());
+                        }
+                        mesh.indices.push_back(iter->second);
+                }
+        }
+
+        ASSERT((mesh.indices.size() >= 3) && (mesh.indices.size() % 3 == 0));
+
+        return mesh;
+}
+
+void load_mesh_to_buffers(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const std::vector<std::uint32_t>& family_indices,
+        const BufferMesh& mesh,
+        std::unique_ptr<vulkan::BufferWithMemory>* const vertex_buffer,
+        std::unique_ptr<vulkan::BufferWithMemory>* const index_buffer)
+{
+        *vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(mesh.vertices));
+        (*vertex_buffer)->write(command_pool, queue, data_size(mesh.vertices), data_pointer(mesh.vertices));
+
+        *index_buffer = std::make_unique<vulkan::BufferWithMemory>(
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
+                VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(mesh.indices));
+        (*index_buffer)->write(command_pool, queue, data_size(mesh.indices), data_pointer(mesh.indices));
+}
+
+std::string mesh_info(
+        const BufferMesh& mesh,
+        const double create_duration,
+        const double map_duration,
+        const double load_duration)
+{
+        std::ostringstream oss;
+        oss << "Mesh info" << '\n';
+        oss << "  create  : " << time_string(create_duration) << '\n';
+        oss << "  map     : " << time_string(map_duration) << '\n';
+        oss << "  load    : " << time_string(load_duration) << '\n';
+        oss << "  vertices: ";
+        oss << to_string_digit_groups(mesh.vertices.size());
+        oss << " (" << to_string_digit_groups(data_size(mesh.vertices)) << " bytes)" << '\n';
+        oss << "  faces   : ";
+        oss << to_string_digit_groups(mesh.indices.size() / 3);
+        oss << " (" << to_string_digit_groups(data_size(mesh.indices)) << " bytes)";
+        return oss.str();
+}
+}
+
+void load_vertices(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const std::vector<std::uint32_t>& family_indices,
+        const model::mesh::Mesh<3>& mesh,
+        const std::vector<int>& sorted_face_indices,
+        std::unique_ptr<vulkan::BufferWithMemory>* const vertex_buffer,
+        std::unique_ptr<vulkan::BufferWithMemory>* const index_buffer,
+        BufferMesh* const buffer_mesh)
+{
+        if (mesh.facets.empty())
+        {
+                vertex_buffer->reset();
+                index_buffer->reset();
+                *buffer_mesh = {};
+                return;
+        }
+
+        ASSERT(sorted_face_indices.size() == mesh.facets.size());
+
+        //
+
+        const Clock::time_point create_start_time = Clock::now();
+
+        const std::vector<std::array<Vertex, 3>> faces = create_faces(mesh, sorted_face_indices);
+
+        const double create_duration = duration_from(create_start_time);
+
+        //
+
+        const Clock::time_point map_start_time = Clock::now();
+
+        *buffer_mesh = create_buffer_mesh(faces);
+
+        const double map_duration = duration_from(map_start_time);
+
+        //
+
+        const Clock::time_point load_start_time = Clock::now();
+
+        load_mesh_to_buffers(device, command_pool, queue, family_indices, *buffer_mesh, vertex_buffer, index_buffer);
+
+        const double load_duration = duration_from(load_start_time);
+
+        //
+
+        LOG(mesh_info(*buffer_mesh, create_duration, map_duration, load_duration));
+}
+
+std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_structure(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const std::vector<std::uint32_t>& family_indices,
+        const BufferMesh& buffer_mesh)
+{
+        if (buffer_mesh.indices.empty())
+        {
+                return {};
+        }
+
+        const Clock::time_point start_time = Clock::now();
+
+        std::vector<numerical::Vector3f> vertices;
+        vertices.reserve(buffer_mesh.vertices.size());
+        for (const TrianglesVertex& v : buffer_mesh.vertices)
+        {
+                vertices.push_back(v.position);
+        }
+
+        vulkan::BottomLevelAccelerationStructure acceleration_structure =
+                vulkan::create_bottom_level_acceleration_structure(
+                        device, compute_command_pool, compute_queue, family_indices, vertices, buffer_mesh.indices,
+                        std::nullopt);
+
+        const double duration = duration_from(start_time);
+
+        LOG("Mesh acceleration structure info: " + time_string(duration));
+
+        return std::make_unique<vulkan::BottomLevelAccelerationStructure>(std::move(acceleration_structure));
+}
+}

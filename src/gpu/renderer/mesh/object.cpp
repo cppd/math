@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object.h"
 
 #include "load.h"
+#include "load_vertices.h"
 #include "memory.h"
 
 #include "buffers/material.h"
