@@ -31,12 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-using VertexIndexType = std::uint32_t;
-
 struct BufferMesh final
 {
         std::vector<TrianglesVertex> vertices;
-        std::vector<VertexIndexType> indices;
+        std::vector<std::uint32_t> indices;
 };
 
 void load_vertices(

@@ -49,6 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -84,6 +85,7 @@ class Impl final : public MeshObject
 
         std::unique_ptr<vulkan::BufferWithMemory> faces_vertex_buffer_;
         std::unique_ptr<vulkan::BufferWithMemory> faces_index_buffer_;
+        std::optional<VkIndexType> faces_index_buffer_type_;
         unsigned faces_vertex_count_ = 0;
         unsigned faces_index_count_ = 0;
 
@@ -210,6 +212,9 @@ class Impl final : public MeshObject
                         *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh, facets.indices,
                         &faces_vertex_buffer_, &faces_index_buffer_, &buffer_mesh);
 
+                static_assert(std::is_same_v<std::uint32_t, decltype(buffer_mesh.indices)::value_type>);
+                faces_index_buffer_type_ = VK_INDEX_TYPE_UINT32;
+
                 faces_vertex_count_ = buffer_mesh.vertices.size();
                 faces_index_count_ = buffer_mesh.indices.size();
 
@@ -227,6 +232,7 @@ class Impl final : public MeshObject
         {
                 faces_vertex_buffer_.reset();
                 faces_index_buffer_.reset();
+                faces_index_buffer_type_.reset();
                 lines_vertex_buffer_.reset();
                 points_vertex_buffer_.reset();
                 acceleration_structure_.reset();
@@ -269,7 +275,11 @@ class Impl final : public MeshObject
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-                vkCmdBindIndexBuffer(command_buffer, faces_index_buffer_->buffer().handle(), 0, VERTEX_INDEX_TYPE);
+
+                ASSERT(faces_index_buffer_);
+                ASSERT(faces_index_buffer_type_);
+                vkCmdBindIndexBuffer(
+                        command_buffer, faces_index_buffer_->buffer().handle(), 0, *faces_index_buffer_type_);
 
                 for (std::size_t i = 0; i < material_vertices_.size(); ++i)
                 {
@@ -301,7 +311,11 @@ class Impl final : public MeshObject
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-                vkCmdBindIndexBuffer(command_buffer, faces_index_buffer_->buffer().handle(), 0, VERTEX_INDEX_TYPE);
+
+                ASSERT(faces_index_buffer_);
+                ASSERT(faces_index_buffer_type_);
+                vkCmdBindIndexBuffer(
+                        command_buffer, faces_index_buffer_->buffer().handle(), 0, *faces_index_buffer_type_);
 
                 vkCmdDrawIndexed(command_buffer, faces_index_count_, 1, 0, 0, 0);
         }

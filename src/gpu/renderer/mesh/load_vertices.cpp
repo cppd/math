@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
+#include <src/com/type/limit.h>
 #include <src/model/mesh.h>
 #include <src/numerical/vector.h>
 #include <src/vulkan/acceleration_structure.h>
@@ -273,13 +274,15 @@ BufferMesh create_buffer_mesh(const std::vector<std::array<Vertex, 3>>& faces)
         mesh.vertices.reserve(3 * faces.size());
         mesh.indices.reserve(3 * faces.size());
 
-        std::unordered_map<MapVertex, VertexIndexType, MapVertex::Hash> map;
+        using IndexType = decltype(mesh.indices)::value_type;
+        std::unordered_map<MapVertex, IndexType, MapVertex::Hash> map;
         map.reserve(3 * faces.size());
 
         for (const std::array<Vertex, 3>& face_vertices : faces)
         {
                 for (int i = 0; i < 3; ++i)
                 {
+                        ASSERT(map.size() <= Limits<IndexType>::max());
                         const auto [iter, inserted] = map.emplace(&face_vertices[i], map.size());
                         if (inserted)
                         {

@@ -24,16 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
-#include <vulkan/vulkan_core.h>
-
 #include <cstdint>
 #include <memory>
 #include <vector>
 
 namespace ns::gpu::renderer
 {
-inline constexpr VkIndexType VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
-
 std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
