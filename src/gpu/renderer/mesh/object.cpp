@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/material.h"
 #include "buffers/mesh.h"
 #include "shaders/descriptors.h"
+#include "shaders/vertex_triangles.h"
 
 #include <src/color/color.h>
 #include <src/com/alg.h>
@@ -206,17 +207,18 @@ class Impl final : public MeshObject
                         material_vertices_[i].count = 3 * facets.count[i];
                 }
 
-                BufferMesh buffer_mesh;
+                std::vector<TrianglesVertex> vertices;
+                std::vector<std::uint32_t> indices;
 
                 load_vertices(
                         *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh, facets.indices,
-                        &faces_vertex_buffer_, &faces_index_buffer_, &buffer_mesh);
+                        &faces_vertex_buffer_, &faces_index_buffer_, &vertices, &indices);
 
-                static_assert(std::is_same_v<std::uint32_t, decltype(buffer_mesh.indices)::value_type>);
+                static_assert(std::is_same_v<std::uint32_t, decltype(indices)::value_type>);
                 faces_index_buffer_type_ = VK_INDEX_TYPE_UINT32;
 
-                faces_vertex_count_ = buffer_mesh.vertices.size();
-                faces_index_count_ = buffer_mesh.indices.size();
+                faces_vertex_count_ = vertices.size();
+                faces_index_count_ = indices.size();
 
                 ASSERT(faces_index_count_ == 3 * mesh.facets.size());
 
@@ -224,7 +226,7 @@ class Impl final : public MeshObject
                 {
                         acceleration_structure_ = load_acceleration_structure(
                                 *device_, *compute_command_pool_, *compute_queue_,
-                                acceleration_structure_family_indices_, buffer_mesh);
+                                acceleration_structure_family_indices_, vertices, indices);
                 }
         }
 

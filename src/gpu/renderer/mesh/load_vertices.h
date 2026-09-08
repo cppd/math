@@ -31,12 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct BufferMesh final
-{
-        std::vector<TrianglesVertex> vertices;
-        std::vector<std::uint32_t> indices;
-};
-
 void load_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
@@ -46,12 +40,14 @@ void load_vertices(
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* vertex_buffer,
         std::unique_ptr<vulkan::BufferWithMemory>* index_buffer,
-        BufferMesh* buffer_mesh);
+        std::vector<TrianglesVertex>* vertices,
+        std::vector<std::uint32_t>* indices);
 
 std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_structure(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const BufferMesh& buffer_mesh);
+        const std::vector<TrianglesVertex>& vertices,
+        const std::vector<std::uint32_t>& indices);
 }

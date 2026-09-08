@@ -57,6 +57,12 @@ constexpr float MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 
 constexpr numerical::Vector2f NULL_TEXTURE_COORDINATES = numerical::Vector2f(-1e10);
 
+struct BufferMesh final
+{
+        std::vector<TrianglesVertex> vertices;
+        std::vector<std::uint32_t> indices;
+};
+
 std::string time_string(const double time)
 {
         return to_string_fixed(1000.0 * time, 5) + " ms";
@@ -348,13 +354,15 @@ void load_vertices(
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* const vertex_buffer,
         std::unique_ptr<vulkan::BufferWithMemory>* const index_buffer,
-        BufferMesh* const buffer_mesh)
+        std::vector<TrianglesVertex>* const vertices,
+        std::vector<std::uint32_t>* const indices)
 {
         if (mesh.facets.empty())
         {
                 vertex_buffer->reset();
                 index_buffer->reset();
-                *buffer_mesh = {};
+                vertices->clear();
+                indices->clear();
                 return;
         }
 
@@ -372,7 +380,7 @@ void load_vertices(
 
         const Clock::time_point map_start_time = Clock::now();
 
-        *buffer_mesh = create_buffer_mesh(faces);
+        BufferMesh buffer_mesh = create_buffer_mesh(faces);
 
         const double map_duration = duration_from(map_start_time);
 
@@ -380,13 +388,16 @@ void load_vertices(
 
         const Clock::time_point load_start_time = Clock::now();
 
-        load_mesh_to_buffers(device, command_pool, queue, family_indices, *buffer_mesh, vertex_buffer, index_buffer);
+        load_mesh_to_buffers(device, command_pool, queue, family_indices, buffer_mesh, vertex_buffer, index_buffer);
 
         const double load_duration = duration_from(load_start_time);
 
         //
 
-        LOG(mesh_info(*buffer_mesh, create_duration, map_duration, load_duration));
+        LOG(mesh_info(buffer_mesh, create_duration, map_duration, load_duration));
+
+        *vertices = std::move(buffer_mesh.vertices);
+        *indices = std::move(buffer_mesh.indices);
 }
 
 std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_structure(
@@ -394,26 +405,26 @@ std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_stru
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const BufferMesh& buffer_mesh)
+        const std::vector<TrianglesVertex>& vertices,
+        const std::vector<std::uint32_t>& indices)
 {
-        if (buffer_mesh.indices.empty())
+        if (indices.empty())
         {
                 return {};
         }
 
         const Clock::time_point start_time = Clock::now();
 
-        std::vector<numerical::Vector3f> vertices;
-        vertices.reserve(buffer_mesh.vertices.size());
-        for (const TrianglesVertex& v : buffer_mesh.vertices)
+        std::vector<numerical::Vector3f> positions;
+        positions.reserve(vertices.size());
+        for (const TrianglesVertex& v : vertices)
         {
-                vertices.push_back(v.position);
+                positions.push_back(v.position);
         }
 
         vulkan::BottomLevelAccelerationStructure acceleration_structure =
                 vulkan::create_bottom_level_acceleration_structure(
-                        device, compute_command_pool, compute_queue, family_indices, vertices, buffer_mesh.indices,
-                        std::nullopt);
+                        device, compute_command_pool, compute_queue, family_indices, positions, indices, std::nullopt);
 
         const double duration = duration_from(start_time);
 
