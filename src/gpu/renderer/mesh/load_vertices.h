@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/vertex_triangles.h"
 
 #include <src/model/mesh.h>
-#include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
@@ -42,12 +41,4 @@ void load_vertices(
         std::unique_ptr<vulkan::BufferWithMemory>* index_buffer,
         std::vector<TrianglesVertex>* vertices,
         std::vector<std::uint32_t>* indices);
-
-std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const std::vector<std::uint32_t>& family_indices,
-        const std::vector<TrianglesVertex>& vertices,
-        const std::vector<std::uint32_t>& indices);
 }

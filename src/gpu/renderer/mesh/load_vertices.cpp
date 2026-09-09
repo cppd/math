@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/model/mesh.h>
 #include <src/numerical/vector.h>
-#include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
@@ -42,7 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -398,38 +396,5 @@ void load_vertices(
 
         *vertices = std::move(buffer_mesh.vertices);
         *indices = std::move(buffer_mesh.indices);
-}
-
-std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const std::vector<std::uint32_t>& family_indices,
-        const std::vector<TrianglesVertex>& vertices,
-        const std::vector<std::uint32_t>& indices)
-{
-        if (indices.empty())
-        {
-                return {};
-        }
-
-        const Clock::time_point start_time = Clock::now();
-
-        std::vector<numerical::Vector3f> positions;
-        positions.reserve(vertices.size());
-        for (const TrianglesVertex& v : vertices)
-        {
-                positions.push_back(v.position);
-        }
-
-        vulkan::BottomLevelAccelerationStructure acceleration_structure =
-                vulkan::create_bottom_level_acceleration_structure(
-                        device, compute_command_pool, compute_queue, family_indices, positions, indices, std::nullopt);
-
-        const double duration = duration_from(start_time);
-
-        LOG("Mesh acceleration structure info: " + time_string(duration));
-
-        return std::make_unique<vulkan::BottomLevelAccelerationStructure>(std::move(acceleration_structure));
 }
 }
