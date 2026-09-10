@@ -57,6 +57,11 @@ constexpr std::array COLOR_IMAGE_FORMATS
 };
 // clang-format on
 
+std::string time_string(const double time)
+{
+        return to_string_fixed(1000.0 * time, 5) + " ms";
+}
+
 std::unique_ptr<vulkan::BufferWithMemory> make_vertex_buffer(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
@@ -209,7 +214,7 @@ std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_stru
 
         const double duration = duration_from(start_time);
 
-        LOG("Mesh acceleration structure info: " + to_string_fixed(1000.0 * duration, 5) + " ms");
+        LOG("Mesh acceleration structure info: " + time_string(duration));
 
         return std::make_unique<vulkan::BottomLevelAccelerationStructure>(std::move(acceleration_structure));
 }
