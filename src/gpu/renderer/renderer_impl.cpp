@@ -70,18 +70,6 @@ void RendererImpl::info(info::Description* const description) const
         description->ray_tracing = ray_tracing_;
 }
 
-void RendererImpl::receive(const Info& info) const
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        std::visit(
-                [this](const auto& v)
-                {
-                        this->info(v);
-                },
-                info);
-}
-
 void RendererImpl::cmd(const ObjectCommand& command)
 {
         renderer_object_.exec(command);
@@ -90,92 +78,6 @@ void RendererImpl::cmd(const ObjectCommand& command)
 void RendererImpl::cmd(const ViewCommand& command)
 {
         renderer_view_.exec(command);
-}
-
-void RendererImpl::exec(const Command& command)
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        std::visit(
-                [this](const auto& v)
-                {
-                        cmd(v);
-                },
-                command);
-}
-
-VkSemaphore RendererImpl::draw(
-        const VkSemaphore semaphore,
-        const vulkan::Queue& graphics_queue_1,
-        const vulkan::Queue& graphics_queue_2,
-        const unsigned index) const
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        ASSERT(graphics_queue_1.family_index() == graphics_queue_->family_index());
-        ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
-
-        const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
-
-        return renderer_draw_.draw(
-                semaphore, graphics_queue_1.handle(), graphics_queue_2.handle(), index, shadow_mapping,
-                transparency_buffers_);
-}
-
-bool RendererImpl::empty() const
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        return !mesh_renderer_.has_meshes() && !volume_renderer_.has_volume();
-}
-
-void RendererImpl::create_buffers(
-        RenderBuffers3D* const render_buffers,
-        const vulkan::ImageWithMemory* const objects,
-        const numerical::Region<2, int>& viewport)
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        ASSERT(objects->image().type() == VK_IMAGE_TYPE_2D);
-        ASSERT(viewport.x1() <= static_cast<int>(objects->image().extent().width));
-        ASSERT(viewport.y1() <= static_cast<int>(objects->image().extent().height));
-
-        render_buffers_ = render_buffers;
-        object_image_ = objects;
-        viewport_ = viewport;
-
-        const ViewportTransform transform = viewport_transform(viewport_);
-        drawing_buffer_.set_viewport(transform.center, transform.factor);
-
-        ASSERT(render_buffers_->framebuffers().size() == 1);
-
-        create_depth_copy_image();
-        create_transparency_buffers();
-        create_opacity_buffers();
-
-        mesh_renderer_.create_render_buffers(
-                render_buffers_, *object_image_, transparency_buffers_.heads(), transparency_buffers_.heads_size(),
-                transparency_buffers_.counters(), transparency_buffers_.nodes(), opacity_buffers_, viewport_);
-        create_mesh_shadow_mapping_buffers();
-
-        volume_renderer_.create_buffers(
-                render_buffers_, viewport_, depth_copy_image_->image_view().handle(), transparency_buffers_.heads(),
-                transparency_buffers_.nodes(), opacity_buffers_);
-
-        create_mesh_command_buffers();
-        create_volume_command_buffers();
-}
-
-void RendererImpl::delete_buffers()
-{
-        ASSERT(thread_id_ == std::this_thread::get_id());
-
-        volume_renderer_.delete_buffers();
-        delete_mesh_shadow_mapping_buffers();
-        mesh_renderer_.delete_render_buffers();
-        depth_copy_image_.reset();
-        transparency_buffers_.delete_buffers();
-        opacity_buffers_.delete_buffers();
 }
 
 void RendererImpl::create_depth_copy_image()
@@ -342,6 +244,106 @@ void RendererImpl::acceleration_structure_update_matrices() const
         ASSERT(acceleration_structure_);
         acceleration_structure_->update_matrices(
                 device_->handle(), *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
+}
+
+// Renderer
+
+void RendererImpl::receive(const Info& info) const
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        std::visit(
+                [this](const auto& v)
+                {
+                        this->info(v);
+                },
+                info);
+}
+
+void RendererImpl::exec(const Command& command)
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        std::visit(
+                [this](const auto& v)
+                {
+                        cmd(v);
+                },
+                command);
+}
+
+VkSemaphore RendererImpl::draw(
+        const VkSemaphore semaphore,
+        const vulkan::Queue& graphics_queue_1,
+        const vulkan::Queue& graphics_queue_2,
+        const unsigned index) const
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        ASSERT(graphics_queue_1.family_index() == graphics_queue_->family_index());
+        ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
+
+        const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
+
+        return renderer_draw_.draw(
+                semaphore, graphics_queue_1.handle(), graphics_queue_2.handle(), index, shadow_mapping,
+                transparency_buffers_);
+}
+
+bool RendererImpl::empty() const
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        return !mesh_renderer_.has_meshes() && !volume_renderer_.has_volume();
+}
+
+void RendererImpl::create_buffers(
+        RenderBuffers3D* const render_buffers,
+        const vulkan::ImageWithMemory* const objects,
+        const numerical::Region<2, int>& viewport)
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        ASSERT(objects->image().type() == VK_IMAGE_TYPE_2D);
+        ASSERT(viewport.x1() <= static_cast<int>(objects->image().extent().width));
+        ASSERT(viewport.y1() <= static_cast<int>(objects->image().extent().height));
+
+        render_buffers_ = render_buffers;
+        object_image_ = objects;
+        viewport_ = viewport;
+
+        const ViewportTransform transform = viewport_transform(viewport_);
+        drawing_buffer_.set_viewport(transform.center, transform.factor);
+
+        ASSERT(render_buffers_->framebuffers().size() == 1);
+
+        create_depth_copy_image();
+        create_transparency_buffers();
+        create_opacity_buffers();
+
+        mesh_renderer_.create_render_buffers(
+                render_buffers_, *object_image_, transparency_buffers_.heads(), transparency_buffers_.heads_size(),
+                transparency_buffers_.counters(), transparency_buffers_.nodes(), opacity_buffers_, viewport_);
+        create_mesh_shadow_mapping_buffers();
+
+        volume_renderer_.create_buffers(
+                render_buffers_, viewport_, depth_copy_image_->image_view().handle(), transparency_buffers_.heads(),
+                transparency_buffers_.nodes(), opacity_buffers_);
+
+        create_mesh_command_buffers();
+        create_volume_command_buffers();
+}
+
+void RendererImpl::delete_buffers()
+{
+        ASSERT(thread_id_ == std::this_thread::get_id());
+
+        volume_renderer_.delete_buffers();
+        delete_mesh_shadow_mapping_buffers();
+        mesh_renderer_.delete_render_buffers();
+        depth_copy_image_.reset();
+        transparency_buffers_.delete_buffers();
+        opacity_buffers_.delete_buffers();
 }
 
 // StorageMeshEvents

@@ -98,10 +98,28 @@ class RendererImpl final : public Renderer, RendererViewEvents, StorageMeshEvent
         void info(info::Functionality* functionality) const;
         void info(info::Description* description) const;
 
-        void receive(const Info& info) const override;
-
         void cmd(const ObjectCommand& command);
         void cmd(const ViewCommand& command);
+
+        void create_depth_copy_image();
+
+        void create_transparency_buffers();
+        void create_opacity_buffers();
+        void delete_mesh_shadow_mapping_buffers();
+        void create_mesh_shadow_mapping_buffers();
+        void create_mesh_render_command_buffers();
+        void create_mesh_shadow_mapping_command_buffers();
+        void create_mesh_command_buffers();
+        void create_volume_command_buffers();
+
+        void set_volume_matrix();
+
+        void acceleration_structure_create();
+        void acceleration_structure_update_matrices() const;
+
+        // Renderer
+
+        void receive(const Info& info) const override;
 
         void exec(const Command& command) override;
 
@@ -119,22 +137,6 @@ class RendererImpl final : public Renderer, RendererViewEvents, StorageMeshEvent
                 const numerical::Region<2, int>& viewport) override;
 
         void delete_buffers() override;
-
-        void create_depth_copy_image();
-
-        void create_transparency_buffers();
-        void create_opacity_buffers();
-        void delete_mesh_shadow_mapping_buffers();
-        void create_mesh_shadow_mapping_buffers();
-        void create_mesh_render_command_buffers();
-        void create_mesh_shadow_mapping_command_buffers();
-        void create_mesh_command_buffers();
-        void create_volume_command_buffers();
-
-        void set_volume_matrix();
-
-        void acceleration_structure_create();
-        void acceleration_structure_update_matrices() const;
 
         // StorageMeshEvents
 
