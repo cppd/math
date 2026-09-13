@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter_0_conv.h"
 #include "filter_0_measurement.h"
+#include "filter_0_measurement_position.h"
 #include "filter_0_model.h"
 #include "init.h"
 
