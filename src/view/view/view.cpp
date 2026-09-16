@@ -70,8 +70,7 @@ namespace ns::view::view
 {
 namespace
 {
-using FrameClock = std::chrono::steady_clock;
-constexpr FrameClock::duration IDLE_MODE_FRAME_DURATION = std::chrono::milliseconds(100);
+constexpr std::chrono::milliseconds IDLE_MODE_FRAME_DURATION{100};
 
 constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 constexpr double TEXT_SIZE_IN_POINTS = 9;
@@ -131,12 +130,9 @@ class Impl final
         const vulkan::CommandPool graphics_compute_command_pool_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
-        const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device().handle()};
+        const vulkan::handle::Semaphore swapchain_image_semaphore_;
 
-        VkSampleCountFlagBits sample_count_flag_{sample_count_flag_preferred(
-                MULTISAMPLING,
-                PREFERRED_SAMPLE_COUNT,
-                device_graphics_.device().properties())};
+        VkSampleCountFlagBits sample_count_flag_;
 
         std::optional<PixelSizes> pixel_sizes_;
         com::FrameRate frame_rate_;
@@ -157,7 +153,7 @@ class Impl final
         std::optional<ImageResolve> image_resolve_;
         std::optional<Swapchain> swapchain_resolve_;
 
-        FrameClock::time_point last_frame_time_ = FrameClock::now();
+        std::chrono::steady_clock::time_point last_frame_time_;
 
         //
 
@@ -450,6 +446,11 @@ public:
                           vulkan::create_transient_command_pool(
                                   device_graphics_.device().handle(),
                                   device_graphics_.transfer_family_index())),
+                  swapchain_image_semaphore_(device_graphics_.device().handle()),
+                  sample_count_flag_(sample_count_flag_preferred(
+                          MULTISAMPLING,
+                          PREFERRED_SAMPLE_COUNT,
+                          device_graphics_.device().properties())),
                   clear_buffer_(device_graphics_.device().handle(), graphics_compute_command_pool_.handle()),
                   renderer_(
                           gpu::renderer::create_renderer(
@@ -503,7 +504,8 @@ public:
                           [this](const int sample_count)
                           {
                                   set_sample_count(sample_count);
-                          })
+                          }),
+                  last_frame_time_(std::chrono::steady_clock::now())
         {
                 ASSERT(device_graphics_.graphics_compute_queue_size() >= 2);
 
@@ -541,7 +543,7 @@ public:
                 if (renderer_->empty())
                 {
                         std::this_thread::sleep_until(last_frame_time_ + IDLE_MODE_FRAME_DURATION);
-                        last_frame_time_ = FrameClock::now();
+                        last_frame_time_ = std::chrono::steady_clock::now();
                 }
         }
 
