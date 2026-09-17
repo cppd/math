@@ -38,10 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/com/clip_plane.h>
 #include <src/view/com/frame_rate.h>
 #include <src/view/com/mouse.h>
-#include <src/view/com/view_thread.h>
 #include <src/view/com/window.h>
 #include <src/view/event.h>
-#include <src/view/view.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device/device_graphics.h>
@@ -120,357 +118,297 @@ vulkan::physical_device::DeviceFunctionality device_functionality()
 
         return res;
 }
+}
 
-class Impl final
+void View::cmd(const ViewCommand& command)
 {
-        const std::thread::id thread_id_ = std::this_thread::get_id();
+        view_process_.exec(command);
+}
 
-        const vulkan::handle::SurfaceKHR surface_;
-        const vulkan::device::DeviceGraphics device_graphics_;
-        const vulkan::CommandPool graphics_compute_command_pool_;
-        const vulkan::CommandPool compute_command_pool_;
-        const vulkan::CommandPool transfer_command_pool_;
-        const vulkan::handle::Semaphore swapchain_image_semaphore_;
+void View::cmd(const MouseCommand& command)
+{
+        mouse_.exec(command);
+}
 
-        VkSampleCountFlagBits sample_count_flag_;
-
-        std::optional<PixelSizes> pixel_sizes_;
-        com::FrameRate frame_rate_;
-
-        ClearBuffer clear_buffer_;
-        std::unique_ptr<gpu::renderer::Renderer> renderer_;
-        std::unique_ptr<gpu::text_writer::View> text_;
-
-        ImageProcess image_process_;
-        com::Camera camera_;
-        com::Mouse mouse_;
-        com::ClipPlane clip_plane_;
-        ViewProcess view_process_;
-
-        std::optional<vulkan::Swapchain> swapchain_;
-        std::unique_ptr<RenderBuffers> render_buffers_;
-        std::optional<vulkan::ImageWithMemory> object_image_;
-        std::optional<ImageResolve> image_resolve_;
-        std::optional<Swapchain> swapchain_resolve_;
-
-        std::chrono::steady_clock::time_point last_frame_time_;
-
-        //
-
-        void cmd(const ViewCommand& command)
+void View::cmd(const ImageCommand& command)
+{
+        const bool two_windows = image_process_.two_windows();
+        image_process_.exec(command);
+        if (two_windows != image_process_.two_windows())
         {
-                view_process_.exec(command);
+                create_swapchain();
         }
+}
 
-        void cmd(const MouseCommand& command)
-        {
-                mouse_.exec(command);
-        }
+void View::cmd(const ClipPlaneCommand& command)
+{
+        clip_plane_.exec(command);
+}
 
-        void cmd(const ImageCommand& command)
-        {
-                const bool two_windows = image_process_.two_windows();
-                image_process_.exec(command);
-                if (two_windows != image_process_.two_windows())
-                {
-                        create_swapchain();
-                }
-        }
+void View::info(std::optional<info::Camera>* const camera) const
+{
+        *camera = camera_.camera();
+}
 
-        void cmd(const ClipPlaneCommand& command)
-        {
-                clip_plane_.exec(command);
-        }
+void View::info(std::optional<info::Image>* const image)
+{
+        static_assert(RENDER_BUFFER_COUNT == 1);
 
-        void info(std::optional<info::Camera>* const camera) const
-        {
-                *camera = camera_.camera();
-        }
+        static constexpr int IMAGE_INDEX = 0;
 
-        void info(std::optional<info::Image>* const image)
-        {
-                static_assert(RENDER_BUFFER_COUNT == 1);
+        device_graphics_.device().wait_idle();
 
-                static constexpr int IMAGE_INDEX = 0;
+        ASSERT(swapchain_);
+        const int width = swapchain_->width();
+        const int height = swapchain_->height();
 
-                device_graphics_.device().wait_idle();
+        delete_swapchain_buffers();
+        create_buffers(SAVE_FORMAT, width, height);
 
-                ASSERT(swapchain_);
-                const int width = swapchain_->width();
-                const int height = swapchain_->height();
+        const VkSemaphore semaphore = draw();
 
-                delete_swapchain_buffers();
-                create_buffers(SAVE_FORMAT, width, height);
-
-                const VkSemaphore semaphore = draw();
-
-                *image = info::Image{
-                        .image = resolve_to_image(
-                                device_graphics_.device(), graphics_compute_command_pool_,
-                                device_graphics_.graphics_compute_queue(0), *render_buffers_, semaphore, IMAGE_INDEX)};
-
-                delete_buffers();
-                create_swapchain_buffers();
-        }
-
-        void info(std::optional<info::ClipPlane>* const clip_plane)
-        {
-                *clip_plane = info::ClipPlane{.equation = clip_plane_.equation(), .position = clip_plane_.position()};
-        }
-
-        void info(std::optional<info::Functionality>* const functionality) const
-        {
-                gpu::renderer::info::Functionality info;
-                renderer_->receive(&info);
-                *functionality = info::Functionality{.shadow_zoom = info.shadow_zoom};
-        }
-
-        void info(std::optional<info::Description>* const description) const
-        {
-                gpu::renderer::info::Description info;
-                renderer_->receive(&info);
-                *description = info::Description{.ray_tracing = info.ray_tracing};
-        }
-
-        void info(std::optional<info::SampleCount>* const sample_count) const
-        {
-                *sample_count = info::SampleCount{
-                        .sample_counts = sample_counts(MULTISAMPLING, device_graphics_.device().properties()),
-                        .sample_count = vulkan::sample_count_flag_to_sample_count(sample_count_flag_)};
-        }
-
-        //
-
-        void delete_buffers()
-        {
-                text_->delete_buffers();
-                image_process_.delete_buffers();
-                renderer_->delete_buffers();
-                clear_buffer_.delete_buffers();
-
-                image_resolve_.reset();
-                object_image_.reset();
-                render_buffers_.reset();
-        }
-
-        void create_buffers(const VkFormat format, const unsigned width, const unsigned height)
-        {
-                ASSERT(pixel_sizes_);
-
-                frame_rate_.set_text_size(pixel_sizes_->text);
-                text_->set_text_size(pixel_sizes_->text);
-
-                render_buffers_ = create_render_buffers(
-                        RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
-                        {device_graphics_.graphics_compute_queue(0).family_index()}, device_graphics_.device(),
-                        sample_count_flag_);
-
-                object_image_.emplace(
-                        device_graphics_.device(),
-                        std::vector({device_graphics_.graphics_compute_queue(0).family_index()}),
-                        std::vector({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
-                        VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
-                        graphics_compute_command_pool_, device_graphics_.graphics_compute_queue(0));
-
-                const auto [window_1, window_2] = com::window_position_and_size(
-                        image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
-                        pixel_sizes_->frame);
-
-                static_assert(RENDER_BUFFER_COUNT == 1);
-                image_resolve_.emplace(
+        *image = info::Image{
+                .image = resolve_to_image(
                         device_graphics_.device(), graphics_compute_command_pool_,
-                        device_graphics_.graphics_compute_queue(0), *render_buffers_, window_1,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
+                        device_graphics_.graphics_compute_queue(0), *render_buffers_, semaphore, IMAGE_INDEX)};
 
-                clear_buffer_.create_buffers(render_buffers_.get(), &*object_image_, view_process_.clear_color_rgb32());
+        delete_buffers();
+        create_swapchain_buffers();
+}
 
-                renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
+void View::info(std::optional<info::ClipPlane>* const clip_plane)
+{
+        *clip_plane = info::ClipPlane{.equation = clip_plane_.equation(), .position = clip_plane_.position()};
+}
 
-                text_->create_buffers(
-                        &render_buffers_->buffers_2d(),
-                        numerical::Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
+void View::info(std::optional<info::Functionality>* const functionality) const
+{
+        gpu::renderer::info::Functionality info;
+        renderer_->receive(&info);
+        *functionality = info::Functionality{.shadow_zoom = info.shadow_zoom};
+}
 
-                image_process_.create_buffers(
-                        pixel_sizes_->ppi, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_,
-                        window_1, window_2);
+void View::info(std::optional<info::Description>* const description) const
+{
+        gpu::renderer::info::Description info;
+        renderer_->receive(&info);
+        *description = info::Description{.ray_tracing = info.ray_tracing};
+}
 
-                mouse_.set_rectangle(window_1, width, height);
-                camera_.resize(window_1.width(), window_1.height());
-        }
+void View::info(std::optional<info::SampleCount>* const sample_count) const
+{
+        *sample_count = info::SampleCount{
+                .sample_counts = sample_counts(MULTISAMPLING, device_graphics_.device().properties()),
+                .sample_count = vulkan::sample_count_flag_to_sample_count(sample_count_flag_)};
+}
 
-        [[nodiscard]] VkSemaphore draw() const
+//
+
+void View::delete_buffers()
+{
+        text_->delete_buffers();
+        image_process_.delete_buffers();
+        renderer_->delete_buffers();
+        clear_buffer_.delete_buffers();
+
+        image_resolve_.reset();
+        object_image_.reset();
+        render_buffers_.reset();
+}
+
+void View::create_buffers(const VkFormat format, const unsigned width, const unsigned height)
+{
+        ASSERT(pixel_sizes_);
+
+        frame_rate_.set_text_size(pixel_sizes_->text);
+        text_->set_text_size(pixel_sizes_->text);
+
+        render_buffers_ = create_render_buffers(
+                RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
+                {device_graphics_.graphics_compute_queue(0).family_index()}, device_graphics_.device(),
+                sample_count_flag_);
+
+        object_image_.emplace(
+                device_graphics_.device(), std::vector({device_graphics_.graphics_compute_queue(0).family_index()}),
+                std::vector({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
+                VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
+                graphics_compute_command_pool_, device_graphics_.graphics_compute_queue(0));
+
+        const auto [window_1, window_2] = com::window_position_and_size(
+                image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(), pixel_sizes_->frame);
+
+        static_assert(RENDER_BUFFER_COUNT == 1);
+        image_resolve_.emplace(
+                device_graphics_.device(), graphics_compute_command_pool_, device_graphics_.graphics_compute_queue(0),
+                *render_buffers_, window_1, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
+
+        clear_buffer_.create_buffers(render_buffers_.get(), &*object_image_, view_process_.clear_color_rgb32());
+
+        renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
+
+        text_->create_buffers(
+                &render_buffers_->buffers_2d(),
+                numerical::Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
+
+        image_process_.create_buffers(
+                pixel_sizes_->ppi, &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1,
+                window_2);
+
+        mouse_.set_rectangle(window_1, width, height);
+        camera_.resize(window_1.width(), window_1.height());
+}
+
+VkSemaphore View::draw() const
+{
+        static_assert(RENDER_BUFFER_COUNT == 1);
+
+        static constexpr int IMAGE_INDEX = 0;
+        ASSERT(render_buffers_->image_views().size() == 1);
+
+        VkSemaphore semaphore = clear_buffer_.clear(device_graphics_.graphics_compute_queue(1), IMAGE_INDEX);
+
+        semaphore = renderer_->draw(
+                semaphore, device_graphics_.graphics_compute_queue(0), device_graphics_.graphics_compute_queue(1),
+                IMAGE_INDEX);
+
+        const vulkan::Queue& graphics_queue = device_graphics_.graphics_compute_queue(0);
+        const vulkan::Queue& compute_queue = device_graphics_.compute_queue();
+
+        ASSERT(image_resolve_);
+        semaphore = image_process_.draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
+
+        if (view_process_.text_active())
         {
-                static_assert(RENDER_BUFFER_COUNT == 1);
-
-                static constexpr int IMAGE_INDEX = 0;
-                ASSERT(render_buffers_->image_views().size() == 1);
-
-                VkSemaphore semaphore = clear_buffer_.clear(device_graphics_.graphics_compute_queue(1), IMAGE_INDEX);
-
-                semaphore = renderer_->draw(
-                        semaphore, device_graphics_.graphics_compute_queue(0),
-                        device_graphics_.graphics_compute_queue(1), IMAGE_INDEX);
-
-                const vulkan::Queue& graphics_queue = device_graphics_.graphics_compute_queue(0);
-                const vulkan::Queue& compute_queue = device_graphics_.compute_queue();
-
-                ASSERT(image_resolve_);
-                semaphore = image_process_.draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
-
-                if (view_process_.text_active())
-                {
-                        semaphore = text_->draw(graphics_queue, semaphore, IMAGE_INDEX, frame_rate_.text_data());
-                }
-
-                return semaphore;
+                semaphore = text_->draw(graphics_queue, semaphore, IMAGE_INDEX, frame_rate_.text_data());
         }
 
-        //
+        return semaphore;
+}
 
-        void delete_swapchain_buffers()
-        {
-                swapchain_resolve_.reset();
-                delete_buffers();
-        }
+//
 
-        void create_swapchain_buffers()
+void View::delete_swapchain_buffers()
+{
+        swapchain_resolve_.reset();
+        delete_buffers();
+}
+
+void View::create_swapchain_buffers()
+{
+        ASSERT(swapchain_);
+
+        create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
+
+        swapchain_resolve_.emplace(
+                device_graphics_.device().handle(), graphics_compute_command_pool_, *render_buffers_, *swapchain_);
+}
+
+void View::delete_swapchain()
+{
+        device_graphics_.device().wait_idle();
+
+        delete_swapchain_buffers();
+        swapchain_.reset();
+}
+
+void View::create_swapchain(const std::optional<std::array<double, 2>>& window_size_in_mm)
+{
+        delete_swapchain();
+
+        swapchain_.emplace(
+                surface_, device_graphics_.device(),
+                std::vector<std::uint32_t>{
+                        device_graphics_.graphics_compute_queue(0).family_index(),
+                        device_graphics_.presentation_queue().family_index()},
+                SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
+                view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC : vulkan::PresentMode::PREFER_FAST);
+
+        if (window_size_in_mm)
         {
                 ASSERT(swapchain_);
-
-                create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
-
-                swapchain_resolve_.emplace(
-                        device_graphics_.device().handle(), graphics_compute_command_pool_, *render_buffers_,
-                        *swapchain_);
+                pixel_sizes_ =
+                        pixel_sizes(TEXT_SIZE_IN_POINTS, FRAME_SIZE_IN_MILLIMETERS, *window_size_in_mm, *swapchain_);
         }
 
-        void delete_swapchain()
+        create_swapchain_buffers();
+}
+
+bool View::render_swapchain() const
+{
+        ASSERT(swapchain_);
+
+        const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
+                device_graphics_.device().handle(), swapchain_->swapchain(), swapchain_image_semaphore_);
+
+        if (!image_index)
         {
-                device_graphics_.device().wait_idle();
-
-                delete_swapchain_buffers();
-                swapchain_.reset();
+                return false;
         }
 
-        void create_swapchain(const std::optional<std::array<double, 2>>& window_size_in_mm = std::nullopt)
+        const vulkan::Queue& queue = device_graphics_.graphics_compute_queue(0);
+
+        VkSemaphore semaphore = draw();
+
+        ASSERT(swapchain_resolve_);
+        semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
+
+        if (!vulkan::queue_present(
+                    semaphore, swapchain_->swapchain(), *image_index, device_graphics_.presentation_queue().handle()))
         {
-                delete_swapchain();
-
-                swapchain_.emplace(
-                        surface_, device_graphics_.device(),
-                        std::vector<std::uint32_t>{
-                                device_graphics_.graphics_compute_queue(0).family_index(),
-                                device_graphics_.presentation_queue().family_index()},
-                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
-                        view_process_.vertical_sync()
-                                ? vulkan::PresentMode::PREFER_SYNC
-                                : vulkan::PresentMode::PREFER_FAST);
-
-                if (window_size_in_mm)
-                {
-                        ASSERT(swapchain_);
-                        pixel_sizes_ = pixel_sizes(
-                                TEXT_SIZE_IN_POINTS, FRAME_SIZE_IN_MILLIMETERS, *window_size_in_mm, *swapchain_);
-                }
-
-                create_swapchain_buffers();
+                return false;
         }
 
-        [[nodiscard]] bool render_swapchain() const
+        VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));
+
+        return true;
+}
+
+void View::set_sample_count(const int sample_count)
+{
+        const auto flag = sample_count_flag(MULTISAMPLING, sample_count, device_graphics_.device().properties());
+        if (!flag)
         {
-                ASSERT(swapchain_);
-
-                const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
-                        device_graphics_.device().handle(), swapchain_->swapchain(), swapchain_image_semaphore_);
-
-                if (!image_index)
-                {
-                        return false;
-                }
-
-                const vulkan::Queue& queue = device_graphics_.graphics_compute_queue(0);
-
-                VkSemaphore semaphore = draw();
-
-                ASSERT(swapchain_resolve_);
-                semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
-
-                if (!vulkan::queue_present(
-                            semaphore, swapchain_->swapchain(), *image_index,
-                            device_graphics_.presentation_queue().handle()))
-                {
-                        return false;
-                }
-
-                VULKAN_CHECK(vkQueueWaitIdle(queue.handle()));
-
-                return true;
+                message_warning("Unsupported sample count " + to_string(sample_count));
+                return;
         }
 
-        void set_sample_count(const int sample_count)
-        {
-                const auto flag =
-                        sample_count_flag(MULTISAMPLING, sample_count, device_graphics_.device().properties());
-                if (!flag)
-                {
-                        message_warning("Unsupported sample count " + to_string(sample_count));
-                        return;
-                }
+        device_graphics_.device().wait_idle();
 
-                device_graphics_.device().wait_idle();
+        delete_swapchain_buffers();
+        sample_count_flag_ = *flag;
+        create_swapchain_buffers();
+}
 
-                delete_swapchain_buffers();
-                sample_count_flag_ = *flag;
-                create_swapchain_buffers();
-        }
-
-public:
-        Impl(const window::WindowID window, const std::array<double, 2>& window_size_in_mm)
-                : surface_(
-                          vulkan::Instance::handle(),
-                          [&](const VkInstance instance)
-                          {
-                                  return window::vulkan_create_surface(window, instance);
-                          }),
-                  device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
-                  graphics_compute_command_pool_(
-                          vulkan::create_command_pool(
-                                  device_graphics_.device().handle(),
-                                  device_graphics_.graphics_compute_family_index())),
-                  compute_command_pool_(
-                          vulkan::create_command_pool(
-                                  device_graphics_.device().handle(),
-                                  device_graphics_.compute_family_index())),
-                  transfer_command_pool_(
-                          vulkan::create_transient_command_pool(
-                                  device_graphics_.device().handle(),
-                                  device_graphics_.transfer_family_index())),
-                  swapchain_image_semaphore_(device_graphics_.device().handle()),
-                  sample_count_flag_(sample_count_flag_preferred(
-                          MULTISAMPLING,
-                          PREFERRED_SAMPLE_COUNT,
-                          device_graphics_.device().properties())),
-                  clear_buffer_(device_graphics_.device().handle(), graphics_compute_command_pool_.handle()),
-                  renderer_(
-                          gpu::renderer::create_renderer(
-                                  &device_graphics_.device(),
-                                  &graphics_compute_command_pool_,
-                                  &device_graphics_.graphics_compute_queue(0),
-                                  &transfer_command_pool_,
-                                  &device_graphics_.transfer_queue(),
-                                  &compute_command_pool_,
-                                  &device_graphics_.compute_queue(),
-                                  SAMPLE_RATE_SHADING,
-                                  SAMPLER_ANISOTROPY)),
-                  text_(gpu::text_writer::create_view(
-                          &device_graphics_.device(),
-                          &graphics_compute_command_pool_,
-                          &device_graphics_.graphics_compute_queue(0),
-                          SAMPLE_RATE_SHADING,
-                          DEFAULT_TEXT_COLOR)),
-                  image_process_(
-                          SAMPLE_RATE_SHADING,
+View::View(const window::WindowID window, const std::array<double, 2>& window_size_in_mm)
+        : thread_id_(std::this_thread::get_id()),
+          surface_(
+                  vulkan::Instance::handle(),
+                  [&](const VkInstance instance)
+                  {
+                          return window::vulkan_create_surface(window, instance);
+                  }),
+          device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
+          graphics_compute_command_pool_(
+                  vulkan::create_command_pool(
+                          device_graphics_.device().handle(),
+                          device_graphics_.graphics_compute_family_index())),
+          compute_command_pool_(
+                  vulkan::create_command_pool(
+                          device_graphics_.device().handle(),
+                          device_graphics_.compute_family_index())),
+          transfer_command_pool_(
+                  vulkan::create_transient_command_pool(
+                          device_graphics_.device().handle(),
+                          device_graphics_.transfer_family_index())),
+          swapchain_image_semaphore_(device_graphics_.device().handle()),
+          sample_count_flag_(sample_count_flag_preferred(
+                  MULTISAMPLING,
+                  PREFERRED_SAMPLE_COUNT,
+                  device_graphics_.device().properties())),
+          clear_buffer_(device_graphics_.device().handle(), graphics_compute_command_pool_.handle()),
+          renderer_(
+                  gpu::renderer::create_renderer(
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,
                           &device_graphics_.graphics_compute_queue(0),
@@ -478,112 +416,114 @@ public:
                           &device_graphics_.transfer_queue(),
                           &compute_command_pool_,
                           &device_graphics_.compute_queue(),
-                          RENDER_BUFFER_COUNT),
-                  camera_(
-                          [this](const auto& info)
-                          {
-                                  renderer_->exec(gpu::renderer::command::SetCamera(&info));
-                          }),
-                  mouse_(&camera_),
-                  clip_plane_(
-                          &camera_,
-                          [this](const auto& clip_plane)
-                          {
-                                  renderer_->exec(gpu::renderer::command::SetClipPlane(clip_plane));
-                          }),
-                  view_process_(
-                          &clear_buffer_,
-                          renderer_.get(),
-                          text_.get(),
-                          &camera_,
-                          SWAPCHAIN_INITIAL_VERTICAL_SYNC,
-                          [this]
-                          {
-                                  create_swapchain();
-                          },
-                          [this](const int sample_count)
-                          {
-                                  set_sample_count(sample_count);
-                          }),
-                  last_frame_time_(std::chrono::steady_clock::now())
-        {
-                ASSERT(device_graphics_.graphics_compute_queue_size() >= 2);
+                          SAMPLE_RATE_SHADING,
+                          SAMPLER_ANISOTROPY)),
+          text_(gpu::text_writer::create_view(
+                  &device_graphics_.device(),
+                  &graphics_compute_command_pool_,
+                  &device_graphics_.graphics_compute_queue(0),
+                  SAMPLE_RATE_SHADING,
+                  DEFAULT_TEXT_COLOR)),
+          image_process_(
+                  SAMPLE_RATE_SHADING,
+                  &device_graphics_.device(),
+                  &graphics_compute_command_pool_,
+                  &device_graphics_.graphics_compute_queue(0),
+                  &transfer_command_pool_,
+                  &device_graphics_.transfer_queue(),
+                  &compute_command_pool_,
+                  &device_graphics_.compute_queue(),
+                  RENDER_BUFFER_COUNT),
+          camera_(
+                  [this](const auto& info)
+                  {
+                          renderer_->exec(gpu::renderer::command::SetCamera(&info));
+                  }),
+          mouse_(&camera_),
+          clip_plane_(
+                  &camera_,
+                  [this](const auto& clip_plane)
+                  {
+                          renderer_->exec(gpu::renderer::command::SetClipPlane(clip_plane));
+                  }),
+          view_process_(
+                  &clear_buffer_,
+                  renderer_.get(),
+                  text_.get(),
+                  &camera_,
+                  SWAPCHAIN_INITIAL_VERTICAL_SYNC,
+                  [this]
+                  {
+                          create_swapchain();
+                  },
+                  [this](const int sample_count)
+                  {
+                          set_sample_count(sample_count);
+                  }),
+          last_frame_time_(std::chrono::steady_clock::now())
+{
+        ASSERT(device_graphics_.graphics_compute_queue_size() >= 2);
 
-                create_swapchain(window_size_in_mm);
-                camera_.reset_view();
-        }
-
-        ~Impl()
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                delete_swapchain();
-        }
-
-        Impl(const Impl&) = delete;
-        Impl(Impl&&) = delete;
-        Impl& operator=(const Impl&) = delete;
-        Impl& operator=(Impl&&) = delete;
-
-        void render()
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                if (view_process_.text_active())
-                {
-                        frame_rate_.calculate();
-                }
-
-                if (!render_swapchain())
-                {
-                        create_swapchain();
-                        return;
-                }
-
-                if (renderer_->empty())
-                {
-                        std::this_thread::sleep_until(last_frame_time_ + IDLE_MODE_FRAME_DURATION);
-                        last_frame_time_ = std::chrono::steady_clock::now();
-                }
-        }
-
-        void exec(const std::vector<Command>& commands)
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                const auto visitor = [this](const auto& v)
-                {
-                        cmd(v);
-                };
-
-                for (const Command& command : commands)
-                {
-                        std::visit(visitor, command);
-                }
-        }
-
-        void receive(const std::vector<Info>& infos)
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                const auto visitor = [this](const auto& v)
-                {
-                        info(v);
-                };
-
-                for (const Info& info : infos)
-                {
-                        std::visit(visitor, info);
-                }
-        }
-};
+        create_swapchain(window_size_in_mm);
+        camera_.reset_view();
 }
 
-std::unique_ptr<View> create_view(
-        const window::WindowID window,
-        const std::array<double, 2>& window_size_in_mm,
-        std::vector<Command>&& initial_commands)
+View::~View()
 {
-        return std::make_unique<com::ViewThread<Impl>>(std::move(initial_commands), window, window_size_in_mm);
+        ASSERT(std::this_thread::get_id() == thread_id_);
+
+        delete_swapchain();
+}
+
+void View::render()
+{
+        ASSERT(std::this_thread::get_id() == thread_id_);
+
+        if (view_process_.text_active())
+        {
+                frame_rate_.calculate();
+        }
+
+        if (!render_swapchain())
+        {
+                create_swapchain();
+                return;
+        }
+
+        if (renderer_->empty())
+        {
+                std::this_thread::sleep_until(last_frame_time_ + IDLE_MODE_FRAME_DURATION);
+                last_frame_time_ = std::chrono::steady_clock::now();
+        }
+}
+
+void View::exec(const std::vector<Command>& commands)
+{
+        ASSERT(std::this_thread::get_id() == thread_id_);
+
+        const auto visitor = [this](const auto& v)
+        {
+                cmd(v);
+        };
+
+        for (const Command& command : commands)
+        {
+                std::visit(visitor, command);
+        }
+}
+
+void View::receive(const std::vector<Info>& infos)
+{
+        ASSERT(std::this_thread::get_id() == thread_id_);
+
+        const auto visitor = [this](const auto& v)
+        {
+                info(v);
+        };
+
+        for (const Info& info : infos)
+        {
+                std::visit(visitor, info);
+        }
 }
 }

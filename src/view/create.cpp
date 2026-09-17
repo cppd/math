@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "event.h"
 #include "view.h"
 
+#include "com/view_thread.h"
 #include "view/view.h"
 
 #include <src/window/handle.h>
@@ -36,6 +37,6 @@ std::unique_ptr<View> create_view(
         const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands)
 {
-        return view::create_view(window, window_size_in_mm, std::move(initial_commands));
+        return std::make_unique<com::ViewThread<view::View>>(std::move(initial_commands), window, window_size_in_mm);
 }
 }
