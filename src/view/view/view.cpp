@@ -78,11 +78,14 @@ constexpr int RENDER_BUFFER_COUNT = 1;
 constexpr int SWAPCHAIN_PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
 constexpr VkSurfaceFormatKHR SWAPCHAIN_SURFACE_FORMAT{
         .format = VK_FORMAT_B8G8R8A8_SRGB,
-        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+};
 constexpr bool SWAPCHAIN_INITIAL_VERTICAL_SYNC = false;
 
 constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
-constexpr std::array DEPTH_FORMATS = {VK_FORMAT_D32_SFLOAT};
+constexpr std::array DEPTH_FORMATS = {
+        VK_FORMAT_D32_SFLOAT,
+};
 
 constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
@@ -170,7 +173,8 @@ void View::info(std::optional<info::Image>* const image)
         *image = info::Image{
                 .image = resolve_to_image(
                         device_graphics_.device(), graphics_compute_command_pool_,
-                        device_graphics_.graphics_compute_queue(0), *render_buffers_, semaphore, IMAGE_INDEX)};
+                        device_graphics_.graphics_compute_queue(0), *render_buffers_, semaphore, IMAGE_INDEX),
+        };
 
         delete_buffers();
         create_swapchain_buffers();
@@ -178,28 +182,36 @@ void View::info(std::optional<info::Image>* const image)
 
 void View::info(std::optional<info::ClipPlane>* const clip_plane)
 {
-        *clip_plane = info::ClipPlane{.equation = clip_plane_.equation(), .position = clip_plane_.position()};
+        *clip_plane = info::ClipPlane{
+                .equation = clip_plane_.equation(),
+                .position = clip_plane_.position(),
+        };
 }
 
 void View::info(std::optional<info::Functionality>* const functionality) const
 {
         gpu::renderer::info::Functionality info;
         renderer_->receive(&info);
-        *functionality = info::Functionality{.shadow_zoom = info.shadow_zoom};
+        *functionality = info::Functionality{
+                .shadow_zoom = info.shadow_zoom,
+        };
 }
 
 void View::info(std::optional<info::Description>* const description) const
 {
         gpu::renderer::info::Description info;
         renderer_->receive(&info);
-        *description = info::Description{.ray_tracing = info.ray_tracing};
+        *description = info::Description{
+                .ray_tracing = info.ray_tracing,
+        };
 }
 
 void View::info(std::optional<info::SampleCount>* const sample_count) const
 {
         *sample_count = info::SampleCount{
                 .sample_counts = sample_counts(MULTISAMPLING, device_graphics_.device().properties()),
-                .sample_count = vulkan::sample_count_flag_to_sample_count(sample_count_flag_)};
+                .sample_count = vulkan::sample_count_flag_to_sample_count(sample_count_flag_),
+        };
 }
 
 //
