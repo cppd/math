@@ -38,7 +38,7 @@ class ViewThread final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        ThreadEvents<T> thread_events_;
+        ThreadEvents thread_events_;
         std::thread thread_;
         std::atomic_bool stop_{false};
         std::atomic_bool started_{false};

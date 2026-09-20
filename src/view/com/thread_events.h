@@ -71,7 +71,6 @@ public:
 };
 }
 
-template <typename T>
 class ThreadEvents final
 {
         ThreadQueue<Command> send_queue_;
@@ -100,6 +99,7 @@ public:
                 v.wait();
         }
 
+        template <typename T>
         void dispatch(T* const view)
         {
                 namespace impl = thread_events_implementation;
