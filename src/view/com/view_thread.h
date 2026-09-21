@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <atomic>
 #include <exception>
+#include <functional>
+#include <memory>
 #include <string>
 #include <thread>
 #include <utility>
@@ -54,19 +56,20 @@ class ViewThread final : public View
         }
 
         template <typename... Args>
-        void thread_function(const Args&... args)
+        void thread_function(const std::function<std::unique_ptr<T>()>& constructor)
         {
                 try
                 {
-                        T view(args...);
+                        const std::unique_ptr<T> view = constructor();
+                        ASSERT(view);
 
                         started_ = true;
                         try
                         {
                                 while (!stop_)
                                 {
-                                        thread_events_.dispatch(&view);
-                                        view.render();
+                                        thread_events_.dispatch(view.get());
+                                        view->render();
                                 }
                         }
                         catch (const std::exception& e)
@@ -118,18 +121,22 @@ class ViewThread final : public View
         }
 
 public:
-        template <typename... Args>
-        explicit ViewThread(std::vector<Command>&& initial_commands, const Args&... args)
+        ViewThread(const ViewThread&) = delete;
+        ViewThread(ViewThread&&) = delete;
+        ViewThread& operator=(const ViewThread&) = delete;
+        ViewThread& operator=(ViewThread&&) = delete;
+
+        ViewThread(std::vector<Command>&& initial_commands, std::function<std::unique_ptr<T>()> constructor)
                 : thread_events_(std::move(initial_commands))
         {
                 try
                 {
                         thread_ = std::thread(
-                                [args..., this]
+                                [constructor = std::move(constructor), this]
                                 {
                                         try
                                         {
-                                                thread_function(args...);
+                                                thread_function(constructor);
                                         }
                                         catch (...)
                                         {

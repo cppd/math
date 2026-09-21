@@ -37,6 +37,11 @@ std::unique_ptr<View> create_view(
         const std::array<double, 2>& window_size_in_mm,
         std::vector<Command>&& initial_commands)
 {
-        return std::make_unique<com::ViewThread<view::View>>(std::move(initial_commands), window, window_size_in_mm);
+        return std::make_unique<com::ViewThread<view::View>>(
+                std::move(initial_commands),
+                [=]
+                {
+                        return std::make_unique<view::View>(window, window_size_in_mm);
+                });
 }
 }
