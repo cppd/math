@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/com/clip_plane.h>
 #include <src/view/com/frame_rate.h>
 #include <src/view/com/mouse.h>
+#include <src/view/com/view.h>
 #include <src/view/event.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device/device_graphics.h>
@@ -49,7 +50,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view::view
 {
-class View final
+class View final : public com::View
 {
         const std::thread::id thread_id_;
 
@@ -119,16 +120,16 @@ class View final
 public:
         View(window::WindowID window, const std::array<double, 2>& window_size_in_mm);
 
-        ~View();
+        ~View() override;
 
         View(const View&) = delete;
         View(View&&) = delete;
         View& operator=(const View&) = delete;
         View& operator=(View&&) = delete;
 
-        void render();
+        void render() override;
 
-        void exec(const std::vector<Command>& commands);
-        void receive(const std::vector<Info>& infos);
+        void exec(const std::vector<Command>& commands) override;
+        void receive(const std::vector<Info>& infos) override;
 };
 }

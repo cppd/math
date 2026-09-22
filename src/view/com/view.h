@@ -15,33 +15,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "create.h"
+#pragma once
 
-#include "event.h"
-#include "view.h"
+#include <src/view/event.h>
 
-#include "com/view_thread.h"
-#include "view/view.h"
-
-#include <src/window/handle.h>
-
-#include <array>
-#include <memory>
-#include <utility>
 #include <vector>
 
-namespace ns::view
+namespace ns::view::com
 {
-std::unique_ptr<View> create_view(
-        const window::WindowID window,
-        const std::array<double, 2>& window_size_in_mm,
-        std::vector<Command>&& initial_commands)
+class View
 {
-        return std::make_unique<com::ViewThread>(
-                std::move(initial_commands),
-                [=]
-                {
-                        return std::make_unique<view::View>(window, window_size_in_mm);
-                });
-}
+public:
+        virtual ~View() = default;
+
+        virtual void render() = 0;
+
+        virtual void exec(const std::vector<Command>& commands) = 0;
+        virtual void receive(const std::vector<Info>& infos) = 0;
+};
 }

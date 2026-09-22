@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "thread_events.h"
+#include "view.h"
 
 #include <src/com/error.h>
 #include <src/com/message.h>
@@ -35,8 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view::com
 {
-template <typename T>
-class ViewThread final : public View
+class ViewThread final : public view::View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -56,11 +56,11 @@ class ViewThread final : public View
         }
 
         template <typename... Args>
-        void thread_function(const std::function<std::unique_ptr<T>()>& constructor)
+        void thread_function(const std::function<std::unique_ptr<com::View>()>& constructor)
         {
                 try
                 {
-                        const std::unique_ptr<T> view = constructor();
+                        const std::unique_ptr<com::View> view = constructor();
                         ASSERT(view);
 
                         started_ = true;
@@ -126,7 +126,7 @@ public:
         ViewThread& operator=(const ViewThread&) = delete;
         ViewThread& operator=(ViewThread&&) = delete;
 
-        ViewThread(std::vector<Command>&& initial_commands, std::function<std::unique_ptr<T>()> constructor)
+        ViewThread(std::vector<Command>&& initial_commands, std::function<std::unique_ptr<com::View>()> constructor)
                 : thread_events_(std::move(initial_commands))
         {
                 try
