@@ -20,18 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "thread_events.h"
 #include "view.h"
 
-#include <src/com/error.h>
-#include <src/com/message.h>
 #include <src/view/event.h>
 #include <src/view/view.h>
 
 #include <atomic>
-#include <exception>
 #include <functional>
 #include <memory>
-#include <string>
 #include <thread>
-#include <utility>
 #include <vector>
 
 namespace ns::view::com
@@ -45,80 +40,11 @@ class ViewThread final : public view::View
         std::atomic_bool stop_{false};
         std::atomic_bool started_{false};
 
-        void send(Command&& event) override
-        {
-                thread_events_.send(std::move(event));
-        }
+        void send(Command&& event) override;
+        void receive(const std::vector<Info>& info) override;
 
-        void receive(const std::vector<Info>& info) override
-        {
-                thread_events_.receive(info);
-        }
-
-        template <typename... Args>
-        void thread_function(const std::function<std::unique_ptr<com::View>()>& constructor)
-        {
-                try
-                {
-                        const std::unique_ptr<com::View> view = constructor();
-                        ASSERT(view);
-
-                        started_ = true;
-                        try
-                        {
-                                while (!stop_)
-                                {
-                                        thread_events_.dispatch(view.get());
-                                        view->render();
-                                }
-                        }
-                        catch (const std::exception& e)
-                        {
-                                message_error_fatal(std::string("Error from view\n") + e.what());
-                        }
-                        catch (...)
-                        {
-                                message_error_fatal("Unknown error from view");
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        started_ = true;
-                        message_error_fatal(std::string("Error from view\n") + e.what());
-                }
-                catch (...)
-                {
-                        started_ = true;
-                        message_error_fatal("Unknown error from view");
-                }
-
-                try
-                {
-                        while (!stop_)
-                        {
-                                thread_events_.dispatch();
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        message_error_fatal(std::string("Error while dispatching events\n") + e.what());
-                }
-                catch (...)
-                {
-                        message_error_fatal("Unknown error while dispatching events");
-                }
-        }
-
-        void join_thread()
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                if (thread_.joinable())
-                {
-                        stop_ = true;
-                        thread_.join();
-                }
-        }
+        void thread_function(const std::function<std::unique_ptr<com::View>()>& constructor);
+        void join_thread();
 
 public:
         ViewThread(const ViewThread&) = delete;
@@ -126,41 +52,8 @@ public:
         ViewThread& operator=(const ViewThread&) = delete;
         ViewThread& operator=(ViewThread&&) = delete;
 
-        ViewThread(std::vector<Command>&& initial_commands, std::function<std::unique_ptr<com::View>()> constructor)
-                : thread_events_(std::move(initial_commands))
-        {
-                try
-                {
-                        thread_ = std::thread(
-                                [constructor = std::move(constructor), this]
-                                {
-                                        try
-                                        {
-                                                thread_function(constructor);
-                                        }
-                                        catch (...)
-                                        {
-                                                error_fatal("Exception in the view thread function");
-                                        }
-                                });
+        ViewThread(std::vector<Command>&& initial_commands, std::function<std::unique_ptr<com::View>()>&& constructor);
 
-                        do
-                        {
-                                std::this_thread::yield();
-                        } while (!started_);
-                }
-                catch (...)
-                {
-                        join_thread();
-                        throw;
-                }
-        }
-
-        ~ViewThread() override
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                join_thread();
-        }
+        ~ViewThread() override;
 };
 }
