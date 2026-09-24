@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "thread_queue.h"
+#include "view.h"
 
 #include <src/view/event.h>
 
@@ -99,8 +100,7 @@ public:
                 v.wait();
         }
 
-        template <typename T>
-        void dispatch(T* const view)
+        void dispatch(View* const view)
         {
                 namespace impl = thread_events_implementation;
 
