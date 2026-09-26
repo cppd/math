@@ -18,57 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "thread_events.h"
 
 #include "thread_queue.h"
+#include "thread_receive.h"
 #include "view.h"
 
 #include <src/view/event.h>
 
-#include <condition_variable>
-#include <mutex>
 #include <utility>
 #include <vector>
 
 namespace ns::view::com
 {
-class ThreadEvents::ReceiveInfo final
-{
-        const std::vector<Info>* info_;
-
-        std::mutex mutex_;
-        std::condition_variable cv_;
-        bool received_ = false;
-
-public:
-        explicit ReceiveInfo(const std::vector<Info>* const info)
-                : info_(info)
-        {
-        }
-
-        [[nodiscard]] const std::vector<Info>& info() const
-        {
-                return *info_;
-        }
-
-        void wait()
-        {
-                std::unique_lock lock(mutex_);
-                cv_.wait(
-                        lock,
-                        [&]
-                        {
-                                return received_;
-                        });
-        }
-
-        void notify()
-        {
-                {
-                        const std::lock_guard<std::mutex> lock(mutex_);
-                        received_ = true;
-                }
-                cv_.notify_all();
-        }
-};
-
 ThreadEvents::ThreadEvents(std::vector<Command>&& commands)
 {
         for (Command& command : commands)
@@ -84,7 +43,7 @@ void ThreadEvents::send(Command&& command)
 
 void ThreadEvents::receive(const std::vector<Info>& info)
 {
-        ReceiveInfo v(&info);
+        ThreadReceive v(&info);
         receive_queue_.push(&v);
         v.wait();
 }
@@ -93,16 +52,16 @@ void ThreadEvents::dispatch(View* const view)
 {
         view->exec(send_queue_.pop());
 
-        for (ReceiveInfo* const info : receive_queue_.pop())
+        for (ThreadReceive<const std::vector<Info>*>* const info : receive_queue_.pop())
         {
-                view->receive(info->info());
+                view->receive(*info->info());
                 info->notify();
         }
 }
 
 void ThreadEvents::dispatch()
 {
-        for (ReceiveInfo* const info : receive_queue_.pop())
+        for (ThreadReceive<const std::vector<Info>*>* const info : receive_queue_.pop())
         {
                 info->notify();
         }

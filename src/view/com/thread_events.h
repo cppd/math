@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "thread_queue.h"
+#include "thread_receive.h"
 #include "view.h"
 
 #include <src/view/event.h>
@@ -28,10 +29,8 @@ namespace ns::view::com
 {
 class ThreadEvents final
 {
-        class ReceiveInfo;
-
         ThreadQueue<Command> send_queue_;
-        ThreadQueue<ReceiveInfo*> receive_queue_;
+        ThreadQueue<ThreadReceive<const std::vector<Info>*>*> receive_queue_;
 
 public:
         explicit ThreadEvents(std::vector<Command>&& commands);
