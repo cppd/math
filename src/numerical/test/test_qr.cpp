@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 #include <random>
+#include <span>
 #include <tuple>
 #include <vector>
 
@@ -63,36 +64,12 @@ T norm(const std::vector<T>& x)
 }
 
 template <typename T>
-std::vector<T> compute_px(const HouseholderReflection<T>& hr, const std::vector<T>& x)
-{
-        ASSERT(x.size() == hr.v.size());
-
-        // P * A = (I - beta * v * v^T) * A
-        // P * A = A - (beta * v) * (v^T * A)
-
-        T sum = 0;
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                sum += hr.v[i] * x[i];
-        }
-
-        const T k = hr.beta * sum;
-
-        std::vector<T> res(x.size());
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                res[i] = x[i] - k * hr.v[i];
-        }
-        return res;
-}
-
-template <typename T>
 void test_reflection(const T precision, PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
         std::uniform_int_distribution<std::size_t> uid(1, 100);
 
-        const auto [x, norm_x] = [&]
+        auto [x, norm_x] = [&]
         {
                 std::vector<T> res(uid(engine));
                 T n;
@@ -107,24 +84,26 @@ void test_reflection(const T precision, PCG& engine)
                 return std::tuple(res, n);
         }();
 
-        const HouseholderReflection<T> hr = householder_reflection(x);
+        HouseholderReflection<T> hr;
+        hr.v = x;
+        householder_reflection(hr);
 
-        const std::vector<T> px = compute_px(hr, x);
+        reflect(hr, std::span(x));
 
-        if (!equal(std::abs(px[0]), norm_x, precision))
+        if (!equal(std::abs(x[0]), norm_x, precision))
         {
-                error("abs((Px)[0]) = " + to_string(std::abs(px[0]))
+                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
                       + " is not equal to norm(x) = " + to_string(norm_x));
         }
 
-        if (!equal(norm(px), norm_x, precision))
+        if (!equal(norm(x), norm_x, precision))
         {
-                error("norm(Px) = " + to_string(norm(px)) + " is not equal to norm(x) = " + to_string(norm_x));
+                error("norm(Px) = " + to_string(norm(x)) + " is not equal to norm(x) = " + to_string(norm_x));
         }
 
-        if (!equal(px[0], hr.sigma, precision))
+        if (!equal(x[0], hr.sigma, precision))
         {
-                error("(Px)[0] = " + to_string(px[0]) + " is not equal to sigma = " + to_string(hr.sigma));
+                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
         }
 }
 

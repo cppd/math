@@ -21,10 +21,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <cstddef>
+#include <span>
 #include <vector>
 
 namespace ns::numerical
 {
+namespace qr_implementation
+{
+template <typename T>
+T norm(const std::vector<T>& x)
+{
+        T sum = 0;
+        for (const T& v : x)
+        {
+                sum += v * v;
+        }
+        return std::sqrt(sum);
+}
+}
+
 template <typename T>
 struct HouseholderReflection final
 {
@@ -34,48 +49,61 @@ struct HouseholderReflection final
 };
 
 template <typename T>
-HouseholderReflection<T> householder_reflection(const std::vector<T>& x)
+void householder_reflection(HouseholderReflection<T>& hr)
 {
+        namespace impl = qr_implementation;
+
+        T& beta = hr.beta;
+        T& sigma = hr.sigma;
+        std::vector<T>& x = hr.v;
+
         if (x.empty())
         {
                 error("Empty vector for Householder reflection");
         }
 
-        const T norm = [&]
-        {
-                T sum = 0;
-                for (const T& v : x)
-                {
-                        sum += v * v;
-                }
-                return std::sqrt(sum);
-        }();
+        const T v0 = x[0];
 
-        std::vector<T> u = x;
-        T sigma = norm;
-        u[0] = sigma + abs(x[0]);
-        const T beta = u[0] / sigma;
+        sigma = impl::norm(x);
+        x[0] = sigma + abs(v0);
+        beta = x[0] / sigma;
 
-        if (x[0] < 0)
+        if (v0 < 0)
         {
-                u[0] = -u[0];
+                x[0] = -x[0];
         }
         else
         {
                 sigma = -sigma;
         }
 
-        const T d = u[0];
-        u[0] = 1;
-        for (std::size_t i = 1; i < u.size(); ++i)
+        const T d = x[0];
+        x[0] = 1;
+        for (std::size_t i = 1; i < x.size(); ++i)
         {
-                u[i] = u[i] / d;
+                x[i] = x[i] / d;
+        }
+}
+
+template <typename T>
+void reflect(const HouseholderReflection<T>& hr, const std::span<T> x)
+{
+        ASSERT(x.size() == hr.v.size());
+
+        // P * A = (I - beta * v * v^T) * A
+        // P * A = A - (beta * v) * (v^T * A)
+
+        T sum = 0;
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                sum += hr.v[i] * x[i];
         }
 
-        return {
-                .beta = beta,
-                .sigma = sigma,
-                .v = std::move(u),
-        };
+        const T k = hr.beta * sum;
+
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                x[i] -= k * hr.v[i];
+        }
 }
 }
