@@ -38,6 +38,20 @@ T norm(const std::vector<T>& x)
         }
         return std::sqrt(sum);
 }
+
+template <typename T>
+T dot(const std::vector<T>& a, const std::span<T> b)
+{
+        ASSERT(a.size() == b.size());
+        ASSERT(!a.empty());
+
+        T res = a[0] * b[0];
+        for (std::size_t i = 1; i < a.size(); ++i)
+        {
+                res += a[i] * b[i];
+        }
+        return res;
+}
 }
 
 template <typename T>
@@ -88,22 +102,32 @@ void householder_reflection(HouseholderReflection<T>& hr)
 template <typename T>
 void reflect(const HouseholderReflection<T>& hr, const std::span<T> x)
 {
+        namespace impl = qr_implementation;
+
         ASSERT(x.size() == hr.v.size());
+        ASSERT(!x.empty());
 
         // P * A = (I - beta * v * v^T) * A
         // P * A = A - (beta * v) * (v^T * A)
 
-        T sum = 0;
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                sum += hr.v[i] * x[i];
-        }
-
-        const T k = hr.beta * sum;
-
+        const T k = hr.beta * impl::dot(hr.v, x);
         for (std::size_t i = 0; i < x.size(); ++i)
         {
                 x[i] -= k * hr.v[i];
         }
+}
+
+template <typename T>
+void reflect_first(const HouseholderReflection<T>& hr, const std::span<T> x)
+{
+        namespace impl = qr_implementation;
+
+        ASSERT(x.size() == hr.v.size());
+        ASSERT(!x.empty());
+
+        // P * A = (I - beta * v * v^T) * A
+        // P * A = A - (beta * v) * (v^T * A)
+        const T k = hr.beta * impl::dot(hr.v, x);
+        x[0] -= k * hr.v[0];
 }
 }

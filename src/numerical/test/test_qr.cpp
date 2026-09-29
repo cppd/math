@@ -64,12 +64,57 @@ T norm(const std::vector<T>& x)
 }
 
 template <typename T>
+void test_reflect(const T precision, const HouseholderReflection<T>& hr, const std::vector<T>& data, const T data_norm)
+{
+        std::vector<T> x = data;
+        reflect(hr, std::span(x));
+
+        if (!equal(std::abs(x[0]), data_norm, precision))
+        {
+                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
+                      + " is not equal to norm(x) = " + to_string(data_norm));
+        }
+
+        if (!equal(norm(x), data_norm, precision))
+        {
+                error("norm(Px) = " + to_string(norm(x)) + " is not equal to norm(x) = " + to_string(data_norm));
+        }
+
+        if (!equal(x[0], hr.sigma, precision))
+        {
+                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
+        }
+}
+
+template <typename T>
+void test_reflect_first(
+        const T precision,
+        const HouseholderReflection<T>& hr,
+        const std::vector<T>& data,
+        const T data_norm)
+{
+        std::vector<T> x = data;
+        reflect_first(hr, std::span(x));
+
+        if (!equal(std::abs(x[0]), data_norm, precision))
+        {
+                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
+                      + " is not equal to norm(x) = " + to_string(data_norm));
+        }
+
+        if (!equal(x[0], hr.sigma, precision))
+        {
+                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
+        }
+}
+
+template <typename T>
 void test_reflection(const T precision, PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
         std::uniform_int_distribution<std::size_t> uid(1, 100);
 
-        auto [x, norm_x] = [&]
+        const auto [data, data_norm] = [&]
         {
                 std::vector<T> res(uid(engine));
                 T n;
@@ -84,27 +129,17 @@ void test_reflection(const T precision, PCG& engine)
                 return std::tuple(res, n);
         }();
 
-        HouseholderReflection<T> hr;
-        hr.v = x;
-        householder_reflection(hr);
-
-        reflect(hr, std::span(x));
-
-        if (!equal(std::abs(x[0]), norm_x, precision))
+        const HouseholderReflection<T> hr = [&]
         {
-                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
-                      + " is not equal to norm(x) = " + to_string(norm_x));
-        }
+                HouseholderReflection<T> res;
+                res.v = data;
+                householder_reflection(res);
+                return res;
+        }();
 
-        if (!equal(norm(x), norm_x, precision))
-        {
-                error("norm(Px) = " + to_string(norm(x)) + " is not equal to norm(x) = " + to_string(norm_x));
-        }
+        test_reflect(precision, hr, data, data_norm);
 
-        if (!equal(x[0], hr.sigma, precision))
-        {
-                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
-        }
+        test_reflect_first(precision, hr, data, data_norm);
 }
 
 void test_qr()
