@@ -64,51 +64,6 @@ T norm(const std::vector<T>& x)
 }
 
 template <typename T>
-void test_reflect(const T precision, const HouseholderReflection<T>& hr, const std::vector<T>& data, const T data_norm)
-{
-        std::vector<T> x = data;
-        reflect(hr, std::span(x));
-
-        if (!equal(std::abs(x[0]), data_norm, precision))
-        {
-                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
-                      + " is not equal to norm(x) = " + to_string(data_norm));
-        }
-
-        if (!equal(norm(x), data_norm, precision))
-        {
-                error("norm(Px) = " + to_string(norm(x)) + " is not equal to norm(x) = " + to_string(data_norm));
-        }
-
-        if (!equal(x[0], hr.sigma, precision))
-        {
-                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
-        }
-}
-
-template <typename T>
-void test_reflect_first(
-        const T precision,
-        const HouseholderReflection<T>& hr,
-        const std::vector<T>& data,
-        const T data_norm)
-{
-        std::vector<T> x = data;
-        reflect_first(hr, std::span(x));
-
-        if (!equal(std::abs(x[0]), data_norm, precision))
-        {
-                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
-                      + " is not equal to norm(x) = " + to_string(data_norm));
-        }
-
-        if (!equal(x[0], hr.sigma, precision))
-        {
-                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
-        }
-}
-
-template <typename T>
 void test_reflection(const T precision, PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
@@ -137,9 +92,44 @@ void test_reflection(const T precision, PCG& engine)
                 return res;
         }();
 
-        test_reflect(precision, hr, data, data_norm);
+        std::vector<T> x = data;
+        reflect(hr, std::span(x));
 
-        test_reflect_first(precision, hr, data, data_norm);
+        if (!equal(std::abs(x[0]), data_norm, precision))
+        {
+                error("abs((Px)[0]) = " + to_string(std::abs(x[0]))
+                      + " is not equal to norm(x) = " + to_string(data_norm));
+        }
+
+        if (!equal(norm(x), data_norm, precision))
+        {
+                error("norm(Px) = " + to_string(norm(x)) + " is not equal to norm(x) = " + to_string(data_norm));
+        }
+
+        if (!equal(x[0], hr.sigma, precision))
+        {
+                error("(Px)[0] = " + to_string(x[0]) + " is not equal to sigma = " + to_string(hr.sigma));
+        }
+}
+
+template <typename T>
+void test_solve()
+{
+        std::vector<std::vector<T>> a;
+        std::vector<T> b;
+
+        const std::size_t n = 3;
+        const std::size_t m = 3;
+
+        a.resize(n);
+        for (std::size_t i = 0; i < n; ++i)
+        {
+                a[i].resize(m);
+        }
+
+        b.resize(m);
+
+        solve_qr(a, b);
 }
 
 void test_qr()
@@ -152,6 +142,10 @@ void test_qr()
                 test_reflection<float>(1e-5, engine);
                 test_reflection<double>(1e-14, engine);
                 test_reflection<long double>(1e-17, engine);
+
+                test_solve<float>();
+                test_solve<double>();
+                test_solve<long double>();
         }
         LOG("Test QR decomposition passed");
 }
