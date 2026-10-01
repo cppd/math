@@ -64,6 +64,58 @@ T norm(const std::vector<T>& x)
 }
 
 template <typename T>
+std::vector<std::vector<T>> random_matrix(const std::size_t size, PCG& engine)
+{
+        std::uniform_real_distribution<T> urd(-10, 10);
+        std::vector<std::vector<T>> res;
+        res.resize(size);
+        for (std::size_t c = 0; c < size; ++c)
+        {
+                res[c].resize(size);
+                for (std::size_t r = 0; r < size; ++r)
+                {
+                        res[c][r] = urd(engine);
+                }
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<T> random_vector(const std::size_t size, PCG& engine)
+{
+        std::uniform_real_distribution<T> urd(-10, 10);
+        std::vector<T> res(size);
+        for (std::size_t i = 0; i < size; ++i)
+        {
+                res[i] = urd(engine);
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<T> mul(const std::vector<std::vector<T>>& a, const std::vector<T>& b)
+{
+        ASSERT(a.size() == b.size());
+        ASSERT(!a.empty());
+
+        const std::size_t cols = a.size();
+        const std::size_t rows = a[0].size();
+        ASSERT(rows > 0);
+
+        std::vector<T> res(rows);
+        for (std::size_t r = 0; r < rows; ++r)
+        {
+                res[r] = 0;
+                for (std::size_t c = 0; c < cols; ++c)
+                {
+                        ASSERT(a[c].size() == rows);
+                        res[r] += a[c][r] * b[c];
+                }
+        }
+        return res;
+}
+
+template <typename T>
 void test_reflection(const T precision, PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
@@ -113,23 +165,44 @@ void test_reflection(const T precision, PCG& engine)
 }
 
 template <typename T>
-void test_solve()
+void test_solve(const std::size_t size, const T precision, PCG& engine)
 {
-        std::vector<std::vector<T>> a;
-        std::vector<T> b;
+        const std::vector<std::vector<T>> a = random_matrix<T>(size, engine);
+        const std::vector<T> b = random_vector<T>(size, engine);
 
-        const std::size_t n = 3;
-        const std::size_t m = 3;
-
-        a.resize(n);
-        for (std::size_t i = 0; i < n; ++i)
+        const std::vector<T> x = [&]
         {
-                a[i].resize(m);
+                std::vector<std::vector<T>> as = a;
+                std::vector<T> bs = b;
+                solve_qr(as, bs);
+                return bs;
+        }();
+
+        if (x.size() != size)
+        {
+                error("Solution size (" + to_string(x.size()) + ") is not equal to system size (" + to_string(size)
+                      + ")");
         }
 
-        b.resize(m);
+        const std::vector<T> multiplied = mul(a, x);
 
-        solve_qr(a, b);
+        for (std::size_t i = 0; i < size; ++i)
+        {
+                if (!equal(multiplied[i], b[i], precision))
+                {
+                        error("Failed to solve:\nx = " + to_string(x) + "\nb = " + to_string(b)
+                              + "\na*x = " + to_string(multiplied));
+                }
+        }
+}
+
+template <typename T>
+void test_solve(const T precision, PCG& engine)
+{
+        for (std::size_t size = 1; size <= 20; ++size)
+        {
+                test_solve(size, precision, engine);
+        }
 }
 
 void test_qr()
@@ -143,9 +216,8 @@ void test_qr()
                 test_reflection<double>(1e-14, engine);
                 test_reflection<long double>(1e-17, engine);
 
-                test_solve<float>();
-                test_solve<double>();
-                test_solve<long double>();
+                test_solve<double>(1e-7, engine);
+                test_solve<long double>(1e-10, engine);
         }
         LOG("Test QR decomposition passed");
 }
