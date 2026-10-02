@@ -34,10 +34,12 @@ namespace qr_implementation
 template <typename T>
 T norm(const std::vector<T>& x)
 {
-        T sum = 0;
-        for (const T& v : x)
+        ASSERT(!x.empty());
+
+        T sum = x[0] * x[0];
+        for (std::size_t i = 1; i < x.size(); ++i)
         {
-                sum += v * v;
+                sum += x[i] * x[i];
         }
         return std::sqrt(sum);
 }
