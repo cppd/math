@@ -195,5 +195,7 @@ void solve_qr(std::vector<std::vector<T>>& a, std::vector<T>& b)
         }
 
         impl::solve_x(a, b);
+
+        b.resize(n);
 }
 }
