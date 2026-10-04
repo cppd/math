@@ -166,7 +166,7 @@ void reflect(const HouseholderReflection<T>& hr, const std::span<T> x)
 }
 
 template <typename T>
-void solve_qr(std::vector<std::vector<T>>& a, std::vector<T>& b)
+[[nodiscard]] std::vector<T> solve_qr(std::vector<std::vector<T>>& a, std::vector<T>& b)
 {
         namespace impl = qr_implementation;
 
@@ -196,6 +196,6 @@ void solve_qr(std::vector<std::vector<T>>& a, std::vector<T>& b)
 
         impl::solve_x(a, b);
 
-        b.resize(n);
+        return {b.begin(), b.begin() + n};
 }
 }

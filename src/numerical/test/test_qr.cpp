@@ -174,8 +174,7 @@ void test_solve(const std::size_t size, const T precision, PCG& engine)
         {
                 std::vector<std::vector<T>> as = a;
                 std::vector<T> bs = b;
-                solve_qr(as, bs);
-                return bs;
+                return solve_qr(as, bs);
         }();
 
         if (x.size() != size)
@@ -201,6 +200,7 @@ void test_solve_ls(const std::size_t size, const T precision, PCG& engine)
 {
         const std::size_t n = size;
         const std::size_t m = 1000 * n;
+
         const std::vector<std::vector<T>> a = random_matrix<T>(m, n, engine);
         const std::vector<T> x_truth = random_vector<T>(n, engine);
 
@@ -219,8 +219,7 @@ void test_solve_ls(const std::size_t size, const T precision, PCG& engine)
         {
                 std::vector<std::vector<T>> as = a;
                 std::vector<T> bs = b;
-                solve_qr(as, bs);
-                return bs;
+                return solve_qr(as, bs);
         }();
 
         if (x.size() != n)
