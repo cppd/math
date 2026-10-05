@@ -36,12 +36,12 @@ T norm(const std::vector<T>& x)
 {
         ASSERT(!x.empty());
 
-        T sum = x[0] * x[0];
+        T res = x[0] * x[0];
         for (std::size_t i = 1; i < x.size(); ++i)
         {
-                sum += x[i] * x[i];
+                res += x[i] * x[i];
         }
-        return std::sqrt(sum);
+        return std::sqrt(res);
 }
 
 template <typename T>
@@ -83,6 +83,65 @@ void check_size(const std::vector<std::vector<T>>& a, const std::vector<T>& b)
 }
 
 template <typename T>
+struct HouseholderReflection final
+{
+        T beta;
+        T sigma;
+        std::vector<T> v;
+};
+
+template <typename T>
+void householder_reflection(HouseholderReflection<T>& hr)
+{
+        T& beta = hr.beta;
+        T& sigma = hr.sigma;
+        std::vector<T>& v = hr.v;
+
+        if (v.empty())
+        {
+                error("Empty vector for Householder reflection");
+        }
+
+        const T v0 = v[0];
+
+        sigma = norm(v);
+        v[0] = sigma + abs(v0);
+        beta = v[0] / sigma;
+
+        if (v0 < 0)
+        {
+                v[0] = -v[0];
+        }
+        else
+        {
+                sigma = -sigma;
+        }
+
+        const T d = v[0];
+        v[0] = 1;
+        for (std::size_t i = 1; i < v.size(); ++i)
+        {
+                v[i] = v[i] / d;
+        }
+}
+
+template <typename T>
+void reflect(const HouseholderReflection<T>& hr, const std::span<T> x)
+{
+        ASSERT(x.size() == hr.v.size());
+        ASSERT(!x.empty());
+
+        // P * A = (I - beta * v * v^T) * A
+        // P * A = A - (beta * v) * (v^T * A)
+
+        const T k = hr.beta * dot(hr.v, x);
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+                x[i] -= k * hr.v[i];
+        }
+}
+
+template <typename T>
 void solve_x(std::vector<std::vector<T>>& a, std::vector<T>& b)
 {
         using Signed = std::make_signed_t<std::size_t>;
@@ -103,69 +162,6 @@ void solve_x(std::vector<std::vector<T>>& a, std::vector<T>& b)
 }
 
 template <typename T>
-struct HouseholderReflection final
-{
-        T beta;
-        T sigma;
-        std::vector<T> v;
-};
-
-template <typename T>
-void householder_reflection(HouseholderReflection<T>& hr)
-{
-        namespace impl = qr_implementation;
-
-        T& beta = hr.beta;
-        T& sigma = hr.sigma;
-        std::vector<T>& x = hr.v;
-
-        if (x.empty())
-        {
-                error("Empty vector for Householder reflection");
-        }
-
-        const T v0 = x[0];
-
-        sigma = impl::norm(x);
-        x[0] = sigma + abs(v0);
-        beta = x[0] / sigma;
-
-        if (v0 < 0)
-        {
-                x[0] = -x[0];
-        }
-        else
-        {
-                sigma = -sigma;
-        }
-
-        const T d = x[0];
-        x[0] = 1;
-        for (std::size_t i = 1; i < x.size(); ++i)
-        {
-                x[i] = x[i] / d;
-        }
-}
-
-template <typename T>
-void reflect(const HouseholderReflection<T>& hr, const std::span<T> x)
-{
-        namespace impl = qr_implementation;
-
-        ASSERT(x.size() == hr.v.size());
-        ASSERT(!x.empty());
-
-        // P * A = (I - beta * v * v^T) * A
-        // P * A = A - (beta * v) * (v^T * A)
-
-        const T k = hr.beta * impl::dot(hr.v, x);
-        for (std::size_t i = 0; i < x.size(); ++i)
-        {
-                x[i] -= k * hr.v[i];
-        }
-}
-
-template <typename T>
 [[nodiscard]] std::vector<T> solve_qr(std::vector<std::vector<T>>& a, std::vector<T>& b)
 {
         namespace impl = qr_implementation;
@@ -175,7 +171,7 @@ template <typename T>
         const std::size_t n = a.size();
         const std::size_t m = b.size();
 
-        HouseholderReflection<T> hr;
+        impl::HouseholderReflection<T> hr;
 
         ASSERT(m > 0);
         const std::size_t max_col = std::min(m - 1, n);
@@ -184,14 +180,14 @@ template <typename T>
         {
                 hr.v.resize(m - col);
                 std::copy(a[col].begin() + col, a[col].end(), hr.v.begin());
-                householder_reflection(hr);
+                impl::householder_reflection(hr);
 
                 a[col][col] = hr.sigma;
                 for (std::size_t j = col + 1; j < n; ++j)
                 {
-                        reflect(hr, std::span(a[j].begin() + col, a[j].end()));
+                        impl::reflect(hr, std::span(a[j].begin() + col, a[j].end()));
                 }
-                reflect(hr, std::span(b.begin() + col, b.end()));
+                impl::reflect(hr, std::span(b.begin() + col, b.end()));
         }
 
         impl::solve_x(a, b);

@@ -118,6 +118,8 @@ std::vector<T> mul(const std::vector<std::vector<T>>& a, const std::vector<T>& b
 template <typename T>
 void test_reflection(const T precision, PCG& engine)
 {
+        namespace impl = qr_implementation;
+
         std::uniform_real_distribution<T> urd(-10, 10);
         std::uniform_int_distribution<std::size_t> uid(1, 100);
 
@@ -136,16 +138,16 @@ void test_reflection(const T precision, PCG& engine)
                 return std::tuple(res, n);
         }();
 
-        const HouseholderReflection<T> hr = [&]
+        const impl::HouseholderReflection<T> hr = [&]
         {
-                HouseholderReflection<T> res;
+                impl::HouseholderReflection<T> res;
                 res.v = data;
-                householder_reflection(res);
+                impl::householder_reflection(res);
                 return res;
         }();
 
         std::vector<T> x = data;
-        reflect(hr, std::span(x));
+        impl::reflect(hr, std::span(x));
 
         if (!equal(std::abs(x[0]), data_norm, precision))
         {
@@ -260,12 +262,15 @@ void test_qr()
 
         LOG("Test QR decomposition");
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 1000; ++i)
         {
                 test_reflection<float>(1e-5, engine);
                 test_reflection<double>(1e-14, engine);
                 test_reflection<long double>(1e-17, engine);
+        }
 
+        for (int i = 0; i < 100; ++i)
+        {
                 test_solve<double>(1e-7, engine);
                 test_solve<long double>(1e-10, engine);
         }
