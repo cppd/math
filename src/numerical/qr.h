@@ -59,6 +59,19 @@ T dot(const std::vector<T>& a, const std::span<T> b)
 }
 
 template <typename T>
+void normalize_householder(std::vector<T>& v)
+{
+        ASSERT(!v.empty());
+
+        const T d = v[0];
+        v[0] = 1;
+        for (std::size_t i = 1; i < v.size(); ++i)
+        {
+                v[i] = v[i] / d;
+        }
+}
+
+template <typename T>
 void check_size(const std::vector<std::vector<T>>& a, const std::vector<T>& b)
 {
         const std::size_t n = a.size();
@@ -93,14 +106,14 @@ struct HouseholderReflection final
 template <typename T>
 void householder_reflection(HouseholderReflection<T>& hr)
 {
-        T& beta = hr.beta;
-        T& sigma = hr.sigma;
-        std::vector<T>& v = hr.v;
-
-        if (v.empty())
+        if (hr.v.empty())
         {
                 error("Empty vector for Householder reflection");
         }
+
+        T& beta = hr.beta;
+        T& sigma = hr.sigma;
+        std::vector<T>& v = hr.v;
 
         const T v0 = v[0];
 
@@ -117,12 +130,7 @@ void householder_reflection(HouseholderReflection<T>& hr)
                 sigma = -sigma;
         }
 
-        const T d = v[0];
-        v[0] = 1;
-        for (std::size_t i = 1; i < v.size(); ++i)
-        {
-                v[i] = v[i] / d;
-        }
+        normalize_householder(v);
 }
 
 template <typename T>
