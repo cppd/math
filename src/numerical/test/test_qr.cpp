@@ -176,7 +176,7 @@ void test_solve(const std::size_t size, const T precision, PCG& engine)
         {
                 std::vector<std::vector<T>> as = a;
                 std::vector<T> bs = b;
-                return solve_qr(as, bs);
+                return qr_solve(as, bs);
         }();
 
         if (x.size() != size)
@@ -221,7 +221,7 @@ void test_solve_ls(const std::size_t size, const T precision, PCG& engine)
         {
                 std::vector<std::vector<T>> as = a;
                 std::vector<T> bs = b;
-                return solve_qr(as, bs);
+                return qr_solve(as, bs);
         }();
 
         if (x.size() != n)

@@ -15,6 +15,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Åke Björck.
+Numerical Methods in Matrix Computations.
+Springer, 2015.
+
+2.3 Orthogonal Factorizations
+*/
+
+/*
+Gene H. Golub, Charles F. Van Loan.
+Matrix Computations. Fourth Edition.
+The Johns Hopkins University Press, 2013.
+
+5 Orthogonalization and Least Squares
+*/
+
 #pragma once
 
 #include <src/com/error.h>
@@ -157,6 +173,9 @@ void solve_x(std::vector<std::vector<T>>& a, std::vector<T>& b)
         const Signed n = a.size();
         ASSERT(n >= 1);
 
+        // Back substitution.
+        // a (upper triangular matrix) * x = b
+
         b[n - 1] /= a[n - 1][n - 1];
         for (Signed k = n - 2; k >= 0; --k)
         {
@@ -170,7 +189,7 @@ void solve_x(std::vector<std::vector<T>>& a, std::vector<T>& b)
 }
 
 template <typename T>
-[[nodiscard]] std::vector<T> solve_qr(std::vector<std::vector<T>>& a, std::vector<T>& b)
+[[nodiscard]] std::vector<T> qr_solve(std::vector<std::vector<T>>& a, std::vector<T>& b)
 {
         namespace impl = qr_implementation;
 
