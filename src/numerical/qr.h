@@ -90,13 +90,14 @@ void normalize_householder(std::vector<T>& v)
 template <typename T>
 void check_size(const std::vector<std::vector<T>>& a, const std::vector<T>& b)
 {
+        const std::size_t m = b.size();
         const std::size_t n = a.size();
+
         if (n < 1)
         {
                 error("Empty system for QR, n = 0");
         }
 
-        const std::size_t m = b.size();
         if (m < n)
         {
                 error("Underdetermined system for QR, m (" + to_string(m) + ") is less than n (" + to_string(n) + ")");
@@ -104,7 +105,7 @@ void check_size(const std::vector<std::vector<T>>& a, const std::vector<T>& b)
 
         for (const std::vector<T>& v : a)
         {
-                if (v.size() != b.size())
+                if (v.size() != m)
                 {
                         error("Vector sizes are not equal, " + to_string(v.size()) + " != m (" + to_string(m) + ")");
                 }
@@ -122,10 +123,7 @@ struct HouseholderReflection final
 template <typename T>
 void householder_reflection(HouseholderReflection<T>& hr)
 {
-        if (hr.v.empty())
-        {
-                error("Empty vector for Householder reflection");
-        }
+        ASSERT(!hr.v.empty());
 
         T& beta = hr.beta;
         T& sigma = hr.sigma;
