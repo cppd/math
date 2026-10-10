@@ -31,32 +31,42 @@ namespace ns::statistics::test
 namespace
 {
 template <typename T>
-void test(const T precision)
+void test(const T precision, PCG& engine)
 {
         const int count = 10'000;
 
-        PCG engine;
-        std::normal_distribution<T> nd(0, 0.1);
+        std::uniform_real_distribution<T> urd_intercept(-10, 10);
+        std::uniform_real_distribution<T> urd_slope(-10, 10);
+
+        const T intercept = urd_intercept(engine);
+        const T slope = urd_slope(engine);
+
+        std::normal_distribution<T> nd_y(0, 0.1);
+        std::uniform_real_distribution<T> urd_x(-100, 100);
 
         std::vector<numerical::Vector<2, T>> points;
         points.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                points.push_back({i, i + nd(engine)});
+                const T x = urd_x(engine);
+                const T y = intercept + slope * x + nd_y(engine);
+                points.push_back({x, y});
         }
 
         const Line l = linear_fit(points);
 
-        compare(l.intercept, T{0}, precision);
-        compare(l.slope, T{1}, precision);
+        compare(l.intercept, intercept, precision);
+        compare(l.slope, slope, precision);
 }
 
 void test_median()
 {
         LOG("Test linear fit");
 
-        test<double>(1e-2);
-        test<long double>(1e-2);
+        PCG engine;
+
+        test<double>(1e-2, engine);
+        test<long double>(1e-2, engine);
 
         LOG("Test linear fit passed");
 }
