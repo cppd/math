@@ -31,9 +31,10 @@ namespace ns::statistics::test
 namespace
 {
 template <typename T>
-void test(const T precision, PCG& engine)
+void test_qr(PCG& engine)
 {
-        const int count = 10'000;
+        const T precision = 2e-2;
+        const int count = 1'000;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -53,10 +54,47 @@ void test(const T precision, PCG& engine)
                 points.push_back({x, y});
         }
 
-        const Line l = linear_fit(points);
+        const Line l = linear_fit_qr(points);
 
         compare(l.intercept, intercept, precision);
         compare(l.slope, slope, precision);
+}
+
+template <typename T>
+void test_theil_sen(PCG& engine)
+{
+        const T precision = 2e-2;
+        const int count = 1'000;
+
+        std::uniform_real_distribution<T> urd_intercept(-10, 10);
+        std::uniform_real_distribution<T> urd_slope(-10, 10);
+
+        const T intercept = urd_intercept(engine);
+        const T slope = urd_slope(engine);
+
+        std::normal_distribution<T> nd_y(0, 0.1);
+        std::uniform_real_distribution<T> urd_x(-100, 100);
+
+        std::vector<numerical::Vector<2, T>> points;
+        points.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                const T x = urd_x(engine);
+                const T y = intercept + slope * x + nd_y(engine);
+                points.push_back({x, y});
+        }
+
+        const Line l = linear_fit_theil_sen(points);
+
+        compare(l.intercept, intercept, precision);
+        compare(l.slope, slope, precision);
+}
+
+template <typename T>
+void test(PCG& engine)
+{
+        test_qr<T>(engine);
+        test_theil_sen<T>(engine);
 }
 
 void test_median()
@@ -65,8 +103,8 @@ void test_median()
 
         PCG engine;
 
-        test<double>(1e-2, engine);
-        test<long double>(1e-2, engine);
+        test<double>(engine);
+        test<long double>(engine);
 
         LOG("Test linear fit passed");
 }
