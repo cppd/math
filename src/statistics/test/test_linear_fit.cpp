@@ -63,7 +63,7 @@ void test_qr(PCG& engine)
 template <typename T>
 void test_theil_sen(PCG& engine)
 {
-        const T precision = 2e-2;
+        const T precision = 4e-2;
         const int count = 1'000;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
@@ -73,6 +73,7 @@ void test_theil_sen(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, 0.1);
+        std::bernoulli_distribution outlier(0.1);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
         std::vector<numerical::Vector<2, T>> points;
@@ -80,7 +81,7 @@ void test_theil_sen(PCG& engine)
         for (int i = 0; i < count; ++i)
         {
                 const T x = urd_x(engine);
-                const T y = intercept + slope * x + nd_y(engine);
+                const T y = intercept + slope * x + (outlier(engine) ? T{100} : nd_y(engine));
                 points.push_back({x, y});
         }
 
