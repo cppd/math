@@ -74,6 +74,7 @@ void test_theil_sen(PCG& engine)
 
         std::normal_distribution<T> nd_y(0, 0.1);
         std::bernoulli_distribution outlier(0.1);
+        std::uniform_real_distribution<T> urd_outlier(0, 1000);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
         std::vector<numerical::Vector<2, T>> points;
@@ -81,7 +82,7 @@ void test_theil_sen(PCG& engine)
         for (int i = 0; i < count; ++i)
         {
                 const T x = urd_x(engine);
-                const T y = intercept + slope * x + (outlier(engine) ? T{100} : nd_y(engine));
+                const T y = intercept + slope * x + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
                 points.push_back({x, y});
         }
 
