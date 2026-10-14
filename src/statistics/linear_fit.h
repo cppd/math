@@ -29,6 +29,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::statistics
 {
+namespace linear_fit_implementation
+{
+template <typename T>
+void check_breakpoints(const std::vector<T>& breakpoints)
+{
+        if (breakpoints.size() < 2)
+        {
+                error("Breakpoints size (" + to_string(breakpoints.size()) + ") is less than 2");
+        }
+
+        for (std::size_t i = 1; i < breakpoints.size(); ++i)
+        {
+                if (!(breakpoints[i] > breakpoints[i - 1]))
+                {
+                        error("Breakpoints are not strictly ordered");
+                }
+        }
+}
+}
+
 template <typename T>
 struct Line final
 {
@@ -106,5 +126,37 @@ template <typename T>
                 .intercept = intercept,
                 .slope = slope,
         };
+}
+
+template <typename T>
+[[nodiscard]] std::vector<T> linear_fit_piecewise(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints)
+{
+        linear_fit_implementation::check_breakpoints(breakpoints);
+
+        std::vector<std::vector<T>> a(1 + breakpoints.size());
+        std::vector<T> b;
+
+        for (std::vector<T>& v : a)
+        {
+                v.reserve(points.size());
+        }
+        b.reserve(points.size());
+
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                a[0].push_back(1);
+                for (std::size_t i = 0; i < breakpoints.size(); ++i)
+                {
+                        a[i + 1].push_back(p[0] > breakpoints[i] ? p[0] - breakpoints[i] : 0);
+                }
+                b.push_back(p[1]);
+        }
+
+        std::vector<T> s = numerical::qr_solve(a, b);
+        ASSERT(s.size() == breakpoints.size() + 1);
+
+        return s;
 }
 }
