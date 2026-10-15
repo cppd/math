@@ -93,10 +93,48 @@ void test_theil_sen(PCG& engine)
 }
 
 template <typename T>
+void test_linear_piecewise(PCG& engine)
+{
+        const T precision = 4e-2;
+        const int count = 1'000;
+
+        std::uniform_real_distribution<T> urd_betas(-10, 10);
+        std::vector<T> betas{urd_betas(engine), urd_betas(engine), urd_betas(engine)};
+
+        std::uniform_real_distribution<T> urd_breakpoints(-50, 50);
+        std::vector<T> breakpoints{-100, urd_breakpoints(engine)};
+
+        std::uniform_real_distribution<T> urd_x(-100, 100);
+        std::normal_distribution<T> nd_y(0, 0.1);
+
+        std::vector<numerical::Vector<2, T>> points;
+        points.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                const T x = urd_x(engine);
+                T y = betas[0];
+                y += betas[1] * (x - breakpoints[0]);
+                if (x > breakpoints[1])
+                {
+                        y += betas[2] * (x - breakpoints[1]);
+                }
+                y += nd_y(engine);
+                points.push_back({x, y});
+        }
+
+        const std::vector<T> betas_s = linear_fit_piecewise(points, breakpoints);
+
+        compare(betas_s[0], betas[0], precision);
+        compare(betas_s[1], betas[1], precision);
+        compare(betas_s[2], betas[2], precision);
+}
+
+template <typename T>
 void test(PCG& engine)
 {
         test_qr<T>(engine);
         test_theil_sen<T>(engine);
+        test_linear_piecewise<T>(engine);
 }
 
 void test_median()
