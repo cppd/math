@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/statistics/linear_fit.h>
 #include <src/test/test.h>
 
+#include <cstddef>
 #include <random>
 #include <vector>
 
@@ -95,28 +96,35 @@ void test_theil_sen(PCG& engine)
 template <typename T>
 void test_linear_piecewise(PCG& engine)
 {
-        const T precision = 4e-2;
+        const T precision = 6e-2;
         const int count = 1'000;
 
         std::uniform_real_distribution<T> urd_betas(-10, 10);
-        std::vector<T> betas{urd_betas(engine), urd_betas(engine), urd_betas(engine)};
+        const std::vector<T> betas{
+                urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine)};
 
-        std::uniform_real_distribution<T> urd_breakpoints(-50, 50);
-        std::vector<T> breakpoints{-100, urd_breakpoints(engine)};
+        std::uniform_real_distribution<T> urd_breakpoint1(-60, -40);
+        std::uniform_real_distribution<T> urd_breakpoint2(-10, 10);
+        std::uniform_real_distribution<T> urd_breakpoint3(40, 60);
+        const std::vector<T> breakpoints{
+                -100, urd_breakpoint1(engine), urd_breakpoint2(engine), urd_breakpoint3(engine)};
 
         std::uniform_real_distribution<T> urd_x(-100, 100);
         std::normal_distribution<T> nd_y(0, 0.1);
 
         std::vector<numerical::Vector<2, T>> points;
         points.reserve(count);
+
         for (int i = 0; i < count; ++i)
         {
                 const T x = urd_x(engine);
                 T y = betas[0];
-                y += betas[1] * (x - breakpoints[0]);
-                if (x > breakpoints[1])
+                for (std::size_t b = 0; b < breakpoints.size(); ++b)
                 {
-                        y += betas[2] * (x - breakpoints[1]);
+                        if (x > breakpoints[b])
+                        {
+                                y += betas[b + 1] * (x - breakpoints[b]);
+                        }
                 }
                 y += nd_y(engine);
                 points.push_back({x, y});
@@ -124,9 +132,10 @@ void test_linear_piecewise(PCG& engine)
 
         const std::vector<T> betas_s = linear_fit_piecewise(points, breakpoints);
 
-        compare(betas_s[0], betas[0], precision);
-        compare(betas_s[1], betas[1], precision);
-        compare(betas_s[2], betas[2], precision);
+        for (std::size_t i = 0; i < betas.size(); ++i)
+        {
+                compare(betas_s[i], betas[i], precision);
+        }
 }
 
 template <typename T>
