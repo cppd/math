@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "compare.h"
 
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/vector_object.h>
@@ -31,6 +32,22 @@ namespace ns::statistics::test
 {
 namespace
 {
+template <typename T>
+T piecewise_function(const T& x, const std::vector<T>& betas, const std::vector<T>& breakpoints)
+{
+        ASSERT(betas.size() == breakpoints.size() + 1);
+
+        T res = betas[0];
+        for (std::size_t b = 0; b < breakpoints.size(); ++b)
+        {
+                if (x > breakpoints[b])
+                {
+                        res += betas[b + 1] * (x - breakpoints[b]);
+                }
+        }
+        return res;
+}
+
 template <typename T>
 void test_qr(PCG& engine)
 {
@@ -118,15 +135,7 @@ void test_linear_piecewise(PCG& engine)
         for (int i = 0; i < count; ++i)
         {
                 const T x = urd_x(engine);
-                T y = betas[0];
-                for (std::size_t b = 0; b < breakpoints.size(); ++b)
-                {
-                        if (x > breakpoints[b])
-                        {
-                                y += betas[b + 1] * (x - breakpoints[b]);
-                        }
-                }
-                y += nd_y(engine);
+                const T y = piecewise_function(x, betas, breakpoints) + nd_y(engine);
                 points.push_back({x, y});
         }
 
