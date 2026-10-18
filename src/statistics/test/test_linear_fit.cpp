@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/statistics/linear_fit.h>
 #include <src/test/test.h>
 
+#include <cmath>
 #include <cstddef>
 #include <random>
 #include <vector>
@@ -32,6 +33,15 @@ namespace ns::statistics::test
 {
 namespace
 {
+template <typename T>
+void compare_less(const T a, const T b)
+{
+        if (!(a < b))
+        {
+                error(to_string(a) + " is not less than " + to_string(b));
+        }
+}
+
 template <typename T>
 T piecewise_function(const T& x, const std::vector<T>& betas, const std::vector<T>& breakpoints)
 {
@@ -49,10 +59,30 @@ T piecewise_function(const T& x, const std::vector<T>& betas, const std::vector<
 }
 
 template <typename T>
+T compute_rmse(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const T& intercept,
+        const T& slope,
+        const T& s_intercept,
+        const T& s_slope)
+{
+        T sum = 0;
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                const T y = intercept + slope * p[0];
+                const T sy = s_intercept + s_slope * p[0];
+                const T d = y - sy;
+                sum += d * d;
+        }
+        return std::sqrt(sum / points.size());
+}
+
+template <typename T>
 void test_qr(PCG& engine)
 {
         const T precision = 2e-2;
         const int count = 1'000;
+        const T noise_stddev = 0.1;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -60,7 +90,7 @@ void test_qr(PCG& engine)
         const T intercept = urd_intercept(engine);
         const T slope = urd_slope(engine);
 
-        std::normal_distribution<T> nd_y(0, 0.1);
+        std::normal_distribution<T> nd_y(0, noise_stddev);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
         std::vector<numerical::Vector<2, T>> points;
@@ -76,6 +106,10 @@ void test_qr(PCG& engine)
 
         compare(l.intercept, intercept, precision);
         compare(l.slope, slope, precision);
+
+        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
+
+        compare_less(rmse, 5 * noise_stddev / std::sqrt(count));
 }
 
 template <typename T>
