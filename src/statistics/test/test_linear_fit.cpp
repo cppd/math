@@ -78,6 +78,25 @@ T compute_rmse(
 }
 
 template <typename T>
+T compute_rmse(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints,
+        const std::vector<T>& betas,
+        const std::vector<T>& s_betas)
+{
+        T sum = 0;
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                const T x = p[0];
+                const T y = piecewise_function(x, betas, breakpoints);
+                const T sy = piecewise_function(x, s_betas, breakpoints);
+                const T d = y - sy;
+                sum += d * d;
+        }
+        return std::sqrt(sum / points.size());
+}
+
+template <typename T>
 void test_qr(PCG& engine)
 {
         const T precision = 2e-2;
@@ -149,19 +168,20 @@ void test_linear_piecewise(PCG& engine)
 {
         const T precision = 6e-2;
         const int count = 1'000;
+        const T noise_stddev = 0.1;
 
         std::uniform_real_distribution<T> urd_betas(-10, 10);
         const std::vector<T> betas{
                 urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine)};
 
-        std::uniform_real_distribution<T> urd_breakpoint1(-60, -40);
-        std::uniform_real_distribution<T> urd_breakpoint2(-10, 10);
-        std::uniform_real_distribution<T> urd_breakpoint3(40, 60);
+        std::uniform_real_distribution<T> urd_breakpoint1(-51, -49);
+        std::uniform_real_distribution<T> urd_breakpoint2(-1, 1);
+        std::uniform_real_distribution<T> urd_breakpoint3(49, 51);
         const std::vector<T> breakpoints{
                 -100, urd_breakpoint1(engine), urd_breakpoint2(engine), urd_breakpoint3(engine)};
 
         std::uniform_real_distribution<T> urd_x(-100, 100);
-        std::normal_distribution<T> nd_y(0, 0.1);
+        std::normal_distribution<T> nd_y(0, noise_stddev);
 
         std::vector<numerical::Vector<2, T>> points;
         points.reserve(count);
@@ -179,6 +199,10 @@ void test_linear_piecewise(PCG& engine)
         {
                 compare(betas_s[i], betas[i], precision);
         }
+
+        const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
+
+        compare_less(rmse, 5 * noise_stddev / std::sqrt(count));
 }
 
 template <typename T>
