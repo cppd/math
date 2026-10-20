@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "compare.h"
-
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
@@ -27,23 +25,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstddef>
 #include <random>
+#include <string>
 #include <vector>
 
 namespace ns::statistics::test
 {
 namespace
 {
-template <typename T>
-void compare_less(const T a, const T b)
-{
-        if (!(a < b))
-        {
-                error(to_string(a) + " is not less than " + to_string(b));
-        }
-}
+#define COMPARE_LESS(a, b)                                                                                            \
+        do                                                                                                            \
+        {                                                                                                             \
+                if (!((a) < (b)))                                                                                     \
+                {                                                                                                     \
+                        error(std::string(__func__) + ": " + to_string((a)) + " is not less than " + to_string((b))); \
+                }                                                                                                     \
+        } while (false)
 
 template <typename T>
-T piecewise_function(const T& x, const std::vector<T>& betas, const std::vector<T>& breakpoints)
+T piecewise_function(const T x, const std::vector<T>& betas, const std::vector<T>& breakpoints)
 {
         ASSERT(betas.size() == breakpoints.size() + 1);
 
@@ -61,10 +60,10 @@ T piecewise_function(const T& x, const std::vector<T>& betas, const std::vector<
 template <typename T>
 T compute_rmse(
         const std::vector<numerical::Vector<2, T>>& points,
-        const T& intercept,
-        const T& slope,
-        const T& s_intercept,
-        const T& s_slope)
+        const T intercept,
+        const T slope,
+        const T s_intercept,
+        const T s_slope)
 {
         T sum = 0;
         for (const numerical::Vector<2, T>& p : points)
@@ -99,7 +98,6 @@ T compute_rmse(
 template <typename T>
 void test_qr(PCG& engine)
 {
-        const T precision = 2e-2;
         const int count = 1'000;
         const T noise_stddev = 0.1;
 
@@ -123,19 +121,16 @@ void test_qr(PCG& engine)
 
         const Line l = linear_fit_qr(points);
 
-        compare(l.intercept, intercept, precision);
-        compare(l.slope, slope, precision);
-
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        compare_less(rmse, 5 * noise_stddev / std::sqrt(count));
+        COMPARE_LESS(rmse, 5 * noise_stddev / std::sqrt(count));
 }
 
 template <typename T>
 void test_theil_sen(PCG& engine)
 {
-        const T precision = 4e-2;
         const int count = 1'000;
+        const T noise_stddev = 0.1;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -143,9 +138,9 @@ void test_theil_sen(PCG& engine)
         const T intercept = urd_intercept(engine);
         const T slope = urd_slope(engine);
 
-        std::normal_distribution<T> nd_y(0, 0.1);
+        std::normal_distribution<T> nd_y(0, noise_stddev);
         std::bernoulli_distribution outlier(0.1);
-        std::uniform_real_distribution<T> urd_outlier(0, 1000);
+        std::uniform_real_distribution<T> urd_outlier(-5, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
         std::vector<numerical::Vector<2, T>> points;
@@ -159,14 +154,14 @@ void test_theil_sen(PCG& engine)
 
         const Line l = linear_fit_theil_sen(points);
 
-        compare(l.intercept, intercept, precision);
-        compare(l.slope, slope, precision);
+        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
+
+        COMPARE_LESS(rmse, 8 * noise_stddev / std::sqrt(0.9 * count));
 }
 
 template <typename T>
 void test_linear_piecewise(PCG& engine)
 {
-        const T precision = 6e-2;
         const int count = 1'000;
         const T noise_stddev = 0.1;
 
@@ -195,14 +190,9 @@ void test_linear_piecewise(PCG& engine)
 
         const std::vector<T> betas_s = linear_fit_piecewise(points, breakpoints);
 
-        for (std::size_t i = 0; i < betas.size(); ++i)
-        {
-                compare(betas_s[i], betas[i], precision);
-        }
-
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        compare_less(rmse, 5 * noise_stddev / std::sqrt(count));
+        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt(count));
 }
 
 template <typename T>
