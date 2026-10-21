@@ -129,6 +129,57 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] Line<T> linear_fit_medians(const std::vector<numerical::Vector<2, T>>& points)
+{
+        const auto add_slope = [&](const std::size_t i, const std::size_t j, std::vector<T>& data)
+        {
+                const T dx = points[j][0] - points[i][0];
+                if (dx != 0)
+                {
+                        const T dy = points[j][1] - points[i][1];
+                        data.push_back(dy / dx);
+                }
+        };
+
+        const std::size_t n = points.size();
+
+        if (n < 2)
+        {
+                error("Points count (" + to_string(n) + ") is less than 2");
+        }
+
+        std::vector<T> data;
+        data.reserve(n);
+
+        std::vector<T> medians(n);
+
+        for (std::size_t i = 0; i < n; ++i)
+        {
+                data.clear();
+                for (std::size_t j = 0; j < n; ++j)
+                {
+                        add_slope(i, j, data);
+                }
+                medians[i] = median(&data);
+        }
+
+        const T slope = median(&medians);
+
+        data.clear();
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                data.push_back(p[1] - slope * p[0]);
+        }
+
+        const T intercept = median(&data);
+
+        return {
+                .intercept = intercept,
+                .slope = slope,
+        };
+}
+
+template <typename T>
 [[nodiscard]] std::vector<T> linear_fit_piecewise(
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints)

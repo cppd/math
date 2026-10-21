@@ -160,6 +160,39 @@ void test_theil_sen(PCG& engine)
 }
 
 template <typename T>
+void test_medians(PCG& engine)
+{
+        const int count = 1'000;
+        const T noise_stddev = 0.1;
+
+        std::uniform_real_distribution<T> urd_intercept(-10, 10);
+        std::uniform_real_distribution<T> urd_slope(-10, 10);
+
+        const T intercept = urd_intercept(engine);
+        const T slope = urd_slope(engine);
+
+        std::normal_distribution<T> nd_y(0, noise_stddev);
+        std::bernoulli_distribution outlier(0.1);
+        std::uniform_real_distribution<T> urd_outlier(-5, 10);
+        std::uniform_real_distribution<T> urd_x(-100, 100);
+
+        std::vector<numerical::Vector<2, T>> points;
+        points.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                const T x = urd_x(engine);
+                const T y = intercept + slope * x + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
+                points.push_back({x, y});
+        }
+
+        const Line l = linear_fit_medians(points);
+
+        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
+
+        COMPARE_LESS(rmse, 7 * noise_stddev / std::sqrt(0.9 * count));
+}
+
+template <typename T>
 void test_linear_piecewise(PCG& engine)
 {
         const int count = 1'000;
@@ -200,6 +233,7 @@ void test(PCG& engine)
 {
         test_qr<T>(engine);
         test_theil_sen<T>(engine);
+        test_medians<T>(engine);
         test_linear_piecewise<T>(engine);
 }
 
