@@ -50,6 +50,40 @@ void check_breakpoints(const std::vector<T>& breakpoints)
 }
 
 template <typename T>
+void check_point_count(const std::vector<numerical::Vector<2, T>>& points)
+{
+        const std::size_t n = points.size();
+        if (n < 2)
+        {
+                error("Points count (" + to_string(n) + ") is less than 2");
+        }
+}
+
+template <typename T>
+std::vector<T> compute_all_slopes(const std::vector<numerical::Vector<2, T>>& points)
+{
+        const std::size_t n = points.size();
+
+        std::vector<T> res;
+
+        res.reserve(n * (n + 1) / 2);
+        for (std::size_t i = 0; i < n; ++i)
+        {
+                for (std::size_t j = i + 1; j < n; ++j)
+                {
+                        const T dx = points[j][0] - points[i][0];
+                        if (dx != 0)
+                        {
+                                const T dy = points[j][1] - points[i][1];
+                                res.push_back(dy / dx);
+                        }
+                }
+        }
+
+        return res;
+}
+
+template <typename T>
 std::vector<T> compute_slope_medians(const std::vector<numerical::Vector<2, T>>& points)
 {
         const std::size_t n = points.size();
@@ -79,6 +113,22 @@ std::vector<T> compute_slope_medians(const std::vector<numerical::Vector<2, T>>&
 }
 
 template <typename T>
+std::tuple<T, T> intercept_slope(const std::vector<numerical::Vector<2, T>>& points, std::vector<T>&& slopes)
+{
+        const T slope = median(&slopes);
+
+        slopes.clear();
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                slopes.push_back(p[1] - slope * p[0]);
+        }
+
+        const T intercept = median(&slopes);
+
+        return {intercept, slope};
+}
+
+template <typename T>
 std::tuple<T, T> median_mad(std::vector<T> data)
 {
         const T m = median(&data);
@@ -88,6 +138,42 @@ std::tuple<T, T> median_mad(std::vector<T> data)
         }
         const T mad = median(&data);
         return {m, mad};
+}
+
+template <typename T>
+std::vector<T> residuals(const std::vector<numerical::Vector<2, T>>& points, const T intercept, const T slope)
+{
+        std::vector<T> res;
+        res.reserve(points.size());
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                res.push_back(intercept + slope * p[0] - p[1]);
+        }
+        return res;
+}
+
+template <typename T>
+std::vector<numerical::Vector<2, T>> filter_points(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& filter,
+        const T gate)
+{
+        ASSERT(points.size() == filter.size());
+
+        const auto [median, mad] = median_mad(filter);
+        const T min = median - gate * mad;
+        const T max = median + gate * mad;
+
+        std::vector<numerical::Vector<2, T>> res;
+        res.reserve(points.size());
+        for (std::size_t i = 0; i < points.size(); ++i)
+        {
+                if (filter[i] >= min && filter[i] <= max)
+                {
+                        res.push_back(points[i]);
+                }
+        }
+        return res;
 }
 }
 
@@ -129,40 +215,14 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Line<T> linear_fit_theil_sen(const std::vector<numerical::Vector<2, T>>& points)
 {
-        const std::size_t n = points.size();
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = linear_fit_implementation;
 
-        if (n < 2)
-        {
-                error("Points count (" + to_string(n) + ") is less than 2");
-        }
+        impl::check_point_count(points);
 
-        std::vector<T> data;
+        std::vector<T> slopes = impl::compute_all_slopes(points);
 
-        data.reserve(n * (n + 1) / 2);
-        for (std::size_t i = 0; i < n; ++i)
-        {
-                for (std::size_t j = i + 1; j < n; ++j)
-                {
-                        const T dx = points[j][0] - points[i][0];
-                        if (dx == 0)
-                        {
-                                continue;
-                        }
-                        const T dy = points[j][1] - points[i][1];
-                        data.push_back(dy / dx);
-                }
-        }
-
-        const T slope = median(&data);
-
-        data.clear();
-        data.reserve(n);
-        for (const numerical::Vector<2, T>& p : points)
-        {
-                data.push_back(p[1] - slope * p[0]);
-        }
-
-        const T intercept = median(&data);
+        const auto [intercept, slope] = impl::intercept_slope(points, std::move(slopes));
 
         return {
                 .intercept = intercept,
@@ -173,24 +233,15 @@ template <typename T>
 template <typename T>
 [[nodiscard]] Line<T> linear_fit_medians(const std::vector<numerical::Vector<2, T>>& points)
 {
+        static_assert(std::is_floating_point_v<T>);
         namespace impl = linear_fit_implementation;
 
-        if (points.size() < 2)
-        {
-                error("Points count (" + to_string(points.size()) + ") is less than 2");
-        }
+        impl::check_point_count(points);
 
-        std::vector<T> data = impl::compute_slope_medians(points);
+        std::vector<T> slopes = impl::compute_slope_medians(points);
+        ASSERT(slopes.size() == points.size());
 
-        const T slope = median(&data);
-
-        data.clear();
-        for (const numerical::Vector<2, T>& p : points)
-        {
-                data.push_back(p[1] - slope * p[0]);
-        }
-
-        const T intercept = median(&data);
+        const auto [intercept, slope] = impl::intercept_slope(points, std::move(slopes));
 
         return {
                 .intercept = intercept,
@@ -199,52 +250,37 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Line<T> linear_fit_medians_gate(const std::vector<numerical::Vector<2, T>>& points, const T gate)
+[[nodiscard]] Line<T> linear_fit_medians_gate_slopes(const std::vector<numerical::Vector<2, T>>& points, const T gate)
 {
+        static_assert(std::is_floating_point_v<T>);
         namespace impl = linear_fit_implementation;
 
-        const std::size_t n = points.size();
+        impl::check_point_count(points);
 
-        if (n < 2)
-        {
-                error("Points count (" + to_string(n) + ") is less than 2");
-        }
+        const std::vector<T> slopes = impl::compute_slope_medians(points);
 
-        const std::vector<T> slope_medians = impl::compute_slope_medians(points);
+        const std::vector<numerical::Vector<2, T>> filtered_points = impl::filter_points(points, slopes, gate);
 
-        const auto [slope_median, slope_mad] = impl::median_mad(slope_medians);
+        return linear_fit_medians(filtered_points);
+}
 
-        const T min = slope_median - gate * slope_mad;
-        const T max = slope_median + gate * slope_mad;
+template <typename T>
+[[nodiscard]] Line<T> linear_fit_medians_gate_residuals(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const T gate)
+{
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = linear_fit_implementation;
 
-        std::vector<T> data;
-        data.reserve(n);
+        impl::check_point_count(points);
 
-        for (const T slope : slope_medians)
-        {
-                if (slope >= min && slope <= max)
-                {
-                        data.push_back(slope);
-                }
-        }
+        const Line l = linear_fit_medians(points);
 
-        const T slope = median(&data);
+        const std::vector<T> residuals = impl::residuals(points, l.intercept, l.slope);
 
-        data.clear();
-        for (std::size_t i = 0; i < n; ++i)
-        {
-                if (slope_medians[i] >= min && slope_medians[i] <= max)
-                {
-                        data.push_back(points[i][1] - slope * points[i][0]);
-                }
-        }
+        const std::vector<numerical::Vector<2, T>> filtered_points = impl::filter_points(points, residuals, gate);
 
-        const T intercept = median(&data);
-
-        return {
-                .intercept = intercept,
-                .slope = slope,
-        };
+        return linear_fit_medians(filtered_points);
 }
 
 template <typename T>
@@ -252,6 +288,7 @@ template <typename T>
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints)
 {
+        static_assert(std::is_floating_point_v<T>);
         namespace impl = linear_fit_implementation;
 
         impl::check_breakpoints(breakpoints);
