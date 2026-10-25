@@ -297,6 +297,46 @@ void test_linear_piecewise(PCG& engine)
 }
 
 template <typename T>
+void test_linear_piecewise_gate(PCG& engine)
+{
+        const T gate = 4;
+        const int count = 2'000;
+        const T noise_stddev = 0.1;
+
+        std::uniform_real_distribution<T> urd_betas(-10, 10);
+        const std::vector<T> betas{
+                urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine)};
+
+        std::uniform_real_distribution<T> urd_breakpoint1(-51, -49);
+        std::uniform_real_distribution<T> urd_breakpoint2(-1, 1);
+        std::uniform_real_distribution<T> urd_breakpoint3(49, 51);
+        const std::vector<T> breakpoints{
+                -100, urd_breakpoint1(engine), urd_breakpoint2(engine), urd_breakpoint3(engine)};
+
+        std::uniform_real_distribution<T> urd_x(-100, 100);
+        std::normal_distribution<T> nd_y(0, noise_stddev);
+        std::bernoulli_distribution outlier(0.4);
+        std::uniform_real_distribution<T> urd_outlier(-1, 10);
+
+        std::vector<numerical::Vector<2, T>> points;
+        points.reserve(count);
+
+        for (int i = 0; i < count; ++i)
+        {
+                const T x = urd_x(engine);
+                const T y = piecewise_function(x, betas, breakpoints)
+                            + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
+                points.push_back({x, y});
+        }
+
+        const std::vector<T> betas_s = linear_fit_piecewise_gate(points, breakpoints, gate);
+
+        const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
+
+        COMPARE_LESS(rmse, 10 * noise_stddev / std::sqrt(0.6 * count));
+}
+
+template <typename T>
 void test(PCG& engine)
 {
         test_qr<T>(engine);
@@ -305,6 +345,7 @@ void test(PCG& engine)
         test_medians_gate_slopes<T>(engine);
         test_medians_gate_residuals<T>(engine);
         test_linear_piecewise<T>(engine);
+        test_linear_piecewise_gate<T>(engine);
 }
 
 void test_median()

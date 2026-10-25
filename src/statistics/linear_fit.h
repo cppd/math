@@ -197,8 +197,6 @@ std::vector<std::vector<T>> least_squares_a(
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints)
 {
-        check_breakpoints(breakpoints);
-
         std::vector<std::vector<T>> a(1 + breakpoints.size());
 
         a[0].resize(points.size(), 1);
@@ -222,7 +220,6 @@ std::vector<std::vector<T>> least_squares_a(
 
 template <typename T>
 std::vector<T> least_squares_b(const std::vector<numerical::Vector<2, T>>& points)
-
 {
         std::vector<T> b;
         b.reserve(points.size());
@@ -231,6 +228,28 @@ std::vector<T> least_squares_b(const std::vector<numerical::Vector<2, T>>& point
                 b.push_back(p[1]);
         }
         return b;
+}
+
+template <typename T>
+std::vector<std::vector<numerical::Vector<2, T>>> breakpoint_segments(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints)
+{
+        std::vector<std::vector<numerical::Vector<2, T>>> res(breakpoints.size());
+
+        for (const numerical::Vector<2, T>& p : points)
+        {
+                for (auto i = std::ssize(breakpoints) - 1; i >= 0; --i)
+                {
+                        if (p[0] >= breakpoints[i])
+                        {
+                                res[i].push_back(p);
+                                break;
+                        }
+                }
+        }
+
+        return res;
 }
 }
 
@@ -338,8 +357,45 @@ template <typename T>
         static_assert(std::is_floating_point_v<T>);
         namespace impl = linear_fit_implementation;
 
+        impl::check_breakpoints(breakpoints);
+
         std::vector<std::vector<T>> a = impl::least_squares_a(points, breakpoints);
         std::vector<T> b = impl::least_squares_b(points);
+
+        std::vector<T> s = numerical::qr_solve(a, b);
+        ASSERT(s.size() == breakpoints.size() + 1);
+
+        return s;
+}
+
+template <typename T>
+[[nodiscard]] std::vector<T> linear_fit_piecewise_gate(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints,
+        const T gate)
+{
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = linear_fit_implementation;
+
+        impl::check_breakpoints(breakpoints);
+
+        const std::vector<std::vector<numerical::Vector<2, T>>> segments =
+                impl::breakpoint_segments(points, breakpoints);
+
+        std::vector<numerical::Vector<2, T>> filtered_points;
+        for (const std::vector<numerical::Vector<2, T>>& segment : segments)
+        {
+                impl::check_point_count(segment);
+
+                const Line l = linear_fit_medians(segment);
+
+                const std::vector<T> residuals = impl::residuals(segment, l.intercept, l.slope);
+
+                filtered_points.insert_range(filtered_points.end(), impl::filter_points(segment, residuals, gate));
+        }
+
+        std::vector<std::vector<T>> a = impl::least_squares_a(filtered_points, breakpoints);
+        std::vector<T> b = impl::least_squares_b(filtered_points);
 
         std::vector<T> s = numerical::qr_solve(a, b);
         ASSERT(s.size() == breakpoints.size() + 1);
