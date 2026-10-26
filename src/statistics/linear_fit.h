@@ -28,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tuple>
 #include <vector>
 
-namespace ns::statistics
+namespace ns::statistics::linear_fit
 {
-namespace linear_fit_implementation
+namespace implementation
 {
 template <typename T>
 void check_breakpoints(const std::vector<T>& breakpoints)
@@ -264,7 +264,7 @@ template <typename T>
 [[nodiscard]] Line<T> linear_fit_qr(const std::vector<numerical::Vector<2, T>>& points)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         std::vector<std::vector<T>> a = impl::least_squares_a(points);
         std::vector<T> b = impl::least_squares_b(points);
@@ -282,7 +282,7 @@ template <typename T>
 [[nodiscard]] Line<T> linear_fit_theil_sen(const std::vector<numerical::Vector<2, T>>& points)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         impl::check_point_count(points);
 
@@ -300,7 +300,7 @@ template <typename T>
 [[nodiscard]] Line<T> linear_fit_medians(const std::vector<numerical::Vector<2, T>>& points)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         impl::check_point_count(points);
 
@@ -319,7 +319,7 @@ template <typename T>
 [[nodiscard]] Line<T> linear_fit_medians_gate_slopes(const std::vector<numerical::Vector<2, T>>& points, const T gate)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         impl::check_point_count(points);
 
@@ -336,7 +336,7 @@ template <typename T>
         const T gate)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         impl::check_point_count(points);
 
@@ -355,7 +355,7 @@ template <typename T>
         const std::vector<T>& breakpoints)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         impl::check_breakpoints(breakpoints);
 
@@ -375,7 +375,7 @@ template <typename T>
         const T gate)
 {
         static_assert(std::is_floating_point_v<T>);
-        namespace impl = linear_fit_implementation;
+        namespace impl = implementation;
 
         impl::check_breakpoints(breakpoints);
 

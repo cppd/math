@@ -119,7 +119,7 @@ void test_qr(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const Line l = linear_fit_qr(points);
+        const linear_fit::Line l = linear_fit::linear_fit_qr(points);
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
@@ -131,6 +131,7 @@ void test_theil_sen(PCG& engine)
 {
         const int count = 1'000;
         const T noise_stddev = 0.1;
+        const T outlier_p = 0.1;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -139,7 +140,7 @@ void test_theil_sen(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(0.1);
+        std::bernoulli_distribution outlier(outlier_p);
         std::uniform_real_distribution<T> urd_outlier(-5, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -152,11 +153,11 @@ void test_theil_sen(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const Line l = linear_fit_theil_sen(points);
+        const linear_fit::Line l = linear_fit::linear_fit_theil_sen(points);
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 8 * noise_stddev / std::sqrt(0.9 * count));
+        COMPARE_LESS(rmse, 8 * noise_stddev / std::sqrt((1 - outlier_p) * count));
 }
 
 template <typename T>
@@ -164,6 +165,7 @@ void test_medians(PCG& engine)
 {
         const int count = 1'000;
         const T noise_stddev = 0.1;
+        const T outlier_p = 0.1;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -172,7 +174,7 @@ void test_medians(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(0.1);
+        std::bernoulli_distribution outlier(outlier_p);
         std::uniform_real_distribution<T> urd_outlier(-5, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -185,11 +187,11 @@ void test_medians(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const Line l = linear_fit_medians(points);
+        const linear_fit::Line l = linear_fit::linear_fit_medians(points);
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 7 * noise_stddev / std::sqrt(0.9 * count));
+        COMPARE_LESS(rmse, 7 * noise_stddev / std::sqrt((1 - outlier_p) * count));
 }
 
 template <typename T>
@@ -198,6 +200,7 @@ void test_medians_gate_slopes(PCG& engine)
         const T gate = 4;
         const int count = 1'000;
         const T noise_stddev = 0.1;
+        const T outlier_p = 0.4;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -206,7 +209,7 @@ void test_medians_gate_slopes(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(0.4);
+        std::bernoulli_distribution outlier(outlier_p);
         std::uniform_real_distribution<T> urd_outlier(-1, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -219,11 +222,11 @@ void test_medians_gate_slopes(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const Line l = linear_fit_medians_gate_slopes(points, gate);
+        const linear_fit::Line l = linear_fit::linear_fit_medians_gate_slopes(points, gate);
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt(0.6 * count));
+        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt((1 - outlier_p) * count));
 }
 
 template <typename T>
@@ -232,6 +235,7 @@ void test_medians_gate_residuals(PCG& engine)
         const T gate = 4;
         const int count = 1'000;
         const T noise_stddev = 0.1;
+        const T outlier_p = 0.4;
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -240,7 +244,7 @@ void test_medians_gate_residuals(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(0.4);
+        std::bernoulli_distribution outlier(outlier_p);
         std::uniform_real_distribution<T> urd_outlier(-1, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -253,11 +257,11 @@ void test_medians_gate_residuals(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const Line l = linear_fit_medians_gate_residuals(points, gate);
+        const linear_fit::Line l = linear_fit::linear_fit_medians_gate_residuals(points, gate);
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt(0.6 * count));
+        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt((1 - outlier_p) * count));
 }
 
 template <typename T>
@@ -289,7 +293,7 @@ void test_linear_piecewise(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const std::vector<T> betas_s = linear_fit_piecewise(points, breakpoints);
+        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
@@ -302,6 +306,7 @@ void test_linear_piecewise_gate(PCG& engine)
         const T gate = 4;
         const int count = 2'000;
         const T noise_stddev = 0.1;
+        const T outlier_p = 0.4;
 
         std::uniform_real_distribution<T> urd_betas(-10, 10);
         const std::vector<T> betas{
@@ -315,7 +320,7 @@ void test_linear_piecewise_gate(PCG& engine)
 
         std::uniform_real_distribution<T> urd_x(-100, 100);
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(0.4);
+        std::bernoulli_distribution outlier(outlier_p);
         std::uniform_real_distribution<T> urd_outlier(-1, 10);
 
         std::vector<numerical::Vector<2, T>> points;
@@ -329,11 +334,11 @@ void test_linear_piecewise_gate(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const std::vector<T> betas_s = linear_fit_piecewise_gate(points, breakpoints, gate);
+        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise_gate(points, breakpoints, gate);
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        COMPARE_LESS(rmse, 10 * noise_stddev / std::sqrt(0.6 * count));
+        COMPARE_LESS(rmse, 10 * noise_stddev / std::sqrt((1 - outlier_p) * count));
 }
 
 template <typename T>
