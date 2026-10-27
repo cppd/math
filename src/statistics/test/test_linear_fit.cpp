@@ -222,7 +222,7 @@ void test_medians_gate_slopes(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const linear_fit::Line l = linear_fit::linear_fit_medians_gate_slopes(points, gate);
+        const linear_fit::Line l = linear_fit::linear_fit_medians(linear_fit::filter_by_slopes(points, gate));
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
@@ -257,7 +257,7 @@ void test_medians_gate_residuals(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const linear_fit::Line l = linear_fit::linear_fit_medians_gate_residuals(points, gate);
+        const linear_fit::Line l = linear_fit::linear_fit_medians(linear_fit::filter_by_residuals(points, gate));
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
@@ -301,7 +301,7 @@ void test_linear_piecewise(PCG& engine)
 }
 
 template <typename T>
-void test_linear_piecewise_gate(PCG& engine)
+void test_linear_piecewise_gate_residuals(PCG& engine)
 {
         const T gate = 4;
         const int count = 2'000;
@@ -334,7 +334,8 @@ void test_linear_piecewise_gate(PCG& engine)
                 points.push_back({x, y});
         }
 
-        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise_gate(points, breakpoints, gate);
+        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(
+                linear_fit::filter_by_residuals(points, breakpoints, gate), breakpoints);
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
@@ -346,11 +347,13 @@ void test(PCG& engine)
 {
         test_qr<T>(engine);
         test_theil_sen<T>(engine);
+
         test_medians<T>(engine);
         test_medians_gate_slopes<T>(engine);
         test_medians_gate_residuals<T>(engine);
+
         test_linear_piecewise<T>(engine);
-        test_linear_piecewise_gate<T>(engine);
+        test_linear_piecewise_gate_residuals<T>(engine);
 }
 
 void test_median()

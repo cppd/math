@@ -316,40 +316,6 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] Line<T> linear_fit_medians_gate_slopes(const std::vector<numerical::Vector<2, T>>& points, const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_point_count(points);
-
-        const std::vector<T> slopes = impl::compute_slope_medians(points);
-
-        const std::vector<numerical::Vector<2, T>> filtered_points = impl::filter_points(points, slopes, gate);
-
-        return linear_fit_medians(filtered_points);
-}
-
-template <typename T>
-[[nodiscard]] Line<T> linear_fit_medians_gate_residuals(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_point_count(points);
-
-        const Line l = linear_fit_medians(points);
-
-        const std::vector<T> residuals = impl::residuals(points, l.intercept, l.slope);
-
-        const std::vector<numerical::Vector<2, T>> filtered_points = impl::filter_points(points, residuals, gate);
-
-        return linear_fit_medians(filtered_points);
-}
-
-template <typename T>
 [[nodiscard]] std::vector<T> linear_fit_piecewise(
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints)
@@ -369,7 +335,39 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::vector<T> linear_fit_piecewise_gate(
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_by_slopes(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const T gate)
+{
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = implementation;
+
+        impl::check_point_count(points);
+
+        const std::vector<T> slopes = impl::compute_slope_medians(points);
+
+        return impl::filter_points(points, slopes, gate);
+}
+
+template <typename T>
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_by_residuals(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const T gate)
+{
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = implementation;
+
+        impl::check_point_count(points);
+
+        const Line l = linear_fit_medians(points);
+
+        const std::vector<T> residuals = impl::residuals(points, l.intercept, l.slope);
+
+        return impl::filter_points(points, residuals, gate);
+}
+
+template <typename T>
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_by_residuals(
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints,
         const T gate)
@@ -379,27 +377,11 @@ template <typename T>
 
         impl::check_breakpoints(breakpoints);
 
-        const std::vector<std::vector<numerical::Vector<2, T>>> segments =
-                impl::breakpoint_segments(points, breakpoints);
-
-        std::vector<numerical::Vector<2, T>> filtered_points;
-        for (const std::vector<numerical::Vector<2, T>>& segment : segments)
+        std::vector<numerical::Vector<2, T>> res;
+        for (const std::vector<numerical::Vector<2, T>>& segment : impl::breakpoint_segments(points, breakpoints))
         {
-                impl::check_point_count(segment);
-
-                const Line l = linear_fit_medians(segment);
-
-                const std::vector<T> residuals = impl::residuals(segment, l.intercept, l.slope);
-
-                filtered_points.insert_range(filtered_points.end(), impl::filter_points(segment, residuals, gate));
+                res.insert_range(res.end(), filter_by_residuals(segment, gate));
         }
-
-        std::vector<std::vector<T>> a = impl::least_squares_a(filtered_points, breakpoints);
-        std::vector<T> b = impl::least_squares_b(filtered_points);
-
-        std::vector<T> s = numerical::qr_solve(a, b);
-        ASSERT(s.size() == breakpoints.size() + 1);
-
-        return s;
+        return res;
 }
 }
