@@ -335,22 +335,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_by_slopes(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_point_count(points);
-
-        const std::vector<T> slopes = impl::compute_slope_medians(points);
-
-        return impl::filter_points(points, slopes, gate);
-}
-
-template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_by_residuals(
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
         const std::vector<numerical::Vector<2, T>>& points,
         const T gate)
 {
@@ -367,7 +352,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_by_residuals(
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints,
         const T gate)
@@ -380,7 +365,7 @@ template <typename T>
         std::vector<numerical::Vector<2, T>> res;
         for (const std::vector<numerical::Vector<2, T>>& segment : impl::breakpoint_segments(points, breakpoints))
         {
-                res.insert_range(res.end(), filter_by_residuals(segment, gate));
+                res.insert_range(res.end(), filter_points(segment, gate));
         }
         return res;
 }
