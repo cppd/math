@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/vector_object.h>
-#include <src/statistics/linear_fit.h>
+#include <src/statistics/linear_fit/linear_fit.h>
 #include <src/test/test.h>
 
 #include <cmath>

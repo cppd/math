@@ -17,20 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "median.h"
-
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/numerical/qr.h>
 #include <src/numerical/vector.h>
+#include <src/statistics/median.h>
 
 #include <cstddef>
 #include <tuple>
 #include <vector>
 
-namespace ns::statistics::linear_fit
-{
-namespace implementation
+namespace ns::statistics::linear_fit::utils
 {
 template <typename T>
 void check_breakpoints(const std::vector<T>& breakpoints)
@@ -249,124 +246,6 @@ std::vector<std::vector<numerical::Vector<2, T>>> breakpoint_segments(
                 }
         }
 
-        return res;
-}
-}
-
-template <typename T>
-struct Line final
-{
-        T intercept;
-        T slope;
-};
-
-template <typename T>
-[[nodiscard]] Line<T> linear_fit_qr(const std::vector<numerical::Vector<2, T>>& points)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        std::vector<std::vector<T>> a = impl::least_squares_a(points);
-        std::vector<T> b = impl::least_squares_b(points);
-
-        const std::vector<T> s = numerical::qr_solve(a, b);
-        ASSERT(s.size() == 2);
-
-        return {
-                .intercept = s[0],
-                .slope = s[1],
-        };
-}
-
-template <typename T>
-[[nodiscard]] Line<T> linear_fit_theil_sen(const std::vector<numerical::Vector<2, T>>& points)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_point_count(points);
-
-        std::vector<T> slopes = impl::compute_all_slopes(points);
-
-        const auto [intercept, slope] = impl::intercept_slope(points, std::move(slopes));
-
-        return {
-                .intercept = intercept,
-                .slope = slope,
-        };
-}
-
-template <typename T>
-[[nodiscard]] Line<T> linear_fit_medians(const std::vector<numerical::Vector<2, T>>& points)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_point_count(points);
-
-        std::vector<T> slopes = impl::compute_slope_medians(points);
-        ASSERT(slopes.size() == points.size());
-
-        const auto [intercept, slope] = impl::intercept_slope(points, std::move(slopes));
-
-        return {
-                .intercept = intercept,
-                .slope = slope,
-        };
-}
-
-template <typename T>
-[[nodiscard]] std::vector<T> linear_fit_piecewise(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& breakpoints)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_breakpoints(breakpoints);
-
-        std::vector<std::vector<T>> a = impl::least_squares_a(points, breakpoints);
-        std::vector<T> b = impl::least_squares_b(points);
-
-        std::vector<T> s = numerical::qr_solve(a, b);
-        ASSERT(s.size() == breakpoints.size() + 1);
-
-        return s;
-}
-
-template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_point_count(points);
-
-        const Line l = linear_fit_medians(points);
-
-        const std::vector<T> residuals = impl::residuals(points, l.intercept, l.slope);
-
-        return impl::filter_points(points, residuals, gate);
-}
-
-template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& breakpoints,
-        const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-        namespace impl = implementation;
-
-        impl::check_breakpoints(breakpoints);
-
-        std::vector<numerical::Vector<2, T>> res;
-        for (const std::vector<numerical::Vector<2, T>>& segment : impl::breakpoint_segments(points, breakpoints))
-        {
-                res.insert_range(res.end(), filter_points(segment, gate));
-        }
         return res;
 }
 }
