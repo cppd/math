@@ -20,13 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils.h"
 
 #include <src/com/error.h>
-#include <src/com/print.h>
 #include <src/numerical/qr.h>
 #include <src/numerical/vector.h>
-#include <src/statistics/median.h>
 
-#include <cstddef>
-#include <tuple>
 #include <vector>
 
 namespace ns::statistics::linear_fit
@@ -64,7 +60,7 @@ template <typename T>
 
         std::vector<T> slopes = utils::compute_all_slopes(points);
 
-        const auto [intercept, slope] = utils::intercept_slope(points, std::move(slopes));
+        const auto [intercept, slope] = utils::intercept_slope(points, &slopes);
 
         return {
                 .intercept = intercept,
@@ -82,7 +78,7 @@ template <typename T>
         std::vector<T> slopes = utils::compute_slope_medians(points);
         ASSERT(slopes.size() == points.size());
 
-        const auto [intercept, slope] = utils::intercept_slope(points, std::move(slopes));
+        const auto [intercept, slope] = utils::intercept_slope(points, &slopes);
 
         return {
                 .intercept = intercept,
@@ -135,9 +131,9 @@ template <typename T>
         utils::check_breakpoints(breakpoints);
 
         std::vector<numerical::Vector<2, T>> res;
-        for (const std::vector<numerical::Vector<2, T>>& segment : utils::breakpoint_segments(points, breakpoints))
+        for (const auto& segment_points : utils::breakpoint_segments(points, breakpoints))
         {
-                res.insert_range(res.end(), filter_points(segment, gate));
+                res.insert_range(res.end(), filter_points(segment_points, gate));
         }
         return res;
 }

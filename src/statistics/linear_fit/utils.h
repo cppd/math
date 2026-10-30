@@ -110,17 +110,19 @@ std::vector<T> compute_slope_medians(const std::vector<numerical::Vector<2, T>>&
 }
 
 template <typename T>
-std::tuple<T, T> intercept_slope(const std::vector<numerical::Vector<2, T>>& points, std::vector<T>&& slopes)
+std::tuple<T, T> intercept_slope(const std::vector<numerical::Vector<2, T>>& points, std::vector<T>* const slopes)
 {
-        const T slope = median(&slopes);
+        ASSERT(slopes);
 
-        slopes.clear();
+        const T slope = median(slopes);
+
+        slopes->clear();
         for (const numerical::Vector<2, T>& p : points)
         {
-                slopes.push_back(p[1] - slope * p[0]);
+                slopes->push_back(p[1] - slope * p[0]);
         }
 
-        const T intercept = median(&slopes);
+        const T intercept = median(slopes);
 
         return {intercept, slope};
 }

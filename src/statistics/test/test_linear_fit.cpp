@@ -327,6 +327,7 @@ void test_median()
 
         PCG engine;
 
+        test<float>(engine);
         test<double>(engine);
         test<long double>(engine);
 
