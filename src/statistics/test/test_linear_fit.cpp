@@ -99,7 +99,7 @@ template <typename T>
 void test_qr(PCG& engine)
 {
         const int count = 1'000;
-        const T noise_stddev = 0.1;
+        const T noise_stddev = static_cast<T>(0.1);
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -130,8 +130,8 @@ template <typename T>
 void test_theil_sen(PCG& engine)
 {
         const int count = 1'000;
-        const T noise_stddev = 0.1;
-        const T outlier_p = 0.1;
+        const T noise_stddev = static_cast<T>(0.1);
+        const T outlier_p = static_cast<T>(0.1);
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -140,7 +140,7 @@ void test_theil_sen(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(outlier_p);
+        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
         std::uniform_real_distribution<T> urd_outlier(-5, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -164,8 +164,8 @@ template <typename T>
 void test_medians(PCG& engine)
 {
         const int count = 1'000;
-        const T noise_stddev = 0.1;
-        const T outlier_p = 0.1;
+        const T noise_stddev = static_cast<T>(0.1);
+        const T outlier_p = static_cast<T>(0.1);
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -174,7 +174,7 @@ void test_medians(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(outlier_p);
+        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
         std::uniform_real_distribution<T> urd_outlier(-5, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -199,8 +199,8 @@ void test_medians_with_filter(PCG& engine)
 {
         const T gate = 4;
         const int count = 1'000;
-        const T noise_stddev = 0.1;
-        const T outlier_p = 0.4;
+        const T noise_stddev = static_cast<T>(0.1);
+        const T outlier_p = static_cast<T>(0.4);
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -209,7 +209,7 @@ void test_medians_with_filter(PCG& engine)
         const T slope = urd_slope(engine);
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(outlier_p);
+        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
         std::uniform_real_distribution<T> urd_outlier(-1, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
@@ -234,7 +234,7 @@ template <typename T>
 void test_linear_piecewise(PCG& engine)
 {
         const int count = 1'000;
-        const T noise_stddev = 0.1;
+        const T noise_stddev = static_cast<T>(0.1);
 
         std::uniform_real_distribution<T> urd_betas(-10, 10);
         const std::vector<T> betas{
@@ -271,8 +271,8 @@ void test_linear_piecewise_with_filter(PCG& engine)
 {
         const T gate = 4;
         const int count = 2'000;
-        const T noise_stddev = 0.1;
-        const T outlier_p = 0.4;
+        const T noise_stddev = static_cast<T>(0.1);
+        const T outlier_p = static_cast<T>(0.4);
 
         std::uniform_real_distribution<T> urd_betas(-10, 10);
         const std::vector<T> betas{
@@ -286,7 +286,7 @@ void test_linear_piecewise_with_filter(PCG& engine)
 
         std::uniform_real_distribution<T> urd_x(-100, 100);
         std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(outlier_p);
+        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
         std::uniform_real_distribution<T> urd_outlier(-1, 10);
 
         std::vector<numerical::Vector<2, T>> points;
