@@ -127,6 +127,42 @@ void test_qr(PCG& engine)
 }
 
 template <typename T>
+void test_qr_with_filter(PCG& engine)
+{
+        const T gate = 4;
+        const int count = 1'000;
+        const T noise_stddev = static_cast<T>(0.1);
+        const T outlier_p = static_cast<T>(0.4);
+
+        std::uniform_real_distribution<T> urd_intercept(-10, 10);
+        std::uniform_real_distribution<T> urd_slope(-10, 10);
+
+        const T intercept = urd_intercept(engine);
+        const T slope = urd_slope(engine);
+
+        std::normal_distribution<T> nd_y(0, noise_stddev);
+        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
+        std::uniform_real_distribution<T> urd_outlier(-1, 10);
+        std::uniform_real_distribution<T> urd_x(-100, 100);
+
+        std::vector<numerical::Vector<2, T>> points;
+        points.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                const T x = urd_x(engine);
+                const T y = intercept + slope * x + +(outlier(engine) ? urd_outlier(engine) : nd_y(engine));
+                points.push_back({x, y});
+        }
+
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, gate);
+        const linear_fit::Line l = linear_fit::linear_fit_qr(filtered);
+
+        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
+
+        COMPARE_LESS(rmse, 10 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+}
+
+template <typename T>
 void test_theil_sen(PCG& engine)
 {
         const int count = 1'000;
@@ -348,6 +384,7 @@ template <typename T>
 void test(PCG& engine)
 {
         test_qr<T>(engine);
+        test_qr_with_filter<T>(engine);
 
         test_theil_sen<T>(engine);
         test_theil_sen_with_filter<T>(engine);
