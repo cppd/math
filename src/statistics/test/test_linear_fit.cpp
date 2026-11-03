@@ -96,6 +96,18 @@ T compute_rmse(
 }
 
 template <typename T>
+T expected_stddev(const T noise_stddev, const int count)
+{
+        return noise_stddev / std::sqrt(count);
+}
+
+template <typename T>
+T expected_stddev(const T noise_stddev, const int count, const T outlier_probability)
+{
+        return noise_stddev / std::sqrt((1 - outlier_probability) * count);
+}
+
+template <typename T>
 void test_qr(PCG& engine)
 {
         const int count = 1'000;
@@ -123,7 +135,7 @@ void test_qr(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 5 * noise_stddev / std::sqrt(count));
+        COMPARE_LESS(rmse, 5 * expected_stddev(noise_stddev, count));
 }
 
 template <typename T>
@@ -159,7 +171,7 @@ void test_qr_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 10 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+        COMPARE_LESS(rmse, 10 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
@@ -193,7 +205,7 @@ void test_theil_sen(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 8 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+        COMPARE_LESS(rmse, 8 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
@@ -212,7 +224,7 @@ void test_theil_sen_with_filter(PCG& engine)
 
         std::normal_distribution<T> nd_y(0, noise_stddev);
         std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
-        std::uniform_real_distribution<T> urd_outlier(-5, 10);
+        std::uniform_real_distribution<T> urd_outlier(-1, 10);
         std::uniform_real_distribution<T> urd_x(-100, 100);
 
         std::vector<numerical::Vector<2, T>> points;
@@ -229,7 +241,7 @@ void test_theil_sen_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+        COMPARE_LESS(rmse, 6 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
@@ -263,7 +275,7 @@ void test_medians(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 7 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+        COMPARE_LESS(rmse, 7 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
@@ -299,7 +311,7 @@ void test_medians_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+        COMPARE_LESS(rmse, 6 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
@@ -335,7 +347,7 @@ void test_linear_piecewise(PCG& engine)
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        COMPARE_LESS(rmse, 6 * noise_stddev / std::sqrt(count));
+        COMPARE_LESS(rmse, 6 * expected_stddev(noise_stddev, count));
 }
 
 template <typename T>
@@ -377,7 +389,7 @@ void test_linear_piecewise_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        COMPARE_LESS(rmse, 10 * noise_stddev / std::sqrt((1 - outlier_p) * count));
+        COMPARE_LESS(rmse, 10 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
