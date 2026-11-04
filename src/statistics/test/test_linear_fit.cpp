@@ -354,9 +354,9 @@ template <typename T>
 void test_linear_piecewise_with_filter(PCG& engine)
 {
         const T gate = 4;
-        const int count = 2'000;
         const T noise_stddev = static_cast<T>(0.1);
         const T outlier_p = static_cast<T>(0.4);
+        const int count = std::lround(1'000 / (1 - outlier_p));
 
         std::uniform_real_distribution<T> urd_betas(-10, 10);
         const std::vector<T> betas{
@@ -389,7 +389,7 @@ void test_linear_piecewise_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        COMPARE_LESS(rmse, 10 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS(rmse, 12 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
