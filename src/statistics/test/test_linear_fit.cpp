@@ -142,9 +142,9 @@ template <typename T>
 void test_qr_with_filter(PCG& engine)
 {
         const T gate = 4;
-        const int count = 1'000;
         const T noise_stddev = static_cast<T>(0.1);
         const T outlier_p = static_cast<T>(0.4);
+        const int count = std::lround(1'000 / (1 - outlier_p));
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -171,15 +171,15 @@ void test_qr_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 10 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS(rmse, 9 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
 void test_theil_sen(PCG& engine)
 {
-        const int count = 1'000;
         const T noise_stddev = static_cast<T>(0.1);
         const T outlier_p = static_cast<T>(0.1);
+        const int count = std::lround(1'000 / (1 - outlier_p));
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -205,16 +205,16 @@ void test_theil_sen(PCG& engine)
 
         const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
 
-        COMPARE_LESS(rmse, 8 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS(rmse, 7 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
 void test_theil_sen_with_filter(PCG& engine)
 {
         const T gate = 4;
-        const int count = 1'000;
         const T noise_stddev = static_cast<T>(0.1);
         const T outlier_p = static_cast<T>(0.4);
+        const int count = std::lround(1'000 / (1 - outlier_p));
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -247,9 +247,9 @@ void test_theil_sen_with_filter(PCG& engine)
 template <typename T>
 void test_medians(PCG& engine)
 {
-        const int count = 1'000;
         const T noise_stddev = static_cast<T>(0.1);
         const T outlier_p = static_cast<T>(0.1);
+        const int count = std::lround(1'000 / (1 - outlier_p));
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
@@ -282,9 +282,9 @@ template <typename T>
 void test_medians_with_filter(PCG& engine)
 {
         const T gate = 4;
-        const int count = 1'000;
         const T noise_stddev = static_cast<T>(0.1);
         const T outlier_p = static_cast<T>(0.4);
+        const int count = std::lround(1'000 / (1 - outlier_p));
 
         std::uniform_real_distribution<T> urd_intercept(-10, 10);
         std::uniform_real_distribution<T> urd_slope(-10, 10);
