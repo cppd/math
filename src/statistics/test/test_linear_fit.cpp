@@ -108,70 +108,84 @@ T expected_stddev(const T noise_stddev, const int count, const T outlier_probabi
 }
 
 template <typename T>
-void test_qr(PCG& engine)
+class Data final
 {
-        const int count = 1'000;
-        const T noise_stddev = static_cast<T>(0.1);
+        T gate_;
+        T intercept_;
+        T slope_;
+        T expected_stddev_;
+        std::vector<numerical::Vector<2, T>> points_;
 
-        std::uniform_real_distribution<T> urd_intercept(-10, 10);
-        std::uniform_real_distribution<T> urd_slope(-10, 10);
-
-        const T intercept = urd_intercept(engine);
-        const T slope = urd_slope(engine);
-
-        std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::uniform_real_distribution<T> urd_x(-100, 100);
-
-        std::vector<numerical::Vector<2, T>> points;
-        points.reserve(count);
-        for (int i = 0; i < count; ++i)
+public:
+        Data(const bool add_outliers, PCG& engine)
+                : gate_(4),
+                  intercept_(std::uniform_real_distribution<T>(-10, 10)(engine)),
+                  slope_(std::uniform_real_distribution<T>(-10, 10)(engine))
         {
-                const T x = urd_x(engine);
-                const T y = intercept + slope * x + nd_y(engine);
-                points.push_back({x, y});
+                const T noise_stddev = static_cast<T>(0.1);
+                const T outlier_p = static_cast<T>(add_outliers ? 0.25 : 0.0);
+                const std::size_t count = std::llround(1'000 / (1 - outlier_p));
+
+                expected_stddev_ = noise_stddev / std::sqrt((1 - outlier_p) * count);
+
+                std::normal_distribution<T> nd_y(0, noise_stddev);
+                std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
+                std::uniform_real_distribution<T> urd_outlier(-1, 10);
+                std::uniform_real_distribution<T> urd_x(-100, 100);
+
+                points_.reserve(count);
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                        const T noise = outlier(engine) ? urd_outlier(engine) : nd_y(engine);
+                        const T x = urd_x(engine);
+                        const T y = intercept_ + slope_ * x + noise;
+                        points_.push_back({x, y});
+                }
         }
 
-        const linear_fit::Line l = linear_fit::linear_fit_qr(points);
+        [[nodiscard]] T gate() const
+        {
+                return gate_;
+        }
 
-        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
+        [[nodiscard]] const std::vector<numerical::Vector<2, T>>& points() const
+        {
+                return points_;
+        }
 
-        COMPARE_LESS(rmse, 5.6 * expected_stddev(noise_stddev, count));
+        [[nodiscard]] T expected_stddev() const
+        {
+                return expected_stddev_;
+        }
+
+        [[nodiscard]] T rmse(const linear_fit::Line<T>& l) const
+        {
+                return compute_rmse(points_, intercept_, slope_, l.intercept, l.slope);
+        }
+};
+
+template <typename T>
+void test_qr(const Data<T>& data, const T max_error)
+{
+        const linear_fit::Line line = linear_fit::linear_fit_qr(data.points());
+
+        const T rmse = data.rmse(line);
+        const T expected_stddev = data.expected_stddev();
+
+        COMPARE_LESS(rmse, max_error * expected_stddev);
 }
 
 template <typename T>
-void test_qr_with_filter(PCG& engine)
+void test_qr_with_filter(const Data<T>& data, const T max_error)
 {
-        const T gate = 4;
-        const T noise_stddev = static_cast<T>(0.1);
-        const T outlier_p = static_cast<T>(0.25);
-        const int count = std::lround(1'000 / (1 - outlier_p));
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(data.points(), data.gate());
 
-        std::uniform_real_distribution<T> urd_intercept(-10, 10);
-        std::uniform_real_distribution<T> urd_slope(-10, 10);
+        const linear_fit::Line line = linear_fit::linear_fit_qr(filtered);
 
-        const T intercept = urd_intercept(engine);
-        const T slope = urd_slope(engine);
+        const T rmse = data.rmse(line);
+        const T expected_stddev = data.expected_stddev();
 
-        std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
-        std::uniform_real_distribution<T> urd_outlier(-1, 10);
-        std::uniform_real_distribution<T> urd_x(-100, 100);
-
-        std::vector<numerical::Vector<2, T>> points;
-        points.reserve(count);
-        for (int i = 0; i < count; ++i)
-        {
-                const T x = urd_x(engine);
-                const T y = intercept + slope * x + +(outlier(engine) ? urd_outlier(engine) : nd_y(engine));
-                points.push_back({x, y});
-        }
-
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, gate);
-        const linear_fit::Line l = linear_fit::linear_fit_qr(filtered);
-
-        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
-
-        COMPARE_LESS(rmse, 5.6 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS(rmse, max_error * expected_stddev);
 }
 
 template <typename T>
@@ -395,8 +409,11 @@ void test_linear_piecewise_with_filter(PCG& engine)
 template <typename T>
 void test(PCG& engine)
 {
-        test_qr<T>(engine);
-        test_qr_with_filter<T>(engine);
+        const Data<T> data(/*add_outliers=*/false, engine);
+        const Data<T> data_outliers(/*add_outliers=*/true, engine);
+
+        test_qr<T>(data, 5.0);
+        test_qr_with_filter<T>(data_outliers, 5.0);
 
         test_theil_sen<T>(engine);
         test_theil_sen_with_filter<T>(engine);
