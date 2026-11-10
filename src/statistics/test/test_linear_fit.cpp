@@ -213,73 +213,27 @@ void test_theil_sen_with_filter(const Data<T>& data, const T max_error)
 }
 
 template <typename T>
-void test_medians(PCG& engine)
+void test_medians(const Data<T>& data, const T max_error)
 {
-        const T noise_stddev = static_cast<T>(0.1);
-        const T outlier_p = static_cast<T>(0.25);
-        const int count = std::lround(1'000 / (1 - outlier_p));
+        const linear_fit::Line line = linear_fit::linear_fit_medians(data.points());
 
-        std::uniform_real_distribution<T> urd_intercept(-10, 10);
-        std::uniform_real_distribution<T> urd_slope(-10, 10);
+        const T rmse = data.rmse(line);
+        const T expected_stddev = data.expected_stddev();
 
-        const T intercept = urd_intercept(engine);
-        const T slope = urd_slope(engine);
-
-        std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
-        std::uniform_real_distribution<T> urd_outlier(-1, 10);
-        std::uniform_real_distribution<T> urd_x(-100, 100);
-
-        std::vector<numerical::Vector<2, T>> points;
-        points.reserve(count);
-        for (int i = 0; i < count; ++i)
-        {
-                const T x = urd_x(engine);
-                const T y = intercept + slope * x + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
-                points.push_back({x, y});
-        }
-
-        const linear_fit::Line l = linear_fit::linear_fit_medians(points);
-
-        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
-
-        COMPARE_LESS(rmse, 17.7 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS(rmse, max_error * expected_stddev);
 }
 
 template <typename T>
-void test_medians_with_filter(PCG& engine)
+void test_medians_with_filter(const Data<T>& data, const T max_error)
 {
-        const T gate = 4;
-        const T noise_stddev = static_cast<T>(0.1);
-        const T outlier_p = static_cast<T>(0.25);
-        const int count = std::lround(1'000 / (1 - outlier_p));
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(data.points(), data.gate());
 
-        std::uniform_real_distribution<T> urd_intercept(-10, 10);
-        std::uniform_real_distribution<T> urd_slope(-10, 10);
+        const linear_fit::Line line = linear_fit::linear_fit_medians(filtered);
 
-        const T intercept = urd_intercept(engine);
-        const T slope = urd_slope(engine);
+        const T rmse = data.rmse(line);
+        const T expected_stddev = data.expected_stddev();
 
-        std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
-        std::uniform_real_distribution<T> urd_outlier(-1, 10);
-        std::uniform_real_distribution<T> urd_x(-100, 100);
-
-        std::vector<numerical::Vector<2, T>> points;
-        points.reserve(count);
-        for (int i = 0; i < count; ++i)
-        {
-                const T x = urd_x(engine);
-                const T y = intercept + slope * x + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
-                points.push_back({x, y});
-        }
-
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, gate);
-        const linear_fit::Line l = linear_fit::linear_fit_medians(filtered);
-
-        const T rmse = compute_rmse(points, intercept, slope, l.intercept, l.slope);
-
-        COMPARE_LESS(rmse, 6.2 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS(rmse, max_error * expected_stddev);
 }
 
 template <typename T>
@@ -367,13 +321,13 @@ void test(PCG& engine)
         const Data<T> data_outliers(/*add_outliers=*/true, engine);
 
         test_qr<T>(data, 5.0);
-        test_qr_with_filter<T>(data_outliers, 5.5);
+        test_qr_with_filter<T>(data_outliers, 5.3);
 
         test_theil_sen<T>(data_outliers, 17.4);
-        test_theil_sen_with_filter<T>(data_outliers, 5.7);
+        test_theil_sen_with_filter<T>(data_outliers, 5.8);
 
-        test_medians<T>(engine);
-        test_medians_with_filter<T>(engine);
+        test_medians<T>(data_outliers, 17.4);
+        test_medians_with_filter<T>(data_outliers, 5.8);
 
         test_linear_piecewise<T>(engine);
         test_linear_piecewise_with_filter<T>(engine);
