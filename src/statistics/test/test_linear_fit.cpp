@@ -60,17 +60,15 @@ T piecewise_function(const T x, const std::vector<T>& betas, const std::vector<T
 template <typename T>
 T compute_rmse(
         const std::vector<numerical::Vector<2, T>>& points,
-        const T intercept,
-        const T slope,
-        const T s_intercept,
-        const T s_slope)
+        const linear_fit::Line<T>& l1,
+        const linear_fit::Line<T>& l2)
 {
         T sum = 0;
         for (const numerical::Vector<2, T>& p : points)
         {
-                const T y = intercept + slope * p[0];
-                const T sy = s_intercept + s_slope * p[0];
-                const T d = y - sy;
+                const T y1 = l1.intercept + l1.slope * p[0];
+                const T y2 = l2.intercept + l2.slope * p[0];
+                const T d = y1 - y2;
                 sum += d * d;
         }
         return std::sqrt(sum / points.size());
@@ -110,7 +108,6 @@ T expected_stddev(const T noise_stddev, const int count, const T outlier_probabi
 template <typename T>
 class Data final
 {
-        T gate_;
         T intercept_;
         T slope_;
         T expected_stddev_;
@@ -118,15 +115,16 @@ class Data final
 
 public:
         Data(const bool add_outliers, PCG& engine)
-                : gate_(4),
-                  intercept_(std::uniform_real_distribution<T>(-10, 10)(engine)),
+                : intercept_(std::uniform_real_distribution<T>(-10, 10)(engine)),
                   slope_(std::uniform_real_distribution<T>(-10, 10)(engine))
         {
+                const std::size_t data_size = 1'000;
+
                 const T noise_stddev = static_cast<T>(0.1);
                 const T outlier_p = static_cast<T>(add_outliers ? 0.25 : 0.0);
-                const std::size_t count = std::llround(1'000 / (1 - outlier_p));
+                const std::size_t count = std::llround(data_size / (1 - outlier_p));
 
-                expected_stddev_ = noise_stddev / std::sqrt((1 - outlier_p) * count);
+                expected_stddev_ = noise_stddev / std::sqrt(data_size);
 
                 std::normal_distribution<T> nd_y(0, noise_stddev);
                 std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
@@ -143,11 +141,6 @@ public:
                 }
         }
 
-        [[nodiscard]] T gate() const
-        {
-                return gate_;
-        }
-
         [[nodiscard]] const std::vector<numerical::Vector<2, T>>& points() const
         {
                 return points_;
@@ -158,82 +151,52 @@ public:
                 return expected_stddev_;
         }
 
-        [[nodiscard]] T rmse(const linear_fit::Line<T>& l) const
+        [[nodiscard]] linear_fit::Line<T> line() const
         {
-                return compute_rmse(points_, intercept_, slope_, l.intercept, l.slope);
+                return {
+                        .intercept = intercept_,
+                        .slope = slope_,
+                };
         }
 };
 
 template <typename T>
-void test_qr(const Data<T>& data, const T max_error)
+void test_qr(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const linear_fit::Line<T>& etalon_line,
+        const T max_rmse)
 {
-        const linear_fit::Line line = linear_fit::linear_fit_qr(data.points());
+        const linear_fit::Line line = linear_fit::linear_fit_qr(points);
 
-        const T rmse = data.rmse(line);
-        const T expected_stddev = data.expected_stddev();
+        const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, max_error * expected_stddev);
+        COMPARE_LESS(rmse, max_rmse);
 }
 
 template <typename T>
-void test_qr_with_filter(const Data<T>& data, const T max_error)
+void test_theil_sen(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const linear_fit::Line<T>& etalon_line,
+        const T max_rmse)
 {
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(data.points(), data.gate());
+        const linear_fit::Line line = linear_fit::linear_fit_theil_sen(points);
 
-        const linear_fit::Line line = linear_fit::linear_fit_qr(filtered);
+        const T rmse = compute_rmse(points, etalon_line, line);
 
-        const T rmse = data.rmse(line);
-        const T expected_stddev = data.expected_stddev();
-
-        COMPARE_LESS(rmse, max_error * expected_stddev);
+        COMPARE_LESS(rmse, max_rmse);
 }
 
 template <typename T>
-void test_theil_sen(const Data<T>& data, const T max_error)
+void test_medians(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const linear_fit::Line<T>& etalon_line,
+        const T max_rmse)
 {
-        const linear_fit::Line line = linear_fit::linear_fit_theil_sen(data.points());
+        const linear_fit::Line line = linear_fit::linear_fit_medians(points);
 
-        const T rmse = data.rmse(line);
-        const T expected_stddev = data.expected_stddev();
+        const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, max_error * expected_stddev);
-}
-
-template <typename T>
-void test_theil_sen_with_filter(const Data<T>& data, const T max_error)
-{
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(data.points(), data.gate());
-
-        const linear_fit::Line line = linear_fit::linear_fit_theil_sen(filtered);
-
-        const T rmse = data.rmse(line);
-        const T expected_stddev = data.expected_stddev();
-
-        COMPARE_LESS(rmse, max_error * expected_stddev);
-}
-
-template <typename T>
-void test_medians(const Data<T>& data, const T max_error)
-{
-        const linear_fit::Line line = linear_fit::linear_fit_medians(data.points());
-
-        const T rmse = data.rmse(line);
-        const T expected_stddev = data.expected_stddev();
-
-        COMPARE_LESS(rmse, max_error * expected_stddev);
-}
-
-template <typename T>
-void test_medians_with_filter(const Data<T>& data, const T max_error)
-{
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(data.points(), data.gate());
-
-        const linear_fit::Line line = linear_fit::linear_fit_medians(filtered);
-
-        const T rmse = data.rmse(line);
-        const T expected_stddev = data.expected_stddev();
-
-        COMPARE_LESS(rmse, max_error * expected_stddev);
+        COMPARE_LESS(rmse, max_rmse);
 }
 
 template <typename T>
@@ -317,17 +280,32 @@ void test_linear_piecewise_with_filter(PCG& engine)
 template <typename T>
 void test(PCG& engine)
 {
-        const Data<T> data(/*add_outliers=*/false, engine);
-        const Data<T> data_outliers(/*add_outliers=*/true, engine);
+        {
+                const Data<T> data(/*add_outliers=*/false, engine);
 
-        test_qr<T>(data, 5.0);
-        test_qr_with_filter<T>(data_outliers, 5.3);
+                const std::vector<numerical::Vector<2, T>>& points = data.points();
+                const linear_fit::Line<T>& line = data.line();
+                const T stddev = data.expected_stddev();
 
-        test_theil_sen<T>(data_outliers, 17.4);
-        test_theil_sen_with_filter<T>(data_outliers, 5.8);
+                test_qr<T>(points, line, 5.0 * stddev);
+        }
 
-        test_medians<T>(data_outliers, 17.4);
-        test_medians_with_filter<T>(data_outliers, 5.8);
+        const Data<T> data(/*add_outliers=*/true, engine);
+
+        const std::vector<numerical::Vector<2, T>>& points = data.points();
+        const linear_fit::Line<T>& line = data.line();
+        const T stddev = data.expected_stddev();
+
+        const T gate = 4;
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, gate);
+
+        test_qr<T>(filtered, line, 5.3 * stddev);
+
+        test_theil_sen<T>(points, line, 17.4 * stddev);
+        test_theil_sen<T>(filtered, line, 5.8 * stddev);
+
+        test_medians<T>(points, line, 17.4 * stddev);
+        test_medians<T>(filtered, line, 5.8 * stddev);
 
         test_linear_piecewise<T>(engine);
         test_linear_piecewise_with_filter<T>(engine);
