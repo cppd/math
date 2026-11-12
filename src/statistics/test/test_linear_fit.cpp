@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/statistics/linear_fit/linear_fit.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <random>
@@ -106,97 +107,110 @@ T expected_stddev(const T noise_stddev, const int count, const T outlier_probabi
 }
 
 template <typename T>
-class Data final
+linear_fit::Line<T> random_line(PCG& engine)
 {
-        T intercept_;
-        T slope_;
-        T expected_stddev_;
-        std::vector<numerical::Vector<2, T>> points_;
+        const T intercept = std::uniform_real_distribution<T>(-10, 10)(engine);
+        const T slope = std::uniform_real_distribution<T>(-10, 10)(engine);
 
-public:
-        Data(const bool add_outliers, PCG& engine)
-                : intercept_(std::uniform_real_distribution<T>(-10, 10)(engine)),
-                  slope_(std::uniform_real_distribution<T>(-10, 10)(engine))
+        return {
+                .intercept = intercept,
+                .slope = slope,
+        };
+}
+
+template <typename T>
+std::vector<numerical::Vector<2, T>> line_points(
+        const linear_fit::Line<T>& line,
+        const T x_min,
+        const T x_max,
+        const T noise_stddev,
+        const std::size_t count,
+        PCG& engine)
+{
+        std::uniform_real_distribution<T> x_d(x_min, x_max);
+        std::normal_distribution<T> noise_d(0, noise_stddev);
+
+        std::vector<numerical::Vector<2, T>> res;
+        res.reserve(count);
+
+        for (std::size_t i = 0; i < count; ++i)
         {
-                const std::size_t data_size = 1'000;
-
-                const T noise_stddev = static_cast<T>(0.1);
-                const T outlier_p = static_cast<T>(add_outliers ? 0.25 : 0.0);
-                const std::size_t count = std::llround(data_size / (1 - outlier_p));
-
-                expected_stddev_ = noise_stddev / std::sqrt(data_size);
-
-                std::normal_distribution<T> nd_y(0, noise_stddev);
-                std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
-                std::uniform_real_distribution<T> urd_outlier(-1, 10);
-                std::uniform_real_distribution<T> urd_x(-100, 100);
-
-                points_.reserve(count);
-                for (std::size_t i = 0; i < count; ++i)
-                {
-                        const T noise = outlier(engine) ? urd_outlier(engine) : nd_y(engine);
-                        const T x = urd_x(engine);
-                        const T y = intercept_ + slope_ * x + noise;
-                        points_.push_back({x, y});
-                }
+                const T x = x_d(engine);
+                const T y = line.intercept + line.slope * x + noise_d(engine);
+                res.push_back({x, y});
         }
 
-        [[nodiscard]] const std::vector<numerical::Vector<2, T>>& points() const
+        return res;
+}
+
+template <typename T>
+std::vector<numerical::Vector<2, T>> add_outliers(
+        std::vector<numerical::Vector<2, T>> points,
+        const linear_fit::Line<T>& line,
+        const T x_min,
+        const T x_max,
+        const T outlier_probability,
+        const T outlier_min,
+        const T outlier_max,
+        PCG& engine)
+{
+        const std::size_t outlier_count = std::lround(points.size() * outlier_probability / (1 - outlier_probability));
+
+        std::uniform_real_distribution<T> x_d(x_min, x_max);
+        std::uniform_real_distribution<T> outlier_d(outlier_min, outlier_max);
+
+        for (std::size_t i = 0; i < outlier_count; ++i)
         {
-                return points_;
+                const T x = x_d(engine);
+                const T y = line.intercept + line.slope * x + outlier_d(engine);
+                points.push_back({x, y});
         }
 
-        [[nodiscard]] T expected_stddev() const
-        {
-                return expected_stddev_;
-        }
+        std::ranges::shuffle(points, engine);
 
-        [[nodiscard]] linear_fit::Line<T> line() const
-        {
-                return {
-                        .intercept = intercept_,
-                        .slope = slope_,
-                };
-        }
-};
+        return points;
+}
 
 template <typename T>
 void test_qr(
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& etalon_line,
-        const T max_rmse)
+        const T stddev,
+        const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_qr(points);
 
         const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, max_rmse);
+        COMPARE_LESS(rmse, stddev * max_error);
 }
 
 template <typename T>
 void test_theil_sen(
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& etalon_line,
-        const T max_rmse)
+        const T stddev,
+        const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_theil_sen(points);
 
         const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, max_rmse);
+        COMPARE_LESS(rmse, stddev * max_error);
 }
 
 template <typename T>
 void test_medians(
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& etalon_line,
-        const T max_rmse)
+        const T stddev,
+        const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_medians(points);
 
         const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, max_rmse);
+        COMPARE_LESS(rmse, stddev * max_error);
 }
 
 template <typename T>
@@ -280,32 +294,39 @@ void test_linear_piecewise_with_filter(PCG& engine)
 template <typename T>
 void test(PCG& engine)
 {
-        {
-                const Data<T> data(/*add_outliers=*/false, engine);
+        const linear_fit::Line<T> line = random_line<T>(engine);
 
-                const std::vector<numerical::Vector<2, T>>& points = data.points();
-                const linear_fit::Line<T>& line = data.line();
-                const T stddev = data.expected_stddev();
+        const std::size_t data_size = 1'000;
+        const T x_min = -100;
+        const T x_max = 100;
 
-                test_qr<T>(points, line, 5.0 * stddev);
-        }
-
-        const Data<T> data(/*add_outliers=*/true, engine);
-
-        const std::vector<numerical::Vector<2, T>>& points = data.points();
-        const linear_fit::Line<T>& line = data.line();
-        const T stddev = data.expected_stddev();
+        const T noise_stddev = 0.1;
+        const T stddev = noise_stddev / std::sqrt(data_size);
 
         const T gate = 4;
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, gate);
+        const T outlier_probability = 0.25;
+        const T outlier_min = -1;
+        const T outlier_max = 10;
 
-        test_qr<T>(filtered, line, 5.3 * stddev);
+        const std::vector<numerical::Vector<2, T>> points =
+                line_points(line, x_min, x_max, noise_stddev, data_size, engine);
 
-        test_theil_sen<T>(points, line, 17.4 * stddev);
-        test_theil_sen<T>(filtered, line, 5.8 * stddev);
+        const std::vector<numerical::Vector<2, T>> outliers =
+                add_outliers(points, line, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
-        test_medians<T>(points, line, 17.4 * stddev);
-        test_medians<T>(filtered, line, 5.8 * stddev);
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
+
+        test_qr<T>(points, line, stddev, 5.0);
+        test_qr<T>(outliers, line, stddev, 450.0);
+        test_qr<T>(filtered, line, stddev, 5.3);
+
+        test_theil_sen<T>(points, line, stddev, 5.0);
+        test_theil_sen<T>(outliers, line, stddev, 17.4);
+        test_theil_sen<T>(filtered, line, stddev, 5.8);
+
+        test_medians<T>(points, line, stddev, 5.0);
+        test_medians<T>(outliers, line, stddev, 17.4);
+        test_medians<T>(filtered, line, stddev, 5.8);
 
         test_linear_piecewise<T>(engine);
         test_linear_piecewise_with_filter<T>(engine);
