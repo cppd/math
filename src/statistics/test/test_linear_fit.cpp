@@ -27,19 +27,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ns::statistics::test
 {
 namespace
 {
-#define COMPARE_LESS(a, b)                                                                                            \
-        do                                                                                                            \
-        {                                                                                                             \
-                if (!((a) < (b)))                                                                                     \
-                {                                                                                                     \
-                        error(std::string(__func__) + ": " + to_string((a)) + " is not less than " + to_string((b))); \
-                }                                                                                                     \
+#define COMPARE_LESS(name, a, b)                                                                                   \
+        do                                                                                                         \
+        {                                                                                                          \
+                if (!((a) < (b)))                                                                                  \
+                {                                                                                                  \
+                        error(std::string(__func__)                                                                \
+                              + (std::string_view((name)).empty() ? "" : ("(" + std::string((name)) + ")")) + ": " \
+                              + to_string((a)) + " is not less than " + to_string((b)));                           \
+                }                                                                                                  \
         } while (false)
 
 template <typename T>
@@ -173,6 +176,7 @@ std::vector<numerical::Vector<2, T>> add_outliers(
 
 template <typename T>
 void test_qr(
+        const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& etalon_line,
         const T stddev,
@@ -182,11 +186,12 @@ void test_qr(
 
         const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, stddev * max_error);
+        COMPARE_LESS(name, rmse, stddev * max_error);
 }
 
 template <typename T>
 void test_theil_sen(
+        const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& etalon_line,
         const T stddev,
@@ -196,11 +201,12 @@ void test_theil_sen(
 
         const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, stddev * max_error);
+        COMPARE_LESS(name, rmse, stddev * max_error);
 }
 
 template <typename T>
 void test_medians(
+        const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& etalon_line,
         const T stddev,
@@ -210,7 +216,7 @@ void test_medians(
 
         const T rmse = compute_rmse(points, etalon_line, line);
 
-        COMPARE_LESS(rmse, stddev * max_error);
+        COMPARE_LESS(name, rmse, stddev * max_error);
 }
 
 template <typename T>
@@ -246,7 +252,7 @@ void test_linear_piecewise(PCG& engine)
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        COMPARE_LESS(rmse, 6.2 * expected_stddev(noise_stddev, count));
+        COMPARE_LESS("", rmse, 6.2 * expected_stddev(noise_stddev, count));
 }
 
 template <typename T>
@@ -288,11 +294,11 @@ void test_linear_piecewise_with_filter(PCG& engine)
 
         const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
 
-        COMPARE_LESS(rmse, 12.1 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS("", rmse, 12.1 * expected_stddev(noise_stddev, count, outlier_p));
 }
 
 template <typename T>
-void test(PCG& engine)
+void test_line(PCG& engine)
 {
         const linear_fit::Line<T> line = random_line<T>(engine);
 
@@ -316,20 +322,31 @@ void test(PCG& engine)
 
         const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
 
-        test_qr<T>(points, line, stddev, 5.0);
-        test_qr<T>(outliers, line, stddev, 450.0);
-        test_qr<T>(filtered, line, stddev, 5.3);
+        test_qr<T>("points", points, line, stddev, 5.0);
+        test_qr<T>("outliers", outliers, line, stddev, 450.0);
+        test_qr<T>("filtered", filtered, line, stddev, 5.3);
 
-        test_theil_sen<T>(points, line, stddev, 5.0);
-        test_theil_sen<T>(outliers, line, stddev, 17.4);
-        test_theil_sen<T>(filtered, line, stddev, 5.8);
+        test_theil_sen<T>("points", points, line, stddev, 5.0);
+        test_theil_sen<T>("outliers", outliers, line, stddev, 17.4);
+        test_theil_sen<T>("filtered", filtered, line, stddev, 5.8);
 
-        test_medians<T>(points, line, stddev, 5.0);
-        test_medians<T>(outliers, line, stddev, 17.4);
-        test_medians<T>(filtered, line, stddev, 5.8);
+        test_medians<T>("points", points, line, stddev, 5.0);
+        test_medians<T>("outliers", outliers, line, stddev, 17.4);
+        test_medians<T>("filtered", filtered, line, stddev, 5.8);
+}
 
+template <typename T>
+void test_piecewise(PCG& engine)
+{
         test_linear_piecewise<T>(engine);
         test_linear_piecewise_with_filter<T>(engine);
+}
+
+template <typename T>
+void test(PCG& engine)
+{
+        test_line<T>(engine);
+        test_piecewise<T>(engine);
 }
 
 void test_median()
