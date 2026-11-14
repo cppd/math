@@ -46,20 +46,47 @@ namespace
         } while (false)
 
 template <typename T>
-T piecewise_function(const T x, const std::vector<T>& betas, const std::vector<T>& breakpoints)
+class PiecewiseFunction final
 {
-        ASSERT(betas.size() == breakpoints.size() + 1);
+        std::vector<T> breakpoints_;
+        std::vector<T> betas_;
 
-        T res = betas[0];
-        for (std::size_t b = 0; b < breakpoints.size(); ++b)
+public:
+        PiecewiseFunction(const std::vector<T>& breakpoints, PCG& engine)
+                : breakpoints_(breakpoints)
         {
-                if (x > breakpoints[b])
+                std::uniform_real_distribution<T> beta_d(-10, 10);
+
+                const std::size_t count = breakpoints_.size() + 1;
+                betas_.reserve(count);
+                for (std::size_t i = 0; i < count; ++i)
                 {
-                        res += betas[b + 1] * (x - breakpoints[b]);
+                        betas_.push_back(beta_d(engine));
                 }
+
+                ASSERT(betas_.size() == breakpoints_.size() + 1);
         }
-        return res;
-}
+
+        PiecewiseFunction(const std::vector<T>& breakpoints, const std::vector<T>& betas)
+                : breakpoints_(std::move(breakpoints)),
+                  betas_(std::move(betas))
+        {
+                ASSERT(betas_.size() == breakpoints_.size() + 1);
+        }
+
+        [[nodiscard]] T operator()(const T x) const
+        {
+                T res = betas_[0];
+                for (std::size_t b = 0; b < breakpoints_.size(); ++b)
+                {
+                        if (x > breakpoints_[b])
+                        {
+                                res += betas_[b + 1] * (x - breakpoints_[b]);
+                        }
+                }
+                return res;
+        }
+};
 
 template <typename T>
 T compute_rmse(
@@ -81,17 +108,14 @@ T compute_rmse(
 template <typename T>
 T compute_rmse(
         const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& breakpoints,
-        const std::vector<T>& betas,
-        const std::vector<T>& s_betas)
+        const PiecewiseFunction<T>& f1,
+        const PiecewiseFunction<T>& f2)
 {
         T sum = 0;
         for (const numerical::Vector<2, T>& p : points)
         {
                 const T x = p[0];
-                const T y = piecewise_function(x, betas, breakpoints);
-                const T sy = piecewise_function(x, s_betas, breakpoints);
-                const T d = y - sy;
+                const T d = f1(x) - f2(x);
                 sum += d * d;
         }
         return std::sqrt(sum / points.size());
@@ -225,15 +249,14 @@ void test_linear_piecewise(PCG& engine)
         const int count = 1'000;
         const T noise_stddev = static_cast<T>(0.1);
 
-        std::uniform_real_distribution<T> urd_betas(-10, 10);
-        const std::vector<T> betas{
-                urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine)};
-
-        std::uniform_real_distribution<T> urd_breakpoint1(-51, -49);
-        std::uniform_real_distribution<T> urd_breakpoint2(-1, 1);
-        std::uniform_real_distribution<T> urd_breakpoint3(49, 51);
         const std::vector<T> breakpoints{
-                -100, urd_breakpoint1(engine), urd_breakpoint2(engine), urd_breakpoint3(engine)};
+                -100,
+                std::uniform_real_distribution<T>(-51, -49)(engine),
+                std::uniform_real_distribution<T>(-1, 1)(engine),
+                std::uniform_real_distribution<T>(49, 51)(engine),
+        };
+
+        const PiecewiseFunction<T> f(breakpoints, engine);
 
         std::uniform_real_distribution<T> urd_x(-100, 100);
         std::normal_distribution<T> nd_y(0, noise_stddev);
@@ -244,13 +267,13 @@ void test_linear_piecewise(PCG& engine)
         for (int i = 0; i < count; ++i)
         {
                 const T x = urd_x(engine);
-                const T y = piecewise_function(x, betas, breakpoints) + nd_y(engine);
+                const T y = f(x) + nd_y(engine);
                 points.push_back({x, y});
         }
 
         const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
 
-        const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
+        const T rmse = compute_rmse(points, f, PiecewiseFunction<T>(breakpoints, betas_s));
 
         COMPARE_LESS("", rmse, 6.2 * expected_stddev(noise_stddev, count));
 }
@@ -263,15 +286,14 @@ void test_linear_piecewise_with_filter(PCG& engine)
         const T outlier_p = static_cast<T>(0.4);
         const int count = std::lround(1'000 / (1 - outlier_p));
 
-        std::uniform_real_distribution<T> urd_betas(-10, 10);
-        const std::vector<T> betas{
-                urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine), urd_betas(engine)};
-
-        std::uniform_real_distribution<T> urd_breakpoint1(-51, -49);
-        std::uniform_real_distribution<T> urd_breakpoint2(-1, 1);
-        std::uniform_real_distribution<T> urd_breakpoint3(49, 51);
         const std::vector<T> breakpoints{
-                -100, urd_breakpoint1(engine), urd_breakpoint2(engine), urd_breakpoint3(engine)};
+                -100,
+                std::uniform_real_distribution<T>(-51, -49)(engine),
+                std::uniform_real_distribution<T>(-1, 1)(engine),
+                std::uniform_real_distribution<T>(49, 51)(engine),
+        };
+
+        const PiecewiseFunction<T> f(breakpoints, engine);
 
         std::uniform_real_distribution<T> urd_x(-100, 100);
         std::normal_distribution<T> nd_y(0, noise_stddev);
@@ -284,15 +306,14 @@ void test_linear_piecewise_with_filter(PCG& engine)
         for (int i = 0; i < count; ++i)
         {
                 const T x = urd_x(engine);
-                const T y = piecewise_function(x, betas, breakpoints)
-                            + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
+                const T y = f(x) + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
                 points.push_back({x, y});
         }
 
         const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, breakpoints, gate);
         const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(filtered, breakpoints);
 
-        const T rmse = compute_rmse(points, breakpoints, betas, betas_s);
+        const T rmse = compute_rmse(points, f, PiecewiseFunction<T>(breakpoints, betas_s));
 
         COMPARE_LESS("", rmse, 12.1 * expected_stddev(noise_stddev, count, outlier_p));
 }
