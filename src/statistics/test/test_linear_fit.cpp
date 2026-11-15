@@ -122,18 +122,6 @@ T compute_rmse(
 }
 
 template <typename T>
-T expected_stddev(const T noise_stddev, const int count)
-{
-        return noise_stddev / std::sqrt(count);
-}
-
-template <typename T>
-T expected_stddev(const T noise_stddev, const int count, const T outlier_probability)
-{
-        return noise_stddev / std::sqrt((1 - outlier_probability) * count);
-}
-
-template <typename T>
 linear_fit::Line<T> random_line(PCG& engine)
 {
         const T intercept = std::uniform_real_distribution<T>(-10, 10)(engine);
@@ -145,9 +133,9 @@ linear_fit::Line<T> random_line(PCG& engine)
         };
 }
 
-template <typename T>
+template <typename T, typename F>
 std::vector<numerical::Vector<2, T>> line_points(
-        const linear_fit::Line<T>& line,
+        const F& f,
         const T x_min,
         const T x_max,
         const T noise_stddev,
@@ -163,17 +151,17 @@ std::vector<numerical::Vector<2, T>> line_points(
         for (std::size_t i = 0; i < count; ++i)
         {
                 const T x = x_d(engine);
-                const T y = line.intercept + line.slope * x + noise_d(engine);
+                const T y = f(x) + noise_d(engine);
                 res.push_back({x, y});
         }
 
         return res;
 }
 
-template <typename T>
+template <typename T, typename F>
 std::vector<numerical::Vector<2, T>> add_outliers(
         std::vector<numerical::Vector<2, T>> points,
-        const linear_fit::Line<T>& line,
+        const F& f,
         const T x_min,
         const T x_max,
         const T outlier_probability,
@@ -189,7 +177,7 @@ std::vector<numerical::Vector<2, T>> add_outliers(
         for (std::size_t i = 0; i < outlier_count; ++i)
         {
                 const T x = x_d(engine);
-                const T y = line.intercept + line.slope * x + outlier_d(engine);
+                const T y = f(x) + outlier_d(engine);
                 points.push_back({x, y});
         }
 
@@ -246,8 +234,12 @@ void test_medians(
 template <typename T>
 void test_linear_piecewise(PCG& engine)
 {
-        const int count = 1'000;
-        const T noise_stddev = static_cast<T>(0.1);
+        const std::size_t data_size = 1'000;
+        const T x_min = -100;
+        const T x_max = 100;
+
+        const T noise_stddev = 0.1;
+        const T stddev = noise_stddev / std::sqrt(data_size);
 
         const std::vector<T> breakpoints{
                 -100,
@@ -258,33 +250,30 @@ void test_linear_piecewise(PCG& engine)
 
         const PiecewiseFunction<T> f(breakpoints, engine);
 
-        std::uniform_real_distribution<T> urd_x(-100, 100);
-        std::normal_distribution<T> nd_y(0, noise_stddev);
-
-        std::vector<numerical::Vector<2, T>> points;
-        points.reserve(count);
-
-        for (int i = 0; i < count; ++i)
-        {
-                const T x = urd_x(engine);
-                const T y = f(x) + nd_y(engine);
-                points.push_back({x, y});
-        }
+        const std::vector<numerical::Vector<2, T>> points =
+                line_points(f, x_min, x_max, noise_stddev, data_size, engine);
 
         const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
 
         const T rmse = compute_rmse(points, f, PiecewiseFunction<T>(breakpoints, betas_s));
 
-        COMPARE_LESS("", rmse, 6.2 * expected_stddev(noise_stddev, count));
+        COMPARE_LESS("", rmse, 6.2 * stddev);
 }
 
 template <typename T>
 void test_linear_piecewise_with_filter(PCG& engine)
 {
+        const std::size_t data_size = 1'000;
+        const T x_min = -100;
+        const T x_max = 100;
+
+        const T noise_stddev = 0.1;
+        const T stddev = noise_stddev / std::sqrt(data_size);
+
         const T gate = 4;
-        const T noise_stddev = static_cast<T>(0.1);
-        const T outlier_p = static_cast<T>(0.4);
-        const int count = std::lround(1'000 / (1 - outlier_p));
+        const T outlier_probability = 0.25;
+        const T outlier_min = -1;
+        const T outlier_max = 10;
 
         const std::vector<T> breakpoints{
                 -100,
@@ -295,33 +284,29 @@ void test_linear_piecewise_with_filter(PCG& engine)
 
         const PiecewiseFunction<T> f(breakpoints, engine);
 
-        std::uniform_real_distribution<T> urd_x(-100, 100);
-        std::normal_distribution<T> nd_y(0, noise_stddev);
-        std::bernoulli_distribution outlier(static_cast<double>(outlier_p));
-        std::uniform_real_distribution<T> urd_outlier(-1, 10);
+        const std::vector<numerical::Vector<2, T>> points =
+                line_points(f, x_min, x_max, noise_stddev, data_size, engine);
 
-        std::vector<numerical::Vector<2, T>> points;
-        points.reserve(count);
+        const std::vector<numerical::Vector<2, T>> outliers =
+                add_outliers(points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
-        for (int i = 0; i < count; ++i)
-        {
-                const T x = urd_x(engine);
-                const T y = f(x) + (outlier(engine) ? urd_outlier(engine) : nd_y(engine));
-                points.push_back({x, y});
-        }
-
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(points, breakpoints, gate);
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, breakpoints, gate);
         const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(filtered, breakpoints);
 
-        const T rmse = compute_rmse(points, f, PiecewiseFunction<T>(breakpoints, betas_s));
+        const T rmse = compute_rmse(filtered, f, PiecewiseFunction<T>(breakpoints, betas_s));
 
-        COMPARE_LESS("", rmse, 12.1 * expected_stddev(noise_stddev, count, outlier_p));
+        COMPARE_LESS("", rmse, 12.1 * stddev);
 }
 
 template <typename T>
 void test_line(PCG& engine)
 {
         const linear_fit::Line<T> line = random_line<T>(engine);
+
+        const auto f = [&](const T x)
+        {
+                return line.intercept + line.slope * x;
+        };
 
         const std::size_t data_size = 1'000;
         const T x_min = -100;
@@ -336,10 +321,10 @@ void test_line(PCG& engine)
         const T outlier_max = 10;
 
         const std::vector<numerical::Vector<2, T>> points =
-                line_points(line, x_min, x_max, noise_stddev, data_size, engine);
+                line_points(f, x_min, x_max, noise_stddev, data_size, engine);
 
         const std::vector<numerical::Vector<2, T>> outliers =
-                add_outliers(points, line, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
+                add_outliers(points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
         const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
 
