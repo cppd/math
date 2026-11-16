@@ -232,6 +232,22 @@ void test_medians(
 }
 
 template <typename T>
+void test_linear_piecewise(
+        const std::string_view name,
+        const std::vector<numerical::Vector<2, T>>& points,
+        const PiecewiseFunction<T>& etalon_f,
+        const std::vector<T>& breakpoints,
+        const T stddev,
+        const T max_error)
+{
+        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
+
+        const T rmse = compute_rmse(points, etalon_f, PiecewiseFunction<T>(breakpoints, betas_s));
+
+        COMPARE_LESS(name, rmse, stddev * max_error);
+}
+
+template <typename T>
 void test_linear_piecewise(PCG& engine)
 {
         const std::size_t data_size = 1'000;
@@ -248,39 +264,10 @@ void test_linear_piecewise(PCG& engine)
                 std::uniform_real_distribution<T>(49, 51)(engine),
         };
 
-        const PiecewiseFunction<T> f(breakpoints, engine);
-
-        const std::vector<numerical::Vector<2, T>> points =
-                line_points(f, x_min, x_max, noise_stddev, data_size, engine);
-
-        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
-
-        const T rmse = compute_rmse(points, f, PiecewiseFunction<T>(breakpoints, betas_s));
-
-        COMPARE_LESS("", rmse, 6.2 * stddev);
-}
-
-template <typename T>
-void test_linear_piecewise_with_filter(PCG& engine)
-{
-        const std::size_t data_size = 1'000;
-        const T x_min = -100;
-        const T x_max = 100;
-
-        const T noise_stddev = 0.1;
-        const T stddev = noise_stddev / std::sqrt(data_size);
-
         const T gate = 4;
         const T outlier_probability = 0.25;
         const T outlier_min = -1;
         const T outlier_max = 10;
-
-        const std::vector<T> breakpoints{
-                -100,
-                std::uniform_real_distribution<T>(-51, -49)(engine),
-                std::uniform_real_distribution<T>(-1, 1)(engine),
-                std::uniform_real_distribution<T>(49, 51)(engine),
-        };
 
         const PiecewiseFunction<T> f(breakpoints, engine);
 
@@ -291,11 +278,10 @@ void test_linear_piecewise_with_filter(PCG& engine)
                 add_outliers(points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
         const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, breakpoints, gate);
-        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(filtered, breakpoints);
 
-        const T rmse = compute_rmse(filtered, f, PiecewiseFunction<T>(breakpoints, betas_s));
-
-        COMPARE_LESS("", rmse, 12.1 * stddev);
+        test_linear_piecewise<T>("points", points, f, breakpoints, stddev, 5.8);
+        test_linear_piecewise<T>("outliers", outliers, f, breakpoints, stddev, 450.0);
+        test_linear_piecewise<T>("filtered", filtered, f, breakpoints, stddev, 6.3);
 }
 
 template <typename T>
@@ -342,17 +328,10 @@ void test_line(PCG& engine)
 }
 
 template <typename T>
-void test_piecewise(PCG& engine)
-{
-        test_linear_piecewise<T>(engine);
-        test_linear_piecewise_with_filter<T>(engine);
-}
-
-template <typename T>
 void test(PCG& engine)
 {
         test_line<T>(engine);
-        test_piecewise<T>(engine);
+        test_linear_piecewise<T>(engine);
 }
 
 void test_median()
