@@ -89,6 +89,61 @@ public:
 };
 
 template <typename T>
+linear_fit::Line<T> random_line(PCG& engine)
+{
+        const T intercept = std::uniform_real_distribution<T>(-10, 10)(engine);
+        const T slope = std::uniform_real_distribution<T>(-10, 10)(engine);
+
+        return {
+                .intercept = intercept,
+                .slope = slope,
+        };
+}
+
+template <typename T>
+struct LineData final
+{
+        linear_fit::Line<T> line;
+        T stddev;
+        std::vector<numerical::Vector<2, T>> points;
+        std::vector<numerical::Vector<2, T>> outliers;
+        std::vector<numerical::Vector<2, T>> filtered;
+};
+
+template <typename T>
+LineData<T> create_line_data(PCG& engine)
+{
+        const linear_fit::Line<T> line = random_line<T>(engine);
+
+        const auto f = [&](const T x)
+        {
+                return line.intercept + line.slope * x;
+        };
+
+        const std::size_t data_size = 1'000;
+        const T x_min = -100;
+        const T x_max = 100;
+
+        const T noise_stddev = 0.1;
+        const T stddev = noise_stddev / std::sqrt(data_size);
+
+        const T gate = 4;
+        const T outlier_probability = 0.25;
+        const T outlier_min = -1;
+        const T outlier_max = 10;
+
+        LineData<T> res;
+
+        res.line = line;
+        res.stddev = stddev;
+        res.points = line_points(f, x_min, x_max, noise_stddev, data_size, engine);
+        res.outliers = add_outliers(res.points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
+        res.filtered = linear_fit::filter_points(res.outliers, gate);
+
+        return res;
+}
+
+template <typename T>
 T compute_rmse(
         const std::vector<numerical::Vector<2, T>>& points,
         const linear_fit::Line<T>& l1,
@@ -119,18 +174,6 @@ T compute_rmse(
                 sum += d * d;
         }
         return std::sqrt(sum / points.size());
-}
-
-template <typename T>
-linear_fit::Line<T> random_line(PCG& engine)
-{
-        const T intercept = std::uniform_real_distribution<T>(-10, 10)(engine);
-        const T slope = std::uniform_real_distribution<T>(-10, 10)(engine);
-
-        return {
-                .intercept = intercept,
-                .slope = slope,
-        };
 }
 
 template <typename T, typename F>
@@ -287,44 +330,19 @@ void test_linear_piecewise(PCG& engine)
 template <typename T>
 void test_line(PCG& engine)
 {
-        const linear_fit::Line<T> line = random_line<T>(engine);
+        const LineData<T> ld = create_line_data<T>(engine);
 
-        const auto f = [&](const T x)
-        {
-                return line.intercept + line.slope * x;
-        };
+        test_qr<T>("points", ld.points, ld.line, ld.stddev, 5.0);
+        test_qr<T>("outliers", ld.outliers, ld.line, ld.stddev, 450.0);
+        test_qr<T>("filtered", ld.filtered, ld.line, ld.stddev, 5.3);
 
-        const std::size_t data_size = 1'000;
-        const T x_min = -100;
-        const T x_max = 100;
+        test_theil_sen<T>("points", ld.points, ld.line, ld.stddev, 5.0);
+        test_theil_sen<T>("outliers", ld.outliers, ld.line, ld.stddev, 17.4);
+        test_theil_sen<T>("filtered", ld.filtered, ld.line, ld.stddev, 5.8);
 
-        const T noise_stddev = 0.1;
-        const T stddev = noise_stddev / std::sqrt(data_size);
-
-        const T gate = 4;
-        const T outlier_probability = 0.25;
-        const T outlier_min = -1;
-        const T outlier_max = 10;
-
-        const std::vector<numerical::Vector<2, T>> points =
-                line_points(f, x_min, x_max, noise_stddev, data_size, engine);
-
-        const std::vector<numerical::Vector<2, T>> outliers =
-                add_outliers(points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
-
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
-
-        test_qr<T>("points", points, line, stddev, 5.0);
-        test_qr<T>("outliers", outliers, line, stddev, 450.0);
-        test_qr<T>("filtered", filtered, line, stddev, 5.3);
-
-        test_theil_sen<T>("points", points, line, stddev, 5.0);
-        test_theil_sen<T>("outliers", outliers, line, stddev, 17.4);
-        test_theil_sen<T>("filtered", filtered, line, stddev, 5.8);
-
-        test_medians<T>("points", points, line, stddev, 5.0);
-        test_medians<T>("outliers", outliers, line, stddev, 17.4);
-        test_medians<T>("filtered", filtered, line, stddev, 5.8);
+        test_medians<T>("points", ld.points, ld.line, ld.stddev, 5.0);
+        test_medians<T>("outliers", ld.outliers, ld.line, ld.stddev, 17.4);
+        test_medians<T>("filtered", ld.filtered, ld.line, ld.stddev, 5.8);
 }
 
 template <typename T>
