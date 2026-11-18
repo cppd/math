@@ -34,17 +34,6 @@ namespace ns::statistics::test
 {
 namespace
 {
-#define COMPARE_LESS(name, a, b)                                                                                   \
-        do                                                                                                         \
-        {                                                                                                          \
-                if (!((a) < (b)))                                                                                  \
-                {                                                                                                  \
-                        error(std::string(__func__)                                                                \
-                              + (std::string_view((name)).empty() ? "" : ("(" + std::string((name)) + ")")) + ": " \
-                              + to_string((a)) + " is not less than " + to_string((b)));                           \
-                }                                                                                                  \
-        } while (false)
-
 template <typename T>
 class PiecewiseFunction final
 {
@@ -229,6 +218,24 @@ std::vector<numerical::Vector<2, T>> add_outliers(
         return points;
 }
 
+template <typename T, typename F>
+void check_function(
+        const std::string_view name,
+        const std::vector<numerical::Vector<2, T>>& points,
+        const F& f,
+        const F& etalon_f,
+        const T stddev,
+        const T max_error)
+{
+        const T rmse = compute_rmse(points, etalon_f, f);
+        const T max_rmse = stddev * max_error;
+
+        if (!(rmse <= max_rmse))
+        {
+                error(std::string(name) + ": " + to_string(rmse) + " is not less than " + to_string(max_rmse));
+        }
+}
+
 template <typename T>
 void test_qr(
         const std::string_view name,
@@ -238,10 +245,7 @@ void test_qr(
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_qr(points);
-
-        const T rmse = compute_rmse(points, etalon_line, line);
-
-        COMPARE_LESS(name, rmse, stddev * max_error);
+        check_function(name, points, line, etalon_line, stddev, max_error);
 }
 
 template <typename T>
@@ -253,10 +257,7 @@ void test_theil_sen(
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_theil_sen(points);
-
-        const T rmse = compute_rmse(points, etalon_line, line);
-
-        COMPARE_LESS(name, rmse, stddev * max_error);
+        check_function(name, points, line, etalon_line, stddev, max_error);
 }
 
 template <typename T>
@@ -268,10 +269,7 @@ void test_medians(
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_medians(points);
-
-        const T rmse = compute_rmse(points, etalon_line, line);
-
-        COMPARE_LESS(name, rmse, stddev * max_error);
+        check_function(name, points, line, etalon_line, stddev, max_error);
 }
 
 template <typename T>
@@ -284,10 +282,8 @@ void test_linear_piecewise(
         const T max_error)
 {
         const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
-
-        const T rmse = compute_rmse(points, etalon_f, PiecewiseFunction<T>(breakpoints, betas_s));
-
-        COMPARE_LESS(name, rmse, stddev * max_error);
+        const PiecewiseFunction<T> f(breakpoints, betas_s);
+        check_function(name, points, f, etalon_f, stddev, max_error);
 }
 
 template <typename T>
@@ -322,9 +318,9 @@ void test_linear_piecewise(PCG& engine)
 
         const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, breakpoints, gate);
 
-        test_linear_piecewise<T>("points", points, f, breakpoints, stddev, 5.8);
-        test_linear_piecewise<T>("outliers", outliers, f, breakpoints, stddev, 450.0);
-        test_linear_piecewise<T>("filtered", filtered, f, breakpoints, stddev, 6.3);
+        test_linear_piecewise<T>("piecewise points", points, f, breakpoints, stddev, 5.8);
+        test_linear_piecewise<T>("piecewise outliers", outliers, f, breakpoints, stddev, 450.0);
+        test_linear_piecewise<T>("piecewise filtered", filtered, f, breakpoints, stddev, 6.3);
 }
 
 template <typename T>
@@ -332,17 +328,17 @@ void test_line(PCG& engine)
 {
         const LineData<T> ld = create_line_data<T>(engine);
 
-        test_qr<T>("points", ld.points, ld.line, ld.stddev, 5.0);
-        test_qr<T>("outliers", ld.outliers, ld.line, ld.stddev, 450.0);
-        test_qr<T>("filtered", ld.filtered, ld.line, ld.stddev, 5.3);
+        test_qr<T>("qr points", ld.points, ld.line, ld.stddev, 5.0);
+        test_qr<T>("qr outliers", ld.outliers, ld.line, ld.stddev, 450.0);
+        test_qr<T>("qr filtered", ld.filtered, ld.line, ld.stddev, 5.3);
 
-        test_theil_sen<T>("points", ld.points, ld.line, ld.stddev, 5.0);
-        test_theil_sen<T>("outliers", ld.outliers, ld.line, ld.stddev, 17.4);
-        test_theil_sen<T>("filtered", ld.filtered, ld.line, ld.stddev, 5.8);
+        test_theil_sen<T>("theil sen points", ld.points, ld.line, ld.stddev, 5.0);
+        test_theil_sen<T>("theil sen outliers", ld.outliers, ld.line, ld.stddev, 17.4);
+        test_theil_sen<T>("theil sen filtered", ld.filtered, ld.line, ld.stddev, 5.8);
 
-        test_medians<T>("points", ld.points, ld.line, ld.stddev, 5.0);
-        test_medians<T>("outliers", ld.outliers, ld.line, ld.stddev, 17.4);
-        test_medians<T>("filtered", ld.filtered, ld.line, ld.stddev, 5.8);
+        test_medians<T>("medians points", ld.points, ld.line, ld.stddev, 5.0);
+        test_medians<T>("medians outliers", ld.outliers, ld.line, ld.stddev, 17.4);
+        test_medians<T>("medians filtered", ld.filtered, ld.line, ld.stddev, 5.8);
 }
 
 template <typename T>
