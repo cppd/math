@@ -110,6 +110,7 @@ LineData<T> create_line_data(PCG& engine)
         };
 
         const std::size_t data_size = 1'000;
+
         const T x_min = -100;
         const T x_max = 100;
 
@@ -121,15 +122,21 @@ LineData<T> create_line_data(PCG& engine)
         const T outlier_min = -1;
         const T outlier_max = 10;
 
-        LineData<T> res;
+        const std::vector<numerical::Vector<2, T>> points =
+                line_points(f, x_min, x_max, noise_stddev, data_size, engine);
 
-        res.line = line;
-        res.stddev = stddev;
-        res.points = line_points(f, x_min, x_max, noise_stddev, data_size, engine);
-        res.outliers = add_outliers(res.points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
-        res.filtered = linear_fit::filter_points(res.outliers, gate);
+        const std::vector<numerical::Vector<2, T>> outliers =
+                add_outliers(points, f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
-        return res;
+        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
+
+        return {
+                .line = line,
+                .stddev = stddev,
+                .points = points,
+                .outliers = outliers,
+                .filtered = filtered,
+        };
 }
 
 template <typename T>
@@ -147,6 +154,7 @@ template <typename T>
 PiecewiseData<T> create_piecewise_data(PCG& engine)
 {
         const std::size_t data_size = 1'000;
+
         const T x_min = -100;
         const T x_max = 100;
 
