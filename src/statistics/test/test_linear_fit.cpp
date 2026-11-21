@@ -78,6 +78,23 @@ public:
 };
 
 template <typename T>
+class LineFunction final
+{
+        const linear_fit::Line<T> line_;
+
+public:
+        explicit LineFunction(const linear_fit::Line<T>& line)
+                : line_(line)
+        {
+        }
+
+        [[nodiscard]] T operator()(const T x) const
+        {
+                return line_.intercept + line_.slope * x;
+        }
+};
+
+template <typename T>
 linear_fit::Line<T> random_line(PCG& engine)
 {
         const T intercept = std::uniform_real_distribution<T>(-10, 10)(engine);
@@ -104,10 +121,7 @@ LineData<T> create_line_data(PCG& engine)
 {
         const linear_fit::Line<T> line = random_line<T>(engine);
 
-        const auto f = [&](const T x)
-        {
-                return line.intercept + line.slope * x;
-        };
+        const LineFunction<T> f(line);
 
         const std::size_t data_size = 1'000;
 
@@ -193,28 +207,8 @@ PiecewiseData<T> create_piecewise_data(PCG& engine)
         };
 }
 
-template <typename T>
-T compute_rmse(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const linear_fit::Line<T>& l1,
-        const linear_fit::Line<T>& l2)
-{
-        T sum = 0;
-        for (const numerical::Vector<2, T>& p : points)
-        {
-                const T y1 = l1.intercept + l1.slope * p[0];
-                const T y2 = l2.intercept + l2.slope * p[0];
-                const T d = y1 - y2;
-                sum += d * d;
-        }
-        return std::sqrt(sum / points.size());
-}
-
-template <typename T>
-T compute_rmse(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const PiecewiseFunction<T>& f1,
-        const PiecewiseFunction<T>& f2)
+template <typename T, typename F>
+T compute_rmse(const std::vector<numerical::Vector<2, T>>& points, const F& f1, const F& f2)
 {
         T sum = 0;
         for (const numerical::Vector<2, T>& p : points)
@@ -306,7 +300,7 @@ void test_qr(
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_qr(points);
-        check_function(name, points, line, etalon_line, stddev, max_error);
+        check_function(name, points, LineFunction(line), LineFunction(etalon_line), stddev, max_error);
 }
 
 template <typename T>
@@ -318,7 +312,7 @@ void test_theil_sen(
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_theil_sen(points);
-        check_function(name, points, line, etalon_line, stddev, max_error);
+        check_function(name, points, LineFunction(line), LineFunction(etalon_line), stddev, max_error);
 }
 
 template <typename T>
@@ -330,7 +324,7 @@ void test_medians(
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_medians(points);
-        check_function(name, points, line, etalon_line, stddev, max_error);
+        check_function(name, points, LineFunction(line), LineFunction(etalon_line), stddev, max_error);
 }
 
 template <typename T>
