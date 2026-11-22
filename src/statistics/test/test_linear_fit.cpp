@@ -88,6 +88,14 @@ public:
         {
         }
 
+        explicit LineFunction(PCG& engine)
+                : line_{
+                          .intercept = std::uniform_real_distribution<T>(-10, 10)(engine),
+                          .slope = std::uniform_real_distribution<T>(-10, 10)(engine),
+                  }
+        {
+        }
+
         [[nodiscard]] T operator()(const T x) const
         {
                 return line_.intercept + line_.slope * x;
@@ -95,21 +103,9 @@ public:
 };
 
 template <typename T>
-linear_fit::Line<T> random_line(PCG& engine)
-{
-        const T intercept = std::uniform_real_distribution<T>(-10, 10)(engine);
-        const T slope = std::uniform_real_distribution<T>(-10, 10)(engine);
-
-        return {
-                .intercept = intercept,
-                .slope = slope,
-        };
-}
-
-template <typename T>
 struct LineData final
 {
-        linear_fit::Line<T> line;
+        LineFunction<T> line;
         T stddev;
         std::vector<numerical::Vector<2, T>> points;
         std::vector<numerical::Vector<2, T>> outliers;
@@ -119,9 +115,7 @@ struct LineData final
 template <typename T>
 LineData<T> create_line_data(PCG& engine)
 {
-        const linear_fit::Line<T> line = random_line<T>(engine);
-
-        const LineFunction<T> f(line);
+        const LineFunction<T> f(engine);
 
         const std::size_t data_size = 1'000;
 
@@ -145,7 +139,7 @@ LineData<T> create_line_data(PCG& engine)
         const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
 
         return {
-                .line = line,
+                .line = f,
                 .stddev = stddev,
                 .points = points,
                 .outliers = outliers,
@@ -295,36 +289,39 @@ template <typename T>
 void test_qr(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
-        const linear_fit::Line<T>& etalon_line,
+        const LineFunction<T>& etalon_f,
         const T stddev,
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_qr(points);
-        check_function(name, points, LineFunction(line), LineFunction(etalon_line), stddev, max_error);
+        const LineFunction f(line);
+        check_function(name, points, f, etalon_f, stddev, max_error);
 }
 
 template <typename T>
 void test_theil_sen(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
-        const linear_fit::Line<T>& etalon_line,
+        const LineFunction<T>& etalon_f,
         const T stddev,
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_theil_sen(points);
-        check_function(name, points, LineFunction(line), LineFunction(etalon_line), stddev, max_error);
+        const LineFunction f(line);
+        check_function(name, points, f, etalon_f, stddev, max_error);
 }
 
 template <typename T>
 void test_medians(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
-        const linear_fit::Line<T>& etalon_line,
+        const LineFunction<T>& etalon_f,
         const T stddev,
         const T max_error)
 {
         const linear_fit::Line line = linear_fit::linear_fit_medians(points);
-        check_function(name, points, LineFunction(line), LineFunction(etalon_line), stddev, max_error);
+        const LineFunction f(line);
+        check_function(name, points, f, etalon_f, stddev, max_error);
 }
 
 template <typename T>
