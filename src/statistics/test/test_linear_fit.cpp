@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/random/pcg.h>
 #include <src/numerical/vector_object.h>
+#include <src/statistics/linear_fit/linear_filter.h>
 #include <src/statistics/linear_fit/linear_fit.h>
 #include <src/test/test.h>
 
@@ -286,7 +287,7 @@ void check_function(
 }
 
 template <typename T>
-void test_qr(
+void linear_fit_qr(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const LineFunction<T>& etalon_f,
@@ -299,7 +300,7 @@ void test_qr(
 }
 
 template <typename T>
-void test_theil_sen(
+void linear_fit_theil_sen(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const LineFunction<T>& etalon_f,
@@ -312,7 +313,7 @@ void test_theil_sen(
 }
 
 template <typename T>
-void test_medians(
+void linear_fit_medians(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const LineFunction<T>& etalon_f,
@@ -325,7 +326,7 @@ void test_medians(
 }
 
 template <typename T>
-void test_linear_piecewise(
+void linear_fit_qr_piecewise(
         const std::string_view name,
         const std::vector<numerical::Vector<2, T>>& points,
         const PiecewiseFunction<T>& etalon_f,
@@ -333,19 +334,19 @@ void test_linear_piecewise(
         const T stddev,
         const T max_error)
 {
-        const std::vector<T> betas_s = linear_fit::linear_fit_piecewise(points, breakpoints);
+        const std::vector<T> betas_s = linear_fit::linear_fit_qr_piecewise(points, breakpoints);
         const PiecewiseFunction<T> f(breakpoints, betas_s);
         check_function(name, points, f, etalon_f, stddev, max_error);
 }
 
 template <typename T>
-void test_linear_piecewise(PCG& engine)
+void test_piecewise(PCG& engine)
 {
         const PiecewiseData<T> pd = create_piecewise_data<T>(engine);
 
-        test_linear_piecewise<T>("piecewise points", pd.points, pd.etalon_f, pd.breakpoints, pd.stddev, 5.8);
-        test_linear_piecewise<T>("piecewise outliers", pd.outliers, pd.etalon_f, pd.breakpoints, pd.stddev, 450.0);
-        test_linear_piecewise<T>("piecewise filtered", pd.filtered, pd.etalon_f, pd.breakpoints, pd.stddev, 6.3);
+        linear_fit_qr_piecewise<T>("piecewise points", pd.points, pd.etalon_f, pd.breakpoints, pd.stddev, 5.8);
+        linear_fit_qr_piecewise<T>("piecewise outliers", pd.outliers, pd.etalon_f, pd.breakpoints, pd.stddev, 450.0);
+        linear_fit_qr_piecewise<T>("piecewise filtered", pd.filtered, pd.etalon_f, pd.breakpoints, pd.stddev, 6.3);
 }
 
 template <typename T>
@@ -353,24 +354,24 @@ void test_line(PCG& engine)
 {
         const LineData<T> ld = create_line_data<T>(engine);
 
-        test_qr<T>("qr points", ld.points, ld.etalon_f, ld.stddev, 5.0);
-        test_qr<T>("qr outliers", ld.outliers, ld.etalon_f, ld.stddev, 450.0);
-        test_qr<T>("qr filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.3);
+        linear_fit_qr<T>("qr points", ld.points, ld.etalon_f, ld.stddev, 5.0);
+        linear_fit_qr<T>("qr outliers", ld.outliers, ld.etalon_f, ld.stddev, 450.0);
+        linear_fit_qr<T>("qr filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.3);
 
-        test_theil_sen<T>("theil sen points", ld.points, ld.etalon_f, ld.stddev, 5.0);
-        test_theil_sen<T>("theil sen outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
-        test_theil_sen<T>("theil sen filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.8);
+        linear_fit_theil_sen<T>("theil sen points", ld.points, ld.etalon_f, ld.stddev, 5.0);
+        linear_fit_theil_sen<T>("theil sen outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
+        linear_fit_theil_sen<T>("theil sen filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.8);
 
-        test_medians<T>("medians points", ld.points, ld.etalon_f, ld.stddev, 5.0);
-        test_medians<T>("medians outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
-        test_medians<T>("medians filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.8);
+        linear_fit_medians<T>("medians points", ld.points, ld.etalon_f, ld.stddev, 5.0);
+        linear_fit_medians<T>("medians outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
+        linear_fit_medians<T>("medians filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.8);
 }
 
 template <typename T>
 void test(PCG& engine)
 {
         test_line<T>(engine);
-        test_linear_piecewise<T>(engine);
+        test_piecewise<T>(engine);
 }
 
 void test_median()

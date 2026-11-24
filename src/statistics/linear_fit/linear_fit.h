@@ -52,6 +52,24 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] std::vector<T> linear_fit_qr_piecewise(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        utils::check_breakpoints(breakpoints);
+
+        std::vector<std::vector<T>> a = utils::least_squares_a(points, breakpoints);
+        std::vector<T> b = utils::least_squares_b(points);
+
+        std::vector<T> s = numerical::qr_solve(a, b);
+        ASSERT(s.size() == breakpoints.size() + 1);
+
+        return s;
+}
+
+template <typename T>
 [[nodiscard]] Line<T> linear_fit_theil_sen(const std::vector<numerical::Vector<2, T>>& points)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -84,57 +102,5 @@ template <typename T>
                 .intercept = intercept,
                 .slope = slope,
         };
-}
-
-template <typename T>
-[[nodiscard]] std::vector<T> linear_fit_piecewise(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& breakpoints)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        utils::check_breakpoints(breakpoints);
-
-        std::vector<std::vector<T>> a = utils::least_squares_a(points, breakpoints);
-        std::vector<T> b = utils::least_squares_b(points);
-
-        std::vector<T> s = numerical::qr_solve(a, b);
-        ASSERT(s.size() == breakpoints.size() + 1);
-
-        return s;
-}
-
-template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        utils::check_point_count(points);
-
-        const Line l = linear_fit_medians(points);
-
-        const std::vector<T> residuals = utils::residuals(points, l.intercept, l.slope);
-
-        return utils::filter_points(points, residuals, gate);
-}
-
-template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& breakpoints,
-        const T gate)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        utils::check_breakpoints(breakpoints);
-
-        std::vector<numerical::Vector<2, T>> res;
-        for (const auto& segment_points : utils::breakpoint_segments(points, breakpoints))
-        {
-                res.insert_range(res.end(), filter_points(segment_points, gate));
-        }
-        return res;
 }
 }
