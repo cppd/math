@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/numerical/qr.h>
 #include <src/numerical/vector.h>
 #include <src/statistics/median.h>
 
@@ -128,54 +127,6 @@ std::tuple<T, T> intercept_slope(const std::vector<numerical::Vector<2, T>>& poi
 }
 
 template <typename T>
-std::tuple<T, T> median_mad(std::vector<T> data)
-{
-        const T m = median(&data);
-        for (T& v : data)
-        {
-                v = std::abs(v - m);
-        }
-        const T mad = median(&data);
-        return {m, mad};
-}
-
-template <typename T>
-std::vector<T> residuals(const std::vector<numerical::Vector<2, T>>& points, const T intercept, const T slope)
-{
-        std::vector<T> res;
-        res.reserve(points.size());
-        for (const numerical::Vector<2, T>& p : points)
-        {
-                res.push_back(intercept + slope * p[0] - p[1]);
-        }
-        return res;
-}
-
-template <typename T>
-std::vector<numerical::Vector<2, T>> filter_points(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& filter,
-        const T gate)
-{
-        ASSERT(points.size() == filter.size());
-
-        const auto [median, mad] = median_mad(filter);
-        const T min = median - gate * mad;
-        const T max = median + gate * mad;
-
-        std::vector<numerical::Vector<2, T>> res;
-        res.reserve(points.size());
-        for (std::size_t i = 0; i < points.size(); ++i)
-        {
-                if (filter[i] >= min && filter[i] <= max)
-                {
-                        res.push_back(points[i]);
-                }
-        }
-        return res;
-}
-
-template <typename T>
 std::vector<std::vector<T>> least_squares_a(const std::vector<numerical::Vector<2, T>>& points)
 {
         std::vector<std::vector<T>> a(2);
@@ -227,27 +178,5 @@ std::vector<T> least_squares_b(const std::vector<numerical::Vector<2, T>>& point
                 b.push_back(p[1]);
         }
         return b;
-}
-
-template <typename T>
-std::vector<std::vector<numerical::Vector<2, T>>> breakpoint_segments(
-        const std::vector<numerical::Vector<2, T>>& points,
-        const std::vector<T>& breakpoints)
-{
-        std::vector<std::vector<numerical::Vector<2, T>>> res(breakpoints.size());
-
-        for (const numerical::Vector<2, T>& p : points)
-        {
-                for (auto i = std::ssize(breakpoints) - 1; i >= 0; --i)
-                {
-                        if (p[0] >= breakpoints[i])
-                        {
-                                res[i].push_back(p);
-                                break;
-                        }
-                }
-        }
-
-        return res;
 }
 }
