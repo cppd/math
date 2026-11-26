@@ -110,7 +110,7 @@ struct LineData final
         T stddev;
         std::vector<numerical::Vector<2, T>> points;
         std::vector<numerical::Vector<2, T>> outliers;
-        std::vector<numerical::Vector<2, T>> filtered;
+        std::vector<numerical::Vector<2, T>> filtered_medians;
 };
 
 template <typename T>
@@ -137,14 +137,14 @@ LineData<T> create_line_data(PCG& engine)
         const std::vector<numerical::Vector<2, T>> outliers =
                 add_outliers(points, etalon_f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, gate);
+        const std::vector<numerical::Vector<2, T>> filtered_medians = linear_fit::filter_points_medians(outliers, gate);
 
         return {
                 .etalon_f = etalon_f,
                 .stddev = stddev,
                 .points = points,
                 .outliers = outliers,
-                .filtered = filtered,
+                .filtered_medians = filtered_medians,
         };
 }
 
@@ -156,7 +156,7 @@ struct PiecewiseData final
         std::vector<T> breakpoints;
         std::vector<numerical::Vector<2, T>> points;
         std::vector<numerical::Vector<2, T>> outliers;
-        std::vector<numerical::Vector<2, T>> filtered;
+        std::vector<numerical::Vector<2, T>> filtered_medians;
 };
 
 template <typename T>
@@ -190,7 +190,8 @@ PiecewiseData<T> create_piecewise_data(PCG& engine)
         const std::vector<numerical::Vector<2, T>> outliers =
                 add_outliers(points, etalon_f, x_min, x_max, outlier_probability, outlier_min, outlier_max, engine);
 
-        const std::vector<numerical::Vector<2, T>> filtered = linear_fit::filter_points(outliers, breakpoints, gate);
+        const std::vector<numerical::Vector<2, T>> filtered_medians =
+                linear_fit::filter_points_medians(outliers, breakpoints, gate);
 
         return {
                 .etalon_f = etalon_f,
@@ -198,7 +199,7 @@ PiecewiseData<T> create_piecewise_data(PCG& engine)
                 .breakpoints = breakpoints,
                 .points = points,
                 .outliers = outliers,
-                .filtered = filtered,
+                .filtered_medians = filtered_medians,
         };
 }
 
@@ -346,7 +347,8 @@ void test_piecewise(PCG& engine)
 
         linear_fit_qr_piecewise<T>("piecewise points", pd.points, pd.etalon_f, pd.breakpoints, pd.stddev, 5.8);
         linear_fit_qr_piecewise<T>("piecewise outliers", pd.outliers, pd.etalon_f, pd.breakpoints, pd.stddev, 450.0);
-        linear_fit_qr_piecewise<T>("piecewise filtered", pd.filtered, pd.etalon_f, pd.breakpoints, pd.stddev, 6.3);
+        linear_fit_qr_piecewise<T>(
+                "piecewise filtered", pd.filtered_medians, pd.etalon_f, pd.breakpoints, pd.stddev, 6.3);
 }
 
 template <typename T>
@@ -356,15 +358,15 @@ void test_line(PCG& engine)
 
         linear_fit_qr<T>("qr points", ld.points, ld.etalon_f, ld.stddev, 5.0);
         linear_fit_qr<T>("qr outliers", ld.outliers, ld.etalon_f, ld.stddev, 450.0);
-        linear_fit_qr<T>("qr filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.3);
+        linear_fit_qr<T>("qr filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.3);
 
         linear_fit_theil_sen<T>("theil sen points", ld.points, ld.etalon_f, ld.stddev, 5.0);
         linear_fit_theil_sen<T>("theil sen outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
-        linear_fit_theil_sen<T>("theil sen filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.8);
+        linear_fit_theil_sen<T>("theil sen filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.8);
 
         linear_fit_medians<T>("medians points", ld.points, ld.etalon_f, ld.stddev, 5.0);
         linear_fit_medians<T>("medians outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
-        linear_fit_medians<T>("medians filtered", ld.filtered, ld.etalon_f, ld.stddev, 5.8);
+        linear_fit_medians<T>("medians filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.8);
 }
 
 template <typename T>

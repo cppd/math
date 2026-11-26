@@ -104,7 +104,7 @@ std::vector<numerical::Vector<2, T>> filter_points(
 }
 
 template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points_medians(
         const std::vector<numerical::Vector<2, T>>& points,
         const T gate)
 {
@@ -120,7 +120,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points(
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points_medians(
         const std::vector<numerical::Vector<2, T>>& points,
         const std::vector<T>& breakpoints,
         const T gate)
@@ -134,7 +134,7 @@ template <typename T>
         std::vector<numerical::Vector<2, T>> res;
         for (const auto& segment_points : impl::breakpoint_segments(points, breakpoints))
         {
-                res.insert_range(res.end(), filter_points(segment_points, gate));
+                res.insert_range(res.end(), filter_points_medians(segment_points, gate));
         }
         return res;
 }
