@@ -101,6 +101,40 @@ std::vector<numerical::Vector<2, T>> filter_points(
         }
         return res;
 }
+
+enum class FilterType
+{
+        MEDIANS,
+        THEIL_SEN
+};
+
+template <FilterType FILTER_TYPE, typename T>
+std::vector<numerical::Vector<2, T>> filter_points(const std::vector<numerical::Vector<2, T>>& points, const T gate)
+{
+        static_assert(FILTER_TYPE == FilterType::MEDIANS || FILTER_TYPE == FilterType::THEIL_SEN);
+
+        utils::check_point_count(points);
+
+        const Line l = (FILTER_TYPE == FilterType::MEDIANS) ? linear_fit_medians(points) : linear_fit_theil_sen(points);
+        const std::vector<T> r = residuals(points, l.intercept, l.slope);
+        return filter_points(points, r, gate);
+}
+
+template <FilterType FILTER_TYPE, typename T>
+std::vector<numerical::Vector<2, T>> filter_points(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints,
+        const T gate)
+{
+        utils::check_breakpoints(breakpoints);
+
+        std::vector<numerical::Vector<2, T>> res;
+        for (const auto& segment_points : breakpoint_segments(points, breakpoints))
+        {
+                res.insert_range(res.end(), filter_points<FILTER_TYPE>(segment_points, gate));
+        }
+        return res;
+}
 }
 
 template <typename T>
@@ -109,14 +143,20 @@ template <typename T>
         const T gate)
 {
         static_assert(std::is_floating_point_v<T>);
-
         namespace impl = linear_filter_implementation;
 
-        utils::check_point_count(points);
+        return impl::filter_points<impl::FilterType::MEDIANS>(points, gate);
+}
 
-        const Line l = linear_fit_medians(points);
-        const std::vector<T> residuals = impl::residuals(points, l.intercept, l.slope);
-        return impl::filter_points(points, residuals, gate);
+template <typename T>
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points_theil_sen(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const T gate)
+{
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = linear_filter_implementation;
+
+        return impl::filter_points<impl::FilterType::THEIL_SEN>(points, gate);
 }
 
 template <typename T>
@@ -126,16 +166,20 @@ template <typename T>
         const T gate)
 {
         static_assert(std::is_floating_point_v<T>);
-
         namespace impl = linear_filter_implementation;
 
-        utils::check_breakpoints(breakpoints);
+        return impl::filter_points<impl::FilterType::MEDIANS>(points, breakpoints, gate);
+}
 
-        std::vector<numerical::Vector<2, T>> res;
-        for (const auto& segment_points : impl::breakpoint_segments(points, breakpoints))
-        {
-                res.insert_range(res.end(), filter_points_medians(segment_points, gate));
-        }
-        return res;
+template <typename T>
+[[nodiscard]] std::vector<numerical::Vector<2, T>> filter_points_theil_sen(
+        const std::vector<numerical::Vector<2, T>>& points,
+        const std::vector<T>& breakpoints,
+        const T gate)
+{
+        static_assert(std::is_floating_point_v<T>);
+        namespace impl = linear_filter_implementation;
+
+        return impl::filter_points<impl::FilterType::THEIL_SEN>(points, breakpoints, gate);
 }
 }
