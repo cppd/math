@@ -111,6 +111,7 @@ struct LineData final
         std::vector<numerical::Vector<2, T>> points;
         std::vector<numerical::Vector<2, T>> outliers;
         std::vector<numerical::Vector<2, T>> filtered_medians;
+        std::vector<numerical::Vector<2, T>> filtered_theil_sen;
 };
 
 template <typename T>
@@ -139,12 +140,16 @@ LineData<T> create_line_data(PCG& engine)
 
         const std::vector<numerical::Vector<2, T>> filtered_medians = linear_fit::filter_points_medians(outliers, gate);
 
+        const std::vector<numerical::Vector<2, T>> filtered_theil_sen =
+                linear_fit::filter_points_theil_sen(outliers, gate);
+
         return {
                 .etalon_f = etalon_f,
                 .stddev = stddev,
                 .points = points,
                 .outliers = outliers,
                 .filtered_medians = filtered_medians,
+                .filtered_theil_sen = filtered_theil_sen,
         };
 }
 
@@ -157,6 +162,7 @@ struct PiecewiseData final
         std::vector<numerical::Vector<2, T>> points;
         std::vector<numerical::Vector<2, T>> outliers;
         std::vector<numerical::Vector<2, T>> filtered_medians;
+        std::vector<numerical::Vector<2, T>> filtered_theil_sen;
 };
 
 template <typename T>
@@ -193,6 +199,9 @@ PiecewiseData<T> create_piecewise_data(PCG& engine)
         const std::vector<numerical::Vector<2, T>> filtered_medians =
                 linear_fit::filter_points_medians(outliers, breakpoints, gate);
 
+        const std::vector<numerical::Vector<2, T>> filtered_theil_sen =
+                linear_fit::filter_points_theil_sen(outliers, breakpoints, gate);
+
         return {
                 .etalon_f = etalon_f,
                 .stddev = stddev,
@@ -200,6 +209,7 @@ PiecewiseData<T> create_piecewise_data(PCG& engine)
                 .points = points,
                 .outliers = outliers,
                 .filtered_medians = filtered_medians,
+                .filtered_theil_sen = filtered_theil_sen,
         };
 }
 
@@ -341,32 +351,37 @@ void linear_fit_qr_piecewise(
 }
 
 template <typename T>
-void test_piecewise(PCG& engine)
-{
-        const PiecewiseData<T> pd = create_piecewise_data<T>(engine);
-
-        linear_fit_qr_piecewise<T>("piecewise points", pd.points, pd.etalon_f, pd.breakpoints, pd.stddev, 5.8);
-        linear_fit_qr_piecewise<T>("piecewise outliers", pd.outliers, pd.etalon_f, pd.breakpoints, pd.stddev, 450.0);
-        linear_fit_qr_piecewise<T>(
-                "piecewise filtered", pd.filtered_medians, pd.etalon_f, pd.breakpoints, pd.stddev, 6.3);
-}
-
-template <typename T>
 void test_line(PCG& engine)
 {
         const LineData<T> ld = create_line_data<T>(engine);
 
-        linear_fit_qr<T>("qr points", ld.points, ld.etalon_f, ld.stddev, 5.0);
-        linear_fit_qr<T>("qr outliers", ld.outliers, ld.etalon_f, ld.stddev, 450.0);
-        linear_fit_qr<T>("qr filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.3);
+        linear_fit_qr<T>("qr points", ld.points, ld.etalon_f, ld.stddev, 4.4);
+        linear_fit_qr<T>("qr outliers", ld.outliers, ld.etalon_f, ld.stddev, 420.0);
+        linear_fit_qr<T>("qr filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 4.4);
+        linear_fit_qr<T>("qr filtered theil sen", ld.filtered_theil_sen, ld.etalon_f, ld.stddev, 4.4);
 
-        linear_fit_theil_sen<T>("theil sen points", ld.points, ld.etalon_f, ld.stddev, 5.0);
-        linear_fit_theil_sen<T>("theil sen outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
-        linear_fit_theil_sen<T>("theil sen filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.8);
+        linear_fit_theil_sen<T>("theil sen points", ld.points, ld.etalon_f, ld.stddev, 4.7);
+        linear_fit_theil_sen<T>("theil sen outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.0);
+        linear_fit_theil_sen<T>("theil sen filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 4.6);
+        linear_fit_theil_sen<T>("theil sen filtered theil sen", ld.filtered_theil_sen, ld.etalon_f, ld.stddev, 4.6);
 
-        linear_fit_medians<T>("medians points", ld.points, ld.etalon_f, ld.stddev, 5.0);
-        linear_fit_medians<T>("medians outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.4);
-        linear_fit_medians<T>("medians filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.8);
+        linear_fit_medians<T>("medians points", ld.points, ld.etalon_f, ld.stddev, 4.8);
+        linear_fit_medians<T>("medians outliers", ld.outliers, ld.etalon_f, ld.stddev, 17.0);
+        linear_fit_medians<T>("medians filtered medians", ld.filtered_medians, ld.etalon_f, ld.stddev, 5.0);
+        linear_fit_medians<T>("medians filtered theil sen", ld.filtered_theil_sen, ld.etalon_f, ld.stddev, 5.0);
+}
+
+template <typename T>
+void test_piecewise(PCG& engine)
+{
+        const PiecewiseData<T> pd = create_piecewise_data<T>(engine);
+
+        linear_fit_qr_piecewise<T>("piecewise points", pd.points, pd.etalon_f, pd.breakpoints, pd.stddev, 5.1);
+        linear_fit_qr_piecewise<T>("piecewise outliers", pd.outliers, pd.etalon_f, pd.breakpoints, pd.stddev, 420.0);
+        linear_fit_qr_piecewise<T>(
+                "piecewise filtered medians", pd.filtered_medians, pd.etalon_f, pd.breakpoints, pd.stddev, 5.8);
+        linear_fit_qr_piecewise<T>(
+                "piecewise filtered theil sen", pd.filtered_theil_sen, pd.etalon_f, pd.breakpoints, pd.stddev, 5.8);
 }
 
 template <typename T>
